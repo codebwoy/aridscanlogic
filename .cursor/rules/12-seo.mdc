@@ -24,7 +24,7 @@ npm run seo:generate   # robots + sitemap + og image
 npm run build          # includes icons + seo + vite
 ```
 
-GitHub Pages: `deploy-github-pages.yml` (configure-pages + deploy-pages). Pages must use **GitHub Actions** source. Never re-run obsolete workflow #1.
+GitHub Pages: peaceiris → `gh-pages` branch. Enable Pages manually: branch `gh-pages` / root. No configure-pages (token cannot enable Pages).
 
 ## Rules
 

@@ -1,7 +1,9 @@
-# GitHub Pages — official Actions deployment (build → deploy).
-# Requires Pages enabled with source "GitHub Actions" (configure-pages enablement: true attempts this).
+# Pushes dist/ to gh-pages (no configure-pages / deploy-pages — avoids token permission errors).
 #
-# Do NOT re-run obsolete workflow #1 (commit bd95397) — use the latest run after pushing to main.
+# One-time (required): https://github.com/codebwoy/aridscanlogic/settings/pages
+#   Build and deployment → Deploy from a branch → gh-pages → / (root) → Save
+#
+# Settings → Actions → General → Workflow permissions → Read and write permissions
 
 name: Deploy GitHub Pages
 
@@ -11,24 +13,17 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - uses: actions/setup-node@v4
         with:
@@ -47,25 +42,23 @@ jobs:
       - name: SPA fallback (404 → index.html)
         run: cp dist/index.html dist/404.html
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Publish to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: dist
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+          force_orphan: true
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-      - name: Deployment summary
-        if: success()
+      - name: Deploy instructions
         run: |
-          echo "## Deployed" >> "$GITHUB_STEP_SUMMARY"
-          echo "URL: ${{ steps.deployment.outputs.page_url }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "Also: https://codebwoy.github.io/aridscanlogic/" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "## Build pushed to \`gh-pages\`"
+            echo ""
+            echo "If the site is not live yet, enable Pages once:"
+            echo "1. [Pages settings](https://github.com/${{ github.repository }}/settings/pages)"
+            echo "2. **Deploy from a branch** → **gh-pages** → **/(root)** → Save"
+            echo "3. Open https://codebwoy.github.io/aridscanlogic/"
+            echo ""
+            echo "Ensure **Settings → Actions → Workflow permissions** is **Read and write**."
+          } >> "$GITHUB_STEP_SUMMARY"
