@@ -1,0 +1,140 @@
+import { jsPDF } from 'jspdf'
+import JSZip from 'jszip'
+import { downloadTextFile } from '@/lib/pdfUtils'
+import { hasWatermark } from './limits'
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = reject
+    img.src = src
+  })
+}
+
+export async function exportDocumentPdf(doc, user, title) {
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  const pageW = pdf.internal.pageSize.getWidth()
+  const pageH = pdf.internal.pageSize.getHeight()
+  const pages = doc.pages || []
+  const watermark = hasWatermark(user)
+
+  for (let i = 0; i < pages.length; i++) {
+    if (i > 0) pdf.addPage()
+    const src = pages[i].processedImageUrl || pages[i].imageUrl
+    try {
+      const img = await loadImage(src)
+      const ratio = Math.min((pageW - 20) / img.width, (pageH - 30) / img.height)
+      const w = img.width * ratio
+      const h = img.height * ratio
+      pdf.addImage(src, 'JPEG', (pageW - w) / 2, 15, w, h)
+    } catch {
+      pdf.text('Page could not be embedded', 10, 40)
+    }
+    if (watermark) {
+      pdf.setFontSize(8)
+      pdf.setTextColor(150, 150, 150)
+      pdf.text('ScanVault Free', pageW - 35, pageH - 8)
+    }
+  }
+  if (doc.extractedText) {
+    pdf.addPage()
+    pdf.setFontSize(10)
+    pdf.text(title || doc.name, 10, 15)
+    const lines = pdf.splitTextToSize(doc.extractedText.slice(0, 8000), pageW - 20)
+    pdf.text(lines, 10, 25)
+  }
+  pdf.save(`${(title || doc.name || 'scan').replace(/\s+/g, '_')}.pdf`)
+}
+
+export function exportDocumentText(doc) {
+  downloadTextFile(doc.extractedText || '', `${doc.name || 'scan'}.txt`)
+}
+
+export function downloadPageImages(doc) {
+  ;(doc.pages || []).forEach((p, i) => {
+    const a = window.document.createElement('a')
+    a.href = p.processedImageUrl || p.imageUrl
+    a.download = `${doc.name || 'scan'}_page_${i + 1}.jpg`
+    setTimeout(() => a.click(), i * 400)
+  })
+}
+
+function safeName(name) {
+  return (name || 'scan').replace(/[^\w-]/g, '_').slice(0, 48)
+}
+
+async function blobFromDataUrl(url) {
+  if (url.startsWith('data:')) {
+    const res = await fetch(url)
+    return res.blob()
+  }
+  const res = await fetch(url)
+  return res.blob()
+}
+
+/** Batch ZIP: one folder per document with pages + optional OCR text */
+export async function exportDocumentsZip(documents, user) {
+  const zip = new JSZip()
+  const watermark = hasWatermark(user)
+  let count = 0
+
+  for (const doc of documents) {
+    const folder = zip.folder(safeName(doc.name))
+    if (doc.extractedText) {
+      folder.file('ocr.txt', doc.extractedText)
+    }
+    const pages = doc.pages || []
+    for (let i = 0; i < pages.length; i++) {
+      const src = pages[i].processedImageUrl || pages[i].imageUrl
+      if (!src) continue
+      try {
+        folder.file(`page_${i + 1}.jpg`, await blobFromDataUrl(src))
+        count++
+      } catch {
+        /* skip */
+      }
+    }
+    if (watermark) folder.file('_watermark.txt', 'ScanVault Free — upgrade to remove watermark on PDF exports')
+  }
+
+  if (count === 0) throw new Error('No images to export')
+  const content = await zip.generateAsync({ type: 'blob' })
+  const url = URL.createObjectURL(content)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `scanvault_batch_${new Date().toISOString().slice(0, 10)}.zip`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+/** Single document as ZIP (pages + OCR + metadata) */
+export async function exportDocumentZip(doc) {
+  const zip = new JSZip()
+  zip.file(
+    'meta.json',
+    JSON.stringify({
+      name: doc.name,
+      pageCount: doc.pageCount,
+      createdAt: doc.createdAt,
+    })
+  )
+  if (doc.extractedText) zip.file('ocr.txt', doc.extractedText)
+  const pages = doc.pages || []
+  for (let i = 0; i < pages.length; i++) {
+    const src = pages[i].processedImageUrl || pages[i].imageUrl
+    if (!src) continue
+    try {
+      zip.file(`page_${i + 1}.jpg`, await blobFromDataUrl(src))
+    } catch {
+      /* skip */
+    }
+  }
+  const content = await zip.generateAsync({ type: 'blob' })
+  const url = URL.createObjectURL(content)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${safeName(doc.name)}.zip`
+  a.click()
+  URL.revokeObjectURL(url)
+}

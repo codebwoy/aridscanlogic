@@ -1,0 +1,394 @@
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Send, Archive, Scale, FileText, ListChecks, Paperclip, Download, Plus } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import { toast } from 'sonner'
+import base44 from '@/lib/base44'
+import QuickPrompts from '@/components/lawyer/QuickPrompts'
+import CategoryPicker from '@/components/lawyer/CategoryPicker'
+import MessageActions from '@/components/lawyer/MessageActions'
+import LawyerAIArchive from '@/components/lawyer/LawyerAIArchive'
+import CaseTimeline from '@/components/lawyer/CaseTimeline'
+import ContractQuickDraft from '@/components/lawyer/ContractQuickDraft'
+import { invokeHerrMueller, generateExecutiveSummary } from '@/lib/lawyer/invokeMueller'
+import { detectLanguage, SAFETY_DISCLAIMER_DE } from '@/lib/lawyer/herrMuellerPrompt'
+import { getStarterPrompt } from '@/lib/lawyer/categories'
+import {
+  ensureCase,
+  getActiveCase,
+  setCaseCategory,
+  addSummary,
+  createNewCase,
+  listCases,
+} from '@/lib/lawyer/caseStore'
+import DocumentPicker from '@/components/lawyer/DocumentPicker'
+import { exportConversationTranscript } from '@/lib/lawyer/exportTranscript'
+
+const WELCOME_DE = `**Guten Tag!** Ich bin **Herr Müller** — Ihr Mentor für Finanzen, Steuern, Recht und Unternehmensführung.
+
+Ich verbinde die Perspektive eines erfahrenen **Wirtschaftsjuristen**, **Steuerstrategen** und **Investors**.
+
+Wählen Sie einen der **13 Beratungsbereiche**, eine Starter-Karte oder stellen Sie Ihre Frage.
+
+${SAFETY_DISCLAIMER_DE}`
+
+const WELCOME_EN = `**Hello!** I am **Herr Müller** — your mentor for finance, tax, law, and business leadership.
+
+I combine the perspective of an experienced **business lawyer**, **tax strategist**, and **investor**.
+
+Pick one of **13 expertise areas**, a starter card, or ask your question.
+
+*Note: Educational coaching only — not a substitute for licensed Rechtsanwalt / Steuerberater advice.*`
+
+export default function LawyerAIPage() {
+  const [messages, setMessages] = useState([{ role: 'assistant', content: WELCOME_DE }])
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [archiveOpen, setArchiveOpen] = useState(false)
+  const [activeCategory, setActiveCategory] = useState(null)
+  const [language, setLanguage] = useState('de')
+  const [documentContext, setDocumentContext] = useState(null)
+  const [showTimeline, setShowTimeline] = useState(false)
+  const [caseData, setCaseData] = useState(null)
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [casesOpen, setCasesOpen] = useState(false)
+  const conversationId = useRef(`conv-${Date.now()}`)
+  const bottomRef = useRef(null)
+
+  const refreshCase = useCallback(() => {
+    setCaseData(getActiveCase(conversationId.current))
+  }, [])
+
+  useEffect(() => {
+    ensureCase(conversationId.current, 'Herr Müller Beratung')
+    refreshCase()
+  }, [refreshCase])
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  const send = async (text, categoryId = activeCategory) => {
+    const userText = (text || input).trim()
+    if (!userText || loading) return
+    const lang = detectLanguage(userText)
+    setLanguage(lang)
+    setInput('')
+    setMessages((m) => [...m, { role: 'user', content: userText }])
+    if (categoryId) setCaseCategory(conversationId.current, categoryId)
+    setLoading(true)
+    try {
+      const { text: reply } = await invokeHerrMueller({
+        userMessage: userText,
+        messages: [...messages, { role: 'user', content: userText }],
+        categoryId,
+        documentContext,
+        language: lang,
+      })
+      setMessages((m) => [...m, { role: 'assistant', content: reply }])
+      if (documentContext) setDocumentContext(null)
+      refreshCase()
+    } catch {
+      toast.error(lang === 'en' ? 'Could not reach Herr Müller' : 'Beratung konnte nicht geladen werden')
+      setMessages((m) => [
+        ...m,
+        {
+          role: 'assistant',
+          content:
+            lang === 'en'
+              ? 'An error occurred. Please try again.'
+              : 'Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.',
+        },
+      ])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCategorySelect = (cat) => {
+    setActiveCategory(cat.id)
+    setCaseCategory(conversationId.current, cat.id)
+    send(getStarterPrompt(cat, language), cat.id)
+  }
+
+  const reviewDocument = async (withText) => {
+    setDocumentContext(withText.ocr_text)
+    setActiveCategory('doc-review')
+    toast.success(withText.title || 'Document attached')
+    const userLine =
+      language === 'en'
+        ? `Please review this document: **${withText.title}**`
+        : `Bitte prüfen Sie dieses Dokument: **${withText.title}**`
+    setMessages((m) => [...m, { role: 'user', content: userLine }])
+    setLoading(true)
+    try {
+      const { text: reply } = await invokeHerrMueller({
+        userMessage: 'Review the attached contract/document thoroughly.',
+        messages: [...messages, { role: 'user', content: userLine }],
+        categoryId: 'doc-review',
+        documentContext: withText.ocr_text,
+        language,
+      })
+      setMessages((m) => [...m, { role: 'assistant', content: reply }])
+      setDocumentContext(null)
+      refreshCase()
+    } catch {
+      toast.error('Review failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const startNewCase = () => {
+    const c = createNewCase(language === 'en' ? 'New consultation' : 'Neue Beratung')
+    conversationId.current = c.conversationId
+    setMessages([{ role: 'assistant', content: language === 'en' ? WELCOME_EN : WELCOME_DE }])
+    setActiveCategory(null)
+    setDocumentContext(null)
+    setCasesOpen(false)
+    refreshCase()
+    toast.success(language === 'en' ? 'New case started' : 'Neuer Fall gestartet')
+  }
+
+  const runExecutiveSummary = async () => {
+    if (messages.length < 2) {
+      toast.error(language === 'en' ? 'Start a conversation first' : 'Bitte zuerst ein Gespräch führen')
+      return
+    }
+    setLoading(true)
+    try {
+      const summary = await generateExecutiveSummary(messages, language)
+      addSummary(conversationId.current, summary)
+      setMessages((m) => [...m, { role: 'assistant', content: summary }])
+      refreshCase()
+      toast.success(language === 'en' ? 'Summary generated' : 'Zusammenfassung erstellt')
+    } catch {
+      toast.error('Summary failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const showStarters = messages.length <= 1
+
+  return (
+    <div className="flex h-full flex-col px-4">
+      <header className="safe-top mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500/40 to-indigo-700/30 shadow-lg shadow-brand-600/20">
+            <Scale className="h-5 w-5 text-brand-300" />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold">Herr Müller</h1>
+            <p className="text-xs text-slate-500">
+              Rechtsanwalt · Steuerberater · Investor
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-1">
+          <button
+            type="button"
+            onClick={() => setPickerOpen(true)}
+            className="premium-card rounded-xl p-2.5"
+            title="Attach scanned document"
+          >
+            <Paperclip className="h-5 w-5 text-slate-400" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setArchiveOpen(true)}
+            className="premium-card rounded-xl p-2.5"
+            title="Archive"
+          >
+            <Archive className="h-5 w-5 text-brand-300" />
+          </button>
+        </div>
+      </header>
+
+      <div className="mb-2 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={runExecutiveSummary}
+          disabled={loading}
+          className="flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-brand-300"
+        >
+          <ListChecks className="h-3 w-3" /> Executive Summary
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowTimeline(!showTimeline)}
+          className="flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-slate-400"
+        >
+          <FileText className="h-3 w-3" /> Timeline
+        </button>
+        <button
+          type="button"
+          onClick={() => setLanguage((l) => (l === 'de' ? 'en' : 'de'))}
+          className="rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] uppercase text-slate-400"
+        >
+          {language === 'de' ? 'EN' : 'DE'}
+        </button>
+        <button
+          type="button"
+          onClick={() => exportConversationTranscript(messages, 'Herr_Mueller')}
+          className="flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-slate-400"
+        >
+          <Download className="h-3 w-3" /> Export
+        </button>
+        <button
+          type="button"
+          onClick={startNewCase}
+          className="flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-slate-400"
+        >
+          <Plus className="h-3 w-3" /> {language === 'en' ? 'New case' : 'Neu'}
+        </button>
+        <button
+          type="button"
+          onClick={() => setCasesOpen(!casesOpen)}
+          className="rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-slate-400"
+        >
+          {language === 'en' ? 'Cases' : 'Fälle'}
+        </button>
+      </div>
+
+      {casesOpen && (
+        <div className="mb-2 max-h-32 overflow-y-auto rounded-xl bg-slate-800/80 p-2 text-xs">
+          {listCases().slice(0, 8).map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => {
+                conversationId.current = c.conversationId
+                refreshCase()
+                setCasesOpen(false)
+                toast.info(c.title)
+              }}
+              className="block w-full truncate rounded-lg px-2 py-1.5 text-left hover:bg-slate-700"
+            >
+              {c.title} · {new Date(c.updatedAt).toLocaleDateString()}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {showTimeline && (
+        <CaseTimeline
+          conversationId={conversationId.current}
+          timeline={caseData?.timeline || []}
+          onUpdate={refreshCase}
+        />
+      )}
+
+      {documentContext && (
+        <div className="mb-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[10px] text-amber-200">
+          Document attached for review ({documentContext.length} chars)
+        </div>
+      )}
+
+      <CategoryPicker
+        activeCategory={activeCategory}
+        onSelect={handleCategorySelect}
+        language={language}
+      />
+
+      {showStarters && (
+        <>
+          <QuickPrompts
+            language={language}
+            onSelect={(prompt, catId) => {
+              if (catId) setActiveCategory(catId)
+              send(prompt, catId)
+            }}
+          />
+          <ContractQuickDraft
+            language={language}
+            onSelect={(prompt) => {
+              setActiveCategory('contracts')
+              send(prompt, 'contracts')
+            }}
+          />
+        </>
+      )}
+
+      <div className="flex-1 space-y-4 overflow-y-auto pb-4 scrollbar-hide">
+        {messages.map((msg, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            <div
+              className={`max-w-[92%] rounded-2xl px-4 py-3 text-sm ${
+                msg.role === 'user'
+                  ? 'bg-gradient-to-br from-brand-600 to-brand-700 text-white shadow-lg shadow-brand-900/30'
+                  : 'premium-card prose prose-invert max-w-none prose-p:my-1 prose-headings:my-2 prose-headings:text-white prose-table:text-sm'
+              }`}
+            >
+              {msg.role === 'user' ? (
+                msg.content
+              ) : (
+                <>
+                  <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  <MessageActions
+                    content={msg.content}
+                    conversationId={conversationId.current}
+                    conversationTitle="Herr Müller Beratung"
+                    categoryId={activeCategory}
+                    onTimelineUpdate={refreshCase}
+                  />
+                </>
+              )}
+            </div>
+          </motion.div>
+        ))}
+        {loading && (
+          <div className="flex justify-start">
+            <div className="premium-card px-4 py-3 text-sm text-slate-400">
+              Herr Müller denkt nach…
+            </div>
+          </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+
+      <div className="safe-bottom border-t border-slate-800/80 py-3">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            send()
+          }}
+          className="flex gap-2"
+        >
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={language === 'en' ? 'Your question…' : 'Ihre Frage…'}
+            className="premium-card flex-1 rounded-xl px-4 py-3 text-sm outline-none ring-brand-500/50 focus:ring-2"
+            disabled={loading}
+          />
+          <button
+            type="submit"
+            disabled={loading || !input.trim()}
+            className="btn-primary flex h-12 w-12 items-center justify-center rounded-xl disabled:opacity-50"
+          >
+            <Send className="h-5 w-5" />
+          </button>
+        </form>
+      </div>
+
+      <DocumentPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        language={language}
+        onSelect={(doc) => reviewDocument(doc)}
+      />
+
+      <AnimatePresence>
+        {archiveOpen && (
+          <LawyerAIArchive open={archiveOpen} onClose={() => setArchiveOpen(false)} />
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}

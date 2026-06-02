@@ -1,0 +1,431 @@
+import { useState, useEffect, useMemo } from 'react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  ScanLine,
+  Settings,
+  Car,
+  Rocket,
+  Receipt,
+  FileBarChart,
+  Tags,
+  PenLine,
+} from 'lucide-react'
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  Tooltip,
+} from 'recharts'
+import { toast } from 'sonner'
+import base44 from '@/lib/base44'
+import PremiumCard from '@/components/shared/PremiumCard'
+import { hasTaxVaultProfile, loadTaxVaultProfile } from '@/lib/taxvault/profile'
+import { computeReceiptStats } from '@/lib/taxvault/stats'
+import { getAllCategories, isOverBudget } from '@/lib/taxvault/categories'
+import TaxVaultProfileSetup from './TaxVaultProfileSetup'
+import ReceiptScanFlow from './ReceiptScanFlow'
+import ReceiptList from './ReceiptList'
+import ReceiptDetail from './ReceiptDetail'
+import TaxSummaryReport from './TaxSummaryReport'
+import TaxVaultSettings from './TaxVaultSettings'
+import MileageLogger from './MileageLogger'
+import TaxVaultCategoryManager from './TaxVaultCategoryManager'
+import ManualExpenseEntry from './ManualExpenseEntry'
+import BizStartGermany from '../bizstart/BizStartGermany'
+import { checkRecurringReminders } from '@/lib/taxvault/reminders'
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+export default function TaxVaultHome() {
+  const [receipts, setReceipts] = useState([])
+  const [mileageLogs, setMileageLogs] = useState([])
+  const [taxYear, setTaxYear] = useState(new Date().getFullYear())
+  const [view, setView] = useState('home')
+  const [selectedReceipt, setSelectedReceipt] = useState(null)
+  const [listCategoryFilter, setListCategoryFilter] = useState('')
+  const [showBizStart, setShowBizStart] = useState(false)
+  const [profileReady, setProfileReady] = useState(hasTaxVaultProfile())
+
+  const profile = loadTaxVaultProfile()
+  const sym = profile.homeCurrency === 'EUR' ? '€' : profile.homeCurrency
+
+  const load = async () => {
+    try {
+      const [rcpts, mileage] = await Promise.all([
+        base44.entities.Receipt.list(),
+        base44.entities.MileageLog.list(),
+      ])
+      setReceipts(rcpts)
+      setMileageLogs(mileage)
+    } catch {
+      toast.error('Could not load Tax Vault data')
+    }
+  }
+
+  useEffect(() => {
+    if (profileReady) {
+      load()
+      checkRecurringReminders()
+    }
+  }, [profileReady])
+
+  const stats = useMemo(
+    () => computeReceiptStats(receipts, taxYear, mileageLogs),
+    [receipts, taxYear, mileageLogs]
+  )
+
+  const monthlyData = stats.byMonth.map((v, i) => ({ month: MONTHS[i], amount: v }))
+  const recent = [...stats.receipts]
+    .sort((a, b) => (b.purchase_date || '').localeCompare(a.purchase_date || ''))
+    .slice(0, 5)
+
+  const budgetWarnings = getAllCategories().filter((c) => isOverBudget(stats.receipts, c))
+
+  if (!profileReady) {
+    return <TaxVaultProfileSetup onComplete={() => setProfileReady(true)} />
+  }
+
+  if (showBizStart) {
+    return (
+      <BizStartGermany
+        onExit={() => setShowBizStart(false)}
+        onComplete={() => {
+          setShowBizStart(false)
+          load()
+        }}
+      />
+    )
+  }
+
+  if (view === 'scan') {
+    return (
+      <ReceiptScanFlow
+        onClose={() => setView('home')}
+        onSaved={load}
+      />
+    )
+  }
+
+  if (view === 'manual') {
+    return (
+      <ManualExpenseEntry
+        onBack={() => setView('home')}
+        onSaved={() => {
+          load()
+          setView('home')
+        }}
+      />
+    )
+  }
+
+  if (view === 'categories') {
+    return (
+      <TaxVaultCategoryManager
+        receipts={receipts}
+        taxYear={taxYear}
+        onBack={() => setView('home')}
+      />
+    )
+  }
+
+  if (view === 'settings') {
+    return <TaxVaultSettings onBack={() => setView('home')} />
+  }
+
+  if (view === 'summary') {
+    return (
+      <TaxSummaryReport
+        receipts={receipts}
+        mileageLogs={mileageLogs}
+        taxYear={taxYear}
+        onBack={() => setView('home')}
+        onCategorySelect={(cat) => {
+          setListCategoryFilter(cat)
+          setView('list')
+        }}
+      />
+    )
+  }
+
+  if (view === 'mileage') {
+    return (
+      <div className="px-4 pb-4">
+        <button
+          type="button"
+          onClick={() => setView('home')}
+          className="safe-top mb-3 text-sm text-slate-400"
+        >
+          ← Back
+        </button>
+        <MileageLogger onChanged={load} />
+      </div>
+    )
+  }
+
+  if (view === 'list') {
+    const listReceipts = listCategoryFilter
+      ? receipts.filter((r) => r.category === listCategoryFilter)
+      : receipts
+    return (
+      <div className="px-4 pb-4">
+        <button
+          type="button"
+          onClick={() => {
+            setListCategoryFilter('')
+            setView('home')
+          }}
+          className="safe-top mb-3 text-sm text-slate-400"
+        >
+          ← Back
+        </button>
+        <h2 className="mb-3 text-lg font-bold">All Receipts</h2>
+        <ReceiptList
+          receipts={listReceipts}
+          taxYear={taxYear}
+          onRefresh={load}
+          onSelect={(r) => {
+            setSelectedReceipt(r)
+            setView('detail')
+          }}
+        />
+      </div>
+    )
+  }
+
+  if (view === 'detail' && selectedReceipt) {
+    return (
+      <ReceiptDetail
+        receipt={selectedReceipt}
+        onBack={() => setView('list')}
+        onUpdated={load}
+      />
+    )
+  }
+
+  return (
+    <div className="px-4 pb-28">
+      <header className="safe-top mb-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Tax Vault</h1>
+          <p className="text-sm text-slate-400">{profile.businessName}</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setView('settings')}
+          className="rounded-xl bg-slate-800 p-2"
+          aria-label="Settings"
+        >
+          <Settings className="h-5 w-5 text-slate-400" />
+        </button>
+      </header>
+
+      <div className="mb-4 flex items-center justify-center gap-4">
+        <button
+          type="button"
+          onClick={() => setTaxYear((y) => y - 1)}
+          className="rounded-full bg-slate-800 p-2"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <span className="text-lg font-semibold">Tax Year {taxYear}</span>
+        <button
+          type="button"
+          onClick={() => setTaxYear((y) => y + 1)}
+          className="rounded-full bg-slate-800 p-2"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      </div>
+
+      <PremiumCard className="mb-4 p-5">
+        <p className="text-xs uppercase tracking-wide text-slate-400">Total expenses</p>
+        <p className="mt-1 text-3xl font-bold text-white">
+          {sym}
+          {stats.totalExpenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </p>
+        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <p className="text-slate-500">VAT paid</p>
+            <p className="font-semibold">
+              {sym}
+              {stats.totalVat.toFixed(2)}
+            </p>
+          </div>
+          <div>
+            <p className="text-slate-500">Receipts</p>
+            <p className="font-semibold">{stats.count}</p>
+          </div>
+          <div>
+            <p className="text-slate-500">Categories</p>
+            <p className="font-semibold">{stats.categoriesUsed}</p>
+          </div>
+          <div>
+            <p className="text-slate-500">Deductible</p>
+            <p className="font-semibold text-emerald-400">
+              {sym}
+              {stats.totalDeductible.toFixed(2)}
+            </p>
+          </div>
+          {stats.mileageTrips > 0 && (
+            <div className="col-span-2 border-t border-slate-700/50 pt-2">
+              <p className="text-slate-500">Mileage ({stats.mileageTrips} trips)</p>
+              <p className="font-semibold">
+                {stats.mileageKm.toFixed(0)} km · {sym}
+                {stats.mileageDeductible.toFixed(2)} deductible
+              </p>
+            </div>
+          )}
+        </div>
+      </PremiumCard>
+
+      {budgetWarnings.length > 0 && (
+        <div className="mb-4 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+          Over budget: {budgetWarnings.map((c) => c.name).join(', ')}
+        </div>
+      )}
+
+      {stats.donutData.length > 0 && (
+        <div className="mb-4 rounded-2xl bg-slate-800/60 p-4">
+          <h3 className="mb-2 text-sm font-semibold">Spending by category</h3>
+          <div className="h-44">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={stats.donutData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={45}
+                  outerRadius={70}
+                  paddingAngle={2}
+                >
+                  {stats.donutData.map((entry) => (
+                    <Cell key={entry.name} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(v) => `${sym}${Number(v).toFixed(2)}`}
+                  contentStyle={{ background: '#1e293b', border: 'none', borderRadius: 8 }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={() => setView('scan')}
+        className="mb-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 py-4 text-lg font-semibold shadow-lg shadow-brand-600/30"
+      >
+        <ScanLine className="h-6 w-6" />
+        Scan Receipt
+      </button>
+      <button
+        type="button"
+        onClick={() => setView('manual')}
+        className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-600 py-3 text-sm font-medium"
+      >
+        <PenLine className="h-4 w-4" />
+        Log expense without receipt
+      </button>
+
+      <div className="mb-4 rounded-2xl bg-slate-800/60 p-4">
+        <h3 className="mb-2 text-sm font-semibold">Monthly spending</h3>
+        <div className="h-36">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={monthlyData}>
+              <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#94a3b8' }} />
+              <Tooltip
+                formatter={(v) => `${sym}${Number(v).toFixed(2)}`}
+                contentStyle={{ background: '#1e293b', border: 'none', borderRadius: 8 }}
+              />
+              <Bar dataKey="amount" fill="#6366f1" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="mb-4 flex gap-2">
+        <button
+          type="button"
+          onClick={() => setView('summary')}
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-slate-800 py-3 text-sm font-medium"
+        >
+          <FileBarChart className="h-4 w-4" /> Tax Summary
+        </button>
+        <button
+          type="button"
+          onClick={() => setView('list')}
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-slate-800 py-3 text-sm font-medium"
+        >
+          <Receipt className="h-4 w-4" /> All receipts
+        </button>
+      </div>
+
+      <div className="mb-2 flex gap-2">
+        <button
+          type="button"
+          onClick={() => setView('mileage')}
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-700 py-2 text-sm"
+        >
+          <Car className="h-4 w-4" /> Mileage log
+        </button>
+        <button
+          type="button"
+          onClick={() => setView('categories')}
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-700 py-2 text-sm"
+        >
+          <Tags className="h-4 w-4" /> Categories
+        </button>
+      </div>
+      <div className="mb-4">
+        <button
+          type="button"
+          onClick={() => setShowBizStart(true)}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-700 py-2 text-sm"
+        >
+          <Rocket className="h-4 w-4" /> BizStart Germany
+        </button>
+      </div>
+
+      <h3 className="mb-2 font-semibold">Recent receipts</h3>
+      <div className="space-y-2">
+        {recent.length === 0 && (
+          <p className="text-sm text-slate-500">No receipts yet — tap Scan Receipt to start.</p>
+        )}
+        {recent.map((r) => (
+          <button
+            key={r.id}
+            type="button"
+            onClick={() => {
+              setSelectedReceipt(r)
+              setView('detail')
+            }}
+            className="flex w-full gap-3 rounded-xl bg-slate-800/80 p-3 text-left"
+          >
+            {r.image_url ? (
+              <img src={r.image_url} alt="" className="h-12 w-10 rounded object-cover" />
+            ) : (
+              <Receipt className="h-10 w-10 text-slate-600" />
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-medium">{r.vendor_name}</p>
+              <p className="text-xs text-slate-500">{r.purchase_date}</p>
+            </div>
+            <p className="font-semibold">
+              {sym}
+              {r.total_amount?.toFixed(2)}
+            </p>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
