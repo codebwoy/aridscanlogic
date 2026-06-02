@@ -1,6 +1,8 @@
-# ✅ Current deploy workflow (peaceiris → gh-pages branch)
-# ❌ Do NOT re-run failed workflow #1 — it used actions/deploy-pages@v4 from an old commit and will always 404.
-#    Open the latest run of THIS workflow, or use "Setup GitHub Pages (run once)".
+# GitHub Pages — official Actions deploy (build + deploy jobs).
+# Do NOT re-run failed workflow #1 (commit bd95397) — use the latest run or workflow_dispatch.
+#
+# If deploy still 404s: Settings → Pages → Source: "GitHub Actions"
+# https://github.com/codebwoy/aridscanlogic/settings/pages
 
 name: Deploy GitHub Pages
 
@@ -10,22 +12,38 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
-  group: deploy-github-pages
+  group: pages
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  enable-pages:
     runs-on: ubuntu-latest
     steps:
-      - name: Workflow info
+      - name: Enable GitHub Pages (Actions source)
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          echo "This run uses peaceiris (gh-pages branch), NOT actions/deploy-pages."
-          echo "If your log shows deploy-pages@v4, you re-ran obsolete workflow #1 — stop that run."
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/pages" \
+            -f build_type=workflow 2>/dev/null || \
+          gh api --method PUT "repos/${GITHUB_REPOSITORY}/pages" \
+            -f build_type=workflow 2>/dev/null || true
+          echo "If deploy fails with 404, open:"
+          echo "https://github.com/${GITHUB_REPOSITORY}/settings/pages"
+          echo "Set Source to: GitHub Actions"
 
+  build:
+    needs: enable-pages
+    runs-on: ubuntu-latest
+    steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/configure-pages@v5
 
       - uses: actions/setup-node@v4
         with:
@@ -34,34 +52,28 @@ jobs:
 
       - run: npm ci
 
-      - name: Build
+      - name: Build static site
         run: npm run build
         env:
           GITHUB_PAGES: 'true'
           VITE_SITE_URL: https://codebwoy.github.io/aridscanlogic
           VITE_BASE_PATH: /aridscanlogic/
 
-      - run: cp dist/index.html dist/404.html
+      - name: SPA fallback
+        run: cp dist/index.html dist/404.html
 
-      - name: Deploy to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          publish_branch: gh-pages
-          force_orphan: true
+          path: dist
 
-      - name: Enable Pages (gh-pages / root)
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh api --method PUT "repos/${GITHUB_REPOSITORY}/pages" \
-            --input - <<'EOF' || true
-          {"build_type":"legacy","source":{"branch":"gh-pages","path":"/"}}
-          EOF
-
-      - name: Done
-        run: |
-          echo "Site (1-2 min): https://codebwoy.github.io/aridscanlogic/"
-          echo "If blank, open Settings → Pages → gh-pages branch → / (root)"
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -94,7 +94,7 @@ npm run preview
 
 ## Deploy (GitHub Pages)
 
-**Failed `deploy-pages@v4` on workflow #1?** That run is old — do not re-run it. See **[DEPLOY.md](./DEPLOY.md)** and run **Setup GitHub Pages (run once)** from the Actions tab.
+**Failed `deploy-pages@v4` / 404?** Do not re-run workflow **#1**. Enable Pages: [settings](https://github.com/codebwoy/aridscanlogic/settings/pages) → **GitHub Actions**. See **[DEPLOY.md](./DEPLOY.md)**.
 
 Live URL: **https://codebwoy.github.io/aridscanlogic/**
 
