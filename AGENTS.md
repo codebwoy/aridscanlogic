@@ -20,4 +20,4 @@ Cursor loads rules from `.cursor/rules/*.mdc`. Use the matching rule when editin
 
 Human-readable security policy: `SECURITY.md`.
 
-**SEO / Google:** Site URL defaults to `https://codebwoy.github.io/aridscanlogic`. Run `npm run build`, enable GitHub Pages (Actions), then submit `sitemap.xml` in [Google Search Console](https://search.google.com/search-console).
+**SEO / Pages:** `https://codebwoy.github.io/aridscanlogic` — deploy via `deploy-github-pages.yml` (peaceiris → `gh-pages`). Enable Pages from branch `gh-pages` in repo settings. See `DEPLOY.md`.

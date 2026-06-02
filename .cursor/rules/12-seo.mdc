@@ -24,7 +24,7 @@ npm run seo:generate   # robots + sitemap + og image
 npm run build          # includes icons + seo + vite
 ```
 
-GitHub Pages: peaceiris → `gh-pages` branch. Enable Pages manually: branch `gh-pages` / root. No configure-pages (token cannot enable Pages).
+**GitHub Pages (current):** `.github/workflows/deploy-github-pages.yml` publishes `dist/` to branch **`gh-pages`** via peaceiris. Do **not** use `configure-pages` or `deploy-pages` (token/404 issues). User enables Pages once: **Deploy from a branch** → `gh-pages` → `/ (root)`. See `DEPLOY.md`.
 
 ## Rules
 

@@ -1,5 +1,5 @@
 # Run this ONCE from the Actions tab → "Setup GitHub Pages (run once)" → Run workflow
-# Fixes 404 from old "deploy-pages" runs by publishing to gh-pages and enabling Pages in settings via API.
+# One-time: publish to gh-pages + try to set Pages source via API (may require repo admin).
 
 name: Setup GitHub Pages (run once)
 

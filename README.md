@@ -94,7 +94,7 @@ npm run preview
 
 ## Deploy (GitHub Pages)
 
-**Failed `deploy-pages@v4` / 404?** Enable Pages: [settings](https://github.com/codebwoy/aridscanlogic/settings/pages) → **GitHub Actions**, then run the latest deploy workflow (not #1). See **[DEPLOY.md](./DEPLOY.md)**.
+**Pages deploy issues?** See **[DEPLOY.md](./DEPLOY.md)** — workflow pushes to **`gh-pages`**; enable Pages: [settings](https://github.com/codebwoy/aridscanlogic/settings/pages) → **Deploy from a branch** → **`gh-pages`** / **(root)**. Do not re-run obsolete workflow **#1**.
 
 Live URL: **https://codebwoy.github.io/aridscanlogic/**
 
