@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Upload, Receipt } from 'lucide-react'
 import { toast } from 'sonner'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { calcVatFromGross, calcDeductible } from '@/lib/taxCalculations'
 import { getSkrCode } from '@/lib/bizstart/skr03'
 
@@ -11,7 +11,7 @@ export default function ReceiptManager({ kleinunternehmer = false }) {
 
   const load = async () => {
     try {
-      setReceipts(await base44.entities.Receipt.list())
+      setReceipts(await appApi.entities.Receipt.list())
     } catch {
       toast.error('Belege konnten nicht geladen werden')
     }
@@ -25,8 +25,8 @@ export default function ReceiptManager({ kleinunternehmer = false }) {
     const file = e.target.files?.[0]
     if (!file) return
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file })
-      const ocr = await base44.integrations.Core.InvokeLLM({
+      const { file_url } = await appApi.integrations.Core.UploadFile({ file })
+      const ocr = await appApi.integrations.Core.InvokeLLM({
         prompt: 'Parse this German receipt. Extract vendor, date, total, VAT rate (7 or 19), category.',
         file_urls: [file_url],
         response_json_schema: {
@@ -44,7 +44,7 @@ export default function ReceiptManager({ kleinunternehmer = false }) {
       const rate = kleinunternehmer ? 0 : parsed.vat_rate === 7 ? 7 : 19
       const { vat } = kleinunternehmer ? { vat: 0 } : calcVatFromGross(gross, rate)
       const deductible = calcDeductible(gross, 'business')
-      await base44.entities.Receipt.create({
+      await appApi.entities.Receipt.create({
         vendor_name: parsed.vendor_name || 'Unbekannt',
         purchase_date: new Date().toISOString().slice(0, 10),
         total_amount: gross,

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Building2, User } from 'lucide-react'
 import { toast } from 'sonner'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 
 const STRUCTURES = [
   { id: 'freelancer', label: 'Freelancer', icon: User },
@@ -19,7 +19,7 @@ export default function TaxVaultOnboarding({ onComplete }) {
     }
     setSaving(true)
     try {
-      await base44.entities.BusinessRegistration.create({
+      await appApi.entities.BusinessRegistration.create({
         business_structure: structure,
         registration_status: 'pending',
         gewerbe_status: 'not_started',

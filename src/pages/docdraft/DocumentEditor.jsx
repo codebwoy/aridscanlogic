@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Plus, Download } from 'lucide-react'
 import { toast } from 'sonner'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { generateInvoicePdf } from '@/lib/pdfUtils'
 import { calcDocDraftTotals, KLEINUNTERNEHMER_FOOTNOTE } from '@/lib/docCalculations'
 import { loadProfile } from './ProfileSetup'
@@ -92,8 +92,8 @@ export default function DocumentEditor({ doc, onSaved, onCancel }) {
         legal_footnote: totals.legal_footnote,
       }
       const saved = doc?.id
-        ? await base44.entities.DocDraftDocument.update(doc.id, payload)
-        : await base44.entities.DocDraftDocument.create(payload)
+        ? await appApi.entities.DocDraftDocument.update(doc.id, payload)
+        : await appApi.entities.DocDraftDocument.create(payload)
       toast.success('Dokument gespeichert')
       onSaved?.(saved)
     } catch {

@@ -121,7 +121,7 @@ export default function DocumentsTab({ onOpenDoc, onSearch, folderId, user, onUp
   }
 
   return (
-    <div className="px-4 pb-4">
+    <div className="w-full">
       <div className="safe-top mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Documents</h1>
         <button
@@ -204,7 +204,7 @@ export default function DocumentsTab({ onOpenDoc, onSearch, folderId, user, onUp
           <p>No documents yet</p>
         </div>
       ) : view === 'grid' ? (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid-cards sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((d) => (
             <DocCard key={d.id} d={d} />
           ))}

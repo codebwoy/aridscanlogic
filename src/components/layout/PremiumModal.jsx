@@ -16,7 +16,7 @@ export default function PremiumModal() {
           onClick={() => setModalOpen(false)}
         >
           <motion.div
-            className="w-full max-w-md rounded-2xl bg-slate-800 p-6 shadow-2xl"
+            className="mx-4 w-full max-w-md rounded-2xl bg-slate-800 p-6 shadow-2xl sm:mx-auto sm:max-w-lg"
             initial={{ y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}

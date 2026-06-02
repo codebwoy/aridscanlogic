@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Send, Archive, Scale, FileText, ListChecks, Paperclip, Download, Plus } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import { toast } from 'sonner'
-import base44 from '@/lib/base44'
 import QuickPrompts from '@/components/lawyer/QuickPrompts'
 import CategoryPicker from '@/components/lawyer/CategoryPicker'
 import MessageActions from '@/components/lawyer/MessageActions'
@@ -23,6 +22,7 @@ import {
 } from '@/lib/lawyer/caseStore'
 import DocumentPicker from '@/components/lawyer/DocumentPicker'
 import { exportConversationTranscript } from '@/lib/lawyer/exportTranscript'
+import ModuleGuideBanner from '@/components/guide/ModuleGuideBanner'
 
 const WELCOME_DE = `**Guten Tag!** Ich bin **Herr Müller** — Ihr Mentor für Finanzen, Steuern, Recht und Unternehmensführung.
 
@@ -172,14 +172,14 @@ export default function LawyerAIPage() {
   const showStarters = messages.length <= 1
 
   return (
-    <div className="flex h-full flex-col px-4">
+    <div className="flex h-full min-h-0 w-full flex-col">
       <header className="safe-top mb-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500/40 to-indigo-700/30 shadow-lg shadow-brand-600/20">
             <Scale className="h-5 w-5 text-brand-300" />
           </div>
           <div>
-            <h1 className="text-lg font-bold">Herr Müller</h1>
+            <h1 className="text-base font-bold sm:text-lg">Herr Müller</h1>
             <p className="text-xs text-slate-500">
               Rechtsanwalt · Steuerberater · Investor
             </p>
@@ -204,6 +204,8 @@ export default function LawyerAIPage() {
           </button>
         </div>
       </header>
+
+      <ModuleGuideBanner moduleId="lawyer" title="Lawyer AI" />
 
       <div className="mb-2 flex flex-wrap gap-2">
         <button
@@ -319,7 +321,7 @@ export default function LawyerAIPage() {
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[92%] rounded-2xl px-4 py-3 text-sm ${
+              className={`max-w-[92%] rounded-2xl px-4 py-3 text-sm sm:max-w-[85%] lg:max-w-2xl ${
                 msg.role === 'user'
                   ? 'bg-gradient-to-br from-brand-600 to-brand-700 text-white shadow-lg shadow-brand-900/30'
                   : 'premium-card prose prose-invert max-w-none prose-p:my-1 prose-headings:my-2 prose-headings:text-white prose-table:text-sm'

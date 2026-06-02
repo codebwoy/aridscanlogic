@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { CheckCircle, Clock, XCircle } from 'lucide-react'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { getContractAudit } from '@/lib/contractsafe/auditLog'
 
 const STATUS_ICON = {
@@ -15,7 +15,7 @@ export default function SigningAudit({ contractId }) {
 
   useEffect(() => {
     if (!contractId) return
-    base44.entities.ContractSigner.list({ contract_id: contractId }).then(setSigners)
+    appApi.entities.ContractSigner.list({ contract_id: contractId }).then(setSigners)
   }, [contractId])
 
   return (

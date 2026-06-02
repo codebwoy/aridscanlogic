@@ -2,12 +2,13 @@ import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Scan, Star, FolderOpen, Plus, Search, Trash2, CheckSquare, Square, FileDown, Archive } from 'lucide-react'
 import { toast } from 'sonner'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import ScannerFlow from '@/components/scanner/ScannerFlow'
 import DocumentDetail from '@/components/scanner/DocumentDetail'
 import EmptyState from '@/components/shared/EmptyState'
 import { exportDocumentPdf, exportDocumentsZip } from '@/lib/docs/export'
 import { createDraftFromScan } from '@/lib/docdraft/fromScan'
+import ModuleGuideBanner from '@/components/guide/ModuleGuideBanner'
 
 const FOLDERS = ['Inbox', 'Receipts', 'Contracts', 'Archive']
 
@@ -24,7 +25,7 @@ export default function DocsPage({ onOpenTaxVault, onOpenDocDraft }) {
 
   const loadDocs = async () => {
     try {
-      setDocuments(await base44.entities.Document.list())
+      setDocuments(await appApi.entities.Document.list())
     } catch {
       toast.error('Dokumente konnten nicht geladen werden')
     } finally {
@@ -54,7 +55,7 @@ export default function DocsPage({ onOpenTaxVault, onOpenDocDraft }) {
 
   const bulkDelete = async () => {
     if (!selected.size || !window.confirm(`Delete ${selected.size} documents?`)) return
-    for (const id of selected) await base44.entities.Document.delete(id)
+    for (const id of selected) await appApi.entities.Document.delete(id)
     setSelected(new Set())
     setSelectMode(false)
     loadDocs()
@@ -73,14 +74,14 @@ export default function DocsPage({ onOpenTaxVault, onOpenDocDraft }) {
   }
 
   const moveFolder = async (doc, newFolder) => {
-    await base44.entities.Document.update(doc.id, { folder: newFolder })
+    await appApi.entities.Document.update(doc.id, { folder: newFolder })
     loadDocs()
     toast.success(`Moved to ${newFolder}`)
   }
 
   const sendToTaxVault = async (doc) => {
     try {
-      await base44.entities.Receipt.create({
+      await appApi.entities.Receipt.create({
         vendor_name: doc.title || 'From scan',
         purchase_date: new Date().toISOString().slice(0, 10),
         total_amount: 0,
@@ -141,13 +142,15 @@ export default function DocsPage({ onOpenTaxVault, onOpenDocDraft }) {
   }
 
   return (
-    <div className="px-4 pb-4">
+    <div className="w-full">
       <header className="safe-top mb-4">
-        <h1 className="bg-gradient-to-r from-white via-brand-100 to-slate-400 bg-clip-text text-2xl font-bold text-transparent">
+        <h1 className="bg-gradient-to-r from-white via-brand-100 to-slate-400 bg-clip-text text-xl font-bold text-transparent sm:text-2xl lg:text-3xl">
           ScanLogic AI
         </h1>
         <p className="text-sm text-slate-400">Multi-page scan · OCR · Search · Folders · Export</p>
       </header>
+
+      <ModuleGuideBanner moduleId="docs" title="Docs" />
 
       <div className="relative mb-3">
         <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
@@ -213,7 +216,7 @@ export default function DocsPage({ onOpenTaxVault, onOpenDocDraft }) {
           }
         />
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3 md:max-w-none">
           {filtered.map((doc) => (
             <div key={doc.id} className="flex gap-2">
               {selectMode && (

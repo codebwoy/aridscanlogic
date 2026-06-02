@@ -1,4 +1,4 @@
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { loadTaxVaultSettings } from './profile'
 
 const LAST_CHECK_KEY = 'taxvault_last_reminder_check'
@@ -20,7 +20,7 @@ export async function checkRecurringReminders() {
   }
   if (Notification.permission !== 'granted') return
 
-  const receipts = await base44.entities.Receipt.list()
+  const receipts = await appApi.entities.Receipt.list()
   const due = receipts.filter((r) => {
     if (!r.is_recurring) return false
     const days = INTERVAL_DAYS[r.recurring_interval] || 30

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { dataUrlToJpegFile } from '@/lib/imageProcessing'
 import { loadTaxVaultSettings } from '@/lib/taxvault/profile'
 import TaxVaultCamera from '@/components/taxvault/TaxVaultCamera'
@@ -21,7 +21,7 @@ export default function ReceiptScanFlow({ onClose, onSaved }) {
     }
     setProcessing(true)
     try {
-      const ocr = await base44.integrations.Core.InvokeLLM({
+      const ocr = await appApi.integrations.Core.InvokeLLM({
         prompt:
           'Extract from this receipt: vendor/store name, purchase date (YYYY-MM-DD), total amount paid, VAT/tax amount if shown, currency code (EUR/USD/GBP/CHF), best matching expense category from: Office Supplies, Equipment, Software, Travel, Food & Entertainment, Marketing, Professional Services, Rent, Education, Insurance, Bank, Other.',
         file_urls: [fileUrl],
@@ -60,7 +60,7 @@ export default function ReceiptScanFlow({ onClose, onSaved }) {
   const handleCapture = async (dataUrl) => {
     try {
       const file = await dataUrlToJpegFile(dataUrl, 'receipt.jpg')
-      const { file_url } = await base44.integrations.Core.UploadFile({ file })
+      const { file_url } = await appApi.integrations.Core.UploadFile({ file })
       setImageUrl(file_url)
       setStep('processing')
       await runOcr(file_url)

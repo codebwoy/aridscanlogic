@@ -7,8 +7,8 @@ Mobile-optimized business productivity workspace combining document scanning, Ge
 ### Scan pipeline
 1. **Capture/Upload** — JPEG `DataURL` / `Blob` from camera canvas or file input
 2. **Crop & optimize** — Canvas filters: grayscale `0.2126R+0.7152G+0.0722B`, high-contrast luminance normalization + binarization, magic-color edge sharpen + text saturation
-3. **Upload** — `dataUrl → File(image/jpeg)` → `base44.integrations.Core.UploadFile({ file })`
-4. **AI** — Page URLs → `InvokeLLM` with `response_json_schema` (OCR, document type, markdown)
+3. **Upload** — `dataUrl → File(image/jpeg)` → local data URL storage
+4. **AI** — Page URLs → Anthropic Claude with `response_json_schema` (OCR, document type, markdown)
 
 ### DocDraft
 - `is_kleinunternehmer` → 0 % VAT + §19 UStG footnote on UI/PDF
@@ -46,11 +46,25 @@ Mobile-optimized business productivity workspace combining document scanning, Ge
 ```bash
 npm install
 cp .env.example .env
-# Optional: set VITE_BASE44_API_URL, VITE_BASE44_APP_ID, VITE_BASE44_API_KEY
+# Required for live AI: ANTHROPIC_API_KEY=sk-ant-...
 npm run dev
 ```
 
-Without Base44 credentials, the app runs in **demo mode** using `localStorage` for entity CRUD and simulated LLM responses.
+**Restart the dev server** after changing `.env`.
+
+### AI (Anthropic Claude)
+
+Set `ANTHROPIC_API_KEY` in `.env` (see `.env.example`). The dev/preview server proxies Claude via `/api/llm` so the key **never** ships to the browser. See [SECURITY.md](./SECURITY.md). When configured, Claude powers:
+
+- **Herr Müller** — full system prompt + multi-turn chat (not demo stubs)
+- **Document scan OCR** — vision + structured JSON
+- **Tax Vault receipt OCR** — vendor, amounts, category
+- **BizStart registration chat**
+- **Background removal** guidance (vision)
+
+Priority: **Anthropic Claude** → demo LLM stubs.
+
+All data (documents, receipts, contracts, etc.) is stored in **browser localStorage**.
 
 ## Project Structure
 
@@ -66,7 +80,7 @@ src/
 │   ├── docdraft/
 │   └── contractsafe/
 └── lib/
-    ├── base44.js    # SDK client + demo fallback
+    ├── appApi.js    # localStorage entities + LLM + file upload
     ├── schemas.js   # Entity definitions
     └── ...
 ```

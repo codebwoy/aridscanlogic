@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import AppShell from '@/components/layout/AppShell'
 import ScanVaultTabBar from '@/components/scanvault/ScanVaultTabBar'
 import ScanTab from './ScanTab'
 import DocumentsTab from './DocumentsTab'
@@ -13,10 +14,8 @@ import SearchResults from './SearchResults'
 import { getSessionUser } from '@/lib/scanvault/store'
 import { canAddScan } from '@/lib/scanvault/limits'
 
-export default function ScanVaultApp({ onOpenBusinessSuite, user: userProp, setUser: setUserProp }) {
-  const [userLocal, setUserLocal] = useState(getSessionUser())
-  const user = userProp ?? userLocal
-  const setUser = setUserProp ?? setUserLocal
+export default function ScanVaultApp({ onOpenBusinessSuite }) {
+  const [user, setUser] = useState(getSessionUser())
   const [tab, setTab] = useState('scan')
   const [scanning, setScanning] = useState(false)
   const [viewDoc, setViewDoc] = useState(null)
@@ -100,63 +99,64 @@ export default function ScanVaultApp({ onOpenBusinessSuite, user: userProp, setU
         onBack={() => setViewDoc(null)}
         onExport={(d) => setExportDoc(d)}
         onDelete={() => setViewDoc(null)}
-        onUpdated={(d) => setViewDoc(d)}
       />
     )
   }
 
   return (
-    <div className="scanvault-shell flex min-h-full flex-col bg-[#0f0f0f] text-white">
-      <main className="mx-auto w-full max-w-lg flex-1 overflow-y-auto pb-24">
-        {folderFilter ? (
-          <div className="px-4 pb-4">
-            <button
-              type="button"
-              onClick={() => setFolderFilter(null)}
-              className="safe-top mb-3 text-sm text-[#007AFF]"
-            >
-              ← Folders
-            </button>
-            <h2 className="mb-4 text-xl font-bold">
-              {folderFilter.emoji} {folderFilter.name}
-            </h2>
+    <AppShell
+      variant="scanvault"
+      nav={<ScanVaultTabBar activeTab={tab} onTabChange={setTab} />}
+    >
+      {folderFilter ? (
+        <>
+          <button
+            type="button"
+            onClick={() => setFolderFilter(null)}
+            className="safe-top mb-3 text-sm text-[#007AFF]"
+          >
+            ← Folders
+          </button>
+          <h2 className="mb-4 text-xl font-bold sm:text-2xl">
+            {folderFilter.emoji} {folderFilter.name}
+          </h2>
+          <DocumentsTab
+            folderId={folderFilter.id}
+            user={user}
+            onOpenDoc={setViewDoc}
+            onSearch={setSearchQuery}
+            onUpgrade={() => setShowPremium(true)}
+          />
+        </>
+      ) : (
+        <>
+          {tab === 'scan' && <ScanTab user={user} onStartScan={startScan} />}
+          {tab === 'documents' && (
             <DocumentsTab
-              folderId={folderFilter.id}
+              user={user}
               onOpenDoc={setViewDoc}
               onSearch={setSearchQuery}
+              onUpgrade={() => setShowPremium(true)}
             />
-          </div>
-        ) : (
-          <>
-            {tab === 'scan' && <ScanTab user={user} onStartScan={startScan} />}
-            {tab === 'documents' && (
-              <DocumentsTab
-                user={user}
-                onOpenDoc={setViewDoc}
-                onSearch={setSearchQuery}
-                onUpgrade={() => setShowPremium(true)}
-              />
-            )}
-            {tab === 'folders' && (
-              <FoldersTab
-                user={user}
-                onOpenFolder={setFolderFilter}
-                onUpgrade={() => setShowPremium(true)}
-              />
-            )}
-            {tab === 'settings' && (
-              <ScanVaultSettings
-                user={user}
-                onProfile={() => setShowProfile(true)}
-                onUpgrade={() => setShowPremium(true)}
-                onLogout={() => window.location.reload()}
-                onOpenBusinessSuite={onOpenBusinessSuite}
-              />
-            )}
-          </>
-        )}
-      </main>
-      {!folderFilter && <ScanVaultTabBar activeTab={tab} onTabChange={setTab} />}
-    </div>
+          )}
+          {tab === 'folders' && (
+            <FoldersTab
+              user={user}
+              onOpenFolder={setFolderFilter}
+              onUpgrade={() => setShowPremium(true)}
+            />
+          )}
+          {tab === 'settings' && (
+            <ScanVaultSettings
+              user={user}
+              onProfile={() => setShowProfile(true)}
+              onUpgrade={() => setShowPremium(true)}
+              onLogout={() => window.location.reload()}
+              onOpenBusinessSuite={onOpenBusinessSuite}
+            />
+          )}
+        </>
+      )}
+    </AppShell>
   )
 }

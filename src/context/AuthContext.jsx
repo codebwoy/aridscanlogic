@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 
 const AuthContext = createContext(null)
 
@@ -8,7 +8,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    base44.auth
+    appApi.auth
       .getCurrentUser()
       .then(setUser)
       .catch(() => setUser(null))

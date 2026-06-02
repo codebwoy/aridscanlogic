@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ChevronLeft } from 'lucide-react'
 import { toast } from 'sonner'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { getAllCategories } from '@/lib/taxvault/categories'
 import { calcDeductibleAmount } from '@/lib/taxvault/stats'
 import { loadTaxVaultProfile, loadTaxVaultSettings } from '@/lib/taxvault/profile'
@@ -49,7 +49,7 @@ export default function ConfirmReceipt({ draft, imageUrl, onBack, onSaved, manua
         form.expense_type,
         form.business_use_pct
       )
-      await base44.entities.Receipt.create({
+      await appApi.entities.Receipt.create({
         vendor_name: form.vendor_name || 'Unknown',
         purchase_date: form.purchase_date,
         total_amount: total,
@@ -81,7 +81,7 @@ export default function ConfirmReceipt({ draft, imageUrl, onBack, onSaved, manua
   }
 
   return (
-    <div className="px-4 pb-4">
+    <div className="w-full">
       <button type="button" onClick={onBack} className="safe-top mb-3 flex items-center gap-1 text-sm text-slate-400">
         <ChevronLeft className="h-4 w-4" /> Back
       </button>

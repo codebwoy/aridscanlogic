@@ -1,4 +1,4 @@
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { canvasDataUrlToJpegFile, loadImage, luminance } from '@/lib/imageProcessing'
 
 const BG_REMOVAL_PROMPT = `You are an edge-aware document segmentation assistant.
@@ -18,10 +18,10 @@ const BG_SCHEMA = {
 /** LLM edge-aware analysis + canvas white-background composite */
 export async function aiBackgroundRemoval(dataUrl) {
   const file = await canvasDataUrlToJpegFile(dataUrl, 0)
-  const { file_url } = await base44.integrations.Core.UploadFile({ file })
+  const { file_url } = await appApi.integrations.Core.UploadFile({ file })
 
   try {
-    await base44.integrations.Core.InvokeLLM({
+    await appApi.integrations.Core.InvokeLLM({
       prompt: BG_REMOVAL_PROMPT,
       file_urls: [file_url],
       response_json_schema: BG_SCHEMA,

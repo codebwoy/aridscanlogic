@@ -1,13 +1,75 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
+import { llmProxyPlugin } from './server/vite-llm-proxy.js'
 
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+
+  const getApiKey = () => (env.ANTHROPIC_API_KEY || env.VITE_ANTHROPIC_API_KEY || '').trim()
+  const getModel = () =>
+    env.VITE_ANTHROPIC_MODEL || env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514'
+  const getDatabaseUrl = () =>
+    (env.DATABASE_URL || env.SUPABASE_DB_URL || '').trim()
+
+  return {
+    plugins: [
+      react(),
+      tailwindcss(),
+      llmProxyPlugin({ getApiKey, getModel, getDatabaseUrl }),
+      VitePWA({
+        registerType: 'prompt',
+        includeAssets: ['favicon.svg', 'pwa-icon.svg', 'apple-touch-icon.png'],
+        manifest: {
+          name: 'ScanLogic Business Suite',
+          short_name: 'ScanLogic',
+          description:
+            'Document scanning, Tax Vault, DocDraft, contracts, and Herr Müller AI — mobile-first business suite.',
+          theme_color: '#0f172a',
+          background_color: '#0a0f1a',
+          display: 'standalone',
+          orientation: 'portrait-primary',
+          scope: '/',
+          start_url: '/',
+          lang: 'de',
+          categories: ['business', 'finance', 'productivity'],
+          icons: [
+            {
+              src: 'pwa-192x192.png',
+              sizes: '192x192',
+              type: 'image/png',
+            },
+            {
+              src: 'pwa-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+            },
+            {
+              src: 'pwa-512x512-maskable.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'maskable',
+            },
+          ],
+        },
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+          navigateFallback: '/index.html',
+          maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        },
+        // PWA service worker is built for production; dev mode caused empty dev-dist glob warnings.
+        devOptions: {
+          enabled: false,
+          type: 'module',
+        },
+      }),
+    ],
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+      },
     },
-  },
+  }
 })

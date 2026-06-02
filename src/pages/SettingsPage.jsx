@@ -1,25 +1,83 @@
-import { useState } from 'react'
-import { Crown, User, Database, Info, Receipt, ChevronRight } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
+import { Crown, User, Database, Info, Receipt, ChevronRight, Sparkles, CloudUpload, BookOpen } from 'lucide-react'
+import { useGuide } from '@/context/GuideContext'
+import { checkDbConnected, isDbConnected } from '@/lib/supabase/remoteStore'
+import { pushAllLocalDataToSupabase } from '@/lib/supabase/migrateLocal'
+import { initAppStorage } from '@/lib/appApi'
+import { isAnthropicConfigured, getAnthropicModel, refreshLlmStatus } from '@/lib/anthropic'
 import { useAuth } from '@/context/AuthContext'
 import { usePremium } from '@/context/PremiumContext'
 import TaxVaultSettings from './taxvault/TaxVaultSettings'
+import InstallPwaButton from '@/components/pwa/InstallPwaButton'
 
 export default function SettingsPage({ onOpenScanVault }) {
   const { user } = useAuth()
   const { isPremium, setModalOpen } = usePremium()
   const [taxVaultSettings, setTaxVaultSettings] = useState(false)
+  const [llmReady, setLlmReady] = useState(isAnthropicConfigured())
+  const [dbReady, setDbReady] = useState(isDbConnected())
+  const [syncing, setSyncing] = useState(false)
+  const { openGuide, language } = useGuide()
+
+  useEffect(() => {
+    refreshLlmStatus().then(() => setLlmReady(isAnthropicConfigured()))
+    checkDbConnected().then(() => setDbReady(isDbConnected()))
+  }, [])
+
+  const pushToSupabase = async () => {
+    setSyncing(true)
+    try {
+      await initAppStorage()
+      if (!isDbConnected()) {
+        toast.error('Supabase not connected. Add DATABASE_URL to .env and restart the dev server.')
+        return
+      }
+      const results = await pushAllLocalDataToSupabase()
+      const total = results.reduce((n, r) => n + (r.count || 0), 0)
+      toast.success(`Pushed ${total} records to Supabase`)
+      setDbReady(true)
+    } catch (e) {
+      toast.error(e.message || 'Sync failed')
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   if (taxVaultSettings) {
     return <TaxVaultSettings onBack={() => setTaxVaultSettings(false)} />
   }
 
   return (
-    <div className="px-4 pb-4">
+    <div className="w-full">
       <header className="safe-top mb-6">
         <h1 className="text-2xl font-bold">Einstellungen</h1>
       </header>
 
       <div className="space-y-3">
+        <button
+          type="button"
+          onClick={() => openGuide('docs')}
+          className="flex w-full items-center justify-between rounded-2xl bg-gradient-to-r from-indigo-900/80 via-brand-900/60 to-slate-800 p-4"
+        >
+          <div className="flex items-center gap-3">
+            <BookOpen className="h-7 w-7 text-brand-300" />
+            <div className="text-left">
+              <p className="font-semibold">
+                {language === 'en' ? 'App Guide & AI Tour' : 'App-Guide & KI-Tour'}
+              </p>
+              <p className="text-xs text-slate-400">
+                {language === 'en'
+                  ? 'What Docs, Tax Vault, DocDraft, Contracts & more do'
+                  : 'Was Docs, Tax Vault, DocDraft, Contracts & mehr leisten'}
+              </p>
+            </div>
+          </div>
+          <ChevronRight className="h-5 w-5 text-brand-400" />
+        </button>
+
+        <InstallPwaButton />
+
         <div className="flex items-center gap-4 rounded-2xl bg-slate-800/80 p-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-600/30">
             <User className="h-6 w-6 text-brand-400" />
@@ -80,13 +138,35 @@ export default function SettingsPage({ onOpenScanVault }) {
 
         <div className="rounded-2xl bg-slate-800/60 p-4">
           <div className="flex items-center gap-2 text-sm text-slate-400">
-            <Database className="h-4 w-4" />
-            Base44 SDK
+            <Sparkles className="h-4 w-4" />
+            Anthropic Claude
           </div>
           <p className="mt-2 text-xs text-slate-500">
-            Ohne API-Keys läuft die App im Demo-Modus mit localStorage. Setzen Sie
-            VITE_BASE44_* in .env für Live-Daten.
+            {llmReady
+              ? `Active — ${getAnthropicModel()}. API key stays on the server (not in the browser).`
+              : 'Not configured. Add ANTHROPIC_API_KEY to .env and restart the dev server.'}
           </p>
+        </div>
+
+        <div className="rounded-2xl bg-slate-800/60 p-4">
+          <div className="flex items-center gap-2 text-sm text-slate-400">
+            <Database className="h-4 w-4" />
+            Supabase PostgreSQL
+          </div>
+          <p className="mt-2 text-xs text-slate-500">
+            {dbReady
+              ? 'Connected. New saves go to Supabase (server proxy). Credentials stay in .env only.'
+              : 'Not connected. Set DATABASE_URL in .env and restart npm run dev.'}
+          </p>
+          <button
+            type="button"
+            disabled={syncing}
+            onClick={pushToSupabase}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 py-2.5 text-sm font-medium disabled:opacity-50"
+          >
+            <CloudUpload className="h-4 w-4" />
+            {syncing ? 'Pushing…' : 'Push local data to Supabase'}
+          </button>
         </div>
 
         <div className="flex items-start gap-2 rounded-2xl bg-slate-800/40 p-4 text-xs text-slate-500">

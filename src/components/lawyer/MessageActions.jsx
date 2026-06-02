@@ -1,6 +1,6 @@
 import { Bookmark, Copy, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { addTimelineEvent } from '@/lib/lawyer/caseStore'
 
 /** First line of markdown response → message_title */
@@ -34,7 +34,7 @@ export default function MessageActions({
   const saveInsight = async () => {
     const messageTitle = parseMessageTitle(content)
     try {
-      await base44.entities.SavedLawyerMessage.create({
+      await appApi.entities.SavedLawyerMessage.create({
         conversation_id: conversationId,
         message_content: content,
         message_title: messageTitle,
@@ -62,7 +62,7 @@ export default function MessageActions({
   const hideInsight = async () => {
     const messageTitle = parseMessageTitle(content)
     try {
-      await base44.entities.SavedLawyerMessage.create({
+      await appApi.entities.SavedLawyerMessage.create({
         conversation_id: conversationId,
         message_content: content,
         message_title: messageTitle,

@@ -1,4 +1,4 @@
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { ensureDefaultProfile, saveDocument, reserveDocumentNumber } from './store'
 
 /** Create a draft invoice from a scanned Document entity */
@@ -39,7 +39,7 @@ export async function createDraftFromScan(doc) {
   )
 
   if (doc.pages?.[0]) {
-    await base44.entities.DocDraftDocument.update(saved.id, {
+    await appApi.entities.DocDraftDocument.update(saved.id, {
       attachment_url: doc.pages[0],
     })
   }

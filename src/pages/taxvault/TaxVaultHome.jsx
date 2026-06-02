@@ -22,7 +22,7 @@ import {
   Tooltip,
 } from 'recharts'
 import { toast } from 'sonner'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import PremiumCard from '@/components/shared/PremiumCard'
 import { hasTaxVaultProfile, loadTaxVaultProfile } from '@/lib/taxvault/profile'
 import { computeReceiptStats } from '@/lib/taxvault/stats'
@@ -33,6 +33,7 @@ import ReceiptList from './ReceiptList'
 import ReceiptDetail from './ReceiptDetail'
 import TaxSummaryReport from './TaxSummaryReport'
 import TaxVaultSettings from './TaxVaultSettings'
+import ModuleGuideBanner from '@/components/guide/ModuleGuideBanner'
 import MileageLogger from './MileageLogger'
 import TaxVaultCategoryManager from './TaxVaultCategoryManager'
 import ManualExpenseEntry from './ManualExpenseEntry'
@@ -57,8 +58,8 @@ export default function TaxVaultHome() {
   const load = async () => {
     try {
       const [rcpts, mileage] = await Promise.all([
-        base44.entities.Receipt.list(),
-        base44.entities.MileageLog.list(),
+        appApi.entities.Receipt.list(),
+        appApi.entities.MileageLog.list(),
       ])
       setReceipts(rcpts)
       setMileageLogs(mileage)
@@ -154,7 +155,7 @@ export default function TaxVaultHome() {
 
   if (view === 'mileage') {
     return (
-      <div className="px-4 pb-4">
+      <div className="w-full">
         <button
           type="button"
           onClick={() => setView('home')}
@@ -172,7 +173,7 @@ export default function TaxVaultHome() {
       ? receipts.filter((r) => r.category === listCategoryFilter)
       : receipts
     return (
-      <div className="px-4 pb-4">
+      <div className="w-full">
         <button
           type="button"
           onClick={() => {
@@ -208,10 +209,10 @@ export default function TaxVaultHome() {
   }
 
   return (
-    <div className="px-4 pb-28">
+    <div className="w-full">
       <header className="safe-top mb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Tax Vault</h1>
+          <h1 className="text-xl font-bold sm:text-2xl">Tax Vault</h1>
           <p className="text-sm text-slate-400">{profile.businessName}</p>
         </div>
         <button
@@ -223,6 +224,8 @@ export default function TaxVaultHome() {
           <Settings className="h-5 w-5 text-slate-400" />
         </button>
       </header>
+
+      <ModuleGuideBanner moduleId="tax" title="Tax Vault" />
 
       <div className="mb-4 flex items-center justify-center gap-4">
         <button
@@ -248,7 +251,7 @@ export default function TaxVaultHome() {
           {sym}
           {stats.totalExpenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>
-        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+        <div className="mt-4 grid-stats text-sm">
           <div>
             <p className="text-slate-500">VAT paid</p>
             <p className="font-semibold">

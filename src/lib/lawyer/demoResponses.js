@@ -1,4 +1,4 @@
-/** Rich demo responses when Base44 API is not configured */
+/** Rich demo responses when Anthropic API is not configured */
 
 export function buildMuellerDemoResponse(prompt, userSnippet) {
   const p = prompt.toLowerCase()
@@ -119,5 +119,5 @@ Ich strukturiere Beratung in drei Ebenen: **finanzielle Grundlagen**, **steuerli
 2. Termin Steuerberater
 3. Bei Verträgen: Rechtsanwalt
 
-*Hinweis: Allgemeine Information und Coaching — kein Ersatz für Rechtsanwalt oder Steuerberater. Konfigurieren Sie VITE_BASE44_* für Live-KI-Antworten.*`
+*Hinweis: Allgemeine Information und Coaching — kein Ersatz für Rechtsanwalt oder Steuerberater. Setzen Sie ANTHROPIC_API_KEY in .env für Live-KI-Antworten.*`
 }

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { Search, Eye, EyeOff, Trash2, X, FolderOpen } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import { toast } from 'sonner'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { listCases } from '@/lib/lawyer/caseStore'
 
 export default function LawyerAIArchive({ open, onClose }) {
@@ -16,7 +16,7 @@ export default function LawyerAIArchive({ open, onClose }) {
 
   const load = async () => {
     try {
-      const all = await base44.entities.SavedLawyerMessage.list()
+      const all = await appApi.entities.SavedLawyerMessage.list()
       setItems(all.sort((a, b) => new Date(b.saved_date) - new Date(a.saved_date)))
       setCases(listCases())
     } catch {
@@ -43,7 +43,7 @@ export default function LawyerAIArchive({ open, onClose }) {
 
   const toggleHidden = async (item) => {
     try {
-      await base44.entities.SavedLawyerMessage.update(item.id, {
+      await appApi.entities.SavedLawyerMessage.update(item.id, {
         is_hidden: !item.is_hidden,
       })
       load()
@@ -55,7 +55,7 @@ export default function LawyerAIArchive({ open, onClose }) {
 
   const remove = async (id) => {
     try {
-      await base44.entities.SavedLawyerMessage.delete(id)
+      await appApi.entities.SavedLawyerMessage.delete(id)
       load()
       toast.success('Permanently deleted')
     } catch {

@@ -1,5 +1,5 @@
 import { saveDocument, reserveDocumentNumber, addAuditEntry } from './store'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 
 export async function convertQuoteToInvoice(quote, profile) {
   if (quote.document_type !== 'quote') {
@@ -19,7 +19,7 @@ export async function convertQuoteToInvoice(quote, profile) {
     },
     updatedProfile
   )
-  await base44.entities.DocDraftDocument.update(quote.id, {
+  await appApi.entities.DocDraftDocument.update(quote.id, {
     status: 'accepted',
     converted_to: invoice.id,
   })

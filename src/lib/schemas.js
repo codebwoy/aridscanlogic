@@ -1,4 +1,4 @@
-/** Entity JSON schemas — RLS enforced via created_by_id on the backend */
+/** Entity field shapes — stored in browser localStorage via appApi */
 
 export const ENTITY_NAMES = {
   Document: 'Document',

@@ -14,16 +14,57 @@
   --color-surface: #0a0f1a;
   --color-surface-elevated: #111827;
   --color-surface-card: #1e293b;
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+  --breakpoint-2xl: 96rem;
+}
+
+:root {
+  --nav-mobile-h: 4.75rem;
+  --sidebar-w: 0px;
+  --content-max: 100%;
+}
+
+@media (min-width: 48rem) {
+  :root {
+    --content-max: 42rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  :root {
+    --sidebar-w: 15.5rem;
+    --content-max: 56rem;
+  }
+}
+
+@media (min-width: 80rem) {
+  :root {
+    --content-max: 64rem;
+  }
+}
+
+@media (min-width: 96rem) {
+  :root {
+    --content-max: 72rem;
+  }
 }
 
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
-html,
+html {
+  height: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
 body,
 #root {
-  height: 100%;
+  min-height: 100%;
+  min-height: 100dvh;
   margin: 0;
 }
 
@@ -39,6 +80,107 @@ body {
     radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.15), transparent),
     radial-gradient(ellipse 60% 40% at 100% 50%, rgba(59, 130, 246, 0.08), transparent),
     linear-gradient(165deg, #0a0f1a 0%, #0f172a 50%, #111827 100%);
+}
+
+.scanvault-shell {
+  background: #0f0f0f;
+  color: #ffffff;
+  min-height: 100dvh;
+}
+
+.scanvault-shell .safe-top {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
+/* Mobile-first page padding (use inside scroll areas) */
+.page-content {
+  width: 100%;
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+  padding-bottom: calc(var(--nav-mobile-h) + env(safe-area-inset-bottom) + 1rem);
+}
+
+@media (min-width: 40rem) {
+  .page-content {
+    padding-left: max(1.5rem, env(safe-area-inset-left));
+    padding-right: max(1.5rem, env(safe-area-inset-right));
+  }
+}
+
+@media (min-width: 64rem) {
+  .page-content {
+    padding-bottom: 2rem;
+  }
+}
+
+/* Main scroll region inside responsive shell */
+.app-main {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  padding-bottom: calc(var(--nav-mobile-h) + env(safe-area-inset-bottom));
+  margin-left: 0;
+  transition: margin-left 0.2s ease;
+}
+
+@media (min-width: 64rem) {
+  .app-main {
+    margin-left: var(--sidebar-w);
+    padding-bottom: 0;
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+.app-main-scroll {
+  height: 100%;
+  min-height: calc(100dvh - var(--nav-mobile-h) - env(safe-area-inset-bottom));
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (min-width: 64rem) {
+  .app-main-scroll {
+    min-height: 100dvh;
+  }
+}
+
+.app-main-inner {
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  max-width: var(--content-max);
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+  padding-top: 0.5rem;
+  padding-bottom: 1.5rem;
+}
+
+@media (min-width: 40rem) {
+  .app-main-inner {
+    padding-left: max(1.5rem, env(safe-area-inset-left));
+    padding-right: max(1.5rem, env(safe-area-inset-right));
+    padding-top: 1rem;
+    padding-bottom: 2rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .app-main-inner {
+    padding-left: 2rem;
+    padding-right: 2rem;
+    padding-top: 1.25rem;
+  }
+}
+
+.app-panel-full {
+  min-height: calc(100dvh - var(--nav-mobile-h) - env(safe-area-inset-bottom) - 2rem);
+}
+
+@media (min-width: 64rem) {
+  .app-panel-full {
+    min-height: calc(100dvh - 4rem);
+  }
 }
 
 .premium-card {
@@ -79,18 +221,41 @@ body {
   scrollbar-width: none;
 }
 
-.scanvault-shell {
-  background: #0f0f0f;
-  color: #ffffff;
-  min-height: 100%;
-}
-
-.scanvault-shell .safe-top {
-  padding-top: max(0.75rem, env(safe-area-inset-top));
-}
-
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* Responsive grids — mobile-first */
+.grid-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 40rem) {
+  .grid-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .grid-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.grid-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+@media (min-width: 48rem) {
+  .grid-stats {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+  }
 }
 
 @keyframes pulse-ring {

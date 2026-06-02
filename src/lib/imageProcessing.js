@@ -134,7 +134,7 @@ export function perspectiveCrop(imageSrc, corners, width = 800, height = 1100) {
   })
 }
 
-/** DataURL (JPEG) → Blob → File for base44.integrations.Core.UploadFile({ file }) */
+/** DataURL (JPEG) → Blob → File for appApi.integrations.Core.UploadFile({ file }) */
 export async function dataUrlToJpegFile(dataUrl, filename) {
   const res = await fetch(dataUrl)
   const blob = await res.blob()

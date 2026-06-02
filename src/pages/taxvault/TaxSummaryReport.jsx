@@ -20,7 +20,7 @@ export default function TaxSummaryReport({ receipts, mileageLogs = [], taxYear, 
   const sym = profile.homeCurrency === 'EUR' ? '€' : profile.homeCurrency
 
   return (
-    <div className="px-4 pb-4">
+    <div className="w-full">
       <button type="button" onClick={onBack} className="safe-top mb-3 flex items-center gap-1 text-sm text-slate-400">
         <ChevronLeft className="h-4 w-4" /> Back
       </button>

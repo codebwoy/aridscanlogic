@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Search, ChevronRight, CheckSquare, Square, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { getCategoryByName } from '@/lib/taxvault/categories'
 import { filterByTaxYear } from '@/lib/taxvault/stats'
 import { loadTaxVaultProfile } from '@/lib/taxvault/profile'
@@ -71,7 +71,7 @@ export default function ReceiptList({ receipts, taxYear, onSelect, onRefresh }) 
     if (!window.confirm(`Delete ${selected.size} receipts permanently?`)) return
     try {
       for (const id of selected) {
-        await base44.entities.Receipt.delete(id)
+        await appApi.entities.Receipt.delete(id)
       }
       toast.success('Deleted')
       setSelected(new Set())
@@ -87,7 +87,7 @@ export default function ReceiptList({ receipts, taxYear, onSelect, onRefresh }) 
     if (!y || !selected.size) return
     try {
       for (const id of selected) {
-        await base44.entities.Receipt.update(id, { tax_year: y })
+        await appApi.entities.Receipt.update(id, { tax_year: y })
       }
       toast.success(`Moved ${selected.size} to tax year ${y}`)
       setSelected(new Set())

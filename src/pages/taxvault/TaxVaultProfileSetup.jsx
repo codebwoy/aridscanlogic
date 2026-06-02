@@ -55,7 +55,7 @@ export default function TaxVaultProfileSetup({ onComplete }) {
   )
 
   return (
-    <div className="px-4 pb-4">
+    <div className="w-full">
       <header className="safe-top mb-4">
         <h1 className="text-2xl font-bold">Tax Vault Setup</h1>
         <p className="text-sm text-slate-400">Business profile for reports & exports</p>

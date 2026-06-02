@@ -38,7 +38,7 @@ export default function FoldersTab({ user, onOpenFolder, onUpgrade }) {
   }
 
   return (
-    <div className="px-4 pb-4">
+    <div className="w-full">
       <div className="safe-top mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Folders</h1>
         <button

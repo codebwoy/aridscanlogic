@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Car, Plus, Navigation } from 'lucide-react'
 import { toast } from 'sonner'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { loadTaxVaultSettings } from '@/lib/taxvault/profile'
 import { createGpsTracker } from '@/lib/taxvault/mileageGps'
 
@@ -20,7 +20,7 @@ export default function MileageLogger({ onChanged }) {
 
   const load = async () => {
     try {
-      setLogs(await base44.entities.MileageLog.list())
+      setLogs(await appApi.entities.MileageLog.list())
     } catch {
       toast.error('Fahrten konnten nicht geladen werden')
     }
@@ -39,7 +39,7 @@ export default function MileageLogger({ onChanged }) {
     }
     try {
       const deductible = km * rate
-      await base44.entities.MileageLog.create({
+      await appApi.entities.MileageLog.create({
         ...form,
         distance_km: km,
         rate_per_km: rate,

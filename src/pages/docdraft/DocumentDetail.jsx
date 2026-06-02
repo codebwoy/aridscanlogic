@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { CheckCircle, Clock, FileDown, Send, ArrowRightLeft } from 'lucide-react'
 import { toast } from 'sonner'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { getAuditLog, addPayment, getTotalPaid, loadPayments } from '@/lib/docdraft/store'
 import { convertQuoteToInvoice } from '@/lib/docdraft/convertQuote'
 import { generateInvoicePdf } from '@/lib/pdfUtils'
@@ -23,7 +23,7 @@ export default function DocumentDetail({ doc, profile, onBack, onUpdated, onSend
       paymentDate: new Date().toISOString().slice(0, 10),
       paymentMethod: 'bank_transfer',
     })
-    await base44.entities.DocDraftDocument.update(doc.id, {
+    await appApi.entities.DocDraftDocument.update(doc.id, {
       status: 'paid',
       paid_at: new Date().toISOString(),
     })
@@ -58,7 +58,7 @@ export default function DocumentDetail({ doc, profile, onBack, onUpdated, onSend
   }
 
   return (
-    <div className="px-4 pb-4">
+    <div className="w-full">
       <button type="button" onClick={onBack} className="safe-top mb-4 text-sm text-slate-400">
         ← Back
       </button>

@@ -1,6 +1,6 @@
 import { Mail, MessageCircle, Link2, Download, Printer } from 'lucide-react'
 import { toast } from 'sonner'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { addAuditEntry } from '@/lib/docdraft/store'
 import { generateInvoicePdf } from '@/lib/pdfUtils'
 
@@ -11,7 +11,7 @@ export default function SendDocumentScreen({ doc, profile, client, onBack, onSen
   )
 
   const markSent = async (channel) => {
-    await base44.entities.DocDraftDocument.update(doc.id, {
+    await appApi.entities.DocDraftDocument.update(doc.id, {
       status: doc.status === 'draft' ? 'sent' : doc.status,
       sent_at: new Date().toISOString(),
     })
@@ -59,7 +59,7 @@ export default function SendDocumentScreen({ doc, profile, client, onBack, onSen
   ]
 
   return (
-    <div className="px-4 pb-4">
+    <div className="w-full">
       <button type="button" onClick={onBack} className="safe-top mb-4 text-sm text-slate-400">
         ← Back
       </button>

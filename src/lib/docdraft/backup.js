@@ -1,5 +1,5 @@
 import JSZip from 'jszip'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import {
   loadProfiles,
   loadDocuments,
@@ -49,8 +49,8 @@ export async function importDocDraftBackup(file) {
   payload.profiles?.forEach((p) => saveProfile(p))
   if (payload.activeProfileId) setActiveProfileId(payload.activeProfileId)
   for (const d of payload.documents || []) {
-    if (d.id) await base44.entities.DocDraftDocument.update(d.id, d)
-    else await base44.entities.DocDraftDocument.create(d)
+    if (d.id) await appApi.entities.DocDraftDocument.update(d.id, d)
+    else await appApi.entities.DocDraftDocument.create(d)
   }
   return payload.documents?.length || 0
 }

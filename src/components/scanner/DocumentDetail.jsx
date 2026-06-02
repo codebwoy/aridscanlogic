@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ChevronLeft, Star, Trash2, RefreshCw, Receipt, FilePenLine, FileDown, FolderInput } from 'lucide-react'
 import { toast } from 'sonner'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { analyzeScannedDocument } from '@/lib/scanPipeline'
 import ResultsView from './ResultsView'
 
@@ -23,19 +23,19 @@ export default function DocumentDetail({
   const pages = doc.pages || []
 
   const saveTitle = async () => {
-    await base44.entities.Document.update(doc.id, { title })
+    await appApi.entities.Document.update(doc.id, { title })
     toast.success('Saved')
     onUpdated?.()
   }
 
   const toggleStar = async () => {
-    await base44.entities.Document.update(doc.id, { is_starred: !doc.is_starred })
+    await appApi.entities.Document.update(doc.id, { is_starred: !doc.is_starred })
     onUpdated?.()
   }
 
   const remove = async () => {
     if (!window.confirm('Delete document?')) return
-    await base44.entities.Document.delete(doc.id)
+    await appApi.entities.Document.delete(doc.id)
     toast.success('Deleted')
     onBack?.()
     onUpdated?.()
@@ -48,7 +48,7 @@ export default function DocumentDetail({
       const analysis = await analyzeScannedDocument(pages)
       setOcrText(analysis.ocr_text)
       setMarkdown(analysis.markdown_result)
-      await base44.entities.Document.update(doc.id, {
+      await appApi.entities.Document.update(doc.id, {
         ocr_text: analysis.ocr_text,
         markdown_result: analysis.markdown_result,
         document_type: analysis.document_type,
@@ -64,7 +64,7 @@ export default function DocumentDetail({
   }
 
   return (
-    <div className="px-4 pb-4">
+    <div className="w-full">
       <button type="button" onClick={onBack} className="safe-top mb-3 flex items-center gap-1 text-sm text-slate-400">
         <ChevronLeft className="h-4 w-4" /> Back
       </button>

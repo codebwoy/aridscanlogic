@@ -5,6 +5,13 @@ import App from './App.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { PremiumProvider } from './context/PremiumContext.jsx'
 import './index.css'
+import { initPwa } from './lib/pwa/register'
+import { ensureLlmStatus } from './lib/anthropic'
+import { initAppStorage } from './lib/appApi'
+
+initPwa()
+ensureLlmStatus()
+initAppStorage()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

@@ -29,16 +29,16 @@ export function loadTaxVaultProfile() {
   }
 }
 
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 
 export async function syncTaxVaultProfileToCloud(profile) {
   try {
-    const existing = await base44.entities.BusinessProfile.list({ module: 'taxvault' })
+    const existing = await appApi.entities.BusinessProfile.list({ module: 'taxvault' })
     const payload = { ...profile, module: 'taxvault' }
     if (existing[0]?.id) {
-      await base44.entities.BusinessProfile.update(existing[0].id, payload)
+      await appApi.entities.BusinessProfile.update(existing[0].id, payload)
     } else {
-      await base44.entities.BusinessProfile.create(payload)
+      await appApi.entities.BusinessProfile.create(payload)
     }
   } catch {
     /* demo / offline — local profile still saved */

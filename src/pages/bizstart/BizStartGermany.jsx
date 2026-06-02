@@ -110,7 +110,7 @@ export default function BizStartGermany({ onExit, onComplete }) {
 
   if (screen === 'structure') {
     return (
-      <div className="px-4 pb-24">
+      <div className="w-full">
         <NavBack onBack={() => setScreen('home')} />
         <StructureSelector
           lang={lang}
@@ -128,7 +128,7 @@ export default function BizStartGermany({ onExit, onComplete }) {
 
   if (screen === 'info') {
     return (
-      <div className="px-4 pb-24">
+      <div className="w-full">
         <NavBack onBack={() => setScreen('home')} />
         <InfoCollector
           lang={lang}
@@ -161,7 +161,7 @@ export default function BizStartGermany({ onExit, onComplete }) {
   if (stepScreens[screen]) {
     const Step = stepScreens[screen]
     return (
-      <div className="px-4 pb-24">
+      <div className="w-full">
         <NavBack onBack={() => setScreen('home')} />
         <Step
           lang={lang}
@@ -178,7 +178,7 @@ export default function BizStartGermany({ onExit, onComplete }) {
   }
 
   return (
-    <div className="px-4 pb-24">
+    <div className="w-full">
       {onExit && (
         <button type="button" onClick={onExit} className="safe-top mb-2 flex items-center gap-2 text-sm text-slate-400">
           <ArrowLeft className="h-4 w-4" /> Tax Vault

@@ -51,7 +51,7 @@ export default function BusinessProfileManager({ onBack, onChanged }) {
 
   if (editing) {
     return (
-      <div className="px-4 pb-4">
+      <div className="w-full">
         <button type="button" onClick={() => setEditing(null)} className="safe-top mb-4 text-sm text-slate-400">
           ← Back
         </button>
@@ -145,7 +145,7 @@ export default function BusinessProfileManager({ onBack, onChanged }) {
   }
 
   return (
-    <div className="px-4 pb-4">
+    <div className="w-full">
       <button type="button" onClick={onBack} className="safe-top mb-4 text-sm text-slate-400">
         ← Back
       </button>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { CONTRACT_TEMPLATES } from '@/lib/contractTemplates'
 
 export default function ContractDesigner({ contract, onSaved, onCancel, initialTemplate }) {
@@ -44,13 +44,13 @@ export default function ContractDesigner({ contract, onSaved, onCancel, initialT
   const save = async () => {
     try {
       const saved = contract?.id
-        ? await base44.entities.Contract.update(contract.id, { ...form, status: 'sent' })
-        : await base44.entities.Contract.create({ ...form, status: 'sent' })
+        ? await appApi.entities.Contract.update(contract.id, { ...form, status: 'sent' })
+        : await appApi.entities.Contract.create({ ...form, status: 'sent' })
 
       const validSigners = signers.filter((x) => x.signer_email)
       for (let i = 0; i < validSigners.length; i++) {
         const s = validSigners[i]
-        await base44.entities.ContractSigner.create({
+        await appApi.entities.ContractSigner.create({
           contract_id: saved.id,
           signer_name: s.signer_name,
           signer_email: s.signer_email,

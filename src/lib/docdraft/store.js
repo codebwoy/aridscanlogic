@@ -1,9 +1,9 @@
 /**
  * DocDraft data layer — business profiles, clients, products, documents, payments, audit.
- * Persists to localStorage; syncs documents to base44.entities.DocDraftDocument for Tax Vault.
+ * Persists to localStorage; syncs documents to appApi.entities.DocDraftDocument for Tax Vault.
  */
 
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { DEFAULT_PROFILE } from './constants'
 import { consumeNextNumber } from './numbering'
 
@@ -176,7 +176,7 @@ export function deleteProduct(profileId, productId) {
 
 // ——— Documents ———
 export async function loadDocuments(profileId) {
-  const all = await base44.entities.DocDraftDocument.list()
+  const all = await appApi.entities.DocDraftDocument.list()
   return all.filter((d) => !d.profile_id || d.profile_id === profileId)
 }
 
@@ -204,10 +204,10 @@ export async function saveDocument(doc, profile) {
   }
   let saved
   if (doc.id) {
-    saved = await base44.entities.DocDraftDocument.update(doc.id, payload)
+    saved = await appApi.entities.DocDraftDocument.update(doc.id, payload)
     addAuditEntry(doc.id, 'updated', doc.status)
   } else {
-    saved = await base44.entities.DocDraftDocument.create(payload)
+    saved = await appApi.entities.DocDraftDocument.create(payload)
     addAuditEntry(saved.id, 'created', doc.document_type)
   }
   return saved

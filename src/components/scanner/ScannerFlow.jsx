@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { uploadScanPages, analyzeScannedDocument } from '@/lib/scanPipeline'
 import CameraCapture from './CameraCapture'
 import PerspectiveCrop from './PerspectiveCrop'
@@ -53,7 +53,7 @@ export default function ScannerFlow({ onBack, onSaved }) {
       setTitle(analysis.title)
       setStep('results')
 
-      const doc = await base44.entities.Document.create({
+      const doc = await appApi.entities.Document.create({
         title: analysis.title,
         document_type: analysis.document_type,
         ocr_text: analysis.ocr_text,

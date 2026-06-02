@@ -6,7 +6,7 @@ export default function ScanTab({ user, onStartScan }) {
   const cloud = canCloudSync(user)
 
   return (
-    <div className="flex flex-col items-center px-4 pt-8">
+    <div className="flex flex-col items-center pt-6 sm:pt-10 lg:pt-16">
       <div className="mb-6 flex w-full items-center justify-between">
         <h1 className="text-2xl font-bold">ScanVault</h1>
         <div className="flex items-center gap-1 text-xs text-slate-500">
@@ -29,7 +29,7 @@ export default function ScanTab({ user, onStartScan }) {
       <button
         type="button"
         onClick={onStartScan}
-        className="flex min-h-[120px] w-full max-w-sm flex-col items-center justify-center gap-3 rounded-3xl bg-[#007AFF] py-8 shadow-lg shadow-[#007AFF]/30"
+        className="flex min-h-[120px] w-full max-w-sm flex-col items-center justify-center gap-3 rounded-3xl bg-[#007AFF] py-8 shadow-lg shadow-[#007AFF]/30 sm:min-h-[140px] md:max-w-md lg:max-w-lg"
       >
         <ScanLine className="h-14 w-14" />
         <span className="text-lg font-semibold">Tap to Scan</span>

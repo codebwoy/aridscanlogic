@@ -1,4 +1,4 @@
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { loadTaxVaultProfile, loadTaxVaultSettings } from './profile'
 
 const BACKUP_VERSION = 1
@@ -8,8 +8,8 @@ export async function exportEncryptedBackup(passphrase) {
     throw new Error('Passphrase must be at least 8 characters')
   }
   const [receipts, mileage] = await Promise.all([
-    base44.entities.Receipt.list(),
-    base44.entities.MileageLog.list(),
+    appApi.entities.Receipt.list(),
+    appApi.entities.MileageLog.list(),
   ])
   const payload = JSON.stringify({
     version: BACKUP_VERSION,
@@ -35,11 +35,11 @@ export async function importEncryptedBackup(file, passphrase) {
   const data = JSON.parse(json)
   for (const r of data.receipts || []) {
     const { id, ...rest } = r
-    await base44.entities.Receipt.create(rest)
+    await appApi.entities.Receipt.create(rest)
   }
   for (const m of data.mileage || []) {
     const { id, ...rest } = m
-    await base44.entities.MileageLog.create(rest)
+    await appApi.entities.MileageLog.create(rest)
   }
   if (data.profile) {
     const { saveTaxVaultProfile } = await import('./profile')

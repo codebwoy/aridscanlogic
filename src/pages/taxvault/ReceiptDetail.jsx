@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ChevronLeft, Trash2, Share2, FileDown, Pencil } from 'lucide-react'
 import { toast } from 'sonner'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { loadTaxVaultProfile } from '@/lib/taxvault/profile'
 import { getCategoryByName, getAllCategories } from '@/lib/taxvault/categories'
 import { calcDeductibleAmount } from '@/lib/taxvault/stats'
@@ -22,7 +22,7 @@ export default function ReceiptDetail({ receipt, onBack, onUpdated }) {
         form.expense_type,
         form.business_use_pct ?? 100
       )
-      await base44.entities.Receipt.update(receipt.id, {
+      await appApi.entities.Receipt.update(receipt.id, {
         ...form,
         deductible_amount: deductible,
       })
@@ -37,7 +37,7 @@ export default function ReceiptDetail({ receipt, onBack, onUpdated }) {
   const remove = async () => {
     if (!window.confirm('Delete this receipt permanently? This cannot be undone.')) return
     try {
-      await base44.entities.Receipt.delete(receipt.id)
+      await appApi.entities.Receipt.delete(receipt.id)
       toast.success('Receipt deleted')
       onBack?.()
       onUpdated?.()
@@ -66,7 +66,7 @@ export default function ReceiptDetail({ receipt, onBack, onUpdated }) {
   }
 
   return (
-    <div className="px-4 pb-4">
+    <div className="w-full">
       <button type="button" onClick={onBack} className="safe-top mb-3 flex items-center gap-1 text-sm text-slate-400">
         <ChevronLeft className="h-4 w-4" /> Back
       </button>

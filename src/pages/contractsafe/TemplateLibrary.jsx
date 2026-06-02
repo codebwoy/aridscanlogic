@@ -3,7 +3,7 @@ import { CONTRACT_TEMPLATES } from '@/lib/contractTemplates'
 
 export default function TemplateLibrary({ onBack, onSelect }) {
   return (
-    <div className="px-4 pb-4">
+    <div className="w-full">
       <button type="button" onClick={onBack} className="safe-top mb-3 text-sm text-slate-400">
         ← Back
       </button>

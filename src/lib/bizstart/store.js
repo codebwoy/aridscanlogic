@@ -1,4 +1,4 @@
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { saveProfile, getActiveProfile, ensureDefaultProfile } from '@/lib/docdraft/store'
 
 const FORM_KEY = 'scanlogic_bizstart_form'
@@ -72,7 +72,7 @@ export function addRegistrationDoc(doc) {
 }
 
 export async function loadBusinessRegistration() {
-  const regs = await base44.entities.BusinessRegistration.list()
+  const regs = await appApi.entities.BusinessRegistration.list()
   return regs[0] || null
 }
 
@@ -96,9 +96,9 @@ export async function syncRegistrationToTaxVault(formData, stepStatus) {
 
   let reg
   if (existing?.id) {
-    reg = await base44.entities.BusinessRegistration.update(existing.id, payload)
+    reg = await appApi.entities.BusinessRegistration.update(existing.id, payload)
   } else {
-    reg = await base44.entities.BusinessRegistration.create(payload)
+    reg = await appApi.entities.BusinessRegistration.create(payload)
   }
 
   ensureDefaultProfile()
@@ -134,7 +134,7 @@ export async function syncRegistrationToTaxVault(formData, stepStatus) {
 
 export async function seedPersonalizedDeadlines(formData) {
   const year = new Date().getFullYear()
-  const existing = await base44.entities.TaxDeadline.list()
+  const existing = await appApi.entities.TaxDeadline.list()
   if (existing.length > 5) return existing
 
   const freq = formData.vatFilingFrequency || 'quarterly'
@@ -171,7 +171,7 @@ export async function seedPersonalizedDeadlines(formData) {
   }
 
   for (const d of deadlines) {
-    await base44.entities.TaxDeadline.create(d)
+    await appApi.entities.TaxDeadline.create(d)
   }
-  return base44.entities.TaxDeadline.list()
+  return appApi.entities.TaxDeadline.list()
 }

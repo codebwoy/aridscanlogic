@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
 import { X, FileText } from 'lucide-react'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 
 export default function DocumentPicker({ open, onClose, onSelect, language = 'de' }) {
   const [docs, setDocs] = useState([])
 
   useEffect(() => {
     if (!open) return
-    base44.entities.Document.list().then(setDocs).catch(() => setDocs([]))
+    appApi.entities.Document.list().then(setDocs).catch(() => setDocs([]))
   }, [open])
 
   if (!open) return null
@@ -15,8 +15,8 @@ export default function DocumentPicker({ open, onClose, onSelect, language = 'de
   const withText = docs.filter((d) => (d.ocr_text?.length || 0) > 30)
 
   return (
-    <div className="fixed inset-0 z-[65] flex items-end justify-center bg-black/70 p-4">
-      <div className="max-h-[70vh] w-full max-w-lg overflow-hidden rounded-2xl bg-slate-900">
+    <div className="fixed inset-0 z-[65] flex items-end justify-center bg-black/70 p-4 sm:items-center">
+      <div className="max-h-[70vh] w-full max-w-lg overflow-hidden rounded-2xl bg-slate-900 sm:max-h-[min(80vh,32rem)]">
         <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
           <h3 className="font-semibold">
             {language === 'en' ? 'Attach document' : 'Dokument anhängen'}

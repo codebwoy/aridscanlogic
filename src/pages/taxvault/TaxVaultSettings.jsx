@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ChevronLeft } from 'lucide-react'
 import { toast } from 'sonner'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import {
   loadTaxVaultProfile,
   saveTaxVaultProfile,
@@ -34,9 +34,9 @@ export default function TaxVaultSettings({ onBack }) {
       return
     }
     try {
-      const receipts = await base44.entities.Receipt.list()
+      const receipts = await appApi.entities.Receipt.list()
       for (const r of receipts) {
-        await base44.entities.Receipt.delete(r.id)
+        await appApi.entities.Receipt.delete(r.id)
       }
       toast.success('Tax Vault data cleared')
       setResetConfirm('')
@@ -48,7 +48,7 @@ export default function TaxVaultSettings({ onBack }) {
   const categories = getAllCategories()
 
   return (
-    <div className="px-4 pb-4">
+    <div className="w-full">
       <button type="button" onClick={onBack} className="safe-top mb-3 flex items-center gap-1 text-sm text-slate-400">
         <ChevronLeft className="h-4 w-4" /> Back
       </button>

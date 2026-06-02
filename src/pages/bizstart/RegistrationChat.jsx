@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { X, Send, MessageCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 
 const DISCLAIMER =
   'This guide provides general information only. For your specific legal and tax situation, consult a licensed Steuerberater or Rechtsanwalt in Germany.'
@@ -27,8 +27,8 @@ export default function RegistrationChat({ lang = 'en', open, onClose }) {
     setMessages((m) => [...m, { role: 'user', content: text }])
     setLoading(true)
     try {
-      const res = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a German business registration guide (not a lawyer). Answer in ${lang === 'de' ? 'German' : 'English'}. Be practical. Mention when to consult Steuerberater.\n\nUser: ${text}`,
+      const res = await appApi.integrations.Core.InvokeLLM({
+        prompt: `You are a German business registration guide (BizStart Germany). You are NOT a licensed Rechtsanwalt or Steuerberater. Answer in ${lang === 'de' ? 'German' : 'English'}. Be practical and step-by-step. Cover Gewerbeanmeldung, Finanzamt, USt, Handelsregister, IHK, and Kleinunternehmer §19 UStG when relevant. Always mention when the user should consult a licensed Steuerberater or lawyer.\n\nUser question: ${text}`,
       })
       setMessages((m) => [
         ...m,

@@ -11,6 +11,7 @@ import {
 import { isPremiumUser, canCloudSync } from '@/lib/scanvault/limits'
 import { exportScanVaultBackup, importScanVaultBackup } from '@/lib/scanvault/backup'
 import { syncToCloud, pullFromCloud, getLastSyncTime } from '@/lib/scanvault/cloudSync'
+import InstallPwaButton from '@/components/pwa/InstallPwaButton'
 
 export default function ScanVaultSettings({
   user,
@@ -79,8 +80,12 @@ export default function ScanVaultSettings({
   }
 
   return (
-    <div className="px-4 pb-4">
+    <div className="w-full">
       <h1 className="safe-top mb-4 text-2xl font-bold">Settings</h1>
+
+      <div className="mb-4 [&_button]:bg-white/10 [&_p]:text-white">
+        <InstallPwaButton />
+      </div>
 
       <section className="mb-4 rounded-2xl bg-white/5 p-4">
         <h2 className="mb-3 text-sm font-semibold text-slate-400">Account</h2>

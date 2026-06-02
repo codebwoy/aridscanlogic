@@ -1,4 +1,4 @@
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { canvasDataUrlToJpegFile } from '@/lib/imageProcessing'
 
 export const DOCUMENT_TYPES = [
@@ -36,7 +36,7 @@ export async function uploadScanPages(dataUrlPages) {
   const urls = []
   for (let i = 0; i < dataUrlPages.length; i++) {
     const file = await canvasDataUrlToJpegFile(dataUrlPages[i], i)
-    const result = await base44.integrations.Core.UploadFile({ file })
+    const result = await appApi.integrations.Core.UploadFile({ file })
     urls.push(result.file_url)
   }
   return urls
@@ -55,7 +55,7 @@ Analyze ALL provided scanned page images.
 
 Return structured JSON matching the schema.`
 
-  const res = await base44.integrations.Core.InvokeLLM({
+  const res = await appApi.integrations.Core.InvokeLLM({
     prompt,
     file_urls: pageUrls,
     response_json_schema: SCAN_ANALYSIS_SCHEMA,

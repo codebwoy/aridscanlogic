@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { ArrowLeft, Lock, PenLine } from 'lucide-react'
 import { toast } from 'sonner'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import SignaturePad from '@/components/contractsafe/SignaturePad'
 import { logContractEvent } from '@/lib/contractsafe/auditLog'
 
@@ -12,7 +12,7 @@ export default function SigningFlow({ contract, onBack, onUpdated }) {
 
   const load = async () => {
     try {
-      const all = await base44.entities.ContractSigner.list({ contract_id: contract.id })
+      const all = await appApi.entities.ContractSigner.list({ contract_id: contract.id })
       const sorted = all.sort(
         (a, b) => (a.signing_order_index ?? 0) - (b.signing_order_index ?? 0)
       )
@@ -55,7 +55,7 @@ export default function SigningFlow({ contract, onBack, onUpdated }) {
   const handleSign = async (signatureBase64) => {
     if (!activeSigner) return
     try {
-      await base44.entities.ContractSigner.update(activeSigner.id, {
+      await appApi.entities.ContractSigner.update(activeSigner.id, {
         signing_status: 'signed',
         signature_image_url: signatureBase64,
         signed_at: new Date().toISOString(),
@@ -67,7 +67,7 @@ export default function SigningFlow({ contract, onBack, onUpdated }) {
       })
 
       if (isSequential) {
-        const refreshed = await base44.entities.ContractSigner.list({
+        const refreshed = await appApi.entities.ContractSigner.list({
           contract_id: contract.id,
         })
         const sorted = refreshed.sort(
@@ -77,15 +77,15 @@ export default function SigningFlow({ contract, onBack, onUpdated }) {
           (s) => s.signing_status === 'waiting' || s.signing_status === 'pending'
         )
         if (next && next.signing_status === 'waiting') {
-          await base44.entities.ContractSigner.update(next.id, { signing_status: 'pending' })
+          await appApi.entities.ContractSigner.update(next.id, { signing_status: 'pending' })
         }
       }
 
-      const updated = await base44.entities.ContractSigner.list({ contract_id: contract.id })
+      const updated = await appApi.entities.ContractSigner.list({ contract_id: contract.id })
       const allSigned = updated.every((s) => s.signing_status === 'signed')
       const anySigned = updated.some((s) => s.signing_status === 'signed')
 
-      await base44.entities.Contract.update(contract.id, {
+      await appApi.entities.Contract.update(contract.id, {
         status: allSigned ? 'fully_signed' : anySigned ? 'partially_signed' : 'sent',
       })
 
@@ -100,7 +100,7 @@ export default function SigningFlow({ contract, onBack, onUpdated }) {
 
   if (activeSigner) {
     return (
-      <div className="px-4 pb-4">
+      <div className="w-full">
         <button
           type="button"
           onClick={() => setActiveSigner(null)}
@@ -118,7 +118,7 @@ export default function SigningFlow({ contract, onBack, onUpdated }) {
   }
 
   return (
-    <div className="px-4 pb-4">
+    <div className="w-full">
       <button
         type="button"
         onClick={onBack}

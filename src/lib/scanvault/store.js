@@ -1,3 +1,5 @@
+import { secureId, secureToken, isValidShareToken } from '@/lib/security/random'
+
 const PREFIX = 'scanvault_'
 
 function read(key, fallback) {
@@ -19,7 +21,7 @@ export function writeRawStore(key, value) {
 }
 
 function uid() {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+  return secureId('sv')
 }
 
 export function getSessionUser() {
@@ -131,7 +133,7 @@ export function deleteFolder(id) {
 }
 
 export function createShareLink(documentId, daysValid = 7) {
-  const token = uid()
+  const token = secureToken()
   const link = {
     id: uid(),
     documentId,
@@ -147,6 +149,7 @@ export function createShareLink(documentId, daysValid = 7) {
 }
 
 export function incrementShareView(token) {
+  if (!isValidShareToken(token)) return
   const links = read('shared_links', [])
   const idx = links.findIndex((l) => l.token === token)
   if (idx < 0) return
@@ -155,6 +158,7 @@ export function incrementShareView(token) {
 }
 
 export function getShareByToken(token) {
+  if (!isValidShareToken(token)) return null
   const link = read('shared_links', []).find((l) => l.token === token)
   if (!link) return null
   if (new Date(link.expiresAt) < new Date()) return null

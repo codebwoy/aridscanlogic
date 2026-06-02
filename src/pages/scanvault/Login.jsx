@@ -6,10 +6,10 @@ export default function Login({ onSuccess, onRegister }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault()
     try {
-      onSuccess(loginWithEmail(email, password))
+      onSuccess(await loginWithEmail(email, password))
     } catch {
       toast.error('Invalid email or password')
     }
@@ -17,7 +17,8 @@ export default function Login({ onSuccess, onRegister }) {
 
   return (
     <div className="scanvault-shell flex min-h-full flex-col justify-center bg-[#0f0f0f] px-6 text-white">
-      <h1 className="text-3xl font-bold">ScanVault</h1>
+      <div className="mx-auto w-full max-w-md">
+      <h1 className="text-2xl font-bold sm:text-3xl">ScanVault</h1>
       <p className="mt-1 text-slate-400">Sign in to your account</p>
       <form onSubmit={submit} className="mt-8 space-y-4">
         <input
@@ -53,6 +54,7 @@ export default function Login({ onSuccess, onRegister }) {
           Register
         </button>
       </p>
+      </div>
     </div>
   )
 }

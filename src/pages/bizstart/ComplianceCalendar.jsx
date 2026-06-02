@@ -1,12 +1,12 @@
 import { buildTaxCalendar } from '@/lib/bizstart/taxCalendar'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import { toast } from 'sonner'
 
 export default function ComplianceCalendar({ formData, onNext }) {
   const items = buildTaxCalendar(formData)
 
   const markFiled = async (item) => {
-    await base44.entities.TaxDeadline.create({
+    await appApi.entities.TaxDeadline.create({
       deadline_name: item.name,
       due_date: item.dueDate,
       is_filed: true,

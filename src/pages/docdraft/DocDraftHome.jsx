@@ -31,6 +31,7 @@ import ReportsPage from './ReportsPage'
 import RecurringInvoices from './RecurringInvoices'
 import PaymentDonut from '@/components/docdraft/PaymentDonut'
 import PremiumCard from '@/components/shared/PremiumCard'
+import ModuleGuideBanner from '@/components/guide/ModuleGuideBanner'
 import EmptyState from '@/components/shared/EmptyState'
 
 const QUICK_ACTIONS = [
@@ -88,7 +89,7 @@ export default function DocDraftHome() {
   }
   if (view === 'builder') {
     return (
-      <div className="px-4 pb-4">
+      <div className="w-full">
         <header className="safe-top mb-4">
           <h1 className="text-xl font-bold capitalize">{builderType.replace('_', ' ')}</h1>
         </header>
@@ -145,12 +146,14 @@ export default function DocDraftHome() {
   })
 
   return (
-    <div className="px-4 pb-4">
+    <div className="w-full">
       <header className="safe-top mb-4">
-        <h1 className="bg-gradient-to-r from-white to-slate-400 bg-clip-text text-2xl font-bold text-transparent">
+        <h1 className="bg-gradient-to-r from-white to-slate-400 bg-clip-text text-xl font-bold text-transparent sm:text-2xl">
           DocDraft
         </h1>
       </header>
+
+      <ModuleGuideBanner moduleId="docdraft" title="DocDraft" />
 
       <PremiumCard
         gradient
@@ -172,7 +175,7 @@ export default function DocDraftHome() {
         <ChevronRight className="h-4 w-4 text-slate-500" />
       </PremiumCard>
 
-      <div className="mb-4 grid grid-cols-2 gap-2">
+      <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-2 md:grid-cols-4">
         {QUICK_ACTIONS.map(({ type, label, icon: Icon, color }) => (
           <motion.button
             key={type}

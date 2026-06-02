@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Plus, FileSignature, PenLine, Library, FileDown, XCircle, Search, Copy, Pencil } from 'lucide-react'
 import { toast } from 'sonner'
-import base44 from '@/lib/base44'
+import appApi from '@/lib/appApi'
 import ContractDesigner from './ContractDesigner'
 import SigningFlow from './SigningFlow'
 import SigningAudit from './SigningAudit'
 import TemplateLibrary from './TemplateLibrary'
 import EmptyState from '@/components/shared/EmptyState'
+import ModuleGuideBanner from '@/components/guide/ModuleGuideBanner'
 import { generateSignedContractPdf } from '@/lib/contractsafe/contractPdf'
 import { logContractEvent } from '@/lib/contractsafe/auditLog'
 
@@ -24,7 +25,7 @@ export default function ContractSafeHome() {
 
   const load = async () => {
     try {
-      setContracts(await base44.entities.Contract.list())
+      setContracts(await appApi.entities.Contract.list())
     } catch {
       toast.error('Verträge konnten nicht geladen werden')
     }
@@ -50,7 +51,7 @@ export default function ContractSafeHome() {
 
   const exportPdf = async (c) => {
     try {
-      const signers = await base44.entities.ContractSigner.list({ contract_id: c.id })
+      const signers = await appApi.entities.ContractSigner.list({ contract_id: c.id })
       await generateSignedContractPdf(c, signers)
       toast.success('PDF downloaded')
     } catch {
@@ -60,14 +61,14 @@ export default function ContractSafeHome() {
 
   const voidContract = async (c) => {
     if (!window.confirm('Void this contract?')) return
-    await base44.entities.Contract.update(c.id, { status: 'voided' })
+    await appApi.entities.Contract.update(c.id, { status: 'voided' })
     logContractEvent(c.id, { type: 'voided' })
     load()
     toast.success('Contract voided')
   }
 
   const duplicateContract = async (c) => {
-    const copy = await base44.entities.Contract.create({
+    const copy = await appApi.entities.Contract.create({
       title: `${c.title} (copy)`,
       template_type: c.template_type,
       sections: c.sections,
@@ -105,7 +106,7 @@ export default function ContractSafeHome() {
 
   if (editing !== null) {
     return (
-      <div className="px-4 pb-4">
+      <div className="w-full">
         <header className="safe-top mb-4">
           <h1 className="text-xl font-bold">{editing?.id ? 'Edit contract' : 'Create contract'}</h1>
         </header>
@@ -127,11 +128,13 @@ export default function ContractSafeHome() {
   }
 
   return (
-    <div className="px-4 pb-4">
+    <div className="w-full">
       <header className="safe-top mb-4">
-        <h1 className="text-2xl font-bold">Contract Safe</h1>
+        <h1 className="text-xl font-bold sm:text-2xl">Contract Safe</h1>
         <p className="text-sm text-slate-400">Templates · Signing · Audit · Search</p>
       </header>
+
+      <ModuleGuideBanner moduleId="contracts" title="Contracts" />
 
       <div className="relative mb-3">
         <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
@@ -178,7 +181,7 @@ export default function ContractSafeHome() {
           description="NDA, Freelance, SaaS, Employment — 6 templates available."
         />
       ) : (
-        <div className="space-y-2">
+        <div className="grid-cards">
           {filtered.map((c) => (
             <div key={c.id} className="rounded-xl bg-slate-800/80 p-4">
               <button
