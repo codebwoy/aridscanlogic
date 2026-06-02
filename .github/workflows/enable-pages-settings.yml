@@ -21,14 +21,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh api --method PUT "repos/${GITHUB_REPOSITORY}/pages" \
-            --input - <<'EOF' && echo "enabled=true" >> "$GITHUB_OUTPUT" || \
-          gh api --method POST "repos/${GITHUB_REPOSITORY}/pages" \
-            --input - <<'EOF' && echo "enabled=true" >> "$GITHUB_OUTPUT" || \
-          echo "enabled=false" >> "$GITHUB_OUTPUT"
-          {"build_type":"legacy","source":{"branch":"gh-pages","path":"/"}}
-          EOF
-          {"build_type":"legacy","source":{"branch":"gh-pages","path":"/"}}
+          BODY='{"build_type":"legacy","source":{"branch":"gh-pages","path":"/"}}'
+          if gh api --method PUT "repos/${GITHUB_REPOSITORY}/pages" --input - <<<"$BODY"; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          elif gh api --method POST "repos/${GITHUB_REPOSITORY}/pages" --input - <<<"$BODY"; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Instructions
         run: |
