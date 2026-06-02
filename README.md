@@ -98,8 +98,8 @@ The build generates `public/robots.txt`, `public/sitemap.xml`, and `public/og-im
 
 | Step | Action |
 |------|--------|
-| 1 | Push to `main` — GitHub Actions deploys to Pages (`/.github/workflows/deploy-pages.yml`) |
-| 2 | Repo **Settings → Pages → Build and deployment: GitHub Actions** |
+| 1 | Push to `main` — workflow builds and pushes to the `gh-pages` branch |
+| 2 | **One-time:** [Pages settings](https://github.com/codebwoy/aridscanlogic/settings/pages) → **Build and deployment: Deploy from a branch** → Branch **`gh-pages`** → folder **`/ (root)`** → Save |
 | 3 | Set `VITE_SITE_URL` in `.env` if using a custom domain (re-run `npm run seo:generate`) |
 | 4 | [Google Search Console](https://search.google.com/search-console) → add property → submit sitemap: `https://codebwoy.github.io/aridscanlogic/sitemap.xml` |
 
