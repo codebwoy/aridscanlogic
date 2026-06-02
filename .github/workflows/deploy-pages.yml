@@ -5,9 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# peaceiris pushes the built site to the gh-pages branch
 permissions:
   contents: write
+  pages: read
 
 concurrency:
   group: pages
@@ -36,11 +36,22 @@ jobs:
       - name: SPA fallback for GitHub Pages
         run: cp dist/index.html dist/404.html
 
-      - name: Deploy to gh-pages branch
+      # Pushes dist to gh-pages — does NOT use actions/deploy-pages (avoids 404 when Pages API unset)
+      - name: Publish to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
           publish_branch: gh-pages
           force_orphan: true
-          commit_message: 'deploy: GitHub Pages from ${{ github.sha }}'
+          commit_message: 'deploy: ${{ github.sha }}'
+
+      - name: Point GitHub Pages at gh-pages branch
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method PUT "repos/${GITHUB_REPOSITORY}/pages" \
+            --input - <<'EOF'
+          {"build_type":"legacy","source":{"branch":"gh-pages","path":"/"}}
+          EOF
