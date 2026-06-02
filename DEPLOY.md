@@ -2,9 +2,14 @@
 
 ## You are seeing `deploy-pages@v4` failed — workflow #1
 
-That run is **obsolete**. It is from commit `bd95397` and uses `actions/deploy-pages`, which returns **404** until GitHub Pages is configured.
+| What you see | What it means |
+|--------------|----------------|
+| Step `Run actions/deploy-pages@v4` | **Obsolete** run from commit `bd95397` |
+| Step `Deploy to gh-pages` (peaceiris) | **Correct** — use the latest run with this step |
 
-**Do not click "Re-run jobs" on that run** — it will fail again every time.
+**Never click "Re-run jobs" on workflow #1** — GitHub replays the old broken YAML every time.
+
+Open the latest **Deploy GitHub Pages** run (number **#2 or higher**), or run **Setup GitHub Pages (run once)**.
 
 ## Fix in 2 minutes
 
@@ -21,8 +26,8 @@ That run is **obsolete**. It is from commit `bd95397` and uses `actions/deploy-p
 1. Open [Pages settings](https://github.com/codebwoy/aridscanlogic/settings/pages)
 2. **Build and deployment** → **Deploy from a branch**
 3. Branch: **`gh-pages`** / Folder: **`/ (root)`** → **Save**
-4. Use the latest **Publish Site to GitHub Pages** workflow run (not #1)
+4. Use the latest **Deploy GitHub Pages** workflow run (not #1)
 
 ## Ongoing deploys
 
-Every push to `main` runs **Publish Site to GitHub Pages** (peaceiris → `gh-pages` branch).
+Every push to `main` runs **Deploy GitHub Pages** (peaceiris → `gh-pages` branch).
