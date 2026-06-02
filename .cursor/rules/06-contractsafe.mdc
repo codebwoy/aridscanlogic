@@ -1,0 +1,54 @@
+---
+description: Contract Safe — templates, designer, signing, audit
+globs: src/pages/contractsafe/**,src/components/contractsafe/**,src/lib/contractsafe/**,src/lib/contractTemplates.js
+alwaysApply: false
+---
+
+# Contract Safe
+
+## Entry
+
+- Tab `contracts` → `ContractSafeHome.jsx`.
+
+## Data
+
+- `appApi.entities.Contract`, `ContractSigner`.
+- Templates: `lib/contractTemplates.js` (NDA, Freelance, Employment, SaaS, etc.).
+- Audit trail: `lib/contractsafe/auditLog.js` (localStorage, max 500 entries).
+- PDF: `lib/contractsafe/contractPdf.js`.
+
+## Flows
+
+1. **New contract**: template pick → `ContractDesigner.jsx` → save draft.
+2. **Signing**: `SigningFlow.jsx` + `SignaturePad.jsx` (Base64 signatures).
+3. **Audit**: `SigningAudit.jsx` — chronological events.
+4. **Library**: `TemplateLibrary.jsx` — duplicate/search.
+
+## Status lifecycle
+
+`draft` → `signing` → `completed` (enforce in UI before PDF archive).
+
+## Signing modes
+
+- **Sequential**: party A before B (document in template copy).
+- **Parallel**: when template supports it — check designer fields.
+
+## Legal UX
+
+- Always treat as **draft tooling**, not notarized contracts.
+- Lawyer AI can review — point users to `LawyerAIPage` for educational review only.
+
+## Patterns
+
+```javascript
+// ✅ Log significant actions
+import { logContractEvent } from '@/lib/contractsafe/auditLog'
+
+// ✅ Persist via appApi
+await appApi.entities.Contract.create({ ... })
+```
+
+## Do not
+
+- Store raw signature images outside entity payload without user consent copy.
+- Claim legally binding eIDAS qualification — demo signature pad only.

@@ -1,0 +1,57 @@
+---
+description: Tax Vault — receipts, mileage, tax estimates, BizStart entry
+globs: src/pages/taxvault/**,src/components/taxvault/**,src/lib/taxvault/**
+alwaysApply: false
+---
+
+# Tax Vault
+
+## Entry
+
+- Tab `tax` → `TaxVaultHome.jsx` (hub cards, navigation).
+- Profile/settings: `TaxVaultSettings.jsx` (also reachable from suite Settings).
+- Onboarding: `TaxVaultOnboarding.jsx`, `TaxVaultProfileSetup.jsx`.
+
+## Data
+
+| Store | Location |
+|-------|----------|
+| Receipts, mileage (suite sync) | `appApi.entities.Receipt`, `MileageLog` |
+| Profile, settings, categories | `lib/taxvault/profile.js`, `categories.js` (localStorage) |
+| Encrypted backup | `lib/taxvault/backup.js` — AES-GCM, PBKDF2 310k iterations |
+
+## Main flows
+
+1. **Receipt scan**: `ReceiptScanFlow.jsx` → `TaxVaultCamera.jsx` → LLM extract → `ConfirmReceipt.jsx`.
+2. **Manual expense**: `ManualExpenseEntry.jsx`.
+3. **Mileage**: `MileageLogger.jsx`, `mileageGps.js`.
+4. **Reports**: `TaxSummaryReport.jsx`, `EstimatedTaxes.jsx`, `exportReport.js`.
+5. **BizStart**: button on home opens `BizStartGermany` (see `09-bizstart.mdc`).
+
+## Business rules (UI copy)
+
+- Kleinunternehmer / §19 UStG affects VAT display — read from profile in `profile.js`.
+- Tax figures are **estimates**, not professional advice (disclaimer in Settings).
+
+## LLM usage
+
+Receipt OCR uses `InvokeLLM` with JSON schema (vendor, amounts, category). Same proxy rules as Docs.
+
+## Patterns
+
+```javascript
+// ✅ Profile merge
+import { loadTaxVaultProfile, saveTaxVaultProfile } from '@/lib/taxvault/profile'
+
+// ✅ Encrypted export requires passphrase ≥ 8 chars
+await exportEncryptedBackup(passphrase)
+```
+
+## Reminders
+
+`lib/taxvault/reminders.js` — deadline checks; uses `localStorage` last-check key.
+
+## Do not
+
+- Put Steuerberater-facing numbers without noting estimates.
+- Lower PBKDF2 iterations in backup without migration plan.

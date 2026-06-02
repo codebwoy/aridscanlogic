@@ -1,0 +1,56 @@
+---
+description: BizStart Germany — registration wizard inside Tax Vault
+globs: src/pages/bizstart/**,src/lib/bizstart/**
+alwaysApply: false
+---
+
+# BizStart Germany
+
+## Entry
+
+- **Not a top-level tab.** Opened from `TaxVaultHome.jsx` → `showBizStart` → `BizStartGermany.jsx`.
+
+## Wizard structure (`BizStartGermany.jsx`)
+
+Steps include (via step components):
+
+- `StructureSelector.jsx` — legal form choice
+- `InfoCollector.jsx` — business data
+- `StepGewerbe.jsx`, `StepFinanzamt.jsx`, `StepVat.jsx`, `StepHandelsregister.jsx`, `StepIhk.jsx`, `StepBank.jsx`
+- `StepComplete.jsx`
+- `ComplianceCalendar.jsx` — deadlines
+- `RegistrationChat.jsx` — LLM assistant (BizStart-specific prompt, not licensed advisor)
+
+## Storage
+
+- `lib/bizstart/store.js` — form progress localStorage.
+- Entity sync optional via `appApi.entities.BusinessRegistration`.
+
+## i18n
+
+- `lib/bizstart/i18n.js` — DE/EN strings for card and steps.
+
+## Exports
+
+- `exportChecklist.js` — PDF checklist via jspdf.
+- `pdfForms.js` — pre-filled Gewerbe PDF helper text.
+
+## LLM (`RegistrationChat.jsx`)
+
+Prompt prefix: German business registration guide; must state not Rechtsanwalt/Steuerberater and recommend licensed advisors.
+
+## External links
+
+Official portals (elster.de, handelsregister.de, etc.) — always `rel="noopener noreferrer"`.
+
+## Patterns
+
+```javascript
+// ✅ Exit back to Tax Vault
+<BizStartGermany onExit={() => setShowBizStart(false)} onComplete={...} />
+```
+
+## Do not
+
+- Register BizStart as a new `TabBar` tab without product decision.
+- Promise successful registration outcomes — guide only.

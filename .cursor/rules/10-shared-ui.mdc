@@ -1,0 +1,64 @@
+---
+description: Layout, navigation, contexts, guide, PWA, settings, premium
+globs: src/components/layout/**,src/components/guide/**,src/components/shared/**,src/components/pwa/**,src/context/**,src/pages/SettingsPage.jsx,src/pages/Dashboard.jsx,src/App.jsx,src/main.jsx,src/hooks/**
+alwaysApply: false
+---
+
+# Shared UI & shell
+
+## App modes (`App.jsx`)
+
+- `sessionStorage` key `scanlogic_app_mode`: `suite` | `scanvault`.
+- Share links force ScanVault mode.
+
+## Suite shell
+
+- `Dashboard.jsx` — tab state: `docs`, `tax`, `docdraft`, `contracts`, `lawyer`, `settings`.
+- `AppShell.jsx` variants: `suite` vs ScanVault.
+- `TabBar.jsx` / `ResponsiveNav.jsx` — bottom/side nav; `layoutId="suite-tab"` for animations.
+- `PremiumModal.jsx` + `PremiumContext.jsx` — `localStorage` premium flag.
+
+## Contexts
+
+| Context | File | Purpose |
+|---------|------|---------|
+| Auth | `AuthContext.jsx` | Suite user stub from appApi.auth |
+| Premium | `PremiumContext.jsx` | Trial/premium modal |
+| Guide | `GuideContext.jsx` | App guide drawer, language DE/EN |
+
+## In-app guide
+
+- Content: `lib/guide/appModules.js` — **source of truth** for module descriptions.
+- UI: `GuideFab`, `AppGuideDrawer`, `ModuleGuideBanner`, `invokeAppGuide.js`.
+- When changing a module’s user-facing purpose, update `APP_GUIDE_MODULES` entries.
+
+## Settings (`SettingsPage.jsx`)
+
+- Anthropic status, Supabase push (`pushAllLocalDataToSupabase`), PWA install, ScanVault link.
+- **LAN API secret** field → `setApiSecret` (sessionStorage only).
+
+## PWA
+
+- `lib/pwa/register.js`, `InstallPwaButton.jsx`, `usePwaInstall.js`.
+- Config in `vite.config.js` `VitePWA` — do not enable dev SW (`devOptions.enabled: false`).
+
+## Styling
+
+- Tailwind 4 via `@tailwindcss/vite`; global `index.css`.
+- Mobile: `safe-top`, `min-h-[48px]` touch targets, `rounded-2xl` cards.
+- Framer Motion for tab transitions in Dashboard.
+
+## Patterns
+
+```jsx
+// ✅ Optional guide hook in nav
+const guide = useGuideOptional()
+
+// ✅ Toast feedback
+import { toast } from 'sonner'
+```
+
+## Do not
+
+- Break `GuideProvider` wrapping when adding new suite tabs — pass `activeModule` id matching `appModules.js`.
+- Store premium or API secrets in `VITE_*` env vars.

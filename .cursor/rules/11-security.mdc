@@ -1,0 +1,54 @@
+---
+description: Security requirements — secrets, API, XSS, auth
+globs: src/lib/security/**,src/lib/anthropic.js,src/lib/apiFetch.js,src/components/SafeMarkdown.jsx,SECURITY.md
+alwaysApply: false
+---
+
+# Security rules (mandatory)
+
+## Secrets
+
+| Variable | Where | Never |
+|----------|-------|-------|
+| `ANTHROPIC_API_KEY` | `.env` server | `VITE_*`, client imports |
+| `DATABASE_URL` | `.env` server | Client bundle |
+| `SCANLOGIC_API_SECRET` | `.env` + Settings session | `VITE_*`, localStorage |
+
+## HTTP
+
+- All `/api/*` from browser: `apiFetch()` in `src/lib/apiFetch.js`.
+- Remote/LAN: Bearer token must match server `SCANLOGIC_API_SECRET`.
+
+## XSS
+
+```jsx
+// ✅
+import SafeMarkdown from '@/components/SafeMarkdown'
+<SafeMarkdown>{llmContent}</SafeMarkdown>
+
+// ❌
+<div dangerouslySetInnerHTML={{ __html: llmContent }} />
+```
+
+## SSRF (LLM images)
+
+- `lib/security/safeUrl.js` — `isSafeFetchUrl()` before fetching user URLs in `anthropic.js`.
+- Allow `https:` (public) and `data:image/*;base64,` only.
+
+## Passwords (ScanVault)
+
+- Hash with `hashPassword` / verify with `verifyPassword` in `lib/security/password.js`.
+- Legacy plaintext: constant-time compare + migrate to hash on successful login.
+
+## Share tokens
+
+- `secureToken()` / UUID v4; validate with `isValidShareToken` before loading share data.
+
+## Server changes
+
+- New `/api` routes: rate limit + sanitize inputs + `clientSafeError` on failures.
+- See `server/security.mjs` — reuse helpers, do not duplicate auth logic.
+
+## Full policy
+
+Read `SECURITY.md` before production deployment or auth changes.

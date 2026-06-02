@@ -1,0 +1,56 @@
+---
+description: ScanLogic core stack, architecture, security, and coding standards
+alwaysApply: true
+---
+
+# ScanLogic Business Suite — Core
+
+## Product
+
+- **ScanLogic Business Suite**: mobile-first PWA (`vite-plugin-pwa`) with tabs Docs, Tax Vault, DocDraft, Contracts, Lawyer AI, Settings.
+- **ScanVault**: separate mode (`App.jsx` → `ScanVaultRoot`) for focused scanning; opened from Settings or `?share=` links.
+- **BizStart Germany**: nested inside Tax Vault (`TaxVaultHome` → `BizStartGermany`), not a top-level tab.
+
+## Stack
+
+- React 19 + Vite 8 + Tailwind 4 + React Router (minimal — tab state in `Dashboard.jsx`).
+- Path alias: `@/` → `src/`.
+- Data: `src/lib/appApi.js` (entities + LLM + file upload). Persistence: `localStorage` or Supabase via `/api/db` when `DATABASE_URL` is set.
+- AI: `src/lib/anthropic.js` → `/api/llm` proxy (`server/llm-proxy.mjs`). Never put API keys in `VITE_*`.
+
+## Key files
+
+| Area | Entry |
+|------|--------|
+| App shell | `src/App.jsx`, `src/pages/Dashboard.jsx`, `src/components/layout/AppShell.jsx` |
+| Data layer | `src/lib/appApi.js`, `src/lib/schemas.js` |
+| Guide copy | `src/lib/guide/appModules.js` |
+| Security | `SECURITY.md`, `server/security.mjs` |
+
+## Entity types (appApi)
+
+`Document`, `Folder`, `SavedLawyerMessage`, `Receipt`, `MileageLog`, `BusinessProfile`, `BusinessRegistration`, `TaxDeadline`, `DocDraftDocument`, `Contract`, `ContractSigner` — must stay in sync with `server/db-api.mjs` `ENTITY_TYPES`.
+
+## Coding rules
+
+- **Minimal diffs**; match existing JSX patterns, `premium-card`, `safe-top`, German UI copy where neighbors use DE.
+- **No secrets in client**: use `.env` server-only vars; use `apiFetch` from `src/lib/apiFetch.js` for `/api/*`.
+- **Markdown from AI/OCR**: always `SafeMarkdown` (`src/components/SafeMarkdown.jsx`), never raw `dangerouslySetInnerHTML`.
+- **External links**: `rel="noopener noreferrer"` with `target="_blank"`.
+- **Toasts**: `sonner` (`toast.success`, `toast.error`).
+- **Do not commit** `.env`, `dist/`, `dev-dist/`.
+
+## Commands
+
+```bash
+npm run dev          # localhost only (secure default)
+npm run dev:lan      # --host; requires SCANLOGIC_API_SECRET for remote /api
+npm run build
+npm run preview
+```
+
+## When adding features
+
+1. Prefer extending `appApi.entities.*` or module `store.js` over new global state.
+2. Cross-module handoffs: Docs → Tax Vault / DocDraft via existing export helpers; check `appModules.js` for intended flows.
+3. Update `appModules.js` if user-facing module behavior changes materially.

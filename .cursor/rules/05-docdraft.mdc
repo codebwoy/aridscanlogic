@@ -1,0 +1,58 @@
+---
+description: DocDraft — quotes, invoices, clients, products, recurring
+globs: src/pages/docdraft/**,src/components/docdraft/**,src/lib/docdraft/**
+alwaysApply: false
+---
+
+# DocDraft
+
+## Entry
+
+- Tab `docdraft` → `DocDraftHome.jsx` (navigation hub).
+
+## Storage model
+
+- **Primary**: `lib/docdraft/store.js` — localStorage keys (`scanlogic_dd_*`).
+- **Sync**: also mirrors to `appApi.entities.DocDraftDocument` for suite/Tax Vault cohesion.
+- **Profile**: `ProfileSetup.jsx` / `scanlogic_docdraft_profile` — business name, VAT ID, bank, Kleinunternehmer flag.
+
+## Key screens
+
+| Screen | Purpose |
+|--------|---------|
+| `DocumentBuilder.jsx` / `DocumentEditor.jsx` | Line items, VAT math |
+| `ClientDatabase.jsx` | Clients |
+| `ProductCatalog.jsx` | Products |
+| `RecurringInvoices.jsx` | Subscriptions |
+| `SendDocumentScreen.jsx` | mailto / WhatsApp demo share |
+| `ReportsPage.jsx` | Payment stats |
+| `DocDraftSettings.jsx` | Module settings |
+
+## VAT / PDF
+
+- §19 UStG / 0 % MwSt for Kleinunternehmer — reflected on PDFs automatically.
+- PDF generation via `jspdf` patterns in module; QR: `lib/docdraft/epcQr.js`.
+- DATEV export: `datevExport.js`.
+
+## Cross-module
+
+- **From Docs**: `fromScan.js` creates draft from scan.
+- **Quote → Invoice**: `convertQuote.js`.
+
+## Backup
+
+`lib/docdraft/backup.js` — JSON export of clients/products/payments (localStorage strings).
+
+## Patterns
+
+```javascript
+// ✅ Read/write through store helpers
+import { listDocuments, saveDocument } from '@/lib/docdraft/store'
+
+// ❌ Do not hardcode VAT rates without checking profile Kleinunternehmer status
+```
+
+## UI
+
+- Use `DocumentPreview.jsx`, `PaymentDonut.jsx` for consistent previews/charts.
+- German number/date formatting where adjacent screens use DE locale.

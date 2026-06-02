@@ -1,0 +1,62 @@
+---
+description: Lawyer AI — Herr Müller mentor, cases, archive, prompts
+globs: src/pages/LawyerAIPage.jsx,src/components/lawyer/**,src/lib/lawyer/**
+alwaysApply: false
+---
+
+# Lawyer AI (Herr Müller)
+
+## Entry
+
+- Tab `lawyer` → `LawyerAIPage.jsx` (full-height panel in `Dashboard`).
+- Wrapped by `GuideProvider` with `activeModule="lawyer"`.
+
+## Invocation
+
+- `lib/lawyer/invokeMueller.js` → `appApi.integrations.Core.InvokeLLM`.
+- System prompt: `lib/lawyer/herrMuellerPrompt.js` (13 domains, DE/EN, safety disclaimer).
+- Demo fallback: `lib/lawyer/demoResponses.js` when API key missing (detects „Herr Müller“, „MUELLER“, „BizStart“ in prompt).
+
+## Case model
+
+- `lib/lawyer/caseStore.js` — localStorage cases with summaries timeline.
+- `caseStore`: `ensureCase`, `addSummary`, `listCases`, `createNewCase`.
+- Saved messages: `appApi.entities.SavedLawyerMessage`.
+
+## UI components
+
+| Component | Role |
+|-----------|------|
+| `CategoryPicker.jsx` | 13 Fachbereiche |
+| `QuickPrompts.jsx` | Starter cards |
+| `DocumentPicker.jsx` | Attach Docs entities |
+| `LawyerAIArchive.jsx` | History — use **SafeMarkdown** |
+| `CaseTimeline.jsx` | Per-case summaries |
+| `ContractQuickDraft.jsx` | Short contract snippets |
+| `MessageActions.jsx` | Copy/save actions |
+
+## Markdown
+
+All assistant output: **`SafeMarkdown`** only.
+
+## Disclaimers
+
+- Not a licensed Rechtsanwalt / Steuerberater.
+- `SAFETY_DISCLAIMER_DE` in prompt; surface in UI where adding new advice surfaces.
+
+## Export
+
+`lib/lawyer/exportTranscript.js` — conversation PDF/text export.
+
+## Patterns
+
+```javascript
+// ✅ Language detection
+import { detectLanguage, SAFETY_DISCLAIMER_DE } from '@/lib/lawyer/herrMuellerPrompt'
+
+// ❌ Do not present outputs as binding legal or tax advice
+```
+
+## Full-height layout
+
+`Dashboard` sets `fullHeight` + `app-panel-full` when `activeTab === 'lawyer'` — preserve when changing layout.

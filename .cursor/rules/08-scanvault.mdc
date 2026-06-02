@@ -1,0 +1,54 @@
+---
+description: ScanVault — standalone scanner app, auth, shares, folders
+globs: src/pages/scanvault/**,src/components/scanvault/**,src/lib/scanvault/**
+alwaysApply: false
+---
+
+# ScanVault (standalone mode)
+
+## Entry
+
+- `App.jsx`: mode `scanvault` or `?share=TOKEN` → `ScanVaultRoot.jsx`.
+- Open from suite: Settings → ScanVault or `onOpenScanVault`.
+
+## Auth (`lib/scanvault/auth.js`)
+
+- Email/password accounts in `localStorage` `scanvault_accounts`.
+- Passwords: PBKDF2 310k via `lib/security/password.js` (`passwordHash` field).
+- **`loginWithGoogle()` is a DEMO stub** — must stay labeled demo; not OAuth.
+- Session: `lib/scanvault/store.js` `getSessionUser` / `saveSessionUser`.
+
+## Document storage
+
+- `lib/scanvault/store.js` — prefixes `scanvault_*` keys (documents, folders, shared_links).
+- OCR: `lib/scanvault/ocr.js`; export: `export.js`, `backup.js`.
+- Cloud: `cloudSync.js` — demo encrypted snapshot in localStorage (Premium).
+
+## Share links
+
+- Create: `createShareLink` in store — token via `secureToken()` / UUID.
+- Validate: `isValidShareToken` in `lib/security/random.js`.
+- Viewer: `ShareLinkViewer.jsx` — `?share=` query param.
+- Expiry: 7 days (enforce in store logic when modifying).
+
+## Tabs (`ScanVaultApp.jsx`)
+
+Scan, Documents, Folders, Profile — `ScanVaultTabBar.jsx`.
+
+## Scanner components
+
+- `ScanVaultCamera.jsx`, `ScanVaultOptimizer.jsx` — parallel to suite scanner but ScanVault-themed (`#007AFF`, dark shell).
+
+## Security
+
+- Never store plaintext passwords on new registrations.
+- Strip `password` / `passwordHash` from session user objects (`stripPassword`).
+
+## Onboarding
+
+`Onboarding.jsx` → `Login.jsx` / `Register.jsx` — min password length 8.
+
+## Do not
+
+- Implement real Google OAuth without backend.
+- Expose share tokens in logs or analytics.

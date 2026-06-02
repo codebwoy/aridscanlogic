@@ -1,0 +1,49 @@
+---
+description: Docs hub — multi-page scan, OCR, folders, export
+globs: src/pages/DocsPage.jsx,src/components/scanner/**,src/lib/scanPipeline.js,src/lib/imageProcessing.js,src/lib/docs/**
+alwaysApply: false
+---
+
+# Docs & scanner
+
+## Entry
+
+- Tab `docs` in `Dashboard.jsx` → `DocsPage.jsx`.
+- Scanner UI: `src/components/scanner/*` — `ScannerFlow`, `CameraCapture`, `PerspectiveCrop`, `DocOptimizer`, `ResultsView`.
+
+## Pipeline
+
+1. Capture pages → `scanPipeline.js` / `imageProcessing.js` / `backgroundRemoval.js`.
+2. OCR + classification via `appApi.integrations.Core.InvokeLLM` with `response_json_schema` (`ocr_text`, `document_type`, `title`, `markdown_result`).
+3. Persist as `appApi.entities.Document` + optional `Folder`.
+4. Display markdown in `ResultsView` with **`SafeMarkdown`**.
+
+## UX conventions
+
+- German labels where existing (e.g. „Neuer Scan“, „Kein Text erkannt“).
+- Folders: Inbox, Receipts, Contracts, etc. — align with Tax Vault handoff.
+- Export: `src/lib/docs/export.js` (PDF/ZIP).
+
+## Cross-module
+
+- **→ Tax Vault**: receipt flow from document (scan as expense).
+- **→ DocDraft**: `lib/docdraft/fromScan.js`.
+- **→ Lawyer AI**: `DocumentPicker` attaches `Document` records.
+
+## Do not
+
+- Render LLM markdown without `SafeMarkdown`.
+- Store API keys in scanner code.
+- Add server routes here — scanner is client-only.
+
+## Key components
+
+| File | Role |
+|------|------|
+| `ScannerFlow.jsx` | Orchestrates capture → process → save |
+| `DocumentDetail.jsx` | View/edit saved document |
+| `ProcessingOverlay.jsx` | Loading during OCR |
+
+## OCR without API key
+
+Demo JSON returned from `invokeLLMDemo` in `appApi.js` when Anthropic not configured.

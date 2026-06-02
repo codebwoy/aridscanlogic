@@ -1,0 +1,55 @@
+---
+description: appApi entities, localStorage, Supabase remote sync
+globs: src/lib/appApi.js,src/lib/schemas.js,src/lib/supabase/**,src/lib/apiFetch.js
+alwaysApply: false
+---
+
+# Data layer
+
+## appApi (`src/lib/appApi.js`)
+
+Default export: `{ entities, auth, integrations }`.
+
+- **entities.[Name]**: `list(filter)`, `get(id)`, `create(data)`, `update(id, data)`, `delete(id)`.
+- **Hybrid storage**: if `isDbConnected()`, uses `remoteStore`; else `localStorage` key `scanlogic_entities_${entity}`.
+- **auth.getCurrentUser()**: stub `local-user` / `user@scanlogic.app` for suite mode.
+- **integrations.Core.InvokeLLM**: Anthropic via proxy, else `invokeLLMDemo` (includes Herr Müller / OCR demo JSON).
+- **integrations.Core.UploadFile**: `{ file }` → `data:` URL (client-side only).
+
+## Remote store (`src/lib/supabase/remoteStore.js`)
+
+- All HTTP via `apiFetch()` (Bearer from sessionStorage when set).
+- `user_id` from `localStorage` key `scanlogic_user_id` (default `local-user`).
+- `syncEntityToRemote(entity, records)` → `POST /api/db/sync/:entity`.
+
+## Migration (`migrateLocal.js`)
+
+- `pushAllLocalDataToSupabase()` — Settings button; reads all entity arrays from localStorage and syncs.
+
+## apiFetch (`src/lib/apiFetch.js`)
+
+- `getApiSecret` / `setApiSecret` — sessionStorage `scanlogic_api_secret` for LAN dev only.
+- Never store server secrets in `localStorage` or `VITE_*`.
+
+## Patterns
+
+```javascript
+// ✅ Create with appApi
+const receipt = await appApi.entities.Receipt.create({ vendor_name, total_amount, ... })
+
+// ✅ List with filter object (single key)
+const docs = await appApi.entities.Document.list({ folder_id: id })
+
+// ❌ Do not bypass appApi for suite entities unless module has its own store (DocDraft local + entity sync)
+```
+
+## schemas.js
+
+Documents field shapes for entities — update when adding DB payload fields.
+
+## New entity checklist
+
+1. Add to `ENTITY_NAMES` in `appApi.js`
+2. Add to `ENTITY_TYPES` in `server/db-api.mjs`
+3. Add migration column usage in `supabase/migrations/` if needed
+4. Add to `migrateLocal.js` entity list

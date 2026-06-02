@@ -1,0 +1,56 @@
+---
+description: Vite dev/preview server — LLM proxy, DB API, security middleware
+globs: server/**,vite.config.js
+alwaysApply: false
+---
+
+# Server & API proxies
+
+## Layout
+
+- `server/vite-llm-proxy.js` — Vite plugin wiring middleware order.
+- `server/llm-proxy.mjs` — `/api/llm`, `/api/llm/status` → Anthropic.
+- `server/db-api.mjs` — `/api/db/*` CRUD + `/api/db/sync/:entity`.
+- `server/db-pool.mjs` — Postgres pool singleton.
+- `server/security.mjs` — auth, rate limits, sanitization.
+
+## Middleware order (do not reorder casually)
+
+1. Security headers (`createSecurityHeadersMiddleware`)
+2. API access (`createApiAccessMiddleware`) — blocks non-local `/api` without Bearer secret
+3. Rate limits: `/api/db` 120/min, `/api/llm` 30/min
+4. DB middleware, then LLM middleware
+
+## Env vars (server-only in `vite.config.js`)
+
+- `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`
+- `DATABASE_URL` or `SUPABASE_DB_URL`
+- `SCANLOGIC_API_SECRET` — required for non-local clients when using `dev:lan`
+
+**Never** read `VITE_ANTHROPIC_API_KEY` in vite config.
+
+## LLM proxy rules
+
+- Use `sanitizeLlmPayload()` before upstream fetch; do not forward raw client JSON.
+- Allowed roles: `user`, `assistant`. Cap `max_tokens` at 8192.
+- Model must match `^claude-[a-z0-9][a-z0-9._-]+$`.
+
+## DB API rules
+
+- `ENTITY_TYPES` must match `ENTITY_NAMES` in `appApi.js`.
+- Sanitize `user_id` via `sanitizeUserId()`; `filter_key` via `sanitizeFilterKey()`.
+- Return `clientSafeError()` for 500s — no SQL stack traces.
+- Body limit: 8 MB (`readBody` in db-api).
+
+## Adding endpoints
+
+```javascript
+// ✅ Extend existing path prefixes
+if (!url.pathname.startsWith('/api/db')) return next()
+
+// ❌ Do not expose raw DATABASE_URL or service_role to the client
+```
+
+## Production
+
+Static hosting cannot run these middlewares. Deploy behind Node (`preview`) or serverless proxy. See `SECURITY.md`.
