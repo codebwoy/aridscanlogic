@@ -1,29 +1,31 @@
-# Deploy / GitHub Pages
+# GitHub Pages deploy
 
-## Failed run with `deploy-pages@v4` and 404?
+## Error: `actions/deploy-pages@v4` → 404 Not Found
 
-### If it is workflow **#1** (commit `bd95397`)
+That step is **removed** from the current workflow. If you still see it, you are on an **old workflow run** (often **#1**, commit `bd95397`).
 
-**Do not click "Re-run jobs".** That run uses an old workflow file and will always fail.
+| Log shows | Action |
+|-----------|--------|
+| `Run actions/deploy-pages@v4` | **Stop.** Do not re-run that job. |
+| `Push to gh-pages branch` | **Correct** workflow — use the latest run. |
 
-Open the **latest** **Deploy GitHub Pages** run instead (higher run number).
+## One-time setup (required)
 
-### If the **latest** run still shows 404
+1. Run workflow: [Actions → **Deploy GitHub Pages** → Run workflow](https://github.com/codebwoy/aridscanlogic/actions/workflows/deploy-github-pages.yml)  
+   (or push to `main` and wait for green ✓)
 
-GitHub Pages is not enabled for this repo. Fix in settings:
+2. Open **[Pages settings](https://github.com/codebwoy/aridscanlogic/settings/pages)**  
+   - **Build and deployment:** Deploy from a branch  
+   - **Branch:** `gh-pages`  
+   - **Folder:** `/ (root)`  
+   - **Save**
 
-1. Open **[Pages settings](https://github.com/codebwoy/aridscanlogic/settings/pages)**
-2. **Build and deployment** → **Source: GitHub Actions** (not “Deploy from a branch”)
-3. Save
-4. Re-run only the **latest** workflow (or push an empty commit)
+3. Open **https://codebwoy.github.io/aridscanlogic/** (may take 1–2 minutes)
 
-Also check: **Settings → Actions → General → Workflow permissions** → **Read and write permissions**.
+## Repo settings check
 
-## One-click setup (alternative: gh-pages branch)
+**Settings → Actions → General → Workflow permissions** → **Read and write permissions** (so the workflow can push to `gh-pages`).
 
-1. [Actions](https://github.com/codebwoy/aridscanlogic/actions) → **Setup GitHub Pages (run once)** → **Run workflow**
-2. Settings → Pages → **Deploy from a branch** → `gh-pages` → `/ (root)`
+## Alternative one-shot
 
-## Live URL
-
-**https://codebwoy.github.io/aridscanlogic/**
+[Actions → **Setup GitHub Pages (run once)** → Run workflow](https://github.com/codebwoy/aridscanlogic/actions/workflows/setup-github-pages.yml)
