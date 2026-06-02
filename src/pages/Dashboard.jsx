@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import AppShell from '@/components/layout/AppShell'
 import TabBar from '@/components/layout/TabBar'
@@ -12,6 +12,7 @@ import LawyerAIPage from './LawyerAIPage'
 import { GuideProvider } from '@/context/GuideContext'
 import AppGuideDrawer from '@/components/guide/AppGuideDrawer'
 import GuideFab from '@/components/guide/GuideFab'
+import { applySeo } from '@/lib/seo/applySeo'
 
 const TAB_CONTENT = {
   tax: TaxVaultHome,
@@ -20,10 +21,16 @@ const TAB_CONTENT = {
   lawyer: LawyerAIPage,
 }
 
+const SEO_TAB_KEYS = new Set(['docs', 'tax', 'docdraft', 'contracts', 'lawyer', 'settings'])
+
 export default function Dashboard({ onOpenScanVault }) {
   const [activeTab, setActiveTab] = useState('docs')
   const ActivePage = TAB_CONTENT[activeTab] || DocsPage
   const isLawyer = activeTab === 'lawyer'
+
+  useEffect(() => {
+    applySeo(SEO_TAB_KEYS.has(activeTab) ? activeTab : 'suite')
+  }, [activeTab])
 
   return (
     <GuideProvider activeModule={activeTab}>

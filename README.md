@@ -91,3 +91,16 @@ src/
 npm run build
 npm run preview
 ```
+
+## SEO & Google indexing
+
+The build generates `public/robots.txt`, `public/sitemap.xml`, and `public/og-image.png`, and injects Open Graph, Twitter Card, and [Schema.org](https://schema.org) JSON-LD into `index.html`.
+
+| Step | Action |
+|------|--------|
+| 1 | Push to `main` — GitHub Actions deploys to Pages (`/.github/workflows/deploy-pages.yml`) |
+| 2 | Repo **Settings → Pages → Build and deployment: GitHub Actions** |
+| 3 | Set `VITE_SITE_URL` in `.env` if using a custom domain (re-run `npm run seo:generate`) |
+| 4 | [Google Search Console](https://search.google.com/search-console) → add property → submit sitemap: `https://codebwoy.github.io/aridscanlogic/sitemap.xml` |
+
+Default canonical URL: `https://codebwoy.github.io/aridscanlogic/`

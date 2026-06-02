@@ -8,13 +8,28 @@ import { llmProxyPlugin } from './server/vite-llm-proxy.js'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
+  const siteUrl = (env.VITE_SITE_URL || 'https://codebwoy.github.io/aridscanlogic').replace(
+    /\/$/,
+    ''
+  )
+  const base =
+    env.VITE_BASE_PATH ||
+    (process.env.GITHUB_PAGES === 'true' ? '/aridscanlogic/' : '/')
+
   const getApiKey = () => (env.ANTHROPIC_API_KEY || '').trim()
   const getModel = () => env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514'
   const getDatabaseUrl = () => (env.DATABASE_URL || env.SUPABASE_DB_URL || '').trim()
   const getApiSecret = () => (env.SCANLOGIC_API_SECRET || '').trim()
 
   return {
+    base,
     plugins: [
+      {
+        name: 'scanlogic-html-seo',
+        transformIndexHtml(html) {
+          return html.replaceAll('__SITE_URL__', siteUrl)
+        },
+      },
       react(),
       tailwindcss(),
       llmProxyPlugin({ getApiKey, getModel, getDatabaseUrl, getApiSecret }),
@@ -30,8 +45,8 @@ export default defineConfig(({ mode }) => {
           background_color: '#0a0f1a',
           display: 'standalone',
           orientation: 'portrait-primary',
-          scope: '/',
-          start_url: '/',
+          scope: base,
+          start_url: base,
           lang: 'de',
           categories: ['business', 'finance', 'productivity'],
           icons: [

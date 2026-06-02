@@ -8,7 +8,9 @@ import './index.css'
 import { initPwa } from './lib/pwa/register'
 import { ensureLlmStatus } from './lib/anthropic'
 import { initAppStorage } from './lib/appApi'
+import { applySeo } from './lib/seo/applySeo'
 
+applySeo('suite')
 initPwa()
 ensureLlmStatus()
 initAppStorage()

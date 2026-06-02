@@ -1,0 +1,34 @@
+---
+description: SEO — meta tags, sitemap, structured data, GitHub Pages
+globs: index.html,public/robots.txt,public/sitemap.xml,src/lib/seo/**,scripts/generate-seo-assets.mjs,.github/workflows/deploy-pages.yml
+alwaysApply: false
+---
+
+# SEO
+
+## Config
+
+- `src/lib/seo/siteConfig.js` — `VITE_SITE_URL`, page titles/descriptions
+- `src/lib/seo/applySeo.js` — updates `document.title` and meta at runtime
+- `scripts/generate-seo-assets.mjs` — `robots.txt`, `sitemap.xml`, `og-image.png`
+- `index.html` — `__SITE_URL__` placeholders replaced at build via Vite plugin
+
+## Runtime
+
+Call `applySeo(tabId)` when suite tab changes (`Dashboard.jsx`) or mode changes (`App.jsx`).
+
+## Build / deploy
+
+```bash
+npm run seo:generate   # robots + sitemap + og image
+npm run build          # includes icons + seo + vite
+```
+
+GitHub Pages: workflow sets `VITE_BASE_PATH=/aridscanlogic/` and `GITHUB_PAGES=true`.
+
+## Rules
+
+- Keep German `lang="de"` and keyword-rich descriptions honest (no stuffing).
+- Use `SafeMarkdown` only — never inject SEO text via unsafe HTML.
+- After changing public URL, update `VITE_SITE_URL` and re-run `npm run seo:generate`.
+- New top-level routes: extend `PAGE_SEO` and sitemap if they become real URLs.
