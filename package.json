@@ -8,6 +8,7 @@
     "dev:lan": "vite --host",
     "dev:open": "vite --open",
     "seo:generate": "node scripts/generate-seo-assets.mjs",
+    "pages:enable": "bash scripts/enable-github-pages.sh",
     "build": "npm run pwa:icons && npm run seo:generate && vite build",
     "pwa:icons": "node scripts/generate-pwa-icons.mjs",
     "db:migrate": "psql \"$DATABASE_URL\" -f supabase/migrations/20250602000000_scanlogic_schema.sql",
