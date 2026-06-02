@@ -24,7 +24,7 @@ npm run seo:generate   # robots + sitemap + og image
 npm run build          # includes icons + seo + vite
 ```
 
-GitHub Pages: `.github/workflows/deploy-github-pages.yml` (peaceiris → gh-pages). Never re-run obsolete workflow #1 (deploy-pages@v4).
+GitHub Pages: `deploy-github-pages.yml` (configure-pages + deploy-pages). Pages must use **GitHub Actions** source. Never re-run obsolete workflow #1.
 
 ## Rules
 
