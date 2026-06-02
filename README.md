@@ -92,6 +92,12 @@ npm run build
 npm run preview
 ```
 
+## Deploy (GitHub Pages)
+
+**Failed `deploy-pages@v4` on workflow #1?** That run is old — do not re-run it. See **[DEPLOY.md](./DEPLOY.md)** and run **Setup GitHub Pages (run once)** from the Actions tab.
+
+Live URL: **https://codebwoy.github.io/aridscanlogic/**
+
 ## SEO & Google indexing
 
 The build generates `public/robots.txt`, `public/sitemap.xml`, and `public/og-image.png`, and injects Open Graph, Twitter Card, and [Schema.org](https://schema.org) JSON-LD into `index.html`.
