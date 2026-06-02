@@ -40,6 +40,7 @@ export default function StepHandelsregister({ onUpdateStep, onNext }) {
       <a
         href="https://www.handelsregister.de"
         target="_blank"
+        rel="noopener noreferrer"
         rel="noreferrer"
         className="block text-center text-sm text-brand-400 underline"
       >

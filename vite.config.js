@@ -8,17 +8,16 @@ import { llmProxyPlugin } from './server/vite-llm-proxy.js'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
-  const getApiKey = () => (env.ANTHROPIC_API_KEY || env.VITE_ANTHROPIC_API_KEY || '').trim()
-  const getModel = () =>
-    env.VITE_ANTHROPIC_MODEL || env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514'
-  const getDatabaseUrl = () =>
-    (env.DATABASE_URL || env.SUPABASE_DB_URL || '').trim()
+  const getApiKey = () => (env.ANTHROPIC_API_KEY || '').trim()
+  const getModel = () => env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514'
+  const getDatabaseUrl = () => (env.DATABASE_URL || env.SUPABASE_DB_URL || '').trim()
+  const getApiSecret = () => (env.SCANLOGIC_API_SECRET || '').trim()
 
   return {
     plugins: [
       react(),
       tailwindcss(),
-      llmProxyPlugin({ getApiKey, getModel, getDatabaseUrl }),
+      llmProxyPlugin({ getApiKey, getModel, getDatabaseUrl, getApiSecret }),
       VitePWA({
         registerType: 'prompt',
         includeAssets: ['favicon.svg', 'pwa-icon.svg', 'apple-touch-icon.png'],

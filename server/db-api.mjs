@@ -1,4 +1,5 @@
 import { getPool } from './db-pool.mjs'
+import { clientSafeError, sanitizeFilterKey, sanitizeUserId } from './security.mjs'
 
 const ENTITY_TYPES = new Set([
   'Document',
@@ -66,7 +67,7 @@ export function createDbApiMiddleware(getDatabaseUrl, getDefaultUserId = () => '
       } catch (err) {
         res.statusCode = 503
         res.setHeader('Content-Type', 'application/json')
-        res.end(JSON.stringify({ connected: false, error: err.message }))
+        res.end(JSON.stringify({ connected: false }))
       }
       return
     }
@@ -82,7 +83,7 @@ export function createDbApiMiddleware(getDatabaseUrl, getDefaultUserId = () => '
       try {
         const raw = await readBody(req)
         const { records = [], user_id } = JSON.parse(raw || '{}')
-        const userId = user_id || getDefaultUserId()
+        const userId = sanitizeUserId(user_id, getDefaultUserId())
         const client = await pool.connect()
         try {
           await client.query('BEGIN')
@@ -119,7 +120,7 @@ export function createDbApiMiddleware(getDatabaseUrl, getDefaultUserId = () => '
       } catch (err) {
         res.statusCode = 500
         res.setHeader('Content-Type', 'application/json')
-        res.end(JSON.stringify({ error: err.message }))
+        res.end(JSON.stringify({ error: clientSafeError(err) }))
       }
       return
     }
@@ -140,15 +141,15 @@ export function createDbApiMiddleware(getDatabaseUrl, getDefaultUserId = () => '
       return
     }
 
-    const userId = url.searchParams.get('user_id') || getDefaultUserId()
+    const userId = sanitizeUserId(url.searchParams.get('user_id'), getDefaultUserId())
 
     try {
       if (req.method === 'GET' && !recordId) {
-        const filterKey = url.searchParams.get('filter_key')
+        const filterKey = sanitizeFilterKey(url.searchParams.get('filter_key'))
         const filterVal = url.searchParams.get('filter_value')
         let query = `SELECT * FROM scanlogic_records WHERE entity_type = $1 AND user_id = $2`
         const params = [entityType, userId]
-        if (filterKey && filterVal !== null) {
+        if (filterKey && filterVal !== null && filterVal.length <= 512) {
           query += ` AND payload->>$3 = $4`
           params.push(filterKey, filterVal)
         }
@@ -224,7 +225,7 @@ export function createDbApiMiddleware(getDatabaseUrl, getDefaultUserId = () => '
     } catch (err) {
       res.statusCode = 500
       res.setHeader('Content-Type', 'application/json')
-      res.end(JSON.stringify({ error: err.message }))
+      res.end(JSON.stringify({ error: clientSafeError(err) }))
     }
   }
 }

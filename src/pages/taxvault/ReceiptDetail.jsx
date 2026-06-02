@@ -71,7 +71,7 @@ export default function ReceiptDetail({ receipt, onBack, onUpdated }) {
         <ChevronLeft className="h-4 w-4" /> Back
       </button>
       {receipt.image_url && (
-        <a href={receipt.image_url} target="_blank" rel="noreferrer" className="block mb-4">
+        <a href={receipt.image_url} target="_blank" rel="noopener noreferrer" className="block mb-4">
           <img
             src={receipt.image_url}
             alt="Receipt"

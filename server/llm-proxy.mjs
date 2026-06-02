@@ -2,6 +2,8 @@
  * Server-side Anthropic proxy — API key never sent to the browser.
  */
 
+import { clientSafeError, sanitizeLlmPayload } from './security.mjs'
+
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages'
 const ANTHROPIC_VERSION = '2023-06-01'
 const MAX_BODY_BYTES = 12 * 1024 * 1024
@@ -72,8 +74,8 @@ export function createLlmProxyMiddleware({ getApiKey, getModel }) {
 
     try {
       const raw = await readBody(req)
-      const payload = JSON.parse(raw || '{}')
-      if (!payload.model) payload.model = getModel()
+      const parsed = JSON.parse(raw || '{}')
+      const payload = sanitizeLlmPayload(parsed, getModel())
 
       const upstream = await fetch(ANTHROPIC_URL, {
         method: 'POST',
@@ -91,9 +93,15 @@ export function createLlmProxyMiddleware({ getApiKey, getModel }) {
       res.setHeader('Cache-Control', 'no-store')
       res.end(text)
     } catch (err) {
-      res.statusCode = err.message === 'Request body too large' ? 413 : 500
+      const tooLarge = err.message === 'Request body too large'
+      const badPayload = err.message === 'Invalid messages'
+      res.statusCode = tooLarge ? 413 : badPayload ? 400 : 500
       res.setHeader('Content-Type', 'application/json')
-      res.end(JSON.stringify({ error: err.message || 'Proxy error' }))
+      res.end(
+        JSON.stringify({
+          error: tooLarge || badPayload ? err.message : clientSafeError(err),
+        })
+      )
     }
   }
 }

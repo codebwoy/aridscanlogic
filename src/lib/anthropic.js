@@ -3,6 +3,9 @@
  * ANTHROPIC_API_KEY must stay in .env on the server only, never in the client bundle.
  */
 
+import { apiFetch } from './apiFetch'
+import { isSafeFetchUrl } from './security/safeUrl'
+
 const DEFAULT_MODEL = 'claude-sonnet-4-20250514'
 const LLM_ENDPOINT = '/api/llm'
 const STATUS_ENDPOINT = '/api/llm/status'
@@ -13,7 +16,7 @@ let statusPromise = null
 
 export async function refreshLlmStatus() {
   try {
-    const res = await fetch(STATUS_ENDPOINT, { cache: 'no-store' })
+    const res = await apiFetch(STATUS_ENDPOINT, { cache: 'no-store' })
     if (!res.ok) throw new Error('status failed')
     const data = await res.json()
     llmConfigured = !!data.configured
@@ -68,8 +71,11 @@ async function urlToImageBlock(url) {
       source: { type: 'base64', media_type: match[1], data: match[2] },
     }
   }
+  if (!isSafeFetchUrl(url)) {
+    return { type: 'text', text: '[Image URL blocked for security]' }
+  }
   try {
-    const res = await fetch(url)
+    const res = await apiFetch(url)
     const blob = await res.blob()
     const mediaType = blob.type || 'image/jpeg'
     const data = await new Promise((resolve, reject) => {
@@ -101,7 +107,7 @@ async function postToLlmProxy(payload) {
   await ensureLlmStatus()
   if (!llmConfigured) throw new Error('ANTHROPIC_API_KEY is not configured on the server')
 
-  const res = await fetch(LLM_ENDPOINT, {
+  const res = await apiFetch(LLM_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),

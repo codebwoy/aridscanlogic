@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Search, Eye, EyeOff, Trash2, X, FolderOpen } from 'lucide-react'
-import ReactMarkdown from 'react-markdown'
+import SafeMarkdown from '@/components/SafeMarkdown'
 import { toast } from 'sonner'
 import appApi from '@/lib/appApi'
 import { listCases } from '@/lib/lawyer/caseStore'
@@ -136,7 +136,7 @@ export default function LawyerAIArchive({ open, onClose }) {
                 </p>
                 {c.summaries?.[0] && (
                   <div className="prose prose-invert mt-2 max-w-none text-xs prose-p:text-slate-400">
-                    <ReactMarkdown>{c.summaries[c.summaries.length - 1].content.slice(0, 400)}…</ReactMarkdown>
+                    <SafeMarkdown>{c.summaries[c.summaries.length - 1].content.slice(0, 400)}…</SafeMarkdown>
                   </div>
                 )}
               </div>
@@ -191,7 +191,7 @@ export default function LawyerAIArchive({ open, onClose }) {
               </button>
               {expanded === item.id && (
                 <div className="prose prose-invert mt-3 max-w-none text-sm prose-p:text-slate-300">
-                  <ReactMarkdown>{item.message_content}</ReactMarkdown>
+                  <SafeMarkdown>{item.message_content}</SafeMarkdown>
                 </div>
               )}
             </div>

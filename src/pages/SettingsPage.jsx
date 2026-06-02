@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { Crown, User, Database, Info, Receipt, ChevronRight, Sparkles, CloudUpload, BookOpen } from 'lucide-react'
 import { useGuide } from '@/context/GuideContext'
 import { checkDbConnected, isDbConnected } from '@/lib/supabase/remoteStore'
+import { getApiSecret, setApiSecret } from '@/lib/apiFetch'
 import { pushAllLocalDataToSupabase } from '@/lib/supabase/migrateLocal'
 import { initAppStorage } from '@/lib/appApi'
 import { isAnthropicConfigured, getAnthropicModel, refreshLlmStatus } from '@/lib/anthropic'
@@ -18,6 +19,7 @@ export default function SettingsPage({ onOpenScanVault }) {
   const [llmReady, setLlmReady] = useState(isAnthropicConfigured())
   const [dbReady, setDbReady] = useState(isDbConnected())
   const [syncing, setSyncing] = useState(false)
+  const [apiSecret, setApiSecretState] = useState(() => getApiSecret())
   const { openGuide, language } = useGuide()
 
   useEffect(() => {
@@ -146,6 +148,26 @@ export default function SettingsPage({ onOpenScanVault }) {
               ? `Active — ${getAnthropicModel()}. API key stays on the server (not in the browser).`
               : 'Not configured. Add ANTHROPIC_API_KEY to .env and restart the dev server.'}
           </p>
+        </div>
+
+        <div className="rounded-2xl bg-slate-800/60 p-4">
+          <p className="text-sm text-slate-400">Remote API access (LAN dev)</p>
+          <p className="mt-1 text-xs text-slate-500">
+            Only needed with <code className="text-slate-400">npm run dev:lan</code>. Set{' '}
+            <code className="text-slate-400">SCANLOGIC_API_SECRET</code> in .env, then paste the same
+            value here (stored in this tab&apos;s session only).
+          </p>
+          <input
+            type="password"
+            autoComplete="off"
+            value={apiSecret}
+            onChange={(e) => {
+              setApiSecretState(e.target.value)
+              setApiSecret(e.target.value)
+            }}
+            placeholder="SCANLOGIC_API_SECRET"
+            className="mt-3 w-full rounded-xl border border-slate-600 bg-slate-900/80 px-3 py-2 text-sm"
+          />
         </div>
 
         <div className="rounded-2xl bg-slate-800/60 p-4">

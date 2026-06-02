@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import ReactMarkdown from 'react-markdown'
+import SafeMarkdown from '@/components/SafeMarkdown'
 import { Copy, Download, FileText, Mail, Image } from 'lucide-react'
 import { toast } from 'sonner'
 import { downloadTextFile, generateScanPdf } from '@/lib/pdfUtils'
@@ -59,7 +59,7 @@ export default function ResultsView({ pages, ocrText, markdownResult, title, onE
         </div>
       ) : (
         <div className="prose prose-invert max-w-none rounded-xl bg-slate-800/50 p-4 text-sm prose-headings:text-white prose-p:text-slate-300">
-          <ReactMarkdown>{markdownResult || ocrText || '*Kein Text erkannt*'}</ReactMarkdown>
+          <SafeMarkdown>{markdownResult || ocrText || '*Kein Text erkannt*'}</SafeMarkdown>
         </div>
       )}
 

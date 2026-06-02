@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Send, Archive, Scale, FileText, ListChecks, Paperclip, Download, Plus } from 'lucide-react'
-import ReactMarkdown from 'react-markdown'
+import SafeMarkdown from '@/components/SafeMarkdown'
 import { toast } from 'sonner'
 import QuickPrompts from '@/components/lawyer/QuickPrompts'
 import CategoryPicker from '@/components/lawyer/CategoryPicker'
@@ -331,7 +331,7 @@ export default function LawyerAIPage() {
                 msg.content
               ) : (
                 <>
-                  <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  <SafeMarkdown>{msg.content}</SafeMarkdown>
                   <MessageActions
                     content={msg.content}
                     conversationId={conversationId.current}

@@ -38,6 +38,7 @@ export default function StepVat({ formData, onUpdateForm, onUpdateStep, onNext }
       <a
         href="https://www.bzst.de/DE/Home/home_node.html"
         target="_blank"
+        rel="noopener noreferrer"
         rel="noreferrer"
         className="premium-card flex items-center gap-2 p-4 text-sm text-brand-300"
       >
@@ -46,6 +47,7 @@ export default function StepVat({ formData, onUpdateForm, onUpdateStep, onNext }
       <a
         href="https://www.elster.de"
         target="_blank"
+        rel="noopener noreferrer"
         rel="noreferrer"
         className="premium-card flex items-center gap-2 p-4 text-sm text-slate-300"
       >

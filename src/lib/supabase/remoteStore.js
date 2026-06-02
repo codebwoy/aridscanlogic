@@ -1,3 +1,5 @@
+import { apiFetch } from '@/lib/apiFetch'
+
 const USER_ID_KEY = 'scanlogic_user_id'
 
 export function getRemoteUserId() {
@@ -16,7 +18,7 @@ let dbConnected = null
 
 export async function checkDbConnected() {
   try {
-    const res = await fetch('/api/db/status', { cache: 'no-store' })
+    const res = await apiFetch('/api/db/status', { cache: 'no-store' })
     const data = await res.json()
     dbConnected = !!data.connected
   } catch {
@@ -44,13 +46,13 @@ export function createRemoteEntityClient(entityName) {
         params.filter_key = filterKey
         params.filter_value = String(filterVal)
       }
-      const res = await fetch(`/api/db/${encodeURIComponent(entityName)}?${qs(params)}`)
+      const res = await apiFetch(`/api/db/${encodeURIComponent(entityName)}?${qs(params)}`)
       if (!res.ok) throw new Error(await res.text())
       return res.json()
     },
 
     async get(id) {
-      const res = await fetch(
+      const res = await apiFetch(
         `/api/db/${encodeURIComponent(entityName)}/${encodeURIComponent(id)}?user_id=${encodeURIComponent(userId())}`
       )
       if (!res.ok) throw new Error(await res.text())
@@ -63,7 +65,7 @@ export function createRemoteEntityClient(entityName) {
         created_by_id: userId(),
         created_date: new Date().toISOString(),
       }
-      const res = await fetch(`/api/db/${encodeURIComponent(entityName)}?user_id=${encodeURIComponent(userId())}`, {
+      const res = await apiFetch(`/api/db/${encodeURIComponent(entityName)}?user_id=${encodeURIComponent(userId())}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -73,7 +75,7 @@ export function createRemoteEntityClient(entityName) {
     },
 
     async update(id, data) {
-      const res = await fetch(
+      const res = await apiFetch(
         `/api/db/${encodeURIComponent(entityName)}/${encodeURIComponent(id)}?user_id=${encodeURIComponent(userId())}`,
         {
           method: 'PATCH',
@@ -86,7 +88,7 @@ export function createRemoteEntityClient(entityName) {
     },
 
     async delete(id) {
-      const res = await fetch(
+      const res = await apiFetch(
         `/api/db/${encodeURIComponent(entityName)}/${encodeURIComponent(id)}?user_id=${encodeURIComponent(userId())}`,
         { method: 'DELETE' }
       )
@@ -98,7 +100,7 @@ export function createRemoteEntityClient(entityName) {
 
 /** Push all local records for one entity type to Supabase */
 export async function syncEntityToRemote(entityName, localRecords) {
-  const res = await fetch(`/api/db/sync/${encodeURIComponent(entityName)}`, {
+  const res = await apiFetch(`/api/db/sync/${encodeURIComponent(entityName)}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ records: localRecords, user_id: getRemoteUserId() }),

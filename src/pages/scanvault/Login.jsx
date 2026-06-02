@@ -43,10 +43,13 @@ export default function Login({ onSuccess, onRegister }) {
       </form>
       <button
         type="button"
-        onClick={() => onSuccess(loginWithGoogle())}
+        onClick={() => {
+          toast.message('Demo only — not real Google sign-in')
+          onSuccess(loginWithGoogle())
+        }}
         className="mt-3 min-h-[48px] w-full rounded-xl border border-white/20 font-medium"
       >
-        Continue with Google
+        Continue with Google (demo)
       </button>
       <p className="mt-6 text-center text-sm text-slate-500">
         No account?{' '}

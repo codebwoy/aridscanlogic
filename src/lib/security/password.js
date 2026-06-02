@@ -38,9 +38,19 @@ export async function hashPassword(password) {
   return `${PREFIX}${toBase64(salt)}:${hash}`
 }
 
+function timingSafeEqualString(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false
+  const len = Math.max(a.length, b.length)
+  let diff = a.length ^ b.length
+  for (let i = 0; i < len; i++) {
+    diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0)
+  }
+  return diff === 0
+}
+
 export async function verifyPassword(password, stored) {
   if (!isPasswordHash(stored)) {
-    return password === stored
+    return timingSafeEqualString(password, stored)
   }
   const body = stored.slice(PREFIX.length)
   const colon = body.indexOf(':')
