@@ -1,6 +1,6 @@
 ---
 description: SEO — meta tags, sitemap, structured data, GitHub Pages
-globs: index.html,public/robots.txt,public/sitemap.xml,src/lib/seo/**,scripts/generate-seo-assets.mjs,.github/workflows/deploy-pages.yml
+globs: index.html,public/robots.txt,public/sitemap.xml,src/lib/seo/**,scripts/generate-seo-assets.mjs,.github/workflows/publish-gh-pages.yml
 alwaysApply: false
 ---
 
@@ -24,7 +24,7 @@ npm run seo:generate   # robots + sitemap + og image
 npm run build          # includes icons + seo + vite
 ```
 
-GitHub Pages: workflow publishes `dist` to `gh-pages` via peaceiris; enable Pages from branch `gh-pages` / root in repo settings.
+GitHub Pages: `.github/workflows/publish-gh-pages.yml` (peaceiris → gh-pages). Never use `actions/deploy-pages` without Pages Actions source. Do not re-run obsolete workflow #1.
 
 ## Rules
 

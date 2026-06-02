@@ -98,9 +98,10 @@ The build generates `public/robots.txt`, `public/sitemap.xml`, and `public/og-im
 
 | Step | Action |
 |------|--------|
-| 1 | Push to `main` — workflow builds and pushes to the `gh-pages` branch |
-| 2 | **One-time:** [Pages settings](https://github.com/codebwoy/aridscanlogic/settings/pages) → **Build and deployment: Deploy from a branch** → Branch **`gh-pages`** → folder **`/ (root)`** → Save |
-| 3 | Set `VITE_SITE_URL` in `.env` if using a custom domain (re-run `npm run seo:generate`) |
-| 4 | [Google Search Console](https://search.google.com/search-console) → add property → submit sitemap: `https://codebwoy.github.io/aridscanlogic/sitemap.xml` |
+| 1 | Push to `main` — workflow **“Publish Site to GitHub Pages”** builds and pushes to `gh-pages` |
+| 2 | **Do not re-run** old failed workflow **#1** (`deploy-pages@v4`) — that is obsolete; use the latest **Publish Site** run |
+| 3 | **One-time:** [Pages settings](https://github.com/codebwoy/aridscanlogic/settings/pages) → **Deploy from a branch** → **`gh-pages`** → **`/ (root)`** → Save |
+| 4 | Set `VITE_SITE_URL` in `.env` if using a custom domain (re-run `npm run seo:generate`) |
+| 5 | [Google Search Console](https://search.google.com/search-console) → submit sitemap: `https://codebwoy.github.io/aridscanlogic/sitemap.xml` |
 
 Default canonical URL: `https://codebwoy.github.io/aridscanlogic/`

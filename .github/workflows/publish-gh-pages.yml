@@ -1,4 +1,10 @@
-name: Deploy GitHub Pages
+# Publishes dist/ to the gh-pages branch (peaceiris).
+# Does NOT use actions/deploy-pages — that action requires Pages "GitHub Actions" source and returns 404 otherwise.
+#
+# If you see a failed run with "deploy-pages@v4", that is an OLD run (e.g. #1 on commit bd95397).
+# Do not click "Re-run" on old runs — open the latest run for this workflow instead.
+
+name: Publish Site to GitHub Pages
 
 on:
   push:
@@ -7,14 +13,13 @@ on:
 
 permissions:
   contents: write
-  pages: read
 
 concurrency:
-  group: pages
+  group: github-pages-publish
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,27 +31,25 @@ jobs:
 
       - run: npm ci
 
-      - name: Build for GitHub Pages
+      - name: Build static site
         run: npm run build
         env:
           GITHUB_PAGES: 'true'
           VITE_SITE_URL: https://codebwoy.github.io/aridscanlogic
           VITE_BASE_PATH: /aridscanlogic/
 
-      - name: SPA fallback for GitHub Pages
+      - name: SPA fallback (404 → index.html)
         run: cp dist/index.html dist/404.html
 
-      # Pushes dist to gh-pages — does NOT use actions/deploy-pages (avoids 404 when Pages API unset)
-      - name: Publish to gh-pages branch
+      - name: Push dist to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
           publish_branch: gh-pages
           force_orphan: true
-          commit_message: 'deploy: ${{ github.sha }}'
 
-      - name: Point GitHub Pages at gh-pages branch
+      - name: Enable Pages from gh-pages branch (API)
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
@@ -55,3 +58,6 @@ jobs:
             --input - <<'EOF'
           {"build_type":"legacy","source":{"branch":"gh-pages","path":"/"}}
           EOF
+          echo "If this step fails, set Pages manually:"
+          echo "https://github.com/${GITHUB_REPOSITORY}/settings/pages"
+          echo "Source: Deploy from a branch → gh-pages → / (root)"
