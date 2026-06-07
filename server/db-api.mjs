@@ -70,6 +70,23 @@ export function createDbApiMiddleware(getDatabaseUrl, getJwtSecret, getDefaultUs
       return sanitizeUserId(queryUserId, getDefaultUserId())
     }
 
+    if (url.pathname === '/api/db/status' && req.method === 'GET') {
+      const dbUrl = getDatabaseUrl()
+      res.setHeader('Content-Type', 'application/json')
+      res.setHeader('Cache-Control', 'no-store')
+      if (!dbUrl) {
+        res.end(JSON.stringify({ connected: false, configured: false }))
+        return
+      }
+      try {
+        await getPool(dbUrl).query('SELECT 1')
+        res.end(JSON.stringify({ connected: true, configured: true }))
+      } catch {
+        res.end(JSON.stringify({ connected: false, configured: true }))
+      }
+      return
+    }
+
     const dbUrl = getDatabaseUrl()
     if (!dbUrl) {
       res.statusCode = 503
@@ -79,19 +96,6 @@ export function createDbApiMiddleware(getDatabaseUrl, getJwtSecret, getDefaultUs
     }
 
     const pool = getPool(dbUrl)
-
-    if (url.pathname === '/api/db/status' && req.method === 'GET') {
-      try {
-        await pool.query('SELECT 1')
-        res.setHeader('Content-Type', 'application/json')
-        res.end(JSON.stringify({ connected: true }))
-      } catch (err) {
-        res.statusCode = 503
-        res.setHeader('Content-Type', 'application/json')
-        res.end(JSON.stringify({ connected: false }))
-      }
-      return
-    }
 
     const syncMatch = url.pathname.match(/^\/api\/db\/sync\/([^/]+)$/)
     if (syncMatch && req.method === 'POST') {

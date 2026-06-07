@@ -15,16 +15,30 @@ export function setRemoteUserId(id) {
 }
 
 let dbConnected = null
+let dbStatusPromise = null
 
 export async function checkDbConnected() {
-  try {
-    const res = await apiFetch('/api/db/status', { cache: 'no-store' })
-    const data = await res.json()
-    dbConnected = !!data.connected
-  } catch {
-    dbConnected = false
-  }
-  return dbConnected
+  if (dbStatusPromise) return dbStatusPromise
+
+  dbStatusPromise = (async () => {
+    try {
+      const res = await apiFetch('/api/db/status', { cache: 'no-store' })
+      if (!res.ok) {
+        dbConnected = false
+        return false
+      }
+      const data = await res.json()
+      dbConnected = !!data.connected
+      return dbConnected
+    } catch {
+      dbConnected = false
+      return false
+    } finally {
+      dbStatusPromise = null
+    }
+  })()
+
+  return dbStatusPromise
 }
 
 export function isDbConnected() {
