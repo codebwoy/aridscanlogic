@@ -111,7 +111,7 @@ export function createLlmProxyMiddleware({ getApiKey, getModel }) {
   }
 }
 
-export function createSecurityHeadersMiddleware() {
+export function createSecurityHeadersMiddleware({ enableCsp = false } = {}) {
   const csp =
     "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 
@@ -121,7 +121,10 @@ export function createSecurityHeadersMiddleware() {
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
     res.setHeader('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()')
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
-    res.setHeader('Content-Security-Policy', csp)
+    // Strict CSP breaks Vite dev (HMR websockets + inline/eval). Use meta CSP in production HTML only.
+    if (enableCsp) {
+      res.setHeader('Content-Security-Policy', csp)
+    }
     next()
   }
 }

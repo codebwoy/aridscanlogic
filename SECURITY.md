@@ -23,6 +23,7 @@
 - LAN dev may send `X-ScanLogic-Api-Secret` alongside a user JWT Bearer token.
 - Local API auth uses **socket address only** (not the `Host` header) to prevent LAN bypass via header spoofing.
 - Postgres TLS certificate verification is **enabled by default**; set `SCANLOGIC_PG_SSL_REJECT_UNAUTHORIZED=false` only if your provider requires it (e.g. some Supabase setups).
+- **Content-Security-Policy** is applied on production preview and in the built HTML meta tag — **not** during `npm run dev` (Vite requires inline scripts for HMR).
 - Markdown from AI/OCR is rendered with `rehype-sanitize` to reduce XSS risk.
 - User image URLs for Claude are restricted to safe `https:` / `data:` targets (SSRF mitigation).
 

@@ -13,9 +13,19 @@ import { initAppStorage } from './lib/appApi'
 import { applySeo } from './lib/seo/applySeo'
 
 applySeo('suite')
+
+if (import.meta.env.DEV && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((regs) => {
+    regs.forEach((r) => r.unregister())
+  })
+}
+
 initPwa()
 ensureLlmStatus()
 initAppStorage()
+
+const seoStatic = document.getElementById('seo-static')
+if (seoStatic) seoStatic.hidden = true
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
