@@ -1,35 +1,40 @@
 # GitHub Pages deploy
 
-## Error: `configure-pages` — "Resource not accessible by integration"
+Live URL: **https://codebwoy.github.io/aridscanlogic/**
 
-The workflow **cannot** enable Pages via the API (GitHub blocks that for `GITHUB_TOKEN`).  
-The deploy workflow now **only pushes to the `gh-pages` branch** — no `configure-pages` or `deploy-pages`.
+## How it works
 
-## Fix (one time, ~1 minute)
+On every push to `main`, [Deploy GitHub Pages](https://github.com/codebwoy/aridscanlogic/actions/workflows/deploy-github-pages.yml):
+
+1. Builds the Vite app with `VITE_BASE_PATH=/aridscanlogic/`
+2. Pushes `dist/` to the **`gh-pages`** branch (peaceiris)
+3. Tries to set Pages source to **`gh-pages` / (root)** via the GitHub API
+
+## One-time setup (if the site is 404)
 
 1. **Workflow permissions**  
    [Actions settings](https://github.com/codebwoy/aridscanlogic/settings/actions) → **General** → **Workflow permissions** → **Read and write permissions** → Save
 
-2. **Run deploy**  
-   [Deploy GitHub Pages](https://github.com/codebwoy/aridscanlogic/actions/workflows/deploy-github-pages.yml) → wait for green ✓ (step: **Publish to gh-pages branch**)
-
-3. **Enable Pages**  
+2. **Enable Pages** (only if step 3 in CI did not succeed)  
    [Pages settings](https://github.com/codebwoy/aridscanlogic/settings/pages)  
    - **Deploy from a branch**  
    - Branch: **`gh-pages`**  
    - Folder: **`/ (root)`**  
    - **Save**
 
-4. **Open site**  
-   https://codebwoy.github.io/aridscanlogic/
+3. **Or from your machine** (with `gh auth login`):
+
+   ```bash
+   ./scripts/enable-github-pages.sh
+   ```
 
 ## Old errors (ignore)
 
-| Error | Meaning |
-|-------|---------|
-| `deploy-pages@v4` 404 | Obsolete workflow **#1** — do not re-run |
-| `configure-pages` enablement failed | Fixed — that step was removed |
+| What you see | Meaning |
+|--------------|---------|
+| Red **github-pages** environment deployments from “Deploy GitHub Pages **#1**” | Obsolete `deploy-pages@v4` runs — not used anymore |
+| `.github/workflows/enable-pages-settings.yml` failed | Removed — invalid workflow permissions caused a failed check on every push |
 
-## Live URL
+## Manual redeploy
 
-**https://codebwoy.github.io/aridscanlogic/**
+[Actions → Deploy GitHub Pages → Run workflow](https://github.com/codebwoy/aridscanlogic/actions/workflows/deploy-github-pages.yml)

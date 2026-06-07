@@ -1,9 +1,5 @@
-# Pushes dist/ to gh-pages (no configure-pages / deploy-pages — avoids token permission errors).
-#
-# One-time (required): https://github.com/codebwoy/aridscanlogic/settings/pages
-#   Build and deployment → Deploy from a branch → gh-pages → / (root) → Save
-#
-# Settings → Actions → General → Workflow permissions → Read and write permissions
+# Builds dist/ and pushes to gh-pages. Tries to enable Pages via API (pages: write).
+# If the site stays 404, set source once: Settings → Pages → gh-pages / (root).
 
 name: Deploy GitHub Pages
 
@@ -14,6 +10,7 @@ on:
 
 permissions:
   contents: write
+  pages: write
 
 concurrency:
   group: pages
@@ -40,7 +37,9 @@ jobs:
           VITE_BASE_PATH: /aridscanlogic/
 
       - name: SPA fallback (404 → index.html)
-        run: cp dist/index.html dist/404.html
+        run: |
+          cp dist/index.html dist/404.html
+          touch dist/.nojekyll
 
       - name: Publish to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
@@ -50,15 +49,33 @@ jobs:
           publish_branch: gh-pages
           force_orphan: true
 
-      - name: Deploy instructions
+      - name: Enable GitHub Pages (gh-pages branch)
+        id: pages
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BODY='{"build_type":"legacy","source":{"branch":"gh-pages","path":"/"}}'
+          if gh api "repos/${GITHUB_REPOSITORY}/pages" &>/dev/null; then
+            gh api --method PUT "repos/${GITHUB_REPOSITORY}/pages" --input - <<<"$BODY"
+          else
+            gh api --method POST "repos/${GITHUB_REPOSITORY}/pages" --input - <<<"$BODY"
+          fi
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy summary
         run: |
           {
-            echo "## Build pushed to \`gh-pages\`"
+            echo "## GitHub Pages deploy"
             echo ""
-            echo "If the site is not live yet, enable Pages once:"
-            echo "1. [Pages settings](https://github.com/${{ github.repository }}/settings/pages)"
-            echo "2. **Deploy from a branch** → **gh-pages** → **/(root)** → Save"
-            echo "3. Open https://codebwoy.github.io/aridscanlogic/"
-            echo ""
-            echo "Ensure **Settings → Actions → Workflow permissions** is **Read and write**."
+            if [[ "${{ steps.pages.outputs.enabled }}" == "true" ]]; then
+              echo "Pages source set to \`gh-pages\` / (root). Site: https://codebwoy.github.io/aridscanlogic/"
+            else
+              echo "Build is on \`gh-pages\`. If the site is still 404, enable once:"
+              echo "1. [Pages settings](https://github.com/${{ github.repository }}/settings/pages)"
+              echo "2. **Deploy from a branch** → **gh-pages** → **/(root)** → Save"
+              echo "3. [Actions permissions](https://github.com/${{ github.repository }}/settings/actions) → **Read and write**"
+              echo ""
+              echo "Then open https://codebwoy.github.io/aridscanlogic/"
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
