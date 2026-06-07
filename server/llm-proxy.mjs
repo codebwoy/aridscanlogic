@@ -88,9 +88,14 @@ export function createLlmProxyMiddleware({ getApiKey, getModel }) {
       })
 
       const text = await upstream.text()
-      res.statusCode = upstream.status
       res.setHeader('Content-Type', 'application/json')
       res.setHeader('Cache-Control', 'no-store')
+      if (!upstream.ok) {
+        res.statusCode = upstream.status >= 500 ? 502 : upstream.status
+        res.end(JSON.stringify({ error: clientSafeError(null) }))
+        return
+      }
+      res.statusCode = upstream.status
       res.end(text)
     } catch (err) {
       const tooLarge = err.message === 'Request body too large'
@@ -107,12 +112,16 @@ export function createLlmProxyMiddleware({ getApiKey, getModel }) {
 }
 
 export function createSecurityHeadersMiddleware() {
+  const csp =
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+
   return function securityHeaders(req, res, next) {
     res.setHeader('X-Content-Type-Options', 'nosniff')
     res.setHeader('X-Frame-Options', 'DENY')
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
     res.setHeader('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()')
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+    res.setHeader('Content-Security-Policy', csp)
     next()
   }
 }

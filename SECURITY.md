@@ -16,7 +16,13 @@
 ## API hardening
 
 - LLM proxy validates model names, caps `max_tokens`, and rate-limits requests.
-- DB proxy sanitizes `user_id` and filter keys; database errors are not leaked to clients.
+- Upstream Anthropic errors are sanitized — raw upstream bodies are not forwarded to clients.
+- DB proxy sanitizes `user_id`, record IDs, and filter keys; database errors are not leaked to clients.
+- Sync batches are capped at 500 records; upserts only apply when the existing row belongs to the same `user_id`.
+- When `SUPABASE_JWT_SECRET` is set, `/api/db` binds requests to the JWT `sub` claim — client-supplied `user_id` cannot impersonate another tenant.
+- LAN dev may send `X-ScanLogic-Api-Secret` alongside a user JWT Bearer token.
+- Local API auth uses **socket address only** (not the `Host` header) to prevent LAN bypass via header spoofing.
+- Postgres TLS certificate verification is **enabled by default**; set `SCANLOGIC_PG_SSL_REJECT_UNAUTHORIZED=false` only if your provider requires it (e.g. some Supabase setups).
 - Markdown from AI/OCR is rendered with `rehype-sanitize` to reduce XSS risk.
 - User image URLs for Claude are restricted to safe `https:` / `data:` targets (SSRF mitigation).
 
@@ -43,6 +49,8 @@ Static hosts (GitHub Pages, S3-only) **cannot** run the LLM proxy. Options:
 ## Supabase
 
 - `DATABASE_URL` is used **only** on the dev/preview server (`/api/db` proxy), never in the frontend bundle.
+- Optional cloud auth: set `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (client) and `SUPABASE_JWT_SECRET` (server) — see `.env.example`.
+- When JWT auth is active, the server ignores mismatched `user_id` query parameters.
 - Do **not** put `service_role` or database passwords in any `VITE_*` variable.
 - Rotate database password and JWT secrets if they were shared in chat or committed.
 

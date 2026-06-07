@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Plus, FileSignature, PenLine, Library, FileDown, XCircle, Search, Copy, Pencil } from 'lucide-react'
 import { toast } from 'sonner'
+import { useConfirm } from '@/context/ConfirmContext'
 import appApi from '@/lib/appApi'
 import ContractDesigner from './ContractDesigner'
 import SigningFlow from './SigningFlow'
@@ -14,7 +15,9 @@ import { logContractEvent } from '@/lib/contractsafe/auditLog'
 const STATUS_FILTERS = ['all', 'draft', 'sent', 'partially_signed', 'fully_signed', 'voided']
 
 export default function ContractSafeHome() {
+  const confirm = useConfirm()
   const [contracts, setContracts] = useState([])
+  const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(null)
   const [signingContract, setSigningContract] = useState(null)
   const [selected, setSelected] = useState(null)
@@ -24,10 +27,13 @@ export default function ContractSafeHome() {
   const [statusFilter, setStatusFilter] = useState('all')
 
   const load = async () => {
+    setLoading(true)
     try {
       setContracts(await appApi.entities.Contract.list())
     } catch {
       toast.error('Verträge konnten nicht geladen werden')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -60,7 +66,13 @@ export default function ContractSafeHome() {
   }
 
   const voidContract = async (c) => {
-    if (!window.confirm('Void this contract?')) return
+    const ok = await confirm({
+      title: 'Vertrag annullieren',
+      message: 'Diesen Vertrag als ungültig markieren?',
+      confirmLabel: 'Annullieren',
+      destructive: true,
+    })
+    if (!ok) return
     await appApi.entities.Contract.update(c.id, { status: 'voided' })
     logContractEvent(c.id, { type: 'voided' })
     load()
@@ -142,12 +154,14 @@ export default function ContractSafeHome() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search contracts…"
+          aria-label="Verträge durchsuchen"
           className="w-full rounded-xl bg-slate-800 py-2 pl-9 pr-3 text-sm"
         />
       </div>
       <select
         value={statusFilter}
         onChange={(e) => setStatusFilter(e.target.value)}
+        aria-label="Status filtern"
         className="mb-4 w-full rounded-xl bg-slate-800 px-3 py-2 text-sm"
       >
         {STATUS_FILTERS.map((s) => (
@@ -174,7 +188,13 @@ export default function ContractSafeHome() {
         </button>
       </div>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="grid-cards" aria-busy="true" aria-label="Verträge werden geladen">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-28 animate-pulse rounded-xl bg-slate-800/80" />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
         <EmptyState
           icon={FileSignature}
           title="Keine Verträge"

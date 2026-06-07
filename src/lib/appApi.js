@@ -3,6 +3,7 @@
  */
 
 import { invokeLLMViaAnthropic, isAnthropicConfigured, ensureLlmStatus } from './anthropic'
+import { capImageDataUrl } from './imageProcessing'
 import {
   checkDbConnected,
   isDbConnected,
@@ -203,11 +204,14 @@ const appApi = {
         if (!file) throw new Error('UploadFile requires a File via { file }')
         return new Promise((resolve, reject) => {
           const reader = new FileReader()
-          reader.onload = () =>
-            resolve({
-              file_url: reader.result,
-              file_name: file.name,
-            })
+          reader.onload = async () => {
+            try {
+              const capped = await capImageDataUrl(reader.result)
+              resolve({ file_url: capped, file_name: file.name })
+            } catch (e) {
+              reject(e)
+            }
+          }
           reader.onerror = reject
           reader.readAsDataURL(file)
         })

@@ -11,8 +11,14 @@ export const PIPELINE_STAGES = [
 export default function ProcessingOverlay({ stage }) {
   const currentIdx = PIPELINE_STAGES.findIndex((s) => s.id === stage)
 
+  const activeLabel = PIPELINE_STAGES[Math.max(0, currentIdx)]?.label || 'Processing'
+
   return (
     <motion.div
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      aria-label={`Dokument wird verarbeitet: ${activeLabel}`}
       className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/95 px-6 backdrop-blur-md"
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}

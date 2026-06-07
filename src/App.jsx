@@ -2,26 +2,18 @@ import { useState, useEffect } from 'react'
 import Dashboard from './pages/Dashboard'
 import ScanVaultRoot from './pages/scanvault/ScanVaultRoot'
 import { applySeo } from '@/lib/seo/applySeo'
-
-const MODE_KEY = 'scanlogic_app_mode'
-
-function getShareToken() {
-  return new URLSearchParams(window.location.search).get('share')
-}
+import { getAppMode, getShareToken, setAppMode } from '@/lib/navigation/mode'
 
 export default function App() {
-  const [mode, setMode] = useState(() => {
-    if (getShareToken()) return 'scanvault'
-    return sessionStorage.getItem(MODE_KEY) || 'suite'
-  })
+  const [mode, setMode] = useState(getAppMode)
 
   const openSuite = () => {
-    sessionStorage.setItem(MODE_KEY, 'suite')
+    setAppMode('suite')
     setMode('suite')
   }
 
   const openScanVault = () => {
-    sessionStorage.setItem(MODE_KEY, 'scanvault')
+    setAppMode('scanvault')
     setMode('scanvault')
   }
 

@@ -2,9 +2,9 @@ import { createLlmProxyMiddleware, createSecurityHeadersMiddleware } from './llm
 import { createDbApiMiddleware } from './db-api.mjs'
 import { createApiAccessMiddleware, createRateLimitMiddleware } from './security.mjs'
 
-export function llmProxyPlugin({ getApiKey, getModel, getDatabaseUrl, getApiSecret }) {
+export function llmProxyPlugin({ getApiKey, getModel, getDatabaseUrl, getApiSecret, getJwtSecret }) {
   const llm = createLlmProxyMiddleware({ getApiKey, getModel })
-  const db = createDbApiMiddleware(getDatabaseUrl)
+  const db = createDbApiMiddleware(getDatabaseUrl, getJwtSecret)
   const security = createSecurityHeadersMiddleware()
   const apiAccess = createApiAccessMiddleware(getApiSecret)
   const rateLimitLlm = createRateLimitMiddleware({ pathPrefix: '/api/llm', windowMs: 60_000, max: 30 })

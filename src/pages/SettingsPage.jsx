@@ -13,7 +13,10 @@ import TaxVaultSettings from './taxvault/TaxVaultSettings'
 import InstallPwaButton from '@/components/pwa/InstallPwaButton'
 
 export default function SettingsPage({ onOpenScanVault }) {
-  const { user } = useAuth()
+  const { user, supabaseReady, signIn, signUp, signOut } = useAuth()
+  const [authEmail, setAuthEmail] = useState('')
+  const [authPassword, setAuthPassword] = useState('')
+  const [authBusy, setAuthBusy] = useState(false)
   const { isPremium, setModalOpen } = usePremium()
   const [taxVaultSettings, setTaxVaultSettings] = useState(false)
   const [llmReady, setLlmReady] = useState(isAnthropicConfigured())
@@ -82,13 +85,91 @@ export default function SettingsPage({ onOpenScanVault }) {
 
         <div className="flex items-center gap-4 rounded-2xl bg-slate-800/80 p-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-600/30">
-            <User className="h-6 w-6 text-brand-400" />
+            <User className="h-6 w-6 text-brand-400" aria-hidden />
           </div>
-          <div>
+          <div className="min-w-0 flex-1">
             <p className="font-medium">{user?.name || 'Benutzer'}</p>
-            <p className="text-sm text-slate-500">{user?.email}</p>
+            <p className="text-sm text-slate-400">{user?.email}</p>
+            {user?.mode === 'supabase' && (
+              <p className="text-xs text-emerald-400">Supabase angemeldet</p>
+            )}
           </div>
+          {user?.mode === 'supabase' && (
+            <button
+              type="button"
+              onClick={() => signOut().then(() => toast.success('Abgemeldet'))}
+              className="rounded-lg bg-slate-700 px-3 py-1.5 text-xs"
+            >
+              Abmelden
+            </button>
+          )}
         </div>
+
+        {supabaseReady && user?.mode !== 'supabase' && (
+          <div className="rounded-2xl bg-slate-800/60 p-4">
+            <p className="mb-2 text-sm font-medium text-slate-300">Cloud-Konto (Supabase)</p>
+            <label className="mb-2 block text-xs text-slate-400" htmlFor="auth-email">
+              E-Mail
+            </label>
+            <input
+              id="auth-email"
+              type="email"
+              value={authEmail}
+              onChange={(e) => setAuthEmail(e.target.value)}
+              className="mb-2 w-full rounded-xl bg-slate-900 px-3 py-2 text-sm"
+              autoComplete="email"
+            />
+            <label className="mb-2 block text-xs text-slate-400" htmlFor="auth-password">
+              Passwort
+            </label>
+            <input
+              id="auth-password"
+              type="password"
+              value={authPassword}
+              onChange={(e) => setAuthPassword(e.target.value)}
+              className="mb-3 w-full rounded-xl bg-slate-900 px-3 py-2 text-sm"
+              autoComplete="current-password"
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={authBusy}
+                onClick={async () => {
+                  setAuthBusy(true)
+                  try {
+                    await signIn(authEmail, authPassword)
+                    toast.success('Angemeldet')
+                  } catch (e) {
+                    toast.error(e.message || 'Anmeldung fehlgeschlagen')
+                  } finally {
+                    setAuthBusy(false)
+                  }
+                }}
+                className="flex-1 rounded-xl bg-brand-600 py-2 text-sm font-semibold disabled:opacity-50"
+              >
+                Anmelden
+              </button>
+              <button
+                type="button"
+                disabled={authBusy}
+                onClick={async () => {
+                  setAuthBusy(true)
+                  try {
+                    await signUp(authEmail, authPassword)
+                    toast.success('Konto erstellt — E-Mail bestätigen falls erforderlich')
+                  } catch (e) {
+                    toast.error(e.message || 'Registrierung fehlgeschlagen')
+                  } finally {
+                    setAuthBusy(false)
+                  }
+                }}
+                className="flex-1 rounded-xl border border-slate-600 py-2 text-sm"
+              >
+                Registrieren
+              </button>
+            </div>
+          </div>
+        )}
 
         {onOpenScanVault && (
           <button

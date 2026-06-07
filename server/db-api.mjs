@@ -1,5 +1,14 @@
 import { getPool } from './db-pool.mjs'
-import { clientSafeError, sanitizeFilterKey, sanitizeUserId } from './security.mjs'
+import { resolveAuthenticatedUserId } from './auth.mjs'
+import { mergeEntityPayload, validateEntityPayload } from './entityValidate.mjs'
+import {
+  clientSafeError,
+  sanitizeFilterKey,
+  sanitizeRecordId,
+  sanitizeUserId,
+} from './security.mjs'
+
+const MAX_SYNC_BATCH = 500
 
 const ENTITY_TYPES = new Set([
   'Document',
@@ -44,10 +53,22 @@ function readBody(req) {
   })
 }
 
-export function createDbApiMiddleware(getDatabaseUrl, getDefaultUserId = () => 'local-user') {
+export function createDbApiMiddleware(getDatabaseUrl, getJwtSecret, getDefaultUserId = () => 'local-user') {
   return async function dbApiMiddleware(req, res, next) {
     const url = new URL(req.url || '/', 'http://localhost')
     if (!url.pathname.startsWith('/api/db')) return next()
+
+    const resolveUserId = (queryUserId) => {
+      const authUserId = resolveAuthenticatedUserId(req, getJwtSecret)
+      if (authUserId) {
+        const requested = sanitizeUserId(queryUserId, authUserId)
+        if (requested !== authUserId) {
+          throw Object.assign(new Error('Forbidden'), { status: 403 })
+        }
+        return authUserId
+      }
+      return sanitizeUserId(queryUserId, getDefaultUserId())
+    }
 
     const dbUrl = getDatabaseUrl()
     if (!dbUrl) {
@@ -83,12 +104,20 @@ export function createDbApiMiddleware(getDatabaseUrl, getDefaultUserId = () => '
       try {
         const raw = await readBody(req)
         const { records = [], user_id } = JSON.parse(raw || '{}')
-        const userId = sanitizeUserId(user_id, getDefaultUserId())
+        if (!Array.isArray(records) || records.length > MAX_SYNC_BATCH) {
+          res.statusCode = 400
+          res.setHeader('Content-Type', 'application/json')
+          res.end(
+            JSON.stringify({ error: `Sync batch exceeds ${MAX_SYNC_BATCH} records` })
+          )
+          return
+        }
+        const userId = resolveUserId(user_id)
         const client = await pool.connect()
         try {
           await client.query('BEGIN')
           for (const rec of records) {
-            const id = rec.id
+            const id = sanitizeRecordId(rec?.id)
             if (!id) continue
             const { id: _id, created_date, updated_date, created_by_id, ...rest } = rec
             const payload = { ...rest, created_by_id: created_by_id || userId }
@@ -97,7 +126,8 @@ export function createDbApiMiddleware(getDatabaseUrl, getDefaultUserId = () => '
                VALUES ($1, $2, $3, $4::jsonb, COALESCE($5::timestamptz, NOW()), $6::timestamptz)
                ON CONFLICT (id) DO UPDATE SET
                  payload = EXCLUDED.payload,
-                 updated_date = COALESCE(EXCLUDED.updated_date, NOW())`,
+                 updated_date = COALESCE(EXCLUDED.updated_date, NOW())
+               WHERE scanlogic_records.user_id = EXCLUDED.user_id`,
               [
                 id,
                 entityType,
@@ -118,9 +148,14 @@ export function createDbApiMiddleware(getDatabaseUrl, getDefaultUserId = () => '
         res.setHeader('Content-Type', 'application/json')
         res.end(JSON.stringify({ ok: true, count: records.length }))
       } catch (err) {
-        res.statusCode = 500
+        const status = err.status || 500
+        res.statusCode = status
         res.setHeader('Content-Type', 'application/json')
-        res.end(JSON.stringify({ error: clientSafeError(err) }))
+        res.end(
+          JSON.stringify({
+            error: status === 403 ? 'Forbidden' : clientSafeError(err),
+          })
+        )
       }
       return
     }
@@ -133,7 +168,15 @@ export function createDbApiMiddleware(getDatabaseUrl, getDefaultUserId = () => '
     }
 
     const entityType = decodeURIComponent(entityMatch[1])
-    const recordId = entityMatch[2] ? decodeURIComponent(entityMatch[2]) : null
+    const rawRecordId = entityMatch[2] ? decodeURIComponent(entityMatch[2]) : null
+    const recordId = rawRecordId ? sanitizeRecordId(rawRecordId) : null
+
+    if (rawRecordId && !recordId) {
+      res.statusCode = 400
+      res.setHeader('Content-Type', 'application/json')
+      res.end(JSON.stringify({ error: 'Invalid record id' }))
+      return
+    }
 
     if (entityType === 'status' || !ENTITY_TYPES.has(entityType)) {
       res.statusCode = entityType === 'status' ? 404 : 400
@@ -141,9 +184,9 @@ export function createDbApiMiddleware(getDatabaseUrl, getDefaultUserId = () => '
       return
     }
 
-    const userId = sanitizeUserId(url.searchParams.get('user_id'), getDefaultUserId())
-
     try {
+      const userId = resolveUserId(url.searchParams.get('user_id'))
+
       if (req.method === 'GET' && !recordId) {
         const filterKey = sanitizeFilterKey(url.searchParams.get('filter_key'))
         const filterVal = url.searchParams.get('filter_value')
@@ -173,10 +216,16 @@ export function createDbApiMiddleware(getDatabaseUrl, getDefaultUserId = () => '
       if (req.method === 'POST' && !recordId) {
         const raw = await readBody(req)
         const data = JSON.parse(raw || '{}')
-        const id = data.id || `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+        const id =
+          sanitizeRecordId(data.id) ||
+          `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
         const created_date = data.created_date || new Date().toISOString()
         const { id: _i, created_date: _cd, updated_date, created_by_id, ...rest } = data
-        const payload = { ...rest, created_by_id: created_by_id || userId, created_date }
+        const payload = validateEntityPayload(entityType, {
+          ...rest,
+          created_by_id: created_by_id || userId,
+          created_date,
+        })
         await pool.query(
           `INSERT INTO scanlogic_records (id, entity_type, user_id, payload, created_date)
            VALUES ($1, $2, $3, $4::jsonb, $5::timestamptz)`,
@@ -200,7 +249,7 @@ export function createDbApiMiddleware(getDatabaseUrl, getDefaultUserId = () => '
           res.end(JSON.stringify({ error: 'Not found' }))
           return
         }
-        const merged = { ...existing[0].payload, ...data, updated_date }
+        const merged = mergeEntityPayload(entityType, existing[0].payload, { ...data, updated_date })
         await pool.query(
           `UPDATE scanlogic_records SET payload = $1::jsonb, updated_date = $2::timestamptz WHERE id = $3 AND entity_type = $4`,
           [JSON.stringify(merged), updated_date, recordId, entityType]
@@ -211,10 +260,16 @@ export function createDbApiMiddleware(getDatabaseUrl, getDefaultUserId = () => '
       }
 
       if (req.method === 'DELETE' && recordId) {
-        await pool.query(
+        const { rowCount } = await pool.query(
           `DELETE FROM scanlogic_records WHERE entity_type = $1 AND id = $2 AND user_id = $3`,
           [entityType, recordId, userId]
         )
+        if (!rowCount) {
+          res.statusCode = 404
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ error: 'Not found' }))
+          return
+        }
         res.setHeader('Content-Type', 'application/json')
         res.end(JSON.stringify({ success: true }))
         return
@@ -223,9 +278,14 @@ export function createDbApiMiddleware(getDatabaseUrl, getDefaultUserId = () => '
       res.statusCode = 405
       res.end(JSON.stringify({ error: 'Method not allowed' }))
     } catch (err) {
-      res.statusCode = 500
+      const status = err.status || 500
+      res.statusCode = status
       res.setHeader('Content-Type', 'application/json')
-      res.end(JSON.stringify({ error: clientSafeError(err) }))
+      res.end(
+        JSON.stringify({
+          error: status === 403 ? 'Forbidden' : clientSafeError(err),
+        })
+      )
     }
   }
 }

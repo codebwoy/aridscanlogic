@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Search, ChevronRight, CheckSquare, Square, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useConfirm } from '@/context/ConfirmContext'
 import appApi from '@/lib/appApi'
 import { getCategoryByName } from '@/lib/taxvault/categories'
 import { filterByTaxYear } from '@/lib/taxvault/stats'
@@ -16,6 +17,7 @@ const SORT_OPTIONS = [
 ]
 
 export default function ReceiptList({ receipts, taxYear, onSelect, onRefresh }) {
+  const confirm = useConfirm()
   const profile = loadTaxVaultProfile()
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('')
@@ -68,7 +70,13 @@ export default function ReceiptList({ receipts, taxYear, onSelect, onRefresh }) 
 
   const bulkDelete = async () => {
     if (!selected.size) return
-    if (!window.confirm(`Delete ${selected.size} receipts permanently?`)) return
+    const ok = await confirm({
+      title: 'Delete receipts',
+      message: `Delete ${selected.size} receipt(s) permanently?`,
+      confirmLabel: 'Delete',
+      destructive: true,
+    })
+    if (!ok) return
     try {
       for (const id of selected) {
         await appApi.entities.Receipt.delete(id)

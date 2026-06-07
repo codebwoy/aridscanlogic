@@ -1,43 +1,15 @@
-import { useRef, useEffect, useState, useCallback } from 'react'
+import { useRef, useState } from 'react'
 import { Camera, Plus, X, FlipHorizontal, ImagePlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { dataUrlToJpegFile } from '@/lib/imageProcessing'
+import { useCameraStream } from '@/lib/camera/useCameraStream'
+import { blobToDataUrl, captureVideoFrame } from '@/lib/camera/captureFrame'
 
 /** Capture produces JPEG DataURL strings; upload path uses Blob → File */
 export default function CameraCapture({ pages, onPagesChange, onDone }) {
-  const videoRef = useRef(null)
-  const streamRef = useRef(null)
   const fileInputRef = useRef(null)
   const [facingMode, setFacingMode] = useState('environment')
-  const [active, setActive] = useState(false)
-
-  const startCamera = useCallback(async () => {
-    try {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((t) => t.stop())
-      }
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
-        audio: false,
-      })
-      streamRef.current = stream
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        await videoRef.current.play()
-      }
-      setActive(true)
-    } catch (err) {
-      toast.error('Kamera konnte nicht gestartet werden')
-      console.error(err)
-    }
-  }, [facingMode])
-
-  useEffect(() => {
-    startCamera()
-    return () => {
-      streamRef.current?.getTracks().forEach((t) => t.stop())
-    }
-  }, [startCamera])
+  const { videoRef, active } = useCameraStream({ facingMode })
 
   const addPageDataUrl = (dataUrl) => {
     onPagesChange([...pages, dataUrl])
@@ -45,31 +17,20 @@ export default function CameraCapture({ pages, onPagesChange, onDone }) {
   }
 
   const capturePage = () => {
-    const video = videoRef.current
-    if (!video) return
-    const canvas = document.createElement('canvas')
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
-    const ctx = canvas.getContext('2d')
-    ctx.drawImage(video, 0, 0)
-    addPageDataUrl(canvas.toDataURL('image/jpeg', 0.9))
+    const dataUrl = captureVideoFrame(videoRef.current, 0.9)
+    if (dataUrl) addPageDataUrl(dataUrl)
   }
 
   const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files || [])
     if (!files.length) return
     try {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i]
+      for (const file of files) {
         const jpegFile =
           file.type === 'image/jpeg'
             ? file
-            : await dataUrlToJpegFile(
-                await blobToDataUrl(file),
-                file.name.replace(/\.\w+$/, '.jpg')
-              )
-        const dataUrl = await blobToDataUrl(jpegFile)
-        addPageDataUrl(dataUrl)
+            : await dataUrlToJpegFile(await blobToDataUrl(file), file.name.replace(/\.\w+$/, '.jpg'))
+        addPageDataUrl(await blobToDataUrl(jpegFile))
       }
     } catch {
       toast.error('Bild-Upload fehlgeschlagen')
@@ -87,7 +48,7 @@ export default function CameraCapture({ pages, onPagesChange, onDone }) {
         <video ref={videoRef} className="h-full w-full object-cover" playsInline muted />
         {!active && (
           <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80">
-            <Camera className="h-12 w-12 animate-pulse text-slate-500" />
+            <Camera className="h-12 w-12 animate-pulse text-slate-500" aria-hidden />
           </div>
         )}
         <div className="pointer-events-none absolute inset-4 rounded-lg border-2 border-dashed border-white/40" />
@@ -102,8 +63,9 @@ export default function CameraCapture({ pages, onPagesChange, onDone }) {
                 type="button"
                 onClick={() => removePage(i)}
                 className="absolute -right-1 -top-1 rounded-full bg-red-500 p-0.5"
+                aria-label={`Seite ${i + 1} entfernen`}
               >
-                <X className="h-3 w-3 text-white" />
+                <X className="h-3 w-3 text-white" aria-hidden />
               </button>
             </div>
           ))}
@@ -115,9 +77,9 @@ export default function CameraCapture({ pages, onPagesChange, onDone }) {
           type="button"
           onClick={() => fileInputRef.current?.click()}
           className="rounded-full bg-slate-800 p-3"
-          title="Bilder hochladen"
+          aria-label="Bilder hochladen"
         >
-          <ImagePlus className="h-5 w-5" />
+          <ImagePlus className="h-5 w-5" aria-hidden />
         </button>
         <input
           ref={fileInputRef}
@@ -131,13 +93,15 @@ export default function CameraCapture({ pages, onPagesChange, onDone }) {
           type="button"
           onClick={() => setFacingMode((m) => (m === 'environment' ? 'user' : 'environment'))}
           className="rounded-full bg-slate-800 p-3"
+          aria-label="Kamera wechseln"
         >
-          <FlipHorizontal className="h-5 w-5" />
+          <FlipHorizontal className="h-5 w-5" aria-hidden />
         </button>
         <button
           type="button"
           onClick={capturePage}
           className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-brand-500 bg-white"
+          aria-label="Seite aufnehmen"
         >
           <div className="h-12 w-12 rounded-full bg-brand-500" />
         </button>
@@ -147,20 +111,11 @@ export default function CameraCapture({ pages, onPagesChange, onDone }) {
             onClick={onDone}
             className="flex items-center gap-1 rounded-full bg-brand-600 px-4 py-3 text-sm font-semibold"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4" aria-hidden />
             Weiter ({pages.length})
           </button>
         )}
       </div>
     </div>
   )
-}
-
-function blobToDataUrl(blob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result)
-    reader.onerror = reject
-    reader.readAsDataURL(blob)
-  })
 }

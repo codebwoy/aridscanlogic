@@ -1,16 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Wand2, Eraser } from 'lucide-react'
 import { applyFilter } from '@/lib/imageProcessing'
+import { SUITE_FILTERS } from '@/lib/imageFilters'
 import { aiBackgroundRemoval } from '@/lib/backgroundRemoval'
 import { usePremium } from '@/context/PremiumContext'
 import { toast } from 'sonner'
 
-const FILTERS = [
-  { id: 'original', label: 'Original' },
-  { id: 'grayscale', label: 'Grayscale' },
-  { id: 'high-contrast', label: 'High Contrast' },
-  { id: 'magic-color', label: 'Magic Color' },
-]
+const FILTERS = SUITE_FILTERS
 
 export default function DocOptimizer({ imageSrc, onOptimized }) {
   const [preview, setPreview] = useState(imageSrc)
@@ -27,9 +23,10 @@ export default function DocOptimizer({ imageSrc, onOptimized }) {
       onOptimized(imageSrc)
       return
     }
+    const spec = FILTERS.find((f) => f.id === filterId)
     setLoading(true)
     try {
-      const result = await applyFilter(imageSrc, filterId)
+      const result = await applyFilter(imageSrc, spec?.filter || filterId)
       setPreview(result)
       onOptimized(result)
       toast.success('Filter applied')

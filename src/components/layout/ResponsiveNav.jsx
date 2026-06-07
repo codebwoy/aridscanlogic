@@ -37,6 +37,7 @@ export default function ResponsiveNav({
               }`
         }
         aria-current={active ? 'page' : undefined}
+        aria-label={label}
       >
         {horizontal && active && (
           <motion.div

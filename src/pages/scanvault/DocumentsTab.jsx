@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Search, Grid, List, FileText, Trash2, Archive, CheckSquare, Square } from 'lucide-react'
 import { toast } from 'sonner'
+import { useConfirm } from '@/context/ConfirmContext'
 import { listDocuments, deleteDocument } from '@/lib/scanvault/store'
 import { canBatchExport } from '@/lib/scanvault/limits'
 import { exportDocumentsZip } from '@/lib/scanvault/export'
@@ -13,6 +14,7 @@ const SORTS = [
 ]
 
 export default function DocumentsTab({ onOpenDoc, onSearch, folderId, user, onUpgrade }) {
+  const confirm = useConfirm()
   const [docs, setDocs] = useState(listDocuments())
   const [view, setView] = useState('grid')
   const [sort, setSort] = useState('newest')
@@ -57,9 +59,15 @@ export default function DocumentsTab({ onOpenDoc, onSearch, folderId, user, onUp
     })
   }
 
-  const bulkDelete = () => {
+  const bulkDelete = async () => {
     if (!selected.size) return
-    if (!window.confirm(`Delete ${selected.size} document(s)?`)) return
+    const ok = await confirm({
+      title: 'Delete documents',
+      message: `Delete ${selected.size} document(s)?`,
+      confirmLabel: 'Delete',
+      destructive: true,
+    })
+    if (!ok) return
     selected.forEach((id) => deleteDocument(id))
     toast.success('Deleted')
     setSelectMode(false)

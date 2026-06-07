@@ -6,10 +6,7 @@ import Register from './Register'
 import ScanVaultApp from './ScanVaultApp'
 import ShareLinkViewer from './ShareLinkViewer'
 import Dashboard from '../Dashboard'
-
-function getShareToken() {
-  return new URLSearchParams(window.location.search).get('share')
-}
+import { getShareToken } from '@/lib/navigation/mode'
 
 export default function ScanVaultRoot({ onOpenBusinessSuite }) {
   const shareToken = getShareToken()

@@ -38,7 +38,11 @@ import MileageLogger from './MileageLogger'
 import TaxVaultCategoryManager from './TaxVaultCategoryManager'
 import ManualExpenseEntry from './ManualExpenseEntry'
 import BizStartGermany from '../bizstart/BizStartGermany'
+import IncomeOverview from './IncomeOverview'
+import EstimatedTaxes from './EstimatedTaxes'
+import ReceiptManager from './ReceiptManager'
 import { checkRecurringReminders } from '@/lib/taxvault/reminders'
+import { ensureDefaultProfile, loadDocuments } from '@/lib/docdraft/store'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -51,6 +55,7 @@ export default function TaxVaultHome() {
   const [listCategoryFilter, setListCategoryFilter] = useState('')
   const [showBizStart, setShowBizStart] = useState(false)
   const [profileReady, setProfileReady] = useState(hasTaxVaultProfile())
+  const [invoices, setInvoices] = useState([])
 
   const profile = loadTaxVaultProfile()
   const sym = profile.homeCurrency === 'EUR' ? '€' : profile.homeCurrency
@@ -63,8 +68,10 @@ export default function TaxVaultHome() {
       ])
       setReceipts(rcpts)
       setMileageLogs(mileage)
+      const p = ensureDefaultProfile()
+      setInvoices(await loadDocuments(p.id))
     } catch {
-      toast.error('Could not load Tax Vault data')
+      toast.error('Tax-Vault-Daten konnten nicht geladen werden')
     }
   }
 
@@ -131,6 +138,21 @@ export default function TaxVaultHome() {
         taxYear={taxYear}
         onBack={() => setView('home')}
       />
+    )
+  }
+
+  if (view === 'manager') {
+    return (
+      <div className="w-full">
+        <button
+          type="button"
+          onClick={() => setView('home')}
+          className="safe-top mb-3 text-sm text-slate-400"
+        >
+          ← Zurück
+        </button>
+        <ReceiptManager kleinunternehmer={profile.kleinunternehmer} onChanged={load} />
+      </div>
     )
   }
 
@@ -232,16 +254,18 @@ export default function TaxVaultHome() {
           type="button"
           onClick={() => setTaxYear((y) => y - 1)}
           className="rounded-full bg-slate-800 p-2"
+          aria-label="Vorheriges Steuerjahr"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-5 w-5" aria-hidden />
         </button>
-        <span className="text-lg font-semibold">Tax Year {taxYear}</span>
+        <span className="text-lg font-semibold">Steuerjahr {taxYear}</span>
         <button
           type="button"
           onClick={() => setTaxYear((y) => y + 1)}
           className="rounded-full bg-slate-800 p-2"
+          aria-label="Nächstes Steuerjahr"
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight className="h-5 w-5" aria-hidden />
         </button>
       </div>
 
@@ -291,6 +315,15 @@ export default function TaxVaultHome() {
           Over budget: {budgetWarnings.map((c) => c.name).join(', ')}
         </div>
       )}
+
+      <IncomeOverview invoices={invoices} receipts={receipts} />
+
+      <EstimatedTaxes
+        receipts={receipts}
+        mileage={mileageLogs}
+        invoices={invoices}
+        expectedProfit={stats.totalDeductible}
+      />
 
       {stats.donutData.length > 0 && (
         <div className="mb-4 rounded-2xl bg-slate-800/60 p-4">
@@ -369,6 +402,13 @@ export default function TaxVaultHome() {
           className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-slate-800 py-3 text-sm font-medium"
         >
           <Receipt className="h-4 w-4" /> All receipts
+        </button>
+        <button
+          type="button"
+          onClick={() => setView('manager')}
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-slate-800 py-3 text-sm font-medium"
+        >
+          <Receipt className="h-4 w-4" aria-hidden /> Beleg-Upload
         </button>
       </div>
 

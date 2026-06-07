@@ -20,6 +20,7 @@ export default defineConfig(({ mode }) => {
   const getModel = () => env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514'
   const getDatabaseUrl = () => (env.DATABASE_URL || env.SUPABASE_DB_URL || '').trim()
   const getApiSecret = () => (env.SCANLOGIC_API_SECRET || '').trim()
+  const getJwtSecret = () => (env.SUPABASE_JWT_SECRET || env.JWT_SECRET || '').trim()
 
   return {
     base,
@@ -32,7 +33,7 @@ export default defineConfig(({ mode }) => {
       },
       react(),
       tailwindcss(),
-      llmProxyPlugin({ getApiKey, getModel, getDatabaseUrl, getApiSecret }),
+      llmProxyPlugin({ getApiKey, getModel, getDatabaseUrl, getApiSecret, getJwtSecret }),
       VitePWA({
         registerType: 'prompt',
         includeAssets: ['favicon.svg', 'pwa-icon.svg', 'apple-touch-icon.png'],
@@ -70,7 +71,8 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-          navigateFallback: '/index.html',
+          navigateFallback: base.endsWith('/') ? `${base}index.html` : `${base}/index.html`,
+          navigateFallbackDenylist: [/^\/api\//],
           maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         },
         // PWA service worker is built for production; dev mode caused empty dev-dist glob warnings.

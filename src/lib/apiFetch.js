@@ -1,6 +1,6 @@
 const API_SECRET_KEY = 'scanlogic_api_secret'
 
-/** Bearer token for non-local dev (session only — never use VITE_ for secrets). */
+/** LAN dev secret (session only — never use VITE_ for secrets). */
 export function getApiSecret() {
   try {
     return sessionStorage.getItem(API_SECRET_KEY) || ''
@@ -18,9 +18,25 @@ export function setApiSecret(value) {
   }
 }
 
+function getAuthToken() {
+  try {
+    return sessionStorage.getItem('scanlogic_auth_token') || ''
+  } catch {
+    return ''
+  }
+}
+
 export function apiFetch(url, options = {}) {
   const secret = getApiSecret()
+  const authToken = getAuthToken()
   const headers = new Headers(options.headers || {})
-  if (secret) headers.set('Authorization', `Bearer ${secret}`)
+
+  if (authToken) {
+    headers.set('Authorization', `Bearer ${authToken}`)
+    if (secret) headers.set('X-ScanLogic-Api-Secret', secret)
+  } else if (secret) {
+    headers.set('Authorization', `Bearer ${secret}`)
+  }
+
   return fetch(url, { ...options, headers })
 }

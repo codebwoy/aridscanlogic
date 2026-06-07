@@ -75,8 +75,8 @@ export default function TaxSummaryReport({ receipts, mileageLogs = [], taxYear, 
       {stats.mileage?.length > 0 && (
         <>
           <h3 className="mb-2 font-semibold">Mileage log</h3>
-          <div className="mb-4 overflow-hidden rounded-xl border border-slate-700">
-            <table className="w-full text-xs">
+          <div className="mb-4 overflow-x-auto rounded-xl border border-slate-700">
+            <table className="w-full min-w-[320px] text-xs">
               <thead className="bg-slate-800 text-slate-400">
                 <tr>
                   <th className="p-2 text-left">Date</th>
@@ -106,8 +106,8 @@ export default function TaxSummaryReport({ receipts, mileageLogs = [], taxYear, 
       )}
 
       <h3 className="mb-2 font-semibold">By category</h3>
-      <div className="mb-4 overflow-hidden rounded-xl border border-slate-700">
-        <table className="w-full text-xs">
+      <div className="mb-4 overflow-x-auto rounded-xl border border-slate-700">
+        <table className="w-full min-w-[280px] text-xs">
           <thead className="bg-slate-800 text-slate-400">
             <tr>
               <th className="p-2 text-left">Category</th>

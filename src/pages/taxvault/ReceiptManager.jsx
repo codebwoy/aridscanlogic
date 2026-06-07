@@ -5,7 +5,7 @@ import appApi from '@/lib/appApi'
 import { calcVatFromGross, calcDeductible } from '@/lib/taxCalculations'
 import { getSkrCode } from '@/lib/bizstart/skr03'
 
-export default function ReceiptManager({ kleinunternehmer = false }) {
+export default function ReceiptManager({ kleinunternehmer = false, onChanged }) {
   const [receipts, setReceipts] = useState([])
   const fileRef = useRef(null)
 
@@ -58,6 +58,7 @@ export default function ReceiptManager({ kleinunternehmer = false }) {
       })
       toast.success('Beleg erfasst')
       load()
+      onChanged?.()
     } catch (err) {
       toast.error('Beleg-Upload fehlgeschlagen')
       console.error(err)

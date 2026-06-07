@@ -42,19 +42,27 @@ const QUICK_ACTIONS = [
 ]
 
 export default function DocDraftHome() {
-  const [profile, setProfile] = useState(null)
+  const [profile, setProfile] = useState(() => ensureDefaultProfile())
   const [docs, setDocs] = useState([])
   const [view, setView] = useState('home')
   const [builderType, setBuilderType] = useState('invoice')
   const [activeDoc, setActiveDoc] = useState(null)
   const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   const refresh = useCallback(async () => {
+    setLoading(true)
     const p = ensureDefaultProfile()
     setProfile(p)
-    const list = await loadDocuments(p.id)
-    setDocs(list)
-    setStats(computeDocStats(list))
+    try {
+      const list = await loadDocuments(p.id)
+      setDocs(list)
+      setStats(computeDocStats(list))
+    } catch {
+      toast.error('Dokumente konnten nicht geladen werden')
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => {
@@ -68,6 +76,20 @@ export default function DocDraftHome() {
   }
 
   if (!profile) return null
+
+  if (loading && view === 'home') {
+    return (
+      <div className="flex flex-1 flex-col gap-4 p-4" aria-busy="true" aria-label="DocDraft wird geladen">
+        <div className="h-8 w-48 animate-pulse rounded-lg bg-slate-800" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-24 animate-pulse rounded-2xl bg-slate-800/80" />
+          ))}
+        </div>
+        <div className="h-40 animate-pulse rounded-2xl bg-slate-800/60" />
+      </div>
+    )
+  }
 
   if (view === 'profiles') {
     return <BusinessProfileManager onBack={() => setView('home')} onChanged={refresh} />

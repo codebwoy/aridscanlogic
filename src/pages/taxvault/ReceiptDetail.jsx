@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ChevronLeft, Trash2, Share2, FileDown, Pencil } from 'lucide-react'
 import { toast } from 'sonner'
+import { useConfirm } from '@/context/ConfirmContext'
 import appApi from '@/lib/appApi'
 import { loadTaxVaultProfile } from '@/lib/taxvault/profile'
 import { getCategoryByName, getAllCategories } from '@/lib/taxvault/categories'
@@ -8,6 +9,7 @@ import { calcDeductibleAmount } from '@/lib/taxvault/stats'
 import { exportReceiptPdf } from '@/lib/taxvault/exportReport'
 
 export default function ReceiptDetail({ receipt, onBack, onUpdated }) {
+  const confirm = useConfirm()
   const profile = loadTaxVaultProfile()
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({ ...receipt })
@@ -35,7 +37,13 @@ export default function ReceiptDetail({ receipt, onBack, onUpdated }) {
   }
 
   const remove = async () => {
-    if (!window.confirm('Delete this receipt permanently? This cannot be undone.')) return
+    const ok = await confirm({
+      title: 'Delete receipt',
+      message: 'Delete this receipt permanently? This cannot be undone.',
+      confirmLabel: 'Delete',
+      destructive: true,
+    })
+    if (!ok) return
     try {
       await appApi.entities.Receipt.delete(receipt.id)
       toast.success('Receipt deleted')

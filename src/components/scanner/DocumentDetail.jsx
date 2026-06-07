@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ChevronLeft, Star, Trash2, RefreshCw, Receipt, FilePenLine, FileDown, FolderInput } from 'lucide-react'
 import { toast } from 'sonner'
+import { useConfirm } from '@/context/ConfirmContext'
 import appApi from '@/lib/appApi'
 import { analyzeScannedDocument } from '@/lib/scanPipeline'
 import ResultsView from './ResultsView'
@@ -15,6 +16,7 @@ export default function DocumentDetail({
   onMoveFolder,
   onExportPdf,
 }) {
+  const confirm = useConfirm()
   const [pageIdx, setPageIdx] = useState(0)
   const [title, setTitle] = useState(doc.title)
   const [ocrText, setOcrText] = useState(doc.ocr_text || '')
@@ -34,7 +36,13 @@ export default function DocumentDetail({
   }
 
   const remove = async () => {
-    if (!window.confirm('Delete document?')) return
+    const ok = await confirm({
+      title: 'Dokument löschen',
+      message: 'Dieses Dokument endgültig löschen?',
+      confirmLabel: 'Löschen',
+      destructive: true,
+    })
+    if (!ok) return
     await appApi.entities.Document.delete(doc.id)
     toast.success('Deleted')
     onBack?.()

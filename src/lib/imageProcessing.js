@@ -144,3 +144,15 @@ export async function dataUrlToJpegFile(dataUrl, filename) {
 export async function canvasDataUrlToJpegFile(dataUrl, pageIndex) {
   return dataUrlToJpegFile(dataUrl, `scan-page-${pageIndex + 1}.jpg`)
 }
+
+/** Downscale large scans before localStorage / DB persistence. */
+export async function capImageDataUrl(dataUrl, maxDim = 1920, quality = 0.85) {
+  const img = await loadImage(dataUrl)
+  const scale = Math.min(1, maxDim / Math.max(img.width, img.height))
+  if (scale >= 1) return dataUrl
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.round(img.width * scale)
+  canvas.height = Math.round(img.height * scale)
+  canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
+  return canvas.toDataURL('image/jpeg', quality)
+}

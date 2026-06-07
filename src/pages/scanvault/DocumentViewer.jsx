@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { ChevronLeft, FileDown, Trash2, Type, FolderInput, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
+import { useConfirm } from '@/context/ConfirmContext'
 import { deleteDocument, saveDocument, listFolders, getDocument } from '@/lib/scanvault/store'
 import { downloadTextFile } from '@/lib/pdfUtils'
 import { getSettings } from '@/lib/scanvault/store'
 import { runOcrOnPages } from '@/lib/scanvault/ocr'
 
 export default function DocumentViewer({ document: doc, onBack, onExport, onDelete, onUpdated }) {
+  const confirm = useConfirm()
   const [pageIdx, setPageIdx] = useState(0)
   const [showOcr, setShowOcr] = useState(false)
   const [name, setName] = useState(doc.name)
@@ -15,8 +17,14 @@ export default function DocumentViewer({ document: doc, onBack, onExport, onDele
   const current = pages[pageIdx]
   const folders = listFolders()
 
-  const remove = () => {
-    if (!window.confirm('Delete this document?')) return
+  const remove = async () => {
+    const ok = await confirm({
+      title: 'Delete document',
+      message: 'Delete this document?',
+      confirmLabel: 'Delete',
+      destructive: true,
+    })
+    if (!ok) return
     deleteDocument(doc.id)
     toast.success('Deleted')
     onDelete?.()

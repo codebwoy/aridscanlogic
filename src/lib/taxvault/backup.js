@@ -1,5 +1,5 @@
 import appApi from '@/lib/appApi'
-import { loadTaxVaultProfile, loadTaxVaultSettings } from './profile'
+import { loadTaxVaultProfile, loadTaxVaultSettings, saveTaxVaultProfile } from './profile'
 
 const BACKUP_VERSION = 1
 
@@ -42,7 +42,6 @@ export async function importEncryptedBackup(file, passphrase) {
     await appApi.entities.MileageLog.create(rest)
   }
   if (data.profile) {
-    const { saveTaxVaultProfile } = await import('./profile')
     saveTaxVaultProfile(data.profile)
   }
   return data

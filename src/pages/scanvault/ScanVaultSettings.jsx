@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ChevronRight, Crown, LogOut, Trash2, Cloud, Download, Upload } from 'lucide-react'
 import { toast } from 'sonner'
+import { useConfirm } from '@/context/ConfirmContext'
 import {
   getSettings,
   saveSettings,
@@ -20,6 +21,7 @@ export default function ScanVaultSettings({
   onLogout,
   onOpenBusinessSuite,
 }) {
+  const confirm = useConfirm()
   const [settings, setSettings] = useState(getSettings())
   const [syncing, setSyncing] = useState(false)
   const premium = isPremiumUser(user)
@@ -31,8 +33,14 @@ export default function ScanVaultSettings({
     toast.success('Saved')
   }
 
-  const clearAll = () => {
-    if (!window.confirm('Delete ALL scans? This cannot be undone.')) return
+  const clearAll = async () => {
+    const ok = await confirm({
+      title: 'Clear all scans',
+      message: 'Delete ALL scans? This cannot be undone.',
+      confirmLabel: 'Delete all',
+      destructive: true,
+    })
+    if (!ok) return
     if (window.prompt('Type DELETE to confirm') !== 'DELETE') return
     listDocuments().forEach((d) => deleteDocument(d.id))
     toast.success('All scans cleared')
@@ -59,7 +67,13 @@ export default function ScanVaultSettings({
       onUpgrade?.()
       return
     }
-    if (!window.confirm('Restore from last cloud snapshot? Local changes may be overwritten.')) return
+    const ok = await confirm({
+      title: 'Restore from cloud',
+      message: 'Restore from last cloud snapshot? Local changes may be overwritten.',
+      confirmLabel: 'Restore',
+      destructive: true,
+    })
+    if (!ok) return
     setSyncing(true)
     try {
       const at = await pullFromCloud(user)

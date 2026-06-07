@@ -1,5 +1,3 @@
-import { createWorker } from 'tesseract.js'
-
 const LANG_MAP = {
   eng: 'eng',
   deu: 'deu',
@@ -9,6 +7,7 @@ const LANG_MAP = {
 }
 
 export async function runOcrOnImage(imageUrl, language = 'eng', onProgress) {
+  const { createWorker } = await import('tesseract.js')
   const lang = LANG_MAP[language] || language || 'eng'
   const worker = await createWorker(lang, 1, {
     logger: (m) => {

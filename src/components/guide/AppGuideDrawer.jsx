@@ -5,12 +5,22 @@ import { toast } from 'sonner'
 import { useGuide } from '@/context/GuideContext'
 import { APP_GUIDE_MODULES, formatModule } from '@/lib/guide/appModules'
 import { askAppGuide } from '@/lib/guide/invokeAppGuide'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
 
 const NAV_IDS = ['docs', 'tax', 'docdraft', 'contracts', 'lawyer', 'settings']
 
 export default function AppGuideDrawer() {
   const { open, closeGuide, focusModule, language, setLanguage } = useGuide()
+  const trapRef = useFocusTrap(open)
   const [selected, setSelected] = useState(focusModule || 'docs')
+
+  useEffect(() => {
+    const el = trapRef.current
+    if (!el || !open) return
+    const onEscape = () => closeGuide()
+    el.addEventListener('modal-escape', onEscape)
+    return () => el.removeEventListener('modal-escape', onEscape)
+  }, [open, closeGuide, trapRef])
 
   useEffect(() => {
     if (open && focusModule) setSelected(focusModule)
@@ -63,7 +73,9 @@ export default function AppGuideDrawer() {
         aria-hidden
       />
       <motion.aside
+        ref={trapRef}
         role="dialog"
+        aria-modal="true"
         aria-labelledby="app-guide-title"
         initial={{ x: '100%' }}
         animate={{ x: 0 }}

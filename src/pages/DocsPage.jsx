@@ -9,10 +9,12 @@ import EmptyState from '@/components/shared/EmptyState'
 import { exportDocumentPdf, exportDocumentsZip } from '@/lib/docs/export'
 import { createDraftFromScan } from '@/lib/docdraft/fromScan'
 import ModuleGuideBanner from '@/components/guide/ModuleGuideBanner'
+import { useConfirm } from '@/context/ConfirmContext'
 
 const FOLDERS = ['Inbox', 'Receipts', 'Contracts', 'Archive']
 
 export default function DocsPage({ onOpenTaxVault, onOpenDocDraft }) {
+  const confirm = useConfirm()
   const [scanning, setScanning] = useState(false)
   const [documents, setDocuments] = useState([])
   const [loading, setLoading] = useState(true)
@@ -54,7 +56,14 @@ export default function DocsPage({ onOpenTaxVault, onOpenDocDraft }) {
   }, [documents, search, folder, starredOnly])
 
   const bulkDelete = async () => {
-    if (!selected.size || !window.confirm(`Delete ${selected.size} documents?`)) return
+    if (!selected.size) return
+    const ok = await confirm({
+      title: 'Dokumente löschen',
+      message: `${selected.size} Dokument(e) endgültig löschen?`,
+      confirmLabel: 'Löschen',
+      destructive: true,
+    })
+    if (!ok) return
     for (const id of selected) await appApi.entities.Document.delete(id)
     setSelected(new Set())
     setSelectMode(false)
@@ -158,6 +167,7 @@ export default function DocsPage({ onOpenTaxVault, onOpenDocDraft }) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search title & OCR text…"
+          aria-label="Dokumente durchsuchen"
           className="w-full rounded-xl bg-slate-800 py-2 pl-9 pr-3 text-sm"
         />
       </div>

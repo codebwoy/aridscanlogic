@@ -1,13 +1,8 @@
 import { useState, useEffect } from 'react'
 import { applyFilter } from '@/lib/imageProcessing'
+import { SCANVAULT_FILTERS } from '@/lib/imageFilters'
 
-const FILTERS = [
-  { id: 'auto', label: 'Auto', filter: 'magic-color' },
-  { id: 'bw', label: 'B&W', filter: 'high-contrast' },
-  { id: 'grayscale', label: 'Grayscale', filter: 'grayscale' },
-  { id: 'color', label: 'Color', filter: 'magic-color' },
-  { id: 'photo', label: 'Photo', filter: 'original' },
-]
+const FILTERS = SCANVAULT_FILTERS
 
 export default function ScanVaultOptimizer({ imageSrc, defaultFilter = 'auto', onApply }) {
   const [preview, setPreview] = useState(imageSrc)
