@@ -1,6 +1,6 @@
 /** Rich demo responses when Anthropic API is not configured */
 
-function executiveSummaryDemo(language, userSnippet) {
+export function executiveSummaryDemo(language, userSnippet) {
   const q = (userSnippet || '').slice(0, 120)
   const date = new Date().toISOString().slice(0, 10)
 

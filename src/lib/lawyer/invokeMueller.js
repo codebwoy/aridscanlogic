@@ -70,3 +70,35 @@ export async function generateExecutiveSummary(messages, language = 'de') {
   const res = await appApi.integrations.Core.InvokeLLM({ prompt })
   return res?.text || res?.content || ''
 }
+
+function isExecutiveSummaryMarkdown(content) {
+  return /^##\s*(Executive Summary|Zusammenfassung)/im.test((content || '').trim())
+}
+
+export async function translateMuellerContent(content, targetLang) {
+  const lang = targetLang === 'en' ? 'en' : 'de'
+  const instruction =
+    lang === 'en'
+      ? 'Translate the following Herr Müller markdown response to English. Keep all markdown structure, tables, headings, and lists. Output ONLY the translated markdown — no preamble.'
+      : 'Übersetze die folgende Herr-Müller-Markdown-Antwort ins Deutsche. Behalte Markdown-Struktur, Tabellen, Überschriften und Listen bei. Gib NUR die übersetzte Markdown-Antwort aus — keine Einleitung.'
+
+  await ensureLlmStatus()
+  if (isAnthropicConfigured()) {
+    return anthropicChat({
+      system: instruction,
+      messages: [{ role: 'user', content }],
+      maxTokens: 4096,
+    })
+  }
+
+  if (isExecutiveSummaryMarkdown(content)) {
+    const { executiveSummaryDemo } = await import('./demoResponses.js')
+    return executiveSummaryDemo(lang, '')
+  }
+
+  const prompt = `${instruction}\n\n---\n${content}`
+  const res = await appApi.integrations.Core.InvokeLLM({ prompt })
+  const text = res?.text || res?.content || ''
+  if (text && !text.includes('Demo mode')) return text
+  throw new Error('TRANSLATION_UNAVAILABLE')
+}

@@ -10,8 +10,13 @@ import MessageActions from '@/components/lawyer/MessageActions'
 import LawyerAIArchive from '@/components/lawyer/LawyerAIArchive'
 import CaseTimeline from '@/components/lawyer/CaseTimeline'
 import ContractQuickDraft from '@/components/lawyer/ContractQuickDraft'
-import { invokeHerrMueller, generateExecutiveSummary } from '@/lib/lawyer/invokeMueller'
-import { detectLanguage, SAFETY_DISCLAIMER_DE } from '@/lib/lawyer/herrMuellerPrompt'
+import {
+  invokeHerrMueller,
+  generateExecutiveSummary,
+  translateMuellerContent,
+} from '@/lib/lawyer/invokeMueller'
+import { SAFETY_DISCLAIMER_DE } from '@/lib/lawyer/herrMuellerPrompt'
+import LanguageTabs from '@/components/lawyer/LanguageTabs'
 import { getStarterPrompt } from '@/lib/lawyer/categories'
 import {
   ensureCase,
@@ -43,9 +48,12 @@ Pick one of **13 expertise areas**, a starter card, or ask your question.
 *Note: Educational coaching only — not a substitute for licensed Rechtsanwalt / Steuerberater advice.*`
 
 export default function LawyerAIPage() {
-  const [messages, setMessages] = useState([{ role: 'assistant', content: WELCOME_DE }])
+  const [messages, setMessages] = useState([
+    { role: 'assistant', content: WELCOME_DE, language: 'de' },
+  ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [translating, setTranslating] = useState(false)
   const [archiveOpen, setArchiveOpen] = useState(false)
   const [activeCategory, setActiveCategory] = useState(null)
   const [language, setLanguage] = useState('de')
@@ -87,6 +95,7 @@ export default function LawyerAIPage() {
             {
               role: 'assistant',
               content: saved.message_content,
+              language: lang,
               fromArchive: true,
               savedId: saved.id,
             },
@@ -113,7 +122,7 @@ export default function LawyerAIPage() {
         documentContext,
         language: lang,
       })
-      setMessages((m) => [...m, { role: 'assistant', content: reply }])
+      setMessages((m) => [...m, { role: 'assistant', content: reply, language: lang }])
       if (documentContext) setDocumentContext(null)
       refreshCase()
     } catch {
@@ -126,6 +135,7 @@ export default function LawyerAIPage() {
             lang === 'en'
               ? 'An error occurred. Please try again.'
               : 'Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.',
+          language: lang,
         },
       ])
     } finally {
@@ -157,7 +167,7 @@ export default function LawyerAIPage() {
         documentContext: withText.ocr_text,
         language,
       })
-      setMessages((m) => [...m, { role: 'assistant', content: reply }])
+      setMessages((m) => [...m, { role: 'assistant', content: reply, language }])
       setDocumentContext(null)
       refreshCase()
     } catch {
@@ -170,7 +180,9 @@ export default function LawyerAIPage() {
   const startNewCase = () => {
     const c = createNewCase(language === 'en' ? 'New consultation' : 'Neue Beratung')
     conversationId.current = c.conversationId
-    setMessages([{ role: 'assistant', content: language === 'en' ? WELCOME_EN : WELCOME_DE }])
+    setMessages([
+      { role: 'assistant', content: language === 'en' ? WELCOME_EN : WELCOME_DE, language },
+    ])
     setActiveCategory(null)
     setDocumentContext(null)
     setCasesOpen(false)
@@ -187,7 +199,7 @@ export default function LawyerAIPage() {
     try {
       const summary = await generateExecutiveSummary(messages, language)
       addSummary(conversationId.current, summary)
-      setMessages((m) => [...m, { role: 'assistant', content: summary }])
+      setMessages((m) => [...m, { role: 'assistant', content: summary, language }])
       refreshCase()
       toast.success(language === 'en' ? 'Summary generated' : 'Zusammenfassung erstellt')
     } catch {
@@ -205,6 +217,7 @@ export default function LawyerAIPage() {
       {
         role: 'assistant',
         content: item.message_content,
+        language,
         fromArchive: true,
         savedId: item.id,
       },
@@ -213,7 +226,58 @@ export default function LawyerAIPage() {
     toast.success(language === 'en' ? 'Loaded into chat' : 'In den Chat geladen')
   }
 
+  const changeLanguage = async (next) => {
+    if (next === language || loading || translating) return
+
+    const previousLang = language
+    setLanguage(next)
+
+    if (messages.length <= 1) {
+      setMessages([
+        { role: 'assistant', content: next === 'en' ? WELCOME_EN : WELCOME_DE, language: next },
+      ])
+      return
+    }
+
+    const assistantMsgs = messages.filter((m) => m.role === 'assistant')
+    const needsWork = assistantMsgs.some((m) => (m.language || previousLang) !== next)
+    if (!needsWork) return
+
+    setTranslating(true)
+    try {
+      const updated = await Promise.all(
+        messages.map(async (m) => {
+          if (m.role !== 'assistant') return m
+          const msgLang = m.language || previousLang
+          if (msgLang === next) return { ...m, language: next }
+          if (m.translations?.[next]) {
+            return { ...m, content: m.translations[next], language: next }
+          }
+          const translated = await translateMuellerContent(m.content, next)
+          return {
+            ...m,
+            content: translated,
+            language: next,
+            translations: { ...(m.translations || {}), [msgLang]: m.content, [next]: translated },
+          }
+        })
+      )
+      setMessages(updated)
+      toast.success(next === 'en' ? 'Responses translated to English' : 'Antworten auf Deutsch übersetzt')
+    } catch {
+      setLanguage(previousLang)
+      toast.error(
+        next === 'en'
+          ? 'Translation failed — set ANTHROPIC_API_KEY for live translation'
+          : 'Übersetzung fehlgeschlagen — ANTHROPIC_API_KEY für Live-Übersetzung setzen'
+      )
+    } finally {
+      setTranslating(false)
+    }
+  }
+
   const showStarters = messages.length <= 1
+  const busy = loading || translating
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col">
@@ -251,14 +315,22 @@ export default function LawyerAIPage() {
 
       <ModuleGuideBanner moduleId="lawyer" title="Lawyer AI" />
 
+      <div className="mb-3">
+        <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
+          {language === 'en' ? 'Response language' : 'Antwortsprache'}
+        </p>
+        <LanguageTabs language={language} onChange={changeLanguage} disabled={busy} />
+      </div>
+
       <div className="mb-2 flex flex-wrap gap-2">
         <button
           type="button"
           onClick={runExecutiveSummary}
-          disabled={loading}
+          disabled={busy}
           className="flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-brand-300"
         >
-          <ListChecks className="h-3 w-3" /> Executive Summary
+          <ListChecks className="h-3 w-3" />{' '}
+          {language === 'en' ? 'Executive Summary' : 'Zusammenfassung'}
         </button>
         <button
           type="button"
@@ -266,21 +338,6 @@ export default function LawyerAIPage() {
           className="flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-slate-400"
         >
           <FileText className="h-3 w-3" /> Timeline
-        </button>
-        <button
-          type="button"
-          onClick={() =>
-            setLanguage((l) => {
-              const next = l === 'de' ? 'en' : 'de'
-              if (messages.length <= 1) {
-                setMessages([{ role: 'assistant', content: next === 'en' ? WELCOME_EN : WELCOME_DE }])
-              }
-              return next
-            })
-          }
-          className="rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] uppercase text-slate-400"
-        >
-          {language === 'de' ? 'EN' : 'DE'}
         </button>
         <button
           type="button"
@@ -385,7 +442,7 @@ export default function LawyerAIPage() {
                 msg.content
               ) : (
                 <>
-                  <MuellerResponse language={language}>{msg.content}</MuellerResponse>
+                  <MuellerResponse language={msg.language || language}>{msg.content}</MuellerResponse>
                   <MessageActions
                     content={msg.content}
                     userPrompt={messages[i - 1]?.role === 'user' ? messages[i - 1].content : ''}
@@ -400,10 +457,16 @@ export default function LawyerAIPage() {
             </div>
           </motion.div>
         ))}
-        {loading && (
+        {busy && (
           <div className="flex justify-start">
             <div className="premium-card px-4 py-3 text-sm text-slate-400">
-              Herr Müller denkt nach…
+              {translating
+                ? language === 'en'
+                  ? 'Translating responses…'
+                  : 'Antworten werden übersetzt…'
+                : language === 'en'
+                  ? 'Herr Müller is thinking…'
+                  : 'Herr Müller denkt nach…'}
             </div>
           </div>
         )}
@@ -423,11 +486,11 @@ export default function LawyerAIPage() {
             onChange={(e) => setInput(e.target.value)}
             placeholder={language === 'en' ? 'Your question…' : 'Ihre Frage…'}
             className="premium-card flex-1 rounded-xl px-4 py-3 text-sm outline-none ring-brand-500/50 focus:ring-2"
-            disabled={loading}
+            disabled={busy}
           />
           <button
             type="submit"
-            disabled={loading || !input.trim()}
+            disabled={busy || !input.trim()}
             className="btn-primary flex h-12 w-12 items-center justify-center rounded-xl disabled:opacity-50"
           >
             <Send className="h-5 w-5" />
