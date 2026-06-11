@@ -32,6 +32,7 @@ import DocumentPicker from '@/components/lawyer/DocumentPicker'
 import { exportConversationTranscript } from '@/lib/lawyer/exportTranscript'
 import { findSavedResponse } from '@/lib/lawyer/savedResponses'
 import ModuleGuideBanner from '@/components/guide/ModuleGuideBanner'
+import { refreshLlmStatus, isAnthropicConfigured } from '@/lib/anthropic'
 
 const WELCOME_DE = `**Guten Tag!** Ich bin **Herr Müller** — Ihr Mentor für Finanzen, Steuern, Recht und Unternehmensführung.
 
@@ -73,6 +74,12 @@ export default function LawyerAIPage() {
   const [casesOpen, setCasesOpen] = useState(false)
   const conversationId = useRef(`conv-${Date.now()}`)
   const bottomRef = useRef(null)
+  const [llmReady, setLlmReady] = useState(isAnthropicConfigured())
+
+  const aiConfigError =
+    language === 'en'
+      ? 'Live AI is off — add ANTHROPIC_API_KEY to your server (.env locally, Vercel env on production) and redeploy.'
+      : 'Live-KI ist aus — ANTHROPIC_API_KEY auf dem Server setzen (.env lokal, Vercel Env in Produktion) und neu deployen.'
 
   const refreshCase = useCallback(() => {
     setCaseData(getActiveCase(conversationId.current))
@@ -82,6 +89,10 @@ export default function LawyerAIPage() {
     ensureCase(conversationId.current, 'Herr Müller Beratung')
     refreshCase()
   }, [refreshCase])
+
+  useEffect(() => {
+    refreshLlmStatus().then(() => setLlmReady(isAnthropicConfigured()))
+  }, [])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -134,8 +145,14 @@ export default function LawyerAIPage() {
       setMessages((m) => [...m, { role: 'assistant', content: reply, language: lang }])
       if (documentContext) setDocumentContext(null)
       refreshCase()
-    } catch {
-      toast.error(lang === 'en' ? 'Could not reach Herr Müller' : 'Beratung konnte nicht geladen werden')
+    } catch (err) {
+      toast.error(
+        err?.message === 'ANTHROPIC_NOT_CONFIGURED'
+          ? aiConfigError
+          : lang === 'en'
+            ? 'Could not reach Herr Müller'
+            : 'Beratung konnte nicht geladen werden'
+      )
       setMessages((m) => [
         ...m,
         {
@@ -155,6 +172,10 @@ export default function LawyerAIPage() {
   const handleCategorySelect = (cat) => {
     setActiveCategory(cat.id)
     setCaseCategory(conversationId.current, cat.id)
+    if (cat.id === 'case-mgmt') {
+      runExecutiveSummary()
+      return
+    }
     send(getStarterPrompt(cat, language), cat.id)
   }
 
@@ -214,11 +235,7 @@ export default function LawyerAIPage() {
     } catch (err) {
       const code = err?.message || ''
       if (code === 'ANTHROPIC_NOT_CONFIGURED') {
-        toast.error(
-          language === 'en'
-            ? 'AI not configured — add ANTHROPIC_API_KEY to server env and redeploy'
-            : 'KI nicht konfiguriert — ANTHROPIC_API_KEY auf dem Server setzen und neu deployen'
-        )
+        toast.error(aiConfigError)
       } else {
         toast.error(language === 'en' ? 'Summary failed' : 'Zusammenfassung fehlgeschlagen')
       }
@@ -339,6 +356,12 @@ export default function LawyerAIPage() {
       </header>
 
       <ModuleGuideBanner moduleId="lawyer" title="Lawyer AI" />
+
+      {!llmReady && (
+        <div className="mb-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
+          {aiConfigError}
+        </div>
+      )}
 
       <div className="mb-2 flex flex-wrap gap-2">
         <button
