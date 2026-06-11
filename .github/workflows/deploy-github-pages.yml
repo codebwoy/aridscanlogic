@@ -1,5 +1,6 @@
-# Builds dist/ and publishes to gh-pages. GitHub Pages must be enabled once in repo
-# Settings (GITHUB_TOKEN cannot do the first enablement on template repos).
+# Builds dist/ and publishes to gh-pages.
+# Enable Pages once in repo Settings → Pages → gh-pages / (root).
+# GITHUB_TOKEN cannot enable Pages via API on template repos (403).
 
 name: Deploy GitHub Pages
 
@@ -10,7 +11,6 @@ on:
 
 permissions:
   contents: write
-  pages: write
 
 concurrency:
   group: pages
@@ -49,38 +49,16 @@ jobs:
           publish_branch: gh-pages
           force_orphan: true
 
-      - name: Try enable Pages (gh-pages source)
-        id: pages
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          API="https://api.github.com/repos/${GITHUB_REPOSITORY}/pages"
-          AUTH=(-H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28")
-          BODY='{"build_type":"legacy","source":{"branch":"gh-pages","path":"/"}}'
-          CODE=$(curl -sS -o /tmp/pages.json -w "%{http_code}" "${AUTH[@]}" "$API")
-          if [ "$CODE" = "404" ]; then
-            CODE=$(curl -sS -o /tmp/pages.json -w "%{http_code}" -X POST "${AUTH[@]}" -d "$BODY" "$API")
-          elif [ "$CODE" = "200" ]; then
-            CODE=$(curl -sS -o /tmp/pages.json -w "%{http_code}" -X PUT "${AUTH[@]}" -d "$BODY" "$API")
-          fi
-          cat /tmp/pages.json || true
-          if [ "$CODE" -ge 200 ] && [ "$CODE" -lt 300 ]; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Deploy summary
         run: |
           {
             echo "## GitHub Pages deploy"
             echo ""
             echo "Build published to \`gh-pages\`."
-            if [ "${{ steps.pages.outputs.enabled }}" = "true" ]; then
-              echo "Pages source updated. Site: https://codebwoy.github.io/aridscanlogic/"
-            else
-              echo "**One-time setup (if the site is 404):**"
-              echo "1. [Pages settings](https://github.com/${{ github.repository }}/settings/pages)"
-              echo "2. **Deploy from a branch** → branch **\`gh-pages\`** → folder **\`/(root)\`** → **Save**"
-              echo "3. Wait ~1 min, then open https://codebwoy.github.io/aridscanlogic/"
-            fi
+            echo ""
+            echo "Live site: https://codebwoy.github.io/aridscanlogic/"
+            echo ""
+            echo "If the site is **404**, enable Pages once:"
+            echo "1. [Pages settings](https://github.com/${{ github.repository }}/settings/pages)"
+            echo "2. **Deploy from a branch** → **\`gh-pages\`** → **\`/(root)\`** → **Save**"
           } >> "$GITHUB_STEP_SUMMARY"
