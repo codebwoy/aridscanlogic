@@ -2,9 +2,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build"
+    "build": "npx vite build"
   },
-  "devDependencies": {
+  "dependencies": {
     "vite": "8.0.12"
   }
 }
