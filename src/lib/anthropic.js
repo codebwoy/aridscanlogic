@@ -120,6 +120,8 @@ async function postToLlmProxy(payload) {
   })
 
   if (!res.ok) {
+    if (res.status === 404) throw new Error('LLM_API_NOT_FOUND')
+    if (res.status === 503) throw new Error('ANTHROPIC_NOT_CONFIGURED')
     const err = await res.text()
     throw new Error(err || `LLM proxy error ${res.status}`)
   }

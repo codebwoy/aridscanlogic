@@ -10,7 +10,8 @@ alwaysApply: false
 
 - `server/vite-llm-proxy.js` — Vite plugin wiring middleware order.
 - `server/llm-proxy.mjs` — `/api/llm`, `/api/llm/status` → Anthropic.
-- `api/llm/index.js`, `api/llm/status.js` — same handlers on Vercel serverless (production).
+- `api/llm/index.js`, `api/llm/status.js` — Anthropic proxy on Vercel serverless (production).
+- `api/db/status.js`, `api/db/[...slug].js` — Postgres CRUD proxy on Vercel serverless (production).
 - `server/db-api.mjs` — `/api/db/*` CRUD + `/api/db/sync/:entity`.
 - `server/db-pool.mjs` — Postgres pool singleton.
 - `server/security.mjs` — auth, rate limits, sanitization.

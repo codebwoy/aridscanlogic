@@ -81,6 +81,9 @@ export default function LawyerAIPage() {
       ? 'Live AI is off — add ANTHROPIC_API_KEY to your server (.env locally, Vercel env on production) and redeploy.'
       : 'Live-KI ist aus — ANTHROPIC_API_KEY auf dem Server setzen (.env lokal, Vercel Env in Produktion) und neu deployen.'
 
+  const isAiConfigError = (err) =>
+    ['ANTHROPIC_NOT_CONFIGURED', 'LLM_API_NOT_FOUND'].includes(err?.message)
+
   const refreshCase = useCallback(() => {
     setCaseData(getActiveCase(conversationId.current))
   }, [])
@@ -147,7 +150,7 @@ export default function LawyerAIPage() {
       refreshCase()
     } catch (err) {
       toast.error(
-        err?.message === 'ANTHROPIC_NOT_CONFIGURED'
+        isAiConfigError(err)
           ? aiConfigError
           : lang === 'en'
             ? 'Could not reach Herr Müller'
@@ -234,7 +237,7 @@ export default function LawyerAIPage() {
       toast.success(language === 'en' ? 'Summary generated' : 'Zusammenfassung erstellt')
     } catch (err) {
       const code = err?.message || ''
-      if (code === 'ANTHROPIC_NOT_CONFIGURED') {
+      if (code === 'ANTHROPIC_NOT_CONFIGURED' || code === 'LLM_API_NOT_FOUND') {
         toast.error(aiConfigError)
       } else {
         toast.error(language === 'en' ? 'Summary failed' : 'Zusammenfassung fehlgeschlagen')
