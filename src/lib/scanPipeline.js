@@ -1,5 +1,6 @@
 import appApi from '@/lib/appApi'
 import { canvasDataUrlToJpegFile } from '@/lib/imageProcessing'
+import { aiLanguageInstruction } from '@/lib/ai/promptLanguage'
 
 export const DOCUMENT_TYPES = [
   'Invoice',
@@ -45,8 +46,10 @@ export async function uploadScanPages(dataUrlPages) {
 /**
  * AI analysis: page URLs → OCR, document type, markdown (response_json_schema).
  */
-export async function analyzeScannedDocument(pageUrls) {
-  const prompt = `You are a German document OCR and classification system.
+export async function analyzeScannedDocument(pageUrls, language = 'de') {
+  const prompt = `${aiLanguageInstruction(language)}
+
+You are a German document OCR and classification system.
 Analyze ALL provided scanned page images.
 1. Extract complete OCR text (preserve German umlauts).
 2. Classify document_type as one of: ${DOCUMENT_TYPES.join(', ')}.

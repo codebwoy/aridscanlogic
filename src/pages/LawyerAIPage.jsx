@@ -16,8 +16,9 @@ import {
   translateMuellerContent,
 } from '@/lib/lawyer/invokeMueller'
 import { SAFETY_DISCLAIMER_DE } from '@/lib/lawyer/herrMuellerPrompt'
-import LanguageTabs from '@/components/lawyer/LanguageTabs'
-import { getLawyerLanguage, saveLawyerLanguage } from '@/lib/lawyer/languageStorage'
+import AiLanguageTabs from '@/components/shared/AiLanguageTabs'
+import AiLanguageBar from '@/components/shared/AiLanguageBar'
+import { useAiLanguage } from '@/context/AiLanguageContext'
 import { getStarterPrompt } from '@/lib/lawyer/categories'
 import {
   ensureCase,
@@ -49,9 +50,9 @@ Pick one of **13 expertise areas**, a starter card, or ask your question.
 *Note: Educational coaching only — not a substitute for licensed Rechtsanwalt / Steuerberater advice.*`
 
 export default function LawyerAIPage() {
-  const [language, setLanguage] = useState(() => getLawyerLanguage())
+  const { language, setLanguage } = useAiLanguage()
   const [messages, setMessages] = useState(() => {
-    const lang = getLawyerLanguage()
+    const lang = language
     return [
       {
         role: 'assistant',
@@ -239,7 +240,6 @@ export default function LawyerAIPage() {
 
     const previousLang = language
     setLanguage(next)
-    saveLawyerLanguage(next)
 
     if (messages.length <= 1) {
       setMessages([
@@ -302,7 +302,7 @@ export default function LawyerAIPage() {
             </p>
           </div>
         </div>
-        <LanguageTabs
+        <AiLanguageTabs
           language={language}
           onChange={changeLanguage}
           disabled={busy}
@@ -489,12 +489,12 @@ export default function LawyerAIPage() {
       </div>
 
       <div className="safe-bottom shrink-0 border-t border-slate-800/80 bg-slate-950/95 pt-2 backdrop-blur-xl">
-        <div className="mb-2 rounded-xl border border-brand-500/20 bg-brand-950/20 px-2 py-2">
-          <p className="mb-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-brand-300">
-            {language === 'en' ? 'Response language' : 'Antwortsprache'}
-          </p>
-          <LanguageTabs language={language} onChange={changeLanguage} disabled={busy} />
-        </div>
+        <AiLanguageBar
+          language={language}
+          onChange={changeLanguage}
+          disabled={busy}
+          className="mb-2"
+        />
         <form
           onSubmit={(e) => {
             e.preventDefault()

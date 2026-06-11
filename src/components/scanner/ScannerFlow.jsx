@@ -4,6 +4,8 @@ import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import appApi from '@/lib/appApi'
 import { uploadScanPages, analyzeScannedDocument } from '@/lib/scanPipeline'
+import { useAiLanguage } from '@/context/AiLanguageContext'
+import AiLanguageBar from '@/components/shared/AiLanguageBar'
 import CameraCapture from './CameraCapture'
 import PerspectiveCrop from './PerspectiveCrop'
 import DocOptimizer from './DocOptimizer'
@@ -13,6 +15,7 @@ import ResultsView from './ResultsView'
 const STEPS = ['capture', 'crop', 'optimize', 'process', 'results']
 
 export default function ScannerFlow({ onBack, onSaved }) {
+  const { language, setLanguage } = useAiLanguage()
   const [step, setStep] = useState('capture')
   const [rawPages, setRawPages] = useState([])
   const [processedPages, setProcessedPages] = useState([])
@@ -44,7 +47,7 @@ export default function ScannerFlow({ onBack, onSaved }) {
       await new Promise((r) => setTimeout(r, 400))
 
       setProcessStage('ocr')
-      const analysis = await analyzeScannedDocument(pageUrls)
+      const analysis = await analyzeScannedDocument(pageUrls, language)
 
       setProcessStage('markdown')
       setOcrText(analysis.ocr_text)
@@ -119,6 +122,11 @@ export default function ScannerFlow({ onBack, onSaved }) {
       <AnimatePresence mode="wait">
         {step === 'capture' && (
           <motion.div key="capture" {...slideUp}>
+            <AiLanguageBar
+              language={language}
+              onChange={setLanguage}
+              className="mb-4"
+            />
             <CameraCapture
               pages={rawPages}
               onPagesChange={setRawPages}

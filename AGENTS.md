@@ -17,6 +17,7 @@ Cursor loads rules from `.cursor/rules/*.mdc`. Use the matching rule when editin
 | `10-shared-ui.mdc` | Layout, guide, settings, PWA, contexts |
 | `11-security.mdc` | Security helpers and policies |
 | `12-seo.mdc` | Meta tags, sitemap, GitHub Pages deploy |
+| `13-ai-language.mdc` | Global DE/EN toggle for all AI surfaces |
 
 Human-readable security policy: `SECURITY.md`.
 

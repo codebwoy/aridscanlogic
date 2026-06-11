@@ -2,10 +2,14 @@ import { useState, useEffect, useRef } from 'react'
 import { Upload, Receipt } from 'lucide-react'
 import { toast } from 'sonner'
 import appApi from '@/lib/appApi'
+import { useAiLanguage } from '@/context/AiLanguageContext'
+import AiLanguageBar from '@/components/shared/AiLanguageBar'
+import { aiLanguageInstruction } from '@/lib/ai/promptLanguage'
 import { calcVatFromGross, calcDeductible } from '@/lib/taxCalculations'
 import { getSkrCode } from '@/lib/bizstart/skr03'
 
 export default function ReceiptManager({ kleinunternehmer = false, onChanged }) {
+  const { language, setLanguage } = useAiLanguage()
   const [receipts, setReceipts] = useState([])
   const fileRef = useRef(null)
 
@@ -27,7 +31,9 @@ export default function ReceiptManager({ kleinunternehmer = false, onChanged }) 
     try {
       const { file_url } = await appApi.integrations.Core.UploadFile({ file })
       const ocr = await appApi.integrations.Core.InvokeLLM({
-        prompt: 'Parse this German receipt. Extract vendor, date, total, VAT rate (7 or 19), category.',
+        prompt: `${aiLanguageInstruction(language)}
+
+Parse this German receipt. Extract vendor, date, total, VAT rate (7 or 19), category.`,
         file_urls: [file_url],
         response_json_schema: {
           type: 'object',
@@ -70,6 +76,7 @@ export default function ReceiptManager({ kleinunternehmer = false, onChanged }) 
 
   return (
     <div>
+      <AiLanguageBar language={language} onChange={setLanguage} className="mb-4" />
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h3 className="font-semibold">Belege</h3>

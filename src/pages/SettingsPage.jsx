@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Crown, User, Database, Receipt, ChevronRight, Sparkles, CloudUpload, BookOpen } from 'lucide-react'
 import { useGuide } from '@/context/GuideContext'
+import { useAiLanguage } from '@/context/AiLanguageContext'
+import AiLanguageBar from '@/components/shared/AiLanguageBar'
 import { checkDbConnected, isDbConnected } from '@/lib/supabase/remoteStore'
 import { getApiSecret, setApiSecret } from '@/lib/apiFetch'
 import { pushAllLocalDataToSupabase } from '@/lib/supabase/migrateLocal'
@@ -25,7 +27,8 @@ export default function SettingsPage({ onOpenScanVault }) {
   const [dbReady, setDbReady] = useState(isDbConnected())
   const [syncing, setSyncing] = useState(false)
   const [apiSecret, setApiSecretState] = useState(() => getApiSecret())
-  const { openGuide, language } = useGuide()
+  const { openGuide } = useGuide()
+  const { language, setLanguage } = useAiLanguage()
 
   useEffect(() => {
     refreshLlmStatus().then(() => setLlmReady(isAnthropicConfigured()))
@@ -62,6 +65,8 @@ export default function SettingsPage({ onOpenScanVault }) {
       </header>
 
       <div className="space-y-3">
+        <AiLanguageBar language={language} onChange={setLanguage} />
+
         <button
           type="button"
           onClick={() => openGuide('docs')}

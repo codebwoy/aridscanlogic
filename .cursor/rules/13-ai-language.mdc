@@ -1,0 +1,52 @@
+---
+description: Global AI language (Deutsch/English) for all LLM surfaces
+globs: src/context/AiLanguageContext.jsx,src/components/shared/AiLanguage*.jsx,src/lib/ai/**,src/pages/LawyerAIPage.jsx,src/components/guide/**,src/pages/bizstart/RegistrationChat.jsx,src/lib/scanPipeline.js,src/components/scanner/**,src/pages/taxvault/Receipt*.jsx,src/pages/SettingsPage.jsx
+alwaysApply: false
+---
+
+# AI language (Deutsch / English)
+
+## Global rule
+
+Every **user-facing AI** area must expose the same language switch and read from one source:
+
+| Piece | Location |
+|-------|----------|
+| Context | `src/context/AiLanguageContext.jsx` — `useAiLanguage()` |
+| Storage | `src/lib/ai/languageStorage.js` — `localStorage` key `scanlogic_ai_language` |
+| UI tabs | `src/components/shared/AiLanguageTabs.jsx` |
+| Footer bar | `src/components/shared/AiLanguageBar.jsx` — **above every AI chat input** |
+| Prompt helper | `src/lib/ai/promptLanguage.js` — `aiLanguageInstruction(language)` |
+
+Provider wraps the app in `main.jsx` (`AiLanguageProvider`).
+
+## UI placement (required)
+
+1. **`AiLanguageBar`** directly above the message/input form (always visible while chatting).
+2. **Compact `AiLanguageTabs`** in the panel header when there is a chat header.
+3. For long structured AI output (e.g. Executive Summary), optional inline tabs in the response card.
+
+Do **not** hide language behind a single tiny “EN/DE” chip.
+
+## LLM calls
+
+Pass `language` from `useAiLanguage()` into prompts:
+
+```javascript
+import { aiLanguageInstruction } from '@/lib/ai/promptLanguage'
+
+const prompt = `${aiLanguageInstruction(language)}\n\n...`
+```
+
+Never auto-detect language from user text when the UI language toggle is set.
+
+## Covered areas
+
+- Lawyer AI (`LawyerAIPage.jsx`)
+- App Guide drawer (`AppGuideDrawer.jsx`)
+- BizStart registration chat (`RegistrationChat.jsx`)
+- Docs scan OCR/classification (`scanPipeline.js`)
+- Tax Vault receipt OCR (`ReceiptManager.jsx`, `ReceiptScanFlow.jsx`)
+- Settings (`SettingsPage.jsx`) — global default for all AI modules
+
+When adding a new AI feature, wire `useAiLanguage` + `AiLanguageBar` + `aiLanguageInstruction`.

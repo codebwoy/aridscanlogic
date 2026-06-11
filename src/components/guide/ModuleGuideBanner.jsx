@@ -1,9 +1,11 @@
 import { Sparkles } from 'lucide-react'
 import { useGuide } from '@/context/GuideContext'
+import { useAiLanguage } from '@/context/AiLanguageContext'
 
 /** One-line contextual CTA under page titles — opens guide for current module */
 export default function ModuleGuideBanner({ moduleId, title }) {
-  const { openGuide, language } = useGuide()
+  const { openGuide } = useGuide()
+  const { language } = useAiLanguage()
 
   return (
     <button

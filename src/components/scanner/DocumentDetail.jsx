@@ -4,6 +4,8 @@ import { toast } from 'sonner'
 import { useConfirm } from '@/context/ConfirmContext'
 import appApi from '@/lib/appApi'
 import { analyzeScannedDocument } from '@/lib/scanPipeline'
+import { useAiLanguage } from '@/context/AiLanguageContext'
+import AiLanguageBar from '@/components/shared/AiLanguageBar'
 import ResultsView from './ResultsView'
 
 export default function DocumentDetail({
@@ -17,6 +19,7 @@ export default function DocumentDetail({
   onExportPdf,
 }) {
   const confirm = useConfirm()
+  const { language, setLanguage } = useAiLanguage()
   const [pageIdx, setPageIdx] = useState(0)
   const [title, setTitle] = useState(doc.title)
   const [ocrText, setOcrText] = useState(doc.ocr_text || '')
@@ -53,7 +56,7 @@ export default function DocumentDetail({
     if (!pages.length) return
     setReprocessing(true)
     try {
-      const analysis = await analyzeScannedDocument(pages)
+      const analysis = await analyzeScannedDocument(pages, language)
       setOcrText(analysis.ocr_text)
       setMarkdown(analysis.markdown_result)
       await appApi.entities.Document.update(doc.id, {
@@ -117,6 +120,12 @@ export default function DocumentDetail({
           </button>
         ))}
       </div>
+      <AiLanguageBar
+        language={language}
+        onChange={setLanguage}
+        disabled={reprocessing}
+        className="mb-3"
+      />
       <div className="mb-3 flex flex-wrap gap-2">
         <button type="button" onClick={reOcr} disabled={reprocessing} className="flex items-center gap-1 rounded-lg bg-slate-800 px-3 py-2 text-xs">
           <RefreshCw className={`h-3 w-3 ${reprocessing ? 'animate-spin' : ''}`} /> Re-OCR

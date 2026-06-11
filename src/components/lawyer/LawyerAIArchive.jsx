@@ -4,9 +4,12 @@ import { Search, Eye, EyeOff, Trash2, X, FolderOpen, MessageSquare } from 'lucid
 import MuellerResponse from '@/components/lawyer/MuellerResponse'
 import { toast } from 'sonner'
 import appApi from '@/lib/appApi'
+import { useAiLanguage } from '@/context/AiLanguageContext'
 import { listCases } from '@/lib/lawyer/caseStore'
 
-export default function LawyerAIArchive({ open, onClose, onUseInChat, language = 'de' }) {
+export default function LawyerAIArchive({ open, onClose, onUseInChat, language: languageProp }) {
+  const { language: globalLanguage } = useAiLanguage()
+  const language = languageProp ?? globalLanguage
   const [items, setItems] = useState([])
   const [cases, setCases] = useState([])
   const [tab, setTab] = useState('insights')

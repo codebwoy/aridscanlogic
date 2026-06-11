@@ -6,8 +6,6 @@ const SEEN_KEY = 'scanlogic_guide_intro_seen'
 export function GuideProvider({ children, activeModule = 'docs' }) {
   const [open, setOpen] = useState(false)
   const [focusModule, setFocusModule] = useState(null)
-  const [language, setLanguage] = useState('de')
-
   const openGuide = useCallback((moduleId) => {
     setFocusModule(moduleId ?? null)
     setOpen(true)
@@ -34,12 +32,10 @@ export function GuideProvider({ children, activeModule = 'docs' }) {
       open,
       focusModule: focusModule ?? activeModule,
       activeModule,
-      language,
-      setLanguage,
       openGuide,
       closeGuide,
     }),
-    [open, focusModule, activeModule, language, openGuide, closeGuide]
+    [open, focusModule, activeModule, openGuide, closeGuide]
   )
 
   return <GuideContext.Provider value={value}>{children}</GuideContext.Provider>

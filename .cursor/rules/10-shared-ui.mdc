@@ -24,7 +24,8 @@ alwaysApply: false
 |---------|------|---------|
 | Auth | `AuthContext.jsx` | Suite user stub from appApi.auth |
 | Premium | `PremiumContext.jsx` | Trial/premium modal |
-| Guide | `GuideContext.jsx` | App guide drawer, language DE/EN |
+| Guide | `GuideContext.jsx` | App guide drawer open/focus |
+| AI language | `AiLanguageContext.jsx` | Global DE/EN for all LLM surfaces (`useAiLanguage`) |
 
 ## In-app guide
 

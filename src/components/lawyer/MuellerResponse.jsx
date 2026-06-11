@@ -1,7 +1,7 @@
 import { ListChecks } from 'lucide-react'
 import LawyerMarkdown, { isExecutiveSummary } from '@/components/lawyer/LawyerMarkdown'
 import BrandLogo from '@/components/shared/BrandLogo'
-import LanguageTabs from '@/components/lawyer/LanguageTabs'
+import AiLanguageTabs from '@/components/shared/AiLanguageTabs'
 
 export default function MuellerResponse({
   children,
@@ -38,7 +38,7 @@ export default function MuellerResponse({
             <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
               {language === 'en' ? 'Switch language' : 'Sprache wechseln'}
             </p>
-            <LanguageTabs
+            <AiLanguageTabs
               language={language}
               onChange={onLanguageChange}
               disabled={languageSwitchDisabled}

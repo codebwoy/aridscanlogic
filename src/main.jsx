@@ -6,6 +6,7 @@ import ErrorBoundary from './components/shared/ErrorBoundary.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { ConfirmProvider } from './context/ConfirmContext.jsx'
 import { PremiumProvider } from './context/PremiumContext.jsx'
+import { AiLanguageProvider } from './context/AiLanguageContext.jsx'
 import './index.css'
 import { initPwa } from './lib/pwa/register'
 import { ensureLlmStatus } from './lib/anthropic'
@@ -33,7 +34,9 @@ createRoot(document.getElementById('root')).render(
       <AuthProvider>
         <ConfirmProvider>
           <PremiumProvider>
-            <App />
+            <AiLanguageProvider>
+              <App />
+            </AiLanguageProvider>
         <Toaster
           position="top-center"
           toastOptions={{

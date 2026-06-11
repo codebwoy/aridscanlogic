@@ -4,9 +4,13 @@ import appApi from '@/lib/appApi'
 import { dataUrlToJpegFile } from '@/lib/imageProcessing'
 import { loadTaxVaultSettings } from '@/lib/taxvault/profile'
 import TaxVaultCamera from '@/components/taxvault/TaxVaultCamera'
+import { useAiLanguage } from '@/context/AiLanguageContext'
+import AiLanguageTabs from '@/components/shared/AiLanguageTabs'
+import { aiLanguageInstruction } from '@/lib/ai/promptLanguage'
 import ConfirmReceipt from './ConfirmReceipt'
 
 export default function ReceiptScanFlow({ onClose, onSaved }) {
+  const { language, setLanguage } = useAiLanguage()
   const [step, setStep] = useState('camera')
   const [imageUrl, setImageUrl] = useState('')
   const [draft, setDraft] = useState({})
@@ -22,8 +26,9 @@ export default function ReceiptScanFlow({ onClose, onSaved }) {
     setProcessing(true)
     try {
       const ocr = await appApi.integrations.Core.InvokeLLM({
-        prompt:
-          'Extract from this receipt: vendor/store name, purchase date (YYYY-MM-DD), total amount paid, VAT/tax amount if shown, currency code (EUR/USD/GBP/CHF), best matching expense category from: Office Supplies, Equipment, Software, Travel, Food & Entertainment, Marketing, Professional Services, Rent, Education, Insurance, Bank, Other.',
+        prompt: `${aiLanguageInstruction(language)}
+
+Extract from this receipt: vendor/store name, purchase date (YYYY-MM-DD), total amount paid, VAT/tax amount if shown, currency code (EUR/USD/GBP/CHF), best matching expense category from: Office Supplies, Equipment, Software, Travel, Food & Entertainment, Marketing, Professional Services, Rent, Education, Insurance, Bank, Other.`,
         file_urls: [fileUrl],
         response_json_schema: {
           type: 'object',
@@ -86,10 +91,12 @@ export default function ReceiptScanFlow({ onClose, onSaved }) {
 
   if (step === 'camera') {
     return (
-      <TaxVaultCamera
-        onCapture={handleCapture}
-        onCancel={onClose}
-      />
+      <>
+        <div className="fixed right-4 top-16 z-[80]">
+          <AiLanguageTabs language={language} onChange={setLanguage} disabled={processing} compact />
+        </div>
+        <TaxVaultCamera onCapture={handleCapture} onCancel={onClose} />
+      </>
     )
   }
 

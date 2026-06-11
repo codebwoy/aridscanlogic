@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Sparkles, Send, ChevronRight, BookOpen, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useGuide } from '@/context/GuideContext'
+import { useAiLanguage } from '@/context/AiLanguageContext'
+import AiLanguageTabs from '@/components/shared/AiLanguageTabs'
+import AiLanguageBar from '@/components/shared/AiLanguageBar'
 import { APP_GUIDE_MODULES, formatModule } from '@/lib/guide/appModules'
 import { askAppGuide } from '@/lib/guide/invokeAppGuide'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
@@ -10,7 +13,8 @@ import { useFocusTrap } from '@/hooks/useFocusTrap'
 const NAV_IDS = ['docs', 'tax', 'docdraft', 'contracts', 'lawyer', 'settings']
 
 export default function AppGuideDrawer() {
-  const { open, closeGuide, focusModule, language, setLanguage } = useGuide()
+  const { open, closeGuide, focusModule } = useGuide()
+  const { language, setLanguage } = useAiLanguage()
   const trapRef = useFocusTrap(open)
   const [selected, setSelected] = useState(focusModule || 'docs')
 
@@ -100,14 +104,14 @@ export default function AppGuideDrawer() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setLanguage((l) => (l === 'de' ? 'en' : 'de'))}
-              className="rounded-lg bg-slate-800 px-2 py-1 text-[10px] uppercase text-slate-400"
-            >
-              {language === 'de' ? 'EN' : 'DE'}
-            </button>
+          <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
+            <AiLanguageTabs
+              language={language}
+              onChange={setLanguage}
+              disabled={loading}
+              compact
+              className="w-[108px]"
+            />
             <button
               type="button"
               onClick={closeGuide}
@@ -194,6 +198,12 @@ export default function AppGuideDrawer() {
                   </button>
                 ))}
               </div>
+              <AiLanguageBar
+                language={language}
+                onChange={setLanguage}
+                disabled={loading}
+                className="mb-3"
+              />
               <form
                 onSubmit={(e) => {
                   e.preventDefault()
