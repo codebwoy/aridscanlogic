@@ -35,6 +35,22 @@ Red **github-pages** entries from June 2026 (*"Add SEO, structured data…"*) ar
 
 [Actions → Deploy GitHub Pages → Run workflow](https://github.com/codebwoy/aridscanlogic/actions/workflows/deploy-github-pages.yml)
 
+## Vercel (Production on `main` only)
+
+**Project:** [codebwoys-projects/aridscanlogic](https://vercel.com/codebwoys-projects/aridscanlogic)  
+**URL:** https://aridscanlogic-tau.vercel.app
+
+| Setting | Value |
+|---|---|
+| Production branch | `main` |
+| Framework preset | Other |
+| Install command | `npm install` |
+| Build command | `npm run build` |
+| Output directory | `dist` |
+| Ignored build step | skip when branch is `gh-pages` |
+
+The **`gh-pages`** branch is **GitHub Pages only** — Vercel must not build it. That is enforced in `vercel.json` (`git.deploymentEnabled.gh-pages: false`) and in the Vercel dashboard ignored-build-step command.
+
 ## Vercel cron / keep-alive
 
 **Working URL (use this in cron-job.org):**
