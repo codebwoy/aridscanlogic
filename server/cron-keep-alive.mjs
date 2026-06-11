@@ -1,4 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
+import { readFileSync } from 'fs'
+import { dirname, join } from 'path'
+import { fileURLToPath } from 'url'
 import { getPool } from './db-pool.mjs'
 import { timingSafeEqual } from './crypto.mjs'
 
@@ -6,6 +9,23 @@ const SUCCESS_BODY = {
   success: true,
   message: 'Supabase keep-alive ping successful — Supabase kept active',
 }
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
+function loadPublicSupabaseConfig() {
+  try {
+    const raw = readFileSync(join(__dirname, '../config/supabase-public.json'), 'utf8')
+    const parsed = JSON.parse(raw)
+    return {
+      url: typeof parsed.url === 'string' ? parsed.url.trim() : '',
+      anonKey: typeof parsed.anonKey === 'string' ? parsed.anonKey.trim() : '',
+    }
+  } catch {
+    return { url: '', anonKey: '' }
+  }
+}
+
+const PUBLIC_SUPABASE = loadPublicSupabaseConfig()
 
 function getBearerToken(req) {
   const auth = req.headers?.authorization || req.headers?.get?.('authorization') || ''
@@ -19,30 +39,42 @@ function sendJson(res, status, body) {
   res.end(JSON.stringify(body))
 }
 
-function getSupabaseRestConfig() {
-  const url = (
+function getSupabaseUrl() {
+  return (
     process.env.SUPABASE_URL ||
     process.env.VITE_SUPABASE_URL ||
+    PUBLIC_SUPABASE.url ||
     ''
   ).trim()
-  const serviceKey = (
+}
+
+function getServiceRoleKey() {
+  return (
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.SUPABASE_SERVICE_KEY ||
     process.env.VITE_SUPABASE_SECRET_KEY ||
     ''
   ).trim()
-  if (!url || !serviceKey) return null
-  return { url, serviceKey }
 }
 
-async function pingSupabaseRest() {
-  const config = getSupabaseRestConfig()
-  if (!config) return false
+function getAnonKey() {
+  return (
+    process.env.SUPABASE_ANON_KEY ||
+    process.env.VITE_SUPABASE_ANON_KEY ||
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    PUBLIC_SUPABASE.anonKey ||
+    ''
+  ).trim()
+}
 
-  const client = createClient(config.url, config.serviceKey, {
+async function pingSupabaseRest(table, key) {
+  const url = getSupabaseUrl()
+  if (!url || !key) return false
+
+  const client = createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
   })
-  const { error } = await client.from('scanlogic_records').select('id').limit(1)
+  const { error } = await client.from(table).select('id').limit(1)
   if (error) throw error
   return true
 }
@@ -53,14 +85,21 @@ async function pingSupabasePg(dbUrl) {
 
 async function pingDatabase() {
   const dbUrl = (process.env.DATABASE_URL || process.env.SUPABASE_DB_URL || '').trim()
+  const serviceKey = getServiceRoleKey()
+  const anonKey = getAnonKey()
 
-  if (getSupabaseRestConfig()) {
-    await pingSupabaseRest()
+  if (getSupabaseUrl() && serviceKey) {
+    await pingSupabaseRest('scanlogic_records', serviceKey)
     return
   }
 
   if (dbUrl) {
     await pingSupabasePg(dbUrl)
+    return
+  }
+
+  if (getSupabaseUrl() && anonKey) {
+    await pingSupabaseRest('keep_alive_ping', anonKey)
     return
   }
 
