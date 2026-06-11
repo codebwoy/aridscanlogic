@@ -32,9 +32,18 @@ Sitemap: ${siteUrl}/sitemap.xml
 writeFileSync(join(root, 'public/robots.txt'), robots, 'utf8')
 console.log('Wrote public/robots.txt')
 
-const src = join(root, 'public/pwa-icon.svg')
-await sharp(src)
-  .resize(1200, 630, { fit: 'contain', background: { r: 15, g: 23, b: 42 } })
+const src = join(root, 'public/brand-logo.png')
+const logo = await sharp(src).resize(480, 480, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer()
+
+await sharp({
+  create: {
+    width: 1200,
+    height: 630,
+    channels: 4,
+    background: { r: 15, g: 23, b: 42, alpha: 1 },
+  },
+})
+  .composite([{ input: logo, gravity: 'centre' }])
   .png()
   .toFile(join(root, 'public/og-image.png'))
 console.log('Wrote public/og-image.png')

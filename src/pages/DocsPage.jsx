@@ -9,6 +9,8 @@ import EmptyState from '@/components/shared/EmptyState'
 import { exportDocumentPdf, exportDocumentsZip } from '@/lib/docs/export'
 import { createDraftFromScan } from '@/lib/docdraft/fromScan'
 import ModuleGuideBanner from '@/components/guide/ModuleGuideBanner'
+import { BrandMark } from '@/components/shared/BrandLogo'
+import { BRAND_NAME } from '@/lib/brand'
 import { useConfirm } from '@/context/ConfirmContext'
 
 const FOLDERS = ['Inbox', 'Receipts', 'Contracts', 'Archive']
@@ -153,10 +155,11 @@ export default function DocsPage({ onOpenTaxVault, onOpenDocDraft }) {
   return (
     <div className="w-full">
       <header className="safe-top mb-4">
-        <h1 className="bg-gradient-to-r from-white via-brand-100 to-slate-400 bg-clip-text text-xl font-bold text-transparent sm:text-2xl lg:text-3xl">
-          ScanLogic AI
-        </h1>
-        <p className="text-sm text-slate-400">Multi-page scan · OCR · Search · Folders · Export</p>
+        <BrandMark
+          title={`${BRAND_NAME} AI`}
+          subtitle="Multi-page scan · OCR · Search · Folders · Export"
+          size={48}
+        />
       </header>
 
       <ModuleGuideBanner moduleId="docs" title="Docs" />

@@ -52,12 +52,29 @@ export async function generateExecutiveSummary(messages, language = 'de') {
     .slice(0, 12000)
 
   const system = buildHerrMuellerSystemPrompt({ language })
-  const userPrompt = `Create an **Executive Summary** of this consultation transcript. Include:
-1. Key topics discussed
-2. Decisions or recommendations given
-3. **Timeline** table (Date | Event | Status) for any filings/registrations/deadlines mentioned
-4. Open action items
-5. Questions to bring to Steuerberater / Rechtsanwalt
+  const userPrompt = `Create an **Executive Summary** of this consultation transcript.
+
+Use this exact markdown structure (German or English matching the transcript language):
+
+## Executive Summary
+
+**Themen:** one-line topic overview
+
+| Datum | Ereignis | Status |
+|-------|----------|--------|
+| YYYY-MM-DD | … | … |
+
+### Empfehlungen
+1. …
+2. …
+
+### Offene Punkte
+- …
+
+### Fragen für Ihren Steuerberater / Rechtsanwalt
+- …
+
+*Hinweis: Diese Beratung dient ausschließlich der allgemeinen Information und Bildung.*
 
 TRANSCRIPT:
 ${transcript}`

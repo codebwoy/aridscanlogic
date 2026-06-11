@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { registerUser } from '@/lib/scanvault/auth'
+import { BrandMark } from '@/components/shared/BrandLogo'
+import { BRAND_SCANVAULT_NAME } from '@/lib/brand'
 
 export default function Register({ onSuccess, onLogin }) {
   const [name, setName] = useState('')
@@ -28,7 +30,7 @@ export default function Register({ onSuccess, onLogin }) {
   return (
     <div className="scanvault-shell flex min-h-full flex-col justify-center bg-[#0f0f0f] px-6 text-white">
       <div className="mx-auto w-full max-w-md">
-      <h1 className="text-2xl font-bold sm:text-3xl">Create account</h1>
+      <BrandMark title={BRAND_SCANVAULT_NAME} subtitle="Create account" size={56} className="mb-2" />
       <form onSubmit={submit} className="mt-6 space-y-3">
         <input
           placeholder="Full name"

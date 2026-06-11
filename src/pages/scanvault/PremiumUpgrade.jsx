@@ -2,6 +2,8 @@ import { ChevronLeft, Check } from 'lucide-react'
 import { startPremiumTrial } from '@/lib/scanvault/auth'
 import { saveSessionUser } from '@/lib/scanvault/store'
 import { toast } from 'sonner'
+import { BrandMark } from '@/components/shared/BrandLogo'
+import { BRAND_SCANVAULT_NAME } from '@/lib/brand'
 
 const FEATURES = [
   'Unlimited scans and storage',
@@ -28,8 +30,12 @@ export default function PremiumUpgrade({ user, onBack, onUpgraded }) {
       <button type="button" onClick={onBack} className="safe-top mb-4 flex items-center gap-1 text-sm text-slate-400">
         <ChevronLeft className="h-4 w-4" /> Back
       </button>
-      <h1 className="text-2xl font-bold">ScanVault Premium</h1>
-      <p className="mt-1 text-slate-400">$X.99/year · 3-day free trial</p>
+      <BrandMark
+        title={`${BRAND_SCANVAULT_NAME} Premium`}
+        subtitle="$X.99/year · 3-day free trial"
+        size={52}
+        className="mb-2"
+      />
       <div className="mt-6 grid grid-cols-2 gap-2 text-center text-xs">
         <div className="rounded-xl bg-white/5 p-3">
           <p className="font-semibold text-slate-400">Free</p>

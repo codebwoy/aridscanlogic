@@ -1,5 +1,7 @@
 import { ScanLine, Cloud, CloudOff } from 'lucide-react'
 import { isPremiumUser, canCloudSync } from '@/lib/scanvault/limits'
+import { BrandMark } from '@/components/shared/BrandLogo'
+import { BRAND_SCANVAULT_NAME } from '@/lib/brand'
 
 export default function ScanTab({ user, onStartScan }) {
   const premium = isPremiumUser(user)
@@ -7,8 +9,8 @@ export default function ScanTab({ user, onStartScan }) {
 
   return (
     <div className="flex flex-col items-center pt-6 sm:pt-10 lg:pt-16">
-      <div className="mb-6 flex w-full items-center justify-between">
-        <h1 className="text-2xl font-bold">ScanVault</h1>
+      <div className="mb-6 flex w-full items-center justify-between gap-3">
+        <BrandMark title={BRAND_SCANVAULT_NAME} size={44} />
         <div className="flex items-center gap-1 text-xs text-slate-500">
           {cloud ? (
             <>

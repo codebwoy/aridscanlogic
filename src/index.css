@@ -203,6 +203,14 @@ body {
   border-color: rgba(129, 140, 248, 0.25);
 }
 
+.lawyer-prose :where(h2, h3):first-child {
+  margin-top: 0;
+}
+
+.mueller-summary .lawyer-prose > h2:first-child {
+  display: none;
+}
+
 .btn-primary {
   background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #4338ca 100%);
   box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);

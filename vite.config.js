@@ -42,7 +42,7 @@ export default defineConfig(({ mode }) => {
       llmProxyPlugin({ getApiKey, getModel, getDatabaseUrl, getApiSecret, getJwtSecret }),
       VitePWA({
         registerType: 'prompt',
-        includeAssets: ['favicon.svg', 'pwa-icon.svg', 'apple-touch-icon.png'],
+        includeAssets: ['favicon.png', 'favicon-32.png', 'favicon-16.png', 'brand-logo.png', 'apple-touch-icon.png'],
         manifest: {
           name: 'ScanLogic Business Suite',
           short_name: 'ScanLogic',

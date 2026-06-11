@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { BrandMark } from '@/components/shared/BrandLogo'
 
 /**
  * Mobile-first nav: bottom tab bar on phone/tablet portrait, left sidebar on lg+.
@@ -77,12 +78,11 @@ export default function ResponsiveNav({
         aria-label="Main navigation"
       >
         <div className="border-b border-inherit px-5 py-5">
-          <p className={`text-lg font-bold ${isScanVault ? 'text-white' : 'text-white'}`}>
-            {brandTitle || (isScanVault ? 'ScanVault' : 'ScanLogic')}
-          </p>
-          {brandSubtitle && (
-            <p className="mt-0.5 text-xs text-slate-500">{brandSubtitle}</p>
-          )}
+          <BrandMark
+            title={brandTitle || (isScanVault ? 'ScanVault' : 'ScanLogic')}
+            subtitle={brandSubtitle}
+            size={44}
+          />
         </div>
         <div className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
           {tabs.map((tab) => (

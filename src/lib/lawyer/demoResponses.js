@@ -14,15 +14,18 @@ export function buildMuellerDemoResponse(prompt, userSnippet) {
 | ${new Date().toISOString().slice(0, 10)} | Erstberatung Herr Müller | Abgeschlossen |
 
 ### Empfehlungen
+
 1. Dokumentation für Finanzamt vorbereiten
 2. Termin mit Steuerberater für konkrete ESt/USt-Fragen
 3. Vertragsentwurf vom Rechtsanwalt prüfen lassen
 
 ### Offene Punkte
+
 - Individuelle Gewinnprognose noch nicht berechnet
 - Vertragsklauseln rechtlich verbindlich bestätigen
 
 ### Fragen für Ihren Steuerberater / Rechtsanwalt
+
 - Passt die gewählte Rechtsform zu geplanter Skalierung?
 - Optimale Vorsteuerabzugs-Strategie?
 

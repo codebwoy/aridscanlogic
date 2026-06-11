@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Crown, Sparkles, X } from 'lucide-react'
+import { Sparkles, X } from 'lucide-react'
+import BrandLogo from '@/components/shared/BrandLogo'
 import { usePremium } from '@/context/PremiumContext'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
 
@@ -38,9 +39,7 @@ export default function PremiumModal() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-start justify-between">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600/30">
-                <Crown className="h-6 w-6 text-brand-400" aria-hidden />
-              </div>
+              <BrandLogo size={48} rounded="rounded-2xl" />
               <button
                 type="button"
                 onClick={() => setModalOpen(false)}

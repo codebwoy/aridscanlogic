@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Send, Archive, Scale, FileText, ListChecks, Paperclip, Download, Plus } from 'lucide-react'
-import SafeMarkdown from '@/components/SafeMarkdown'
+import MuellerResponse from '@/components/lawyer/MuellerResponse'
+import { isExecutiveSummary } from '@/components/lawyer/LawyerMarkdown'
 import { toast } from 'sonner'
 import QuickPrompts from '@/components/lawyer/QuickPrompts'
 import CategoryPicker from '@/components/lawyer/CategoryPicker'
@@ -365,17 +366,19 @@ export default function LawyerAIPage() {
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[92%] rounded-2xl px-4 py-3 text-sm sm:max-w-[85%] lg:max-w-2xl ${
+              className={`rounded-2xl px-4 py-3 text-sm ${
                 msg.role === 'user'
-                  ? 'bg-gradient-to-br from-brand-600 to-brand-700 text-white shadow-lg shadow-brand-900/30'
-                  : 'premium-card prose prose-invert max-w-none prose-p:my-1 prose-headings:my-2 prose-headings:text-white prose-table:text-sm'
+                  ? 'max-w-[92%] bg-gradient-to-br from-brand-600 to-brand-700 text-white shadow-lg shadow-brand-900/30 sm:max-w-[85%] lg:max-w-2xl'
+                  : isExecutiveSummary(msg.content)
+                    ? 'premium-card-gradient w-full max-w-full border border-brand-500/20'
+                    : 'premium-card max-w-[92%] sm:max-w-[85%] lg:max-w-2xl'
               }`}
             >
               {msg.role === 'user' ? (
                 msg.content
               ) : (
                 <>
-                  <SafeMarkdown>{msg.content}</SafeMarkdown>
+                  <MuellerResponse language={language}>{msg.content}</MuellerResponse>
                   <MessageActions
                     content={msg.content}
                     userPrompt={messages[i - 1]?.role === 'user' ? messages[i - 1].content : ''}

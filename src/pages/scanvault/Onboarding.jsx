@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ScanLine, FileText, Share2 } from 'lucide-react'
 import { setOnboardingDone } from '@/lib/scanvault/store'
+import BrandLogo from '@/components/shared/BrandLogo'
 
 const SLIDES = [
   {
@@ -48,9 +49,13 @@ export default function Onboarding({ onDone }) {
           exit={{ opacity: 0, x: -40 }}
           className="flex flex-1 flex-col items-center justify-center text-center"
         >
-          <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-3xl bg-[#007AFF]/20">
-            <Icon className="h-12 w-12 text-[#007AFF]" />
-          </div>
+          {idx === 0 ? (
+            <BrandLogo size={96} rounded="rounded-3xl" className="mb-8 shadow-lg shadow-[#007AFF]/20" />
+          ) : (
+            <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-3xl bg-[#007AFF]/20">
+              <Icon className="h-12 w-12 text-[#007AFF]" />
+            </div>
+          )}
           <h1 className="text-2xl font-bold">{slide.title}</h1>
           <p className="mt-3 max-w-xs text-slate-400">{slide.body}</p>
         </motion.div>

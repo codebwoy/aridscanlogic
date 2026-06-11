@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { loginWithEmail, loginWithGoogle } from '@/lib/scanvault/auth'
+import { BrandMark } from '@/components/shared/BrandLogo'
+import { BRAND_SCANVAULT_NAME } from '@/lib/brand'
 
 export default function Login({ onSuccess, onRegister }) {
   const [email, setEmail] = useState('')
@@ -18,8 +20,7 @@ export default function Login({ onSuccess, onRegister }) {
   return (
     <div className="scanvault-shell flex min-h-full flex-col justify-center bg-[#0f0f0f] px-6 text-white">
       <div className="mx-auto w-full max-w-md">
-      <h1 className="text-2xl font-bold sm:text-3xl">ScanVault</h1>
-      <p className="mt-1 text-slate-400">Sign in to your account</p>
+      <BrandMark title={BRAND_SCANVAULT_NAME} subtitle="Sign in to your account" size={56} className="mb-2" />
       <form onSubmit={submit} className="mt-8 space-y-4">
         <input
           type="email"

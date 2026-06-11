@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
-import { Crown, User, Database, Info, Receipt, ChevronRight, Sparkles, CloudUpload, BookOpen } from 'lucide-react'
+import { Crown, User, Database, Receipt, ChevronRight, Sparkles, CloudUpload, BookOpen } from 'lucide-react'
 import { useGuide } from '@/context/GuideContext'
 import { checkDbConnected, isDbConnected } from '@/lib/supabase/remoteStore'
 import { getApiSecret, setApiSecret } from '@/lib/apiFetch'
@@ -11,6 +11,8 @@ import { useAuth } from '@/context/AuthContext'
 import { usePremium } from '@/context/PremiumContext'
 import TaxVaultSettings from './taxvault/TaxVaultSettings'
 import InstallPwaButton from '@/components/pwa/InstallPwaButton'
+import BrandLogo from '@/components/shared/BrandLogo'
+import { BRAND_SUITE_NAME } from '@/lib/brand'
 
 export default function SettingsPage({ onOpenScanVault }) {
   const { user, supabaseReady, signIn, signUp, signOut } = useAuth()
@@ -272,11 +274,11 @@ export default function SettingsPage({ onOpenScanVault }) {
           </button>
         </div>
 
-        <div className="flex items-start gap-2 rounded-2xl bg-slate-800/40 p-4 text-xs text-slate-500">
-          <Info className="mt-0.5 h-4 w-4 shrink-0" />
+        <div className="flex items-start gap-3 rounded-2xl bg-slate-800/40 p-4 text-xs text-slate-500">
+          <BrandLogo size={36} className="shrink-0" />
           <p>
-            ScanLogic AI & Business Suite v1.0 — Steuer- und Rechtsangaben sind
-            vereinfachte Schätzungen, keine professionelle Beratung.
+            {BRAND_SUITE_NAME} v1.0 — Steuer- und Rechtsangaben sind vereinfachte Schätzungen,
+            keine professionelle Beratung.
           </p>
         </div>
       </div>

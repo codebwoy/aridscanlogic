@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Search, Eye, EyeOff, Trash2, X, FolderOpen, MessageSquare } from 'lucide-react'
-import SafeMarkdown from '@/components/SafeMarkdown'
+import MuellerResponse from '@/components/lawyer/MuellerResponse'
 import { toast } from 'sonner'
 import appApi from '@/lib/appApi'
 import { listCases } from '@/lib/lawyer/caseStore'
@@ -222,8 +222,8 @@ export default function LawyerAIArchive({ open, onClose, onUseInChat, language =
                 </button>
               </div>
               {expanded === item.id && (
-                <div className="prose prose-invert mt-3 max-w-none text-sm prose-p:text-slate-300">
-                  <SafeMarkdown>{item.message_content}</SafeMarkdown>
+                <div className="mt-3 text-sm">
+                  <MuellerResponse language={language}>{item.message_content}</MuellerResponse>
                 </div>
               )}
             </div>
