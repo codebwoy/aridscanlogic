@@ -1,0 +1,27 @@
+# Daily Supabase ping — works even if a custom Vercel domain lacks env vars.
+# Add repo secrets: CRON_SECRET, and either SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY
+# or set KEEP_ALIVE_URL to https://aridscanlogic-tau.vercel.app/api/cron/keep-alive
+
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping keep-alive endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          KEEP_ALIVE_URL: ${{ secrets.KEEP_ALIVE_URL }}
+        run: |
+          URL="${KEEP_ALIVE_URL:-https://aridscanlogic-tau.vercel.app/api/cron/keep-alive}"
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::Add CRON_SECRET to GitHub repo secrets (Settings → Secrets → Actions)"
+            exit 1
+          fi
+          curl -sf -H "Authorization: Bearer ${CRON_SECRET}" "$URL"
+          echo "Keep-alive OK: $URL"

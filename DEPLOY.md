@@ -34,3 +34,25 @@ Red **github-pages** entries from June 2026 (*"Add SEO, structured data…"*) ar
 ## Manual redeploy
 
 [Actions → Deploy GitHub Pages → Run workflow](https://github.com/codebwoy/aridscanlogic/actions/workflows/deploy-github-pages.yml)
+
+## Vercel cron / keep-alive
+
+**Working URL (use this in cron-job.org):**
+
+`https://aridscanlogic-tau.vercel.app/api/cron/keep-alive`
+
+Header: `Authorization: Bearer <CRON_SECRET>`
+
+### Why `aridscanlogic.cycroommedia.com` returns 500
+
+That domain is attached to a **different Vercel team** (`aberlinda95-9315's projects`), not `codebwoy's projects/aridscanlogic`. That deployment has `CRON_SECRET` but is **missing** `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
+
+**Fix option A (recommended):** Point cron-job.org at `aridscanlogic-tau.vercel.app` (above).
+
+**Fix option B:** In Vercel, open the project that owns `aridscanlogic.cycroommedia.com` → **Settings → Environment Variables** → add `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `CRON_SECRET` (Production) → **Redeploy**.
+
+**Fix option C:** Remove the domain from the other team’s project, then add it to [codebwoys-projects/aridscanlogic](https://vercel.com/codebwoys-projects/aridscanlogic).
+
+### GitHub Actions backup
+
+[Supabase Keep-Alive](https://github.com/codebwoy/aridscanlogic/actions/workflows/supabase-keep-alive.yml) runs daily if you add `CRON_SECRET` to **GitHub → Settings → Secrets → Actions**.
