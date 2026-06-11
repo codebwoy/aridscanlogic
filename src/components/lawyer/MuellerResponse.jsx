@@ -9,7 +9,7 @@ export default function MuellerResponse({ children, language = 'de' }) {
     return <LawyerMarkdown>{children}</LawyerMarkdown>
   }
 
-  const badge = language === 'en' ? 'Executive Summary' : 'Executive Summary'
+  const badge = language === 'en' ? 'Executive Summary' : 'Zusammenfassung'
   const body = children.replace(/^##\s*(Executive Summary|Zusammenfassung)\s*\n+/im, '')
 
   return (

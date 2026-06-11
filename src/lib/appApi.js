@@ -171,7 +171,8 @@ async function invokeLLMDemo({ prompt, response_json_schema }) {
   ) {
     const { buildMuellerDemoResponse } = await import('./lawyer/demoResponses.js')
     const userLine = prompt.split('\nuser:').pop()?.split('\nassistant:')[0]?.trim() || ''
-    return { text: buildMuellerDemoResponse(prompt, userLine) }
+    const demoLang = /respond exclusively in \*\*English\*\*/i.test(prompt) ? 'en' : 'de'
+    return { text: buildMuellerDemoResponse(prompt, userLine, demoLang) }
   }
   return {
     text: `**Demo mode:** Configure ANTHROPIC_API_KEY in .env for live AI.\n\nYour question: ${prompt.slice(0, 300)}…`,

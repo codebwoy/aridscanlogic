@@ -1,11 +1,13 @@
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
+import rehypeSanitize from 'rehype-sanitize'
+import { lawyerMarkdownSchema } from '@/lib/lawyer/sanitizeSchema'
+import { normalizeLawyerMarkdown } from '@/lib/lawyer/markdownNormalize'
 
 const schema = {
-  ...defaultSchema,
+  ...lawyerMarkdownSchema,
   protocols: {
-    ...defaultSchema.protocols,
+    ...lawyerMarkdownSchema.protocols,
     href: ['http', 'https', 'mailto'],
   },
 }
@@ -82,7 +84,8 @@ export function splitDisclaimer(markdown) {
 }
 
 export default function LawyerMarkdown({ children, className = '' }) {
-  const { body, disclaimer } = splitDisclaimer(children)
+  const normalized = normalizeLawyerMarkdown(children)
+  const { body, disclaimer } = splitDisclaimer(normalized)
 
   return (
     <div className={`lawyer-prose ${className}`}>

@@ -1,17 +1,44 @@
 /** Rich demo responses when Anthropic API is not configured */
 
-export function buildMuellerDemoResponse(prompt, userSnippet) {
-  const p = prompt.toLowerCase()
+function executiveSummaryDemo(language, userSnippet) {
   const q = (userSnippet || '').slice(0, 120)
+  const date = new Date().toISOString().slice(0, 10)
 
-  if (p.includes('executive summary') || p.includes('zusammenfassung')) {
+  if (language === 'en') {
     return `## Executive Summary
+
+**Topics:** Consultation on ${q || 'your question'}
+
+| Date | Event | Status |
+|------|-------|--------|
+| ${date} | Initial consultation with Herr Müller | Completed |
+
+### Recommendations
+
+1. Prepare documentation for the tax office
+2. Schedule a meeting with your tax advisor for income/VAT questions
+3. Have your contract draft reviewed by an attorney
+
+### Open items
+
+- Individual profit forecast not yet calculated
+- Contract clauses not yet legally confirmed
+
+### Questions for your tax advisor / attorney
+
+- Does your legal structure fit your scaling plans?
+- What is the optimal input-VAT strategy?
+
+*Note: This guidance is for general information and coaching only.*`
+  }
+
+  return `## Executive Summary
 
 **Themen:** Beratung zu ${q || 'Ihrem Anliegen'}
 
 | Datum | Ereignis | Status |
 |-------|----------|--------|
-| ${new Date().toISOString().slice(0, 10)} | Erstberatung Herr Müller | Abgeschlossen |
+| ${date} | Erstberatung Herr Müller | Abgeschlossen |
 
 ### Empfehlungen
 
@@ -30,6 +57,20 @@ export function buildMuellerDemoResponse(prompt, userSnippet) {
 - Optimale Vorsteuerabzugs-Strategie?
 
 *Hinweis: Diese Beratung dient ausschließlich der allgemeinen Information und Bildung.*`
+}
+
+export function buildMuellerDemoResponse(prompt, userSnippet, language = 'de') {
+  const p = prompt.toLowerCase()
+  const q = (userSnippet || '').slice(0, 120)
+  const lang =
+    language === 'en' || language === 'de'
+      ? language
+      : prompt.includes('**Topics:**') || prompt.includes('Write the entire summary in **English only**')
+        ? 'en'
+        : 'de'
+
+  if (p.includes('executive summary') || p.includes('zusammenfassung')) {
+    return executiveSummaryDemo(lang, q)
   }
 
   if (p.includes('document') || p.includes('vertrag') || p.includes('review') || p.includes('prüfen')) {
@@ -104,6 +145,26 @@ Progressiv bis ca. **45%** zuzüglich Solidaritätszuschlag.
 - Gewerbesteuer-Hebesatz in Ihrer Gemeinde?
 
 *Keine individuelle Steuerberatung.*`
+  }
+
+  if (lang === 'en') {
+    return `## Summary
+
+Regarding your question: **${q || 'your topic'}**
+
+I structure advice across **financial fundamentals**, **tax efficiency**, and **legal protection** — always as preparation for your licensed advisors.
+
+### Detail
+- Analyse your situation (legal form, revenue, timeline)
+- Document decisions in writing
+- Plan reserves for tax and social contributions
+
+### Next steps
+1. Gather your numbers (revenue, costs, drawings)
+2. Book a tax advisor appointment
+3. For contracts: consult an attorney
+
+*Note: General coaching only — not a substitute for licensed legal or tax advice. Set ANTHROPIC_API_KEY in .env for live AI responses.*`
   }
 
   return `## Kurzfassung

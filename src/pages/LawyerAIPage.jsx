@@ -73,8 +73,7 @@ export default function LawyerAIPage() {
   const send = async (text, categoryId = activeCategory, { skipCache = false } = {}) => {
     const userText = (text || input).trim()
     if (!userText || loading) return
-    const lang = detectLanguage(userText)
-    setLanguage(lang)
+    const lang = language
     setInput('')
     setMessages((m) => [...m, { role: 'user', content: userText }])
     if (categoryId) setCaseCategory(conversationId.current, categoryId)
@@ -270,7 +269,15 @@ export default function LawyerAIPage() {
         </button>
         <button
           type="button"
-          onClick={() => setLanguage((l) => (l === 'de' ? 'en' : 'de'))}
+          onClick={() =>
+            setLanguage((l) => {
+              const next = l === 'de' ? 'en' : 'de'
+              if (messages.length <= 1) {
+                setMessages([{ role: 'assistant', content: next === 'en' ? WELCOME_EN : WELCOME_DE }])
+              }
+              return next
+            })
+          }
           className="rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] uppercase text-slate-400"
         >
           {language === 'de' ? 'EN' : 'DE'}

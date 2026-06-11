@@ -1,6 +1,7 @@
 import appApi from '@/lib/appApi'
 import { anthropicChat, isAnthropicConfigured, ensureLlmStatus } from '@/lib/anthropic'
 import { buildHerrMuellerSystemPrompt, detectLanguage } from './herrMuellerPrompt'
+import { buildExecutiveSummaryPrompt } from './executiveSummaryPrompt'
 
 export async function invokeHerrMueller({
   userMessage,
@@ -9,7 +10,7 @@ export async function invokeHerrMueller({
   documentContext = null,
   language = null,
 }) {
-  const lang = language || detectLanguage(userMessage)
+  const lang = language === 'en' || language === 'de' ? language : detectLanguage(userMessage)
   const system = buildHerrMuellerSystemPrompt({
     language: lang,
     categoryId,
@@ -51,33 +52,9 @@ export async function generateExecutiveSummary(messages, language = 'de') {
     .join('\n')
     .slice(0, 12000)
 
-  const system = buildHerrMuellerSystemPrompt({ language })
-  const userPrompt = `Create an **Executive Summary** of this consultation transcript.
-
-Use this exact markdown structure (German or English matching the transcript language):
-
-## Executive Summary
-
-**Themen:** one-line topic overview
-
-| Datum | Ereignis | Status |
-|-------|----------|--------|
-| YYYY-MM-DD | … | … |
-
-### Empfehlungen
-1. …
-2. …
-
-### Offene Punkte
-- …
-
-### Fragen für Ihren Steuerberater / Rechtsanwalt
-- …
-
-*Hinweis: Diese Beratung dient ausschließlich der allgemeinen Information und Bildung.*
-
-TRANSCRIPT:
-${transcript}`
+  const lang = language === 'en' || language === 'de' ? language : 'de'
+  const system = buildHerrMuellerSystemPrompt({ language: lang })
+  const userPrompt = buildExecutiveSummaryPrompt(lang, transcript)
 
   await ensureLlmStatus()
   if (isAnthropicConfigured()) {
