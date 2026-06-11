@@ -49,7 +49,17 @@ Red **github-pages** entries from June 2026 (*"Add SEO, structured data…"*) ar
 | Output directory | `dist` |
 | Ignored build step | skip when branch is `gh-pages` |
 
-The **`gh-pages`** branch is **GitHub Pages only** — Vercel must not build it. That is enforced in `vercel.json` (`git.deploymentEnabled.gh-pages: false`) and in the Vercel dashboard ignored-build-step command.
+The **`gh-pages`** branch is **GitHub Pages only** — Vercel must not build it.
+
+| Layer | What it does |
+|---|---|
+| `vercel.json` on **`main`** | Skips `gh-pages` on your project (`codebwoys-projects`) |
+| `vercel.json` on **`gh-pages`** | `ignoreCommand: exit 1` — any Vercel project linked to this repo skips that branch |
+| Vercel dashboard (your project) | Ignored build step when branch is `gh-pages` |
+
+### Red “Build Failed” on `aberlinda95-9315's projects`
+
+That is a **separate Vercel account** still connected to this repo. After the next GitHub Pages deploy, its `gh-pages` builds should **cancel/skip** instead of running `vite build`. If failures continue, the owner of that team must **disconnect** the repo under **Settings → Git** (you cannot fix it from `codebwoys-projects`).
 
 ## Vercel cron / keep-alive
 
