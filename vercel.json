@@ -2,6 +2,12 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
+  "ignoreCommand": "bash -c 'test \"$VERCEL_GIT_COMMIT_REF\" != \"gh-pages\"'",
+  "git": {
+    "deploymentEnabled": {
+      "gh-pages": false
+    }
+  },
   "rewrites": [
     {
       "source": "/((?!api/).*)",
