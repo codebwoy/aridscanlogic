@@ -1,25 +1,17 @@
-import { Bookmark, Copy, EyeOff } from 'lucide-react'
+import { Bookmark, Copy, EyeOff, Database } from 'lucide-react'
 import { toast } from 'sonner'
-import appApi from '@/lib/appApi'
 import { addTimelineEvent } from '@/lib/lawyer/caseStore'
+import { saveLawyerResponse, isResponseSaved, parseMessageTitle } from '@/lib/lawyer/savedResponses'
 
-/** First line of markdown response → message_title */
-export function parseMessageTitle(content) {
-  if (!content) return 'Beratung'
-  const firstLine = content.split(/\r?\n/).find((l) => l.trim()) || ''
-  return firstLine
-    .replace(/^#+\s*/, '')
-    .replace(/\*\*/g, '')
-    .replace(/[_*`]/g, '')
-    .trim()
-    .slice(0, 120) || 'Beratung'
-}
+export { parseMessageTitle } from '@/lib/lawyer/savedResponses'
 
 export default function MessageActions({
   content,
+  userPrompt = '',
   conversationId,
   conversationTitle,
   categoryId,
+  fromArchive = false,
   onTimelineUpdate,
 }) {
   const copy = async () => {
@@ -32,17 +24,20 @@ export default function MessageActions({
   }
 
   const saveInsight = async () => {
-    const messageTitle = parseMessageTitle(content)
     try {
-      await appApi.entities.SavedLawyerMessage.create({
-        conversation_id: conversationId,
-        message_content: content,
-        message_title: messageTitle,
-        conversation_title: conversationTitle || 'Herr Müller',
-        is_hidden: false,
-        saved_date: new Date().toISOString(),
+      if (userPrompt && (await isResponseSaved(userPrompt))) {
+        toast.info('Bereits im Archiv gespeichert')
+        return
+      }
+      await saveLawyerResponse({
+        userPrompt,
+        content,
+        conversationId,
+        conversationTitle,
+        categoryId,
+        isHidden: false,
       })
-      toast.success('Insight saved to archive')
+      toast.success('Insight im Archiv gespeichert — gleiche Frage später ohne API')
     } catch {
       toast.error('Save failed')
     }
@@ -60,15 +55,14 @@ export default function MessageActions({
   }
 
   const hideInsight = async () => {
-    const messageTitle = parseMessageTitle(content)
     try {
-      await appApi.entities.SavedLawyerMessage.create({
-        conversation_id: conversationId,
-        message_content: content,
-        message_title: messageTitle,
-        conversation_title: conversationTitle || 'Herr Müller',
-        is_hidden: true,
-        saved_date: new Date().toISOString(),
+      await saveLawyerResponse({
+        userPrompt,
+        content,
+        conversationId,
+        conversationTitle,
+        categoryId,
+        isHidden: true,
       })
       toast.success('Saved and hidden from default view')
     } catch {
@@ -78,12 +72,17 @@ export default function MessageActions({
 
   return (
     <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-700/50 pt-3">
+      {fromArchive && (
+        <span className="flex items-center gap-1 rounded-lg bg-emerald-500/15 px-2 py-1 text-[10px] text-emerald-300">
+          <Database className="h-3 w-3" /> Aus Archiv
+        </span>
+      )}
       <button
         type="button"
         onClick={saveInsight}
         className="flex items-center gap-1.5 rounded-lg bg-brand-600/20 px-3 py-1.5 text-xs font-medium text-brand-300 hover:bg-brand-600/30"
       >
-        <Bookmark className="h-3.5 w-3.5" /> Save Insight
+        <Bookmark className="h-3.5 w-3.5" /> Speichern
       </button>
       <button
         type="button"

@@ -22,6 +22,7 @@ import {
 } from '@/lib/lawyer/caseStore'
 import DocumentPicker from '@/components/lawyer/DocumentPicker'
 import { exportConversationTranscript } from '@/lib/lawyer/exportTranscript'
+import { findSavedResponse } from '@/lib/lawyer/savedResponses'
 import ModuleGuideBanner from '@/components/guide/ModuleGuideBanner'
 
 const WELCOME_DE = `**Guten Tag!** Ich bin **Herr Müller** — Ihr Mentor für Finanzen, Steuern, Recht und Unternehmensführung.
@@ -68,7 +69,7 @@ export default function LawyerAIPage() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const send = async (text, categoryId = activeCategory) => {
+  const send = async (text, categoryId = activeCategory, { skipCache = false } = {}) => {
     const userText = (text || input).trim()
     if (!userText || loading) return
     const lang = detectLanguage(userText)
@@ -76,6 +77,33 @@ export default function LawyerAIPage() {
     setInput('')
     setMessages((m) => [...m, { role: 'user', content: userText }])
     if (categoryId) setCaseCategory(conversationId.current, categoryId)
+
+    if (!skipCache) {
+      try {
+        const saved = await findSavedResponse(userText, categoryId)
+        if (saved) {
+          setMessages((m) => [
+            ...m,
+            {
+              role: 'assistant',
+              content: saved.message_content,
+              fromArchive: true,
+              savedId: saved.id,
+            },
+          ])
+          toast.success(
+            lang === 'en'
+              ? 'Loaded from archive — no API call'
+              : 'Aus Archiv geladen — kein API-Aufruf'
+          )
+          refreshCase()
+          return
+        }
+      } catch {
+        /* fall through to API */
+      }
+    }
+
     setLoading(true)
     try {
       const { text: reply } = await invokeHerrMueller({
@@ -167,6 +195,22 @@ export default function LawyerAIPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const loadFromArchive = (item) => {
+    const userLine = item.user_prompt || item.message_title || ''
+    setMessages((m) => [
+      ...m,
+      ...(userLine ? [{ role: 'user', content: userLine }] : []),
+      {
+        role: 'assistant',
+        content: item.message_content,
+        fromArchive: true,
+        savedId: item.id,
+      },
+    ])
+    if (item.category_id) setActiveCategory(item.category_id)
+    toast.success(language === 'en' ? 'Loaded into chat' : 'In den Chat geladen')
   }
 
   const showStarters = messages.length <= 1
@@ -334,9 +378,11 @@ export default function LawyerAIPage() {
                   <SafeMarkdown>{msg.content}</SafeMarkdown>
                   <MessageActions
                     content={msg.content}
+                    userPrompt={messages[i - 1]?.role === 'user' ? messages[i - 1].content : ''}
                     conversationId={conversationId.current}
                     conversationTitle="Herr Müller Beratung"
                     categoryId={activeCategory}
+                    fromArchive={!!msg.fromArchive}
                     onTimelineUpdate={refreshCase}
                   />
                 </>
@@ -388,7 +434,12 @@ export default function LawyerAIPage() {
 
       <AnimatePresence>
         {archiveOpen && (
-          <LawyerAIArchive open={archiveOpen} onClose={() => setArchiveOpen(false)} />
+          <LawyerAIArchive
+            open={archiveOpen}
+            onClose={() => setArchiveOpen(false)}
+            onUseInChat={loadFromArchive}
+            language={language}
+          />
         )}
       </AnimatePresence>
     </div>

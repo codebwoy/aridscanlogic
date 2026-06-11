@@ -33,6 +33,8 @@ export const folderSchema = {
 
 export const savedLawyerMessageSchema = {
   conversation_id: 'string',
+  user_prompt: 'string',
+  category_id: 'string',
   message_content: 'string',
   message_title: 'string',
   conversation_title: 'string',

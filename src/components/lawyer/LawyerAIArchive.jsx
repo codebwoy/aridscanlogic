@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Search, Eye, EyeOff, Trash2, X, FolderOpen } from 'lucide-react'
+import { Search, Eye, EyeOff, Trash2, X, FolderOpen, MessageSquare } from 'lucide-react'
 import SafeMarkdown from '@/components/SafeMarkdown'
 import { toast } from 'sonner'
 import appApi from '@/lib/appApi'
 import { listCases } from '@/lib/lawyer/caseStore'
 
-export default function LawyerAIArchive({ open, onClose }) {
+export default function LawyerAIArchive({ open, onClose, onUseInChat, language = 'de' }) {
   const [items, setItems] = useState([])
   const [cases, setCases] = useState([])
   const [tab, setTab] = useState('insights')
@@ -36,6 +36,7 @@ export default function LawyerAIArchive({ open, onClose }) {
     const q = query.toLowerCase()
     return (
       i.message_title?.toLowerCase().includes(q) ||
+      i.user_prompt?.toLowerCase().includes(q) ||
       i.message_content?.toLowerCase().includes(q) ||
       i.conversation_title?.toLowerCase().includes(q)
     )
@@ -78,8 +79,13 @@ export default function LawyerAIArchive({ open, onClose }) {
               <FolderOpen className="h-5 w-5 text-brand-400" />
             </div>
             <div>
-              <h2 className="text-lg font-bold">Archive Dashboard</h2>
-              <p className="text-xs text-slate-500">{items.length} saved insights</p>
+              <h2 className="text-lg font-bold">
+                {language === 'en' ? 'Saved insights' : 'Gespeicherte Beratung'}
+              </h2>
+              <p className="text-xs text-slate-500">
+                {items.length}{' '}
+                {language === 'en' ? 'saved — reuse without API' : 'gespeichert — ohne API wiederverwenden'}
+              </p>
             </div>
           </div>
           <button type="button" onClick={onClose} className="rounded-xl p-2 hover:bg-slate-800">
@@ -91,7 +97,7 @@ export default function LawyerAIArchive({ open, onClose }) {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search insights…"
+            placeholder={language === 'en' ? 'Search questions & answers…' : 'Fragen & Antworten suchen…'}
             className="premium-card w-full py-2 pl-10 pr-4 text-sm"
           />
         </div>
@@ -151,8 +157,13 @@ export default function LawyerAIArchive({ open, onClose }) {
               className={`premium-card mb-3 p-4 ${item.is_hidden ? 'opacity-60' : ''}`}
             >
               <div className="flex items-start justify-between gap-2">
-                <div>
+                <div className="min-w-0 flex-1">
                   <p className="font-medium">{item.message_title}</p>
+                  {item.user_prompt && (
+                    <p className="mt-1 truncate text-xs text-slate-400">
+                      {language === 'en' ? 'Question:' : 'Frage:'} {item.user_prompt}
+                    </p>
+                  )}
                   <p className="text-xs text-slate-500">
                     {item.conversation_title} ·{' '}
                     {new Date(item.saved_date).toLocaleDateString('de-DE')}
@@ -182,13 +193,34 @@ export default function LawyerAIArchive({ open, onClose }) {
                   </button>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setExpanded(expanded === item.id ? null : item.id)}
-                className="mt-2 text-xs text-brand-400"
-              >
-                {expanded === item.id ? 'Collapse' : 'Read full insight'}
-              </button>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {onUseInChat && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onUseInChat(item)
+                      onClose()
+                    }}
+                    className="flex items-center gap-1 rounded-lg bg-brand-600/25 px-2.5 py-1 text-xs text-brand-300 hover:bg-brand-600/35"
+                  >
+                    <MessageSquare className="h-3 w-3" />
+                    {language === 'en' ? 'Load in chat' : 'In Chat laden'}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setExpanded(expanded === item.id ? null : item.id)}
+                  className="text-xs text-brand-400"
+                >
+                  {expanded === item.id
+                    ? language === 'en'
+                      ? 'Collapse'
+                      : 'Einklappen'
+                    : language === 'en'
+                      ? 'Read full insight'
+                      : 'Vollständig lesen'}
+                </button>
+              </div>
               {expanded === item.id && (
                 <div className="prose prose-invert mt-3 max-w-none text-sm prose-p:text-slate-300">
                   <SafeMarkdown>{item.message_content}</SafeMarkdown>

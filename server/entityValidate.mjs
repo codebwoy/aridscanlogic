@@ -19,6 +19,8 @@ const ENTITY_FIELDS = {
   Folder: new Set(['name', 'emoji', 'color', 'created_by_id', 'created_date', 'updated_date']),
   SavedLawyerMessage: new Set([
     'conversation_id',
+    'user_prompt',
+    'category_id',
     'message_content',
     'message_title',
     'conversation_title',
