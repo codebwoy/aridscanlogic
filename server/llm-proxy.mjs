@@ -26,14 +26,104 @@ function readBody(req) {
   })
 }
 
-function getApiKey(getApiKey) {
+async function readRequestBody(req) {
+  if (req.body != null) {
+    if (typeof req.body === 'string') return req.body
+    if (Buffer.isBuffer(req.body)) return req.body.toString('utf8')
+    if (typeof req.body === 'object') return JSON.stringify(req.body)
+  }
+  return readBody(req)
+}
+
+function resolveApiKey(getApiKey) {
   const key = typeof getApiKey === 'function' ? getApiKey() : getApiKey
   return typeof key === 'string' ? key.trim() : ''
 }
 
-function getModel(getModel) {
+function resolveModel(getModel) {
   const model = typeof getModel === 'function' ? getModel() : getModel
   return model || 'claude-sonnet-4-20250514'
+}
+
+export function defaultGetApiKey() {
+  return (process.env.ANTHROPIC_API_KEY || '').trim()
+}
+
+export function defaultGetModel() {
+  return process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514'
+}
+
+export async function handleLlmStatusRequest(req, res, { getApiKey = defaultGetApiKey, getModel = defaultGetModel } = {}) {
+  if (req.method !== 'GET') {
+    res.statusCode = 405
+    res.setHeader('Content-Type', 'application/json')
+    res.end(JSON.stringify({ error: 'Method not allowed' }))
+    return
+  }
+
+  const apiKey = resolveApiKey(getApiKey)
+  res.setHeader('Content-Type', 'application/json')
+  res.setHeader('Cache-Control', 'no-store')
+  res.end(
+    JSON.stringify({
+      configured: apiKey.length > 10,
+      model: resolveModel(getModel),
+    })
+  )
+}
+
+export async function handleLlmPostRequest(req, res, { getApiKey = defaultGetApiKey, getModel = defaultGetModel } = {}) {
+  if (req.method !== 'POST') {
+    res.statusCode = 405
+    res.setHeader('Content-Type', 'application/json')
+    res.end(JSON.stringify({ error: 'Method not allowed' }))
+    return
+  }
+
+  const apiKey = resolveApiKey(getApiKey)
+  if (apiKey.length <= 10) {
+    res.statusCode = 503
+    res.setHeader('Content-Type', 'application/json')
+    res.end(JSON.stringify({ error: 'LLM not configured on server' }))
+    return
+  }
+
+  try {
+    const raw = await readRequestBody(req)
+    const parsed = JSON.parse(raw || '{}')
+    const payload = sanitizeLlmPayload(parsed, resolveModel(getModel))
+
+    const upstream = await fetch(ANTHROPIC_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': ANTHROPIC_VERSION,
+      },
+      body: JSON.stringify(payload),
+    })
+
+    const text = await upstream.text()
+    res.setHeader('Content-Type', 'application/json')
+    res.setHeader('Cache-Control', 'no-store')
+    if (!upstream.ok) {
+      res.statusCode = upstream.status >= 500 ? 502 : upstream.status
+      res.end(JSON.stringify({ error: clientSafeError(null) }))
+      return
+    }
+    res.statusCode = upstream.status
+    res.end(text)
+  } catch (err) {
+    const tooLarge = err.message === 'Request body too large'
+    const badPayload = err.message === 'Invalid messages'
+    res.statusCode = tooLarge ? 413 : badPayload ? 400 : 500
+    res.setHeader('Content-Type', 'application/json')
+    res.end(
+      JSON.stringify({
+        error: tooLarge || badPayload ? err.message : clientSafeError(err),
+      })
+    )
+  }
 }
 
 export function createLlmProxyMiddleware({ getApiKey, getModel }) {
@@ -44,70 +134,19 @@ export function createLlmProxyMiddleware({ getApiKey, getModel }) {
       return next()
     }
 
-    if (pathname === '/api/llm/status' && req.method === 'GET') {
-      const apiKey = getApiKey()
-      res.setHeader('Content-Type', 'application/json')
-      res.setHeader('Cache-Control', 'no-store')
-      res.end(
-        JSON.stringify({
-          configured: apiKey.length > 10,
-          model: getModel(getModel),
-        })
-      )
+    if (pathname === '/api/llm/status') {
+      await handleLlmStatusRequest(req, res, { getApiKey, getModel })
       return
     }
 
-    if (pathname !== '/api/llm' || req.method !== 'POST') {
-      res.statusCode = 405
-      res.setHeader('Content-Type', 'application/json')
-      res.end(JSON.stringify({ error: 'Method not allowed' }))
+    if (pathname === '/api/llm') {
+      await handleLlmPostRequest(req, res, { getApiKey, getModel })
       return
     }
 
-    const apiKey = getApiKey()
-    if (apiKey.length <= 10) {
-      res.statusCode = 503
-      res.setHeader('Content-Type', 'application/json')
-      res.end(JSON.stringify({ error: 'LLM not configured on server' }))
-      return
-    }
-
-    try {
-      const raw = await readBody(req)
-      const parsed = JSON.parse(raw || '{}')
-      const payload = sanitizeLlmPayload(parsed, getModel())
-
-      const upstream = await fetch(ANTHROPIC_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': ANTHROPIC_VERSION,
-        },
-        body: JSON.stringify(payload),
-      })
-
-      const text = await upstream.text()
-      res.setHeader('Content-Type', 'application/json')
-      res.setHeader('Cache-Control', 'no-store')
-      if (!upstream.ok) {
-        res.statusCode = upstream.status >= 500 ? 502 : upstream.status
-        res.end(JSON.stringify({ error: clientSafeError(null) }))
-        return
-      }
-      res.statusCode = upstream.status
-      res.end(text)
-    } catch (err) {
-      const tooLarge = err.message === 'Request body too large'
-      const badPayload = err.message === 'Invalid messages'
-      res.statusCode = tooLarge ? 413 : badPayload ? 400 : 500
-      res.setHeader('Content-Type', 'application/json')
-      res.end(
-        JSON.stringify({
-          error: tooLarge || badPayload ? err.message : clientSafeError(err),
-        })
-      )
-    }
+    res.statusCode = 404
+    res.setHeader('Content-Type', 'application/json')
+    res.end(JSON.stringify({ error: 'Not found' }))
   }
 }
 

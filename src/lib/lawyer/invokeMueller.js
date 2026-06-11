@@ -1,5 +1,10 @@
 import appApi from '@/lib/appApi'
-import { anthropicChat, isAnthropicConfigured, ensureLlmStatus } from '@/lib/anthropic'
+import {
+  anthropicChat,
+  isAnthropicConfigured,
+  ensureLlmStatus,
+  refreshLlmStatus,
+} from '@/lib/anthropic'
 import { buildHerrMuellerSystemPrompt, detectLanguage } from './herrMuellerPrompt'
 import { buildExecutiveSummaryPrompt } from './executiveSummaryPrompt'
 
@@ -48,27 +53,35 @@ export async function invokeHerrMueller({
 
 export async function generateExecutiveSummary(messages, language = 'de') {
   const transcript = messages
+    .filter((m) => m.role === 'user' || m.role === 'assistant')
     .map((m) => `${m.role}: ${m.content}`)
     .join('\n')
     .slice(0, 12000)
+
+  if (!transcript.trim()) {
+    throw new Error('EMPTY_TRANSCRIPT')
+  }
 
   const lang = language === 'en' || language === 'de' ? language : 'de'
   const system = buildHerrMuellerSystemPrompt({ language: lang })
   const userPrompt = buildExecutiveSummaryPrompt(lang, transcript)
 
-  await ensureLlmStatus()
-  if (isAnthropicConfigured()) {
-    const text = await anthropicChat({
-      system,
-      messages: [{ role: 'user', content: userPrompt }],
-      maxTokens: 4096,
-    })
-    return text
+  await refreshLlmStatus()
+  if (!isAnthropicConfigured()) {
+    throw new Error('ANTHROPIC_NOT_CONFIGURED')
   }
 
-  const prompt = `${system}\n\n${userPrompt}`
-  const res = await appApi.integrations.Core.InvokeLLM({ prompt })
-  return res?.text || res?.content || ''
+  const text = await anthropicChat({
+    system,
+    messages: [{ role: 'user', content: userPrompt }],
+    maxTokens: 4096,
+  })
+
+  if (!text?.trim()) {
+    throw new Error('EMPTY_SUMMARY')
+  }
+
+  return text
 }
 
 function isExecutiveSummaryMarkdown(content) {

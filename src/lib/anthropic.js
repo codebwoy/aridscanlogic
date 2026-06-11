@@ -13,6 +13,8 @@ const STATUS_ENDPOINT = '/api/llm/status'
 let llmConfigured = false
 let llmModel = DEFAULT_MODEL
 let statusPromise = null
+let statusCheckedAt = 0
+const STATUS_TTL_MS = 30_000
 
 export async function refreshLlmStatus() {
   try {
@@ -25,11 +27,15 @@ export async function refreshLlmStatus() {
     llmConfigured = false
     llmModel = DEFAULT_MODEL
   }
+  statusCheckedAt = Date.now()
   return llmConfigured
 }
 
 export function ensureLlmStatus() {
-  if (!statusPromise) statusPromise = refreshLlmStatus()
+  const stale = Date.now() - statusCheckedAt > STATUS_TTL_MS
+  if (!statusPromise || stale) {
+    statusPromise = refreshLlmStatus()
+  }
   return statusPromise
 }
 

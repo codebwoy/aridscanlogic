@@ -211,8 +211,17 @@ export default function LawyerAIPage() {
       setMessages((m) => [...m, { role: 'assistant', content: summary, language }])
       refreshCase()
       toast.success(language === 'en' ? 'Summary generated' : 'Zusammenfassung erstellt')
-    } catch {
-      toast.error('Summary failed')
+    } catch (err) {
+      const code = err?.message || ''
+      if (code === 'ANTHROPIC_NOT_CONFIGURED') {
+        toast.error(
+          language === 'en'
+            ? 'AI not configured — add ANTHROPIC_API_KEY to server env and redeploy'
+            : 'KI nicht konfiguriert — ANTHROPIC_API_KEY auf dem Server setzen und neu deployen'
+        )
+      } else {
+        toast.error(language === 'en' ? 'Summary failed' : 'Zusammenfassung fehlgeschlagen')
+      }
     } finally {
       setLoading(false)
     }
