@@ -11,7 +11,8 @@ set -euo pipefail
 
 REPO="${GITHUB_REPOSITORY:-codebwoy/aridscanlogic}"
 SITE_URL="https://codebwoy.github.io/aridscanlogic/"
-BODY='{"build_type":"legacy","source":{"branch":"gh-pages","path":"/"}}'
+WORKFLOW_BODY='{"build_type":"workflow"}'
+LEGACY_BODY='{"build_type":"legacy","source":{"branch":"gh-pages","path":"/"}}'
 
 if [[ -n "${GH_TOKEN:-}" ]]; then
   export GH_TOKEN
@@ -27,11 +28,15 @@ if ! gh auth status >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "→ Setting Pages source: gh-pages branch / (root)"
+echo "→ Enabling Pages (GitHub Actions source, fallback: gh-pages branch)"
 if gh api "repos/${REPO}/pages" &>/dev/null; then
-  gh api --method PUT "repos/${REPO}/pages" --input - <<<"$BODY"
+  if ! gh api --method PUT "repos/${REPO}/pages" --input - <<<"$WORKFLOW_BODY" 2>/dev/null; then
+    gh api --method PUT "repos/${REPO}/pages" --input - <<<"$LEGACY_BODY"
+  fi
 else
-  gh api --method POST "repos/${REPO}/pages" --input - <<<"$BODY"
+  if ! gh api --method POST "repos/${REPO}/pages" --input - <<<"$WORKFLOW_BODY" 2>/dev/null; then
+    gh api --method POST "repos/${REPO}/pages" --input - <<<"$LEGACY_BODY"
+  fi
 fi
 
 echo "→ Triggering Deploy GitHub Pages workflow"
