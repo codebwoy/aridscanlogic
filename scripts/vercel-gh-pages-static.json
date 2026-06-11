@@ -1,8 +1,10 @@
 {
-  "installCommand": "exit 0",
-  "buildCommand": "exit 0",
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "",
+  "buildCommand": "",
   "outputDirectory": ".",
   "framework": null,
+  "ignoreCommand": "exit 1",
   "git": {
     "deploymentEnabled": {
       "gh-pages": false
