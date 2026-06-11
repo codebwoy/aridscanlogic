@@ -41,8 +41,11 @@ jobs:
           cp dist/index.html dist/404.html
           touch dist/.nojekyll
 
-      - name: Vercel config for gh-pages (skip vite build on static branch)
-        run: cp scripts/vercel-gh-pages-static.json dist/vercel.json
+      - name: Vercel static branch helpers (gh-pages has no source — only dist output)
+        run: |
+          cp scripts/vercel-gh-pages-static.json dist/vercel.json
+          cp scripts/gh-pages-package.json dist/package.json
+          cp scripts/gh-pages-vite.config.js dist/vite.config.js
 
       - name: Publish to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
