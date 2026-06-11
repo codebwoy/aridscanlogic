@@ -7,29 +7,29 @@ Live URL: **https://codebwoy.github.io/aridscanlogic/**
 On every push to `main`, [Deploy GitHub Pages](https://github.com/codebwoy/aridscanlogic/actions/workflows/deploy-github-pages.yml):
 
 1. Builds the Vite app with `VITE_BASE_PATH=/aridscanlogic/`
-2. Pushes `dist/` to the **`gh-pages`** branch (peaceiris backup)
-3. Enables GitHub Pages via API if needed (`workflow` source preferred)
-4. Deploys via **`actions/deploy-pages@v4`** to the `github-pages` environment
+2. Pushes `dist/` to the **`gh-pages`** branch (peaceiris)
 
-## One-time setup (if the site is 404)
+## One-time setup (required if the site is 404)
 
-1. **Workflow permissions**  
-   [Actions settings](https://github.com/codebwoy/aridscanlogic/settings/actions) → **General** → **Workflow permissions** → **Read and write permissions** → Save
+GitHub does **not** allow `GITHUB_TOKEN` to enable Pages on the **first** deploy (especially on template repos). You must do this **once** in the browser:
 
-2. **Enable Pages** (only if CI cannot enable via API)  
-   [Pages settings](https://github.com/codebwoy/aridscanlogic/settings/pages)  
-   - **Source:** **GitHub Actions** (preferred)  
-   - Or **Deploy from a branch** → **`gh-pages`** → **`/ (root)`**
+1. [Pages settings](https://github.com/codebwoy/aridscanlogic/settings/pages)
+2. **Build and deployment** → **Source:** **Deploy from a branch**
+3. Branch: **`gh-pages`** → Folder: **`/ (root)`** → **Save**
+4. Wait ~1 minute, then open https://codebwoy.github.io/aridscanlogic/
 
-3. **Or from your machine** (with `gh auth login`):
+Also ensure [Actions permissions](https://github.com/codebwoy/aridscanlogic/settings/actions) → **Read and write permissions**.
 
-   ```bash
-   ./scripts/enable-github-pages.sh
-   ```
+### Or from your machine
+
+```bash
+gh auth login
+./scripts/enable-github-pages.sh
+```
 
 ## Old failed deployments
 
-Red **github-pages** entries from June 2026 with commit *"Add SEO, structured data…"* are from an **obsolete** `deploy-pages` workflow that ran **before** Pages was enabled on the repo. They are safe to ignore. New successful runs will show green once Pages is enabled.
+Red **github-pages** entries from June 2026 (*"Add SEO, structured data…"*) are from an **obsolete** `deploy-pages` workflow that ran **before** Pages was enabled. Safe to ignore. After the one-time setup above, new deploys go live from `gh-pages`.
 
 ## Manual redeploy
 

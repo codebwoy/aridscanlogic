@@ -1,5 +1,5 @@
-# Build dist/ and deploy via GitHub Actions → Pages (official flow).
-# Also keeps gh-pages branch updated for branch-based fallback.
+# Builds dist/ and publishes to gh-pages. GitHub Pages must be enabled once in repo
+# Settings (GITHUB_TOKEN cannot do the first enablement on template repos).
 
 name: Deploy GitHub Pages
 
@@ -11,14 +11,13 @@ on:
 permissions:
   contents: write
   pages: write
-  id-token: write
 
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,77 +49,38 @@ jobs:
           publish_branch: gh-pages
           force_orphan: true
 
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Enable GitHub Pages (workflow source)
+      - name: Try enable Pages (gh-pages source)
         id: pages
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          set -euo pipefail
           API="https://api.github.com/repos/${GITHUB_REPOSITORY}/pages"
           AUTH=(-H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28")
-          WORKFLOW_BODY='{"build_type":"workflow"}'
-          LEGACY_BODY='{"build_type":"legacy","source":{"branch":"gh-pages","path":"/"}}'
-
-          http_code() {
-            curl -sS -o /tmp/pages.json -w "%{http_code}" "$@"
-          }
-
-          try_enable() {
-            local body="$1"
-            local code
-            code=$(http_code "${AUTH[@]}" "$API")
-            if [ "$code" = "404" ]; then
-              code=$(http_code -X POST "${AUTH[@]}" -d "$body" "$API")
-            elif [ "$code" = "200" ]; then
-              code=$(http_code -X PUT "${AUTH[@]}" -d "$body" "$API")
-            else
-              echo "Unexpected GET /pages status: $code"
-              cat /tmp/pages.json
-              return 1
-            fi
-            cat /tmp/pages.json
-            echo "HTTP $code"
-            [ "$code" -ge 200 ] && [ "$code" -lt 300 ]
-          }
-
-          if try_enable "$WORKFLOW_BODY"; then
-            echo "enabled=workflow" >> "$GITHUB_OUTPUT"
-          elif try_enable "$LEGACY_BODY"; then
-            echo "enabled=legacy" >> "$GITHUB_OUTPUT"
-            echo "::warning::Pages enabled from gh-pages branch (legacy). deploy-pages step may be skipped."
-            exit 0
-          else
-            echo "::error::Could not enable GitHub Pages via API. Enable once manually: Settings → Pages → GitHub Actions (or gh-pages branch)."
-            exit 1
+          BODY='{"build_type":"legacy","source":{"branch":"gh-pages","path":"/"}}'
+          CODE=$(curl -sS -o /tmp/pages.json -w "%{http_code}" "${AUTH[@]}" "$API")
+          if [ "$CODE" = "404" ]; then
+            CODE=$(curl -sS -o /tmp/pages.json -w "%{http_code}" -X POST "${AUTH[@]}" -d "$BODY" "$API")
+          elif [ "$CODE" = "200" ]; then
+            CODE=$(curl -sS -o /tmp/pages.json -w "%{http_code}" -X PUT "${AUTH[@]}" -d "$BODY" "$API")
+          fi
+          cat /tmp/pages.json || true
+          if [ "$CODE" -ge 200 ] && [ "$CODE" -lt 300 ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Deploy to GitHub Pages
-        if: steps.pages.outputs.enabled == 'workflow'
-        id: deployment
-        uses: actions/deploy-pages@v4
-
       - name: Deploy summary
-        if: always()
         run: |
           {
             echo "## GitHub Pages deploy"
             echo ""
-            if [ "${{ steps.pages.outputs.enabled }}" = "workflow" ]; then
-              echo "Deployed via GitHub Actions. Site: https://codebwoy.github.io/aridscanlogic/"
-            elif [ "${{ steps.pages.outputs.enabled }}" = "legacy" ]; then
-              echo "Pages source: \`gh-pages\` / (root). Site: https://codebwoy.github.io/aridscanlogic/"
+            echo "Build published to \`gh-pages\`."
+            if [ "${{ steps.pages.outputs.enabled }}" = "true" ]; then
+              echo "Pages source updated. Site: https://codebwoy.github.io/aridscanlogic/"
             else
-              echo "Deploy did not complete. Enable Pages: https://github.com/${{ github.repository }}/settings/pages"
+              echo "**One-time setup (if the site is 404):**"
+              echo "1. [Pages settings](https://github.com/${{ github.repository }}/settings/pages)"
+              echo "2. **Deploy from a branch** → branch **\`gh-pages\`** → folder **\`/(root)\`** → **Save**"
+              echo "3. Wait ~1 min, then open https://codebwoy.github.io/aridscanlogic/"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
