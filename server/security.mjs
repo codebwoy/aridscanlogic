@@ -24,6 +24,7 @@ export function createApiAccessMiddleware(getSecret) {
   return function apiAccessMiddleware(req, res, next) {
     const pathname = req.url?.split('?')[0] || ''
     if (!pathname.startsWith('/api/')) return next()
+    if (pathname.startsWith('/api/cron/')) return next()
 
     if (isLocalRequest(req)) return next()
 

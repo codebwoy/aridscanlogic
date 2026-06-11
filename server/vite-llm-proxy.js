@@ -1,5 +1,6 @@
 import { createLlmProxyMiddleware, createSecurityHeadersMiddleware } from './llm-proxy.mjs'
 import { createDbApiMiddleware } from './db-api.mjs'
+import { createKeepAliveMiddleware } from './cron-keep-alive.mjs'
 import { createApiAccessMiddleware, createRateLimitMiddleware } from './security.mjs'
 
 export function llmProxyPlugin({ getApiKey, getModel, getDatabaseUrl, getApiSecret, getJwtSecret }) {
@@ -11,7 +12,10 @@ export function llmProxyPlugin({ getApiKey, getModel, getDatabaseUrl, getApiSecr
   const rateLimitLlm = createRateLimitMiddleware({ pathPrefix: '/api/llm', windowMs: 60_000, max: 30 })
   const rateLimitDb = createRateLimitMiddleware({ pathPrefix: '/api/db', windowMs: 60_000, max: 120 })
 
+  const keepAlive = createKeepAliveMiddleware()
+
   const attachApi = (server) => {
+    server.middlewares.use(keepAlive)
     server.middlewares.use(apiAccess)
     server.middlewares.use(rateLimitDb)
     server.middlewares.use(rateLimitLlm)
