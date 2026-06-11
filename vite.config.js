@@ -24,6 +24,12 @@ export default defineConfig(({ mode }) => {
 
   return {
     base,
+    server: {
+      watch: {
+        // Server middleware is loaded dynamically; avoid dev restarts on API edits.
+        ignored: ['**/server/**', '**/api/**'],
+      },
+    },
     plugins: [
       {
         name: 'scanlogic-html-seo',

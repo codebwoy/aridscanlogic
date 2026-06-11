@@ -1,20 +1,49 @@
-import { createLlmProxyMiddleware, createSecurityHeadersMiddleware } from './llm-proxy.mjs'
-import { createDbApiMiddleware } from './db-api.mjs'
-import { createKeepAliveMiddleware } from './cron-keep-alive.mjs'
-import { createApiAccessMiddleware, createRateLimitMiddleware } from './security.mjs'
+async function loadServerMiddlewares() {
+  const [
+    { createLlmProxyMiddleware, createSecurityHeadersMiddleware },
+    { createDbApiMiddleware },
+    { createKeepAliveMiddleware },
+    { createApiAccessMiddleware, createRateLimitMiddleware },
+  ] = await Promise.all([
+    import('./llm-proxy.mjs'),
+    import('./db-api.mjs'),
+    import('./cron-keep-alive.mjs'),
+    import('./security.mjs'),
+  ])
+
+  return {
+    createLlmProxyMiddleware,
+    createSecurityHeadersMiddleware,
+    createDbApiMiddleware,
+    createKeepAliveMiddleware,
+    createApiAccessMiddleware,
+    createRateLimitMiddleware,
+  }
+}
 
 export function llmProxyPlugin({ getApiKey, getModel, getDatabaseUrl, getApiSecret, getJwtSecret }) {
-  const llm = createLlmProxyMiddleware({ getApiKey, getModel })
-  const db = createDbApiMiddleware(getDatabaseUrl, getJwtSecret)
-  const securityDev = createSecurityHeadersMiddleware({ enableCsp: false })
-  const securityPreview = createSecurityHeadersMiddleware({ enableCsp: true })
-  const apiAccess = createApiAccessMiddleware(getApiSecret)
-  const rateLimitLlm = createRateLimitMiddleware({ pathPrefix: '/api/llm', windowMs: 60_000, max: 30 })
-  const rateLimitDb = createRateLimitMiddleware({ pathPrefix: '/api/db', windowMs: 60_000, max: 120 })
+  const prodCsp =
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 
-  const keepAlive = createKeepAliveMiddleware()
+  const attachMiddlewares = (enableCsp) => async (server) => {
+    const m = await loadServerMiddlewares()
+    const security = m.createSecurityHeadersMiddleware({ enableCsp })
+    const llm = m.createLlmProxyMiddleware({ getApiKey, getModel })
+    const db = m.createDbApiMiddleware(getDatabaseUrl, getJwtSecret)
+    const apiAccess = m.createApiAccessMiddleware(getApiSecret)
+    const rateLimitLlm = m.createRateLimitMiddleware({
+      pathPrefix: '/api/llm',
+      windowMs: 60_000,
+      max: 30,
+    })
+    const rateLimitDb = m.createRateLimitMiddleware({
+      pathPrefix: '/api/db',
+      windowMs: 60_000,
+      max: 120,
+    })
+    const keepAlive = m.createKeepAliveMiddleware()
 
-  const attachApi = (server) => {
+    server.middlewares.use(security)
     server.middlewares.use(keepAlive)
     server.middlewares.use(apiAccess)
     server.middlewares.use(rateLimitDb)
@@ -23,23 +52,10 @@ export function llmProxyPlugin({ getApiKey, getModel, getDatabaseUrl, getApiSecr
     server.middlewares.use(llm)
   }
 
-  const attachDev = (server) => {
-    server.middlewares.use(securityDev)
-    attachApi(server)
-  }
-
-  const attachPreview = (server) => {
-    server.middlewares.use(securityPreview)
-    attachApi(server)
-  }
-
-  const prodCsp =
-    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
-
   return {
     name: 'scanlogic-llm-proxy',
-    configureServer: attachDev,
-    configurePreviewServer: attachPreview,
+    configureServer: attachMiddlewares(false),
+    configurePreviewServer: attachMiddlewares(true),
     transformIndexHtml(html, ctx) {
       if (ctx.server) return html
       const tag = `<meta http-equiv="Content-Security-Policy" content="${prodCsp}" />`
