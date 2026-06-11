@@ -1,7 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { readFileSync } from 'fs'
-import { dirname, join } from 'path'
-import { fileURLToPath } from 'url'
+import PUBLIC_SUPABASE from '../config/supabase-public.json' with { type: 'json' }
 import { getPool } from './db-pool.mjs'
 import { timingSafeEqual } from './crypto.mjs'
 
@@ -9,23 +7,6 @@ const SUCCESS_BODY = {
   success: true,
   message: 'Supabase keep-alive ping successful — Supabase kept active',
 }
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
-
-function loadPublicSupabaseConfig() {
-  try {
-    const raw = readFileSync(join(__dirname, '../config/supabase-public.json'), 'utf8')
-    const parsed = JSON.parse(raw)
-    return {
-      url: typeof parsed.url === 'string' ? parsed.url.trim() : '',
-      anonKey: typeof parsed.anonKey === 'string' ? parsed.anonKey.trim() : '',
-    }
-  } catch {
-    return { url: '', anonKey: '' }
-  }
-}
-
-const PUBLIC_SUPABASE = loadPublicSupabaseConfig()
 
 function getBearerToken(req) {
   const auth = req.headers?.authorization || req.headers?.get?.('authorization') || ''
@@ -43,7 +24,7 @@ function getSupabaseUrl() {
   return (
     process.env.SUPABASE_URL ||
     process.env.VITE_SUPABASE_URL ||
-    PUBLIC_SUPABASE.url ||
+    (typeof PUBLIC_SUPABASE.url === 'string' ? PUBLIC_SUPABASE.url : '') ||
     ''
   ).trim()
 }
@@ -62,7 +43,7 @@ function getAnonKey() {
     process.env.SUPABASE_ANON_KEY ||
     process.env.VITE_SUPABASE_ANON_KEY ||
     process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    PUBLIC_SUPABASE.anonKey ||
+    (typeof PUBLIC_SUPABASE.anonKey === 'string' ? PUBLIC_SUPABASE.anonKey : '') ||
     ''
   ).trim()
 }
