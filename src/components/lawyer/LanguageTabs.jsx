@@ -1,7 +1,16 @@
-export default function LanguageTabs({ language, onChange, disabled = false }) {
+export default function LanguageTabs({
+  language,
+  onChange,
+  disabled = false,
+  compact = false,
+  className = '',
+}) {
+  const deLabel = compact ? 'DE' : 'Deutsch'
+  const enLabel = compact ? 'EN' : 'English'
+
   return (
     <div
-      className="flex rounded-xl border border-slate-700/60 bg-slate-900/60 p-1"
+      className={`flex rounded-xl border border-brand-500/30 bg-slate-900/80 p-1 shadow-inner shadow-black/20 ${className}`}
       role="tablist"
       aria-label="Response language"
     >
@@ -11,13 +20,13 @@ export default function LanguageTabs({ language, onChange, disabled = false }) {
         aria-selected={language === 'de'}
         disabled={disabled}
         onClick={() => onChange('de')}
-        className={`min-h-[36px] flex-1 rounded-lg px-3 text-xs font-semibold transition-colors ${
+        className={`${compact ? 'min-h-[32px] px-2.5 text-[11px]' : 'min-h-[40px] flex-1 px-3 text-xs'} rounded-lg font-semibold transition-colors ${
           language === 'de'
-            ? 'bg-brand-600 text-white shadow-md shadow-brand-900/30'
-            : 'text-slate-400 hover:text-slate-200'
+            ? 'bg-brand-600 text-white shadow-md shadow-brand-900/40'
+            : 'text-slate-400 hover:bg-slate-800/80 hover:text-slate-200'
         }`}
       >
-        Deutsch
+        {deLabel}
       </button>
       <button
         type="button"
@@ -25,13 +34,13 @@ export default function LanguageTabs({ language, onChange, disabled = false }) {
         aria-selected={language === 'en'}
         disabled={disabled}
         onClick={() => onChange('en')}
-        className={`min-h-[36px] flex-1 rounded-lg px-3 text-xs font-semibold transition-colors ${
+        className={`${compact ? 'min-h-[32px] px-2.5 text-[11px]' : 'min-h-[40px] flex-1 px-3 text-xs'} rounded-lg font-semibold transition-colors ${
           language === 'en'
-            ? 'bg-brand-600 text-white shadow-md shadow-brand-900/30'
-            : 'text-slate-400 hover:text-slate-200'
+            ? 'bg-brand-600 text-white shadow-md shadow-brand-900/40'
+            : 'text-slate-400 hover:bg-slate-800/80 hover:text-slate-200'
         }`}
       >
-        English
+        {enLabel}
       </button>
     </div>
   )

@@ -17,6 +17,7 @@ import {
 } from '@/lib/lawyer/invokeMueller'
 import { SAFETY_DISCLAIMER_DE } from '@/lib/lawyer/herrMuellerPrompt'
 import LanguageTabs from '@/components/lawyer/LanguageTabs'
+import { getLawyerLanguage, saveLawyerLanguage } from '@/lib/lawyer/languageStorage'
 import { getStarterPrompt } from '@/lib/lawyer/categories'
 import {
   ensureCase,
@@ -48,15 +49,22 @@ Pick one of **13 expertise areas**, a starter card, or ask your question.
 *Note: Educational coaching only — not a substitute for licensed Rechtsanwalt / Steuerberater advice.*`
 
 export default function LawyerAIPage() {
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: WELCOME_DE, language: 'de' },
-  ])
+  const [language, setLanguage] = useState(() => getLawyerLanguage())
+  const [messages, setMessages] = useState(() => {
+    const lang = getLawyerLanguage()
+    return [
+      {
+        role: 'assistant',
+        content: lang === 'en' ? WELCOME_EN : WELCOME_DE,
+        language: lang,
+      },
+    ]
+  })
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [translating, setTranslating] = useState(false)
   const [archiveOpen, setArchiveOpen] = useState(false)
   const [activeCategory, setActiveCategory] = useState(null)
-  const [language, setLanguage] = useState('de')
   const [documentContext, setDocumentContext] = useState(null)
   const [showTimeline, setShowTimeline] = useState(false)
   const [caseData, setCaseData] = useState(null)
@@ -231,6 +239,7 @@ export default function LawyerAIPage() {
 
     const previousLang = language
     setLanguage(next)
+    saveLawyerLanguage(next)
 
     if (messages.length <= 1) {
       setMessages([
@@ -281,18 +290,25 @@ export default function LawyerAIPage() {
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col">
-      <header className="safe-top mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500/40 to-indigo-700/30 shadow-lg shadow-brand-600/20">
+      <header className="safe-top mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500/40 to-indigo-700/30 shadow-lg shadow-brand-600/20">
             <Scale className="h-5 w-5 text-brand-300" />
           </div>
-          <div>
+          <div className="min-w-0">
             <h1 className="text-base font-bold sm:text-lg">Herr Müller</h1>
             <p className="text-xs text-slate-500">
               Rechtsanwalt · Steuerberater · Investor
             </p>
           </div>
         </div>
+        <LanguageTabs
+          language={language}
+          onChange={changeLanguage}
+          disabled={busy}
+          compact
+          className="order-3 w-full sm:order-none sm:w-auto"
+        />
         <div className="flex gap-1">
           <button
             type="button"
@@ -314,13 +330,6 @@ export default function LawyerAIPage() {
       </header>
 
       <ModuleGuideBanner moduleId="lawyer" title="Lawyer AI" />
-
-      <div className="mb-3">
-        <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
-          {language === 'en' ? 'Response language' : 'Antwortsprache'}
-        </p>
-        <LanguageTabs language={language} onChange={changeLanguage} disabled={busy} />
-      </div>
 
       <div className="mb-2 flex flex-wrap gap-2">
         <button
@@ -442,7 +451,13 @@ export default function LawyerAIPage() {
                 msg.content
               ) : (
                 <>
-                  <MuellerResponse language={msg.language || language}>{msg.content}</MuellerResponse>
+                  <MuellerResponse
+                    language={msg.language || language}
+                    onLanguageChange={isExecutiveSummary(msg.content) ? changeLanguage : undefined}
+                    languageSwitchDisabled={busy}
+                  >
+                    {msg.content}
+                  </MuellerResponse>
                   <MessageActions
                     content={msg.content}
                     userPrompt={messages[i - 1]?.role === 'user' ? messages[i - 1].content : ''}
@@ -473,13 +488,19 @@ export default function LawyerAIPage() {
         <div ref={bottomRef} />
       </div>
 
-      <div className="safe-bottom border-t border-slate-800/80 py-3">
+      <div className="safe-bottom shrink-0 border-t border-slate-800/80 bg-slate-950/95 pt-2 backdrop-blur-xl">
+        <div className="mb-2 rounded-xl border border-brand-500/20 bg-brand-950/20 px-2 py-2">
+          <p className="mb-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-brand-300">
+            {language === 'en' ? 'Response language' : 'Antwortsprache'}
+          </p>
+          <LanguageTabs language={language} onChange={changeLanguage} disabled={busy} />
+        </div>
         <form
           onSubmit={(e) => {
             e.preventDefault()
             send()
           }}
-          className="flex gap-2"
+          className="flex gap-2 pb-1"
         >
           <input
             value={input}
