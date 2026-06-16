@@ -15,13 +15,16 @@ on:
 jobs:
   ping:
     runs-on: ubuntu-latest
-    if: ${{ secrets.CRON_SECRET != '' }}
     steps:
       - name: Ping keep-alive endpoint
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           KEEP_ALIVE_URL: ${{ secrets.KEEP_ALIVE_URL }}
         run: |
+          if [ -z "${CRON_SECRET}" ]; then
+            echo "CRON_SECRET not set in GitHub Actions secrets — skipping (primary scheduler is cron-job.org)."
+            exit 0
+          fi
           URL="${KEEP_ALIVE_URL:-https://aridscanlogic-tau.vercel.app/api/cron/keep-alive}"
           curl -sf -H "Authorization: Bearer ${CRON_SECRET}" "$URL"
           echo "Keep-alive OK: $URL"
