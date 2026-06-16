@@ -79,6 +79,25 @@ That domain is attached to a **different Vercel team** (`aberlinda95-9315's proj
 
 **Fix option C:** Remove the domain from the other team’s project, then add it to [codebwoys-projects/aridscanlogic](https://vercel.com/codebwoys-projects/aridscanlogic).
 
-### GitHub Actions backup
+### GitHub Actions backup (optional)
 
-[Supabase Keep-Alive](https://github.com/codebwoy/aridscanlogic/actions/workflows/supabase-keep-alive.yml) runs daily if you add `CRON_SECRET` to **GitHub → Settings → Secrets → Actions**.
+You may have **three** keep-alive schedulers:
+
+| Scheduler | Status if misconfigured |
+|-----------|-------------------------|
+| **cron-job.org** | You configure URL + `Authorization: Bearer <CRON_SECRET>` — your manual test (200 OK) means this works. |
+| **Vercel Cron** (`vercel.json`) | Needs `CRON_SECRET` on Vercel; Vercel sends the Bearer header automatically. |
+| **GitHub Actions** | Needs `CRON_SECRET` in **GitHub → Settings → Secrets → Actions** (not the same as Vercel env). |
+
+**Failure emails from GitHub** (`Add CRON_SECRET to GitHub repo secrets`) mean the Actions backup is not configured. Your app and Supabase are still fine if cron-job.org or Vercel Cron succeeds.
+
+The workflow **skips** (no failure email) when `CRON_SECRET` is missing from GitHub.
+
+To enable the GitHub backup (same secret as Vercel):
+
+```bash
+gh auth login
+./scripts/enable-github-keep-alive.sh
+```
+
+Or paste `CRON_SECRET` manually under [repo Actions secrets](https://github.com/codebwoy/aridscanlogic/settings/secrets/actions).
