@@ -25,6 +25,6 @@ jobs:
             echo "CRON_SECRET not set in GitHub Actions secrets — skipping (primary scheduler is cron-job.org)."
             exit 0
           fi
-          URL="${KEEP_ALIVE_URL:-https://aridscanlogic-tau.vercel.app/api/cron/keep-alive}"
+          URL="${KEEP_ALIVE_URL:-https://aridscanlogic.cycroommedia.com/api/cron/keep-alive}"
           curl -sf -H "Authorization: Bearer ${CRON_SECRET}" "$URL"
           echo "Keep-alive OK: $URL"

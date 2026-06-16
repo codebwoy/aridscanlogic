@@ -65,19 +65,26 @@ That is a **separate Vercel account** still connected to this repo. After the ne
 
 **Working URL (use this in cron-job.org):**
 
-`https://aridscanlogic-tau.vercel.app/api/cron/keep-alive`
+`https://aridscanlogic.cycroommedia.com/api/cron/keep-alive`
 
 Header: `Authorization: Bearer <CRON_SECRET>`
 
-### Why `aridscanlogic.cycroommedia.com` returns 500
+A successful response must include `"method": "rest-scanlogic_records"` and `"attempts"` — that confirms a real DB query ran. Example:
 
-That domain is attached to a **different Vercel team** (`aberlinda95-9315's projects`), not `codebwoy's projects/aridscanlogic`. That deployment has `CRON_SECRET` but is **missing** `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
+```json
+{"success":true,"message":"Database keep-alive ping successful — Supabase kept active","attempts":1,"method":"rest-scanlogic_records"}
+```
 
-**Fix option A (recommended):** Point cron-job.org at `aridscanlogic-tau.vercel.app` (above).
+### Stale deployment on `aridscanlogic-tau.vercel.app`
 
-**Fix option B:** In Vercel, open the project that owns `aridscanlogic.cycroommedia.com` → **Settings → Environment Variables** → add `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `CRON_SECRET` (Production) → **Redeploy**.
+This repo is linked to **two** Vercel projects. After pushes to `main`, only one may auto-deploy:
 
-**Fix option C:** Remove the domain from the other team’s project, then add it to [codebwoys-projects/aridscanlogic](https://vercel.com/codebwoys-projects/aridscanlogic).
+| URL | Status |
+|---|---|
+| `https://aridscanlogic.cycroommedia.com` | **Current** — has latest keep-alive code + Supabase env vars |
+| `https://aridscanlogic-tau.vercel.app` | **Stale** — may still return the old JSON without `method` / `attempts` |
+
+If cron-job.org points at `aridscanlogic-tau.vercel.app`, update the job URL to `aridscanlogic.cycroommedia.com` (above), or redeploy [codebwoys-projects/aridscanlogic](https://vercel.com/codebwoys-projects/aridscanlogic) from the Vercel dashboard.
 
 ### GitHub Actions backup (optional)
 
