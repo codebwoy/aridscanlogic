@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import appApi from '@/lib/appApi'
 import { CONTRACT_TEMPLATES } from '@/lib/contractTemplates'
 import { isLegalTemplateKey, buildPopulatedLegalTemplate } from '@/lib/legal/contractSections'
+import LegalDocumentPreview from '@/components/legal/LegalDocumentPreview'
 import { useAiLanguage } from '@/context/AiLanguageContext'
 
 export default function ContractDesigner({ contract, onSaved, onCancel, initialTemplate }) {
@@ -115,7 +116,13 @@ export default function ContractDesigner({ contract, onSaved, onCancel, initialT
       {(form.contract_body?.sections || []).map((sec, i) => (
         <div key={i} className="rounded-xl bg-slate-800/60 p-3">
           <p className="font-medium text-brand-300">{sec.heading}</p>
-          <pre className="mt-1 whitespace-pre-wrap font-sans text-sm text-slate-400">{sec.body}</pre>
+          {isLegalTemplateKey(form.template_type) ? (
+            <div className="mt-2 max-h-96 overflow-y-auto">
+              <LegalDocumentPreview content={sec.body} module="Contract Safe" />
+            </div>
+          ) : (
+            <pre className="mt-1 whitespace-pre-wrap font-sans text-sm text-slate-400">{sec.body}</pre>
+          )}
         </div>
       ))}
       <h4 className="text-sm font-medium text-slate-400">Unterzeichner (Reihenfolge = Index)</h4>

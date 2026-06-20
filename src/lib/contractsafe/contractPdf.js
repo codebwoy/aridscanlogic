@@ -1,3 +1,4 @@
+import { drawLegalMarkdownBody } from '@/lib/pdf/drawLegalMarkdownBody'
 import {
   createBrandedPdf,
   drawBrandedHeader,
@@ -8,6 +9,10 @@ import {
   saveBrandedPdf,
   PDF_THEME,
 } from '@/lib/pdf/brandedPdf'
+
+function sectionBodyLooksLikeMarkdown(body = '') {
+  return /(\*\*|^#+\s|^- )/m.test(body)
+}
 
 export async function generateSignedContractPdf(contract, signers = []) {
   const pdf = createBrandedPdf()
@@ -21,7 +26,15 @@ export async function generateSignedContractPdf(contract, signers = []) {
   sections.forEach((sec, i) => {
     y = ensureSpace(pdf, y, 20, { title: contract.title, module: 'Contract Safe' })
     y = drawSectionTitle(pdf, y, sec.heading || `Abschnitt ${i + 1}`)
-    y = drawBodyParagraph(pdf, y, sec.body || '')
+    if (sectionBodyLooksLikeMarkdown(sec.body)) {
+      y = drawLegalMarkdownBody(pdf, y, sec.body || '', {
+        module: 'Contract Safe',
+        docTitle: contract.title,
+        fragment: true,
+      })
+    } else {
+      y = drawBodyParagraph(pdf, y, sec.body || '')
+    }
     y += 4
   })
 

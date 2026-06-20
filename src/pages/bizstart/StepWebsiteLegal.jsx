@@ -19,7 +19,7 @@ import {
 import { getNextStepId } from '@/lib/bizstart/steps'
 import { persistLegalProfile } from '@/lib/legal/sync'
 import LegalProfileForm from '@/components/legal/LegalProfileForm'
-import SafeMarkdown from '@/components/SafeMarkdown'
+import LegalDocumentPreview from '@/components/legal/LegalDocumentPreview'
 
 const PHASES = ['impressum', 'datenschutz', 'avv']
 
@@ -411,8 +411,8 @@ export default function StepWebsiteLegal({ lang, formData, onUpdateForm, onUpdat
       {currentText && (
         <div className="premium-card p-4">
           <p className="mb-2 text-xs font-semibold uppercase text-slate-500">{s.preview}</p>
-          <div className="max-h-48 overflow-y-auto rounded-lg bg-slate-900/60 p-3 text-xs">
-            <SafeMarkdown>{currentText}</SafeMarkdown>
+          <div className="max-h-[28rem] overflow-y-auto">
+            <LegalDocumentPreview content={currentText} />
           </div>
           <p className="mt-3 text-xs font-semibold text-slate-400">{s.exportThis}</p>
           <div className="mt-2 flex flex-wrap gap-2">
