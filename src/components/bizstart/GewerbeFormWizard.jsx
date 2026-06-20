@@ -63,7 +63,7 @@ function FormSelect({ children, className = '', ...props }) {
   return (
     <select
       {...props}
-      className={`w-full rounded-xl border-2 border-brand-100 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25 ${className}`}
+      className={`w-full rounded-xl border-2 border-brand-100 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25 [&>option]:bg-white [&>option]:text-slate-900 ${className}`}
     >
       {children}
     </select>
@@ -703,7 +703,7 @@ export default function GewerbeFormWizard({ lang, formData, onChange, onComplete
   }[stepId]
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-brand-700/30 bg-white shadow-2xl shadow-brand-900/10 ring-1 ring-brand-200/40">
+    <div className="light-form-surface overflow-hidden rounded-2xl border border-brand-700/30 bg-white text-slate-900 shadow-2xl shadow-brand-900/10 ring-1 ring-brand-200/40">
       <div className="bg-gradient-to-br from-brand-950 via-brand-800 to-brand-600 px-4 py-4 text-white sm:px-5">
         <div className="mb-2 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">

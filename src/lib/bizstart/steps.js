@@ -3,6 +3,7 @@
 export const ALL_STEPS = [
   { id: 'structure', key: 'structure', estMin: 5 },
   { id: 'info', key: 'info', estMin: 15 },
+  { id: 'businessPlan', key: 'businessPlan', estMin: 45 },
   { id: 'gewerbe', key: 'gewerbe', estMin: 15, skipFor: ['freiberufler'] },
   { id: 'finanzamt', key: 'finanzamt', estMin: 20 },
   { id: 'krankenkasse', key: 'krankenkasse', estMin: 15 },
@@ -94,6 +95,7 @@ export const STEP_LABELS = {
   en: {
     structure: 'Choose business structure',
     info: 'Personal & business information',
+    businessPlan: 'Business plan (self-employment template)',
     gewerbe: 'Gewerbeanmeldung (GewA 1) — online beantragen',
     finanzamt: 'Fragebogen zur steuerlichen Erfassung',
     krankenkasse: 'Health insurance (Krankenkasse)',
@@ -107,6 +109,7 @@ export const STEP_LABELS = {
   de: {
     structure: 'Rechtsform wählen',
     info: 'Persönliche & geschäftliche Daten',
+    businessPlan: 'Businessplan (Selbstständigkeit)',
     gewerbe: 'Gewerbeanmeldung (GewA 1) — online beantragen',
     finanzamt: 'Fragebogen zur steuerlichen Erfassung',
     krankenkasse: 'Krankenkasse / Krankenversicherung',

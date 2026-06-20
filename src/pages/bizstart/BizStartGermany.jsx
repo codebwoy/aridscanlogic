@@ -31,6 +31,7 @@ import StepIhk from './StepIhk'
 import StepKrankenkasse from './StepKrankenkasse'
 import StepBank from './StepBank'
 import StepWebsiteLegal from './StepWebsiteLegal'
+import StepBusinessPlan from './StepBusinessPlan'
 import StepComplete from './StepComplete'
 import ComplianceCalendar from './ComplianceCalendar'
 import RegistrationChat from './RegistrationChat'
@@ -150,6 +151,7 @@ export default function BizStartGermany({ onExit, onComplete }) {
   }
 
   const stepScreens = {
+    businessPlan: StepBusinessPlan,
     gewerbe: StepGewerbe,
     finanzamt: StepFinanzamt,
     vat: StepVat,

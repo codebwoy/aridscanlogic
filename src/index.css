@@ -183,6 +183,19 @@ body {
   }
 }
 
+.light-form-surface :where(input:not([type='checkbox']):not([type='radio']), select, textarea) {
+  color: #0f172a;
+}
+
+.light-form-surface select option {
+  color: #0f172a;
+  background-color: #fff;
+}
+
+.light-form-surface :where(input, select, textarea)::placeholder {
+  color: #94a3b8;
+}
+
 .premium-card {
   border-radius: 1rem;
   border: 1px solid rgba(148, 163, 184, 0.12);
@@ -201,6 +214,14 @@ body {
     rgba(15, 23, 42, 0.9) 100%
   );
   border-color: rgba(129, 140, 248, 0.25);
+}
+
+.guide-prose :where(h1, h2, h3):first-child {
+  margin-top: 0;
+}
+
+.guide-prose :where(p):last-child {
+  margin-bottom: 0;
 }
 
 .lawyer-prose :where(h2, h3):first-child {

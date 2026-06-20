@@ -6,6 +6,7 @@ import appApi from '@/lib/appApi'
 import { useAiLanguage } from '@/context/AiLanguageContext'
 import AiLanguageTabs from '@/components/shared/AiLanguageTabs'
 import AiLanguageBar from '@/components/shared/AiLanguageBar'
+import GuideMarkdown from '@/components/bizstart/GuideMarkdown'
 import { aiLanguageInstruction } from '@/lib/ai/promptLanguage'
 
 const DISCLAIMER =
@@ -91,15 +92,17 @@ User question: ${text}`,
               </div>
             </div>
             <p className="bg-amber-500/10 px-4 py-2 text-[10px] text-amber-200">{DISCLAIMER}</p>
-            <div className="flex-1 space-y-3 overflow-y-auto p-4">
+            <div className="flex-1 space-y-4 overflow-y-auto p-4">
               {messages.map((m, i) => (
                 <div
                   key={i}
-                  className={`max-w-[90%] rounded-xl px-3 py-2 text-sm ${
-                    m.role === 'user' ? 'ml-auto bg-brand-600' : 'bg-slate-800'
-                  }`}
+                  className={
+                    m.role === 'user'
+                      ? 'ml-auto max-w-[85%] rounded-2xl bg-brand-600 px-4 py-2.5 text-sm leading-relaxed text-white shadow-md shadow-brand-900/30'
+                      : 'max-w-full rounded-2xl border border-brand-500/15 bg-slate-800/95 px-4 py-3 shadow-sm'
+                  }
                 >
-                  {m.content}
+                  {m.role === 'user' ? m.content : <GuideMarkdown>{m.content}</GuideMarkdown>}
                 </div>
               ))}
               {loading && (
