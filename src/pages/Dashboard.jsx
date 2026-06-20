@@ -73,7 +73,7 @@ export default function Dashboard({ onOpenScanVault }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.2 }}
-            className={isLawyer ? 'app-panel-full flex min-h-0 flex-1 flex-col' : ''}
+            className={isLawyer ? 'app-panel-full flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col overflow-x-hidden' : 'min-w-0 max-w-full overflow-x-hidden'}
           >
             <Suspense fallback={<TabFallback />}>
               {activeTab === 'docs' ? (

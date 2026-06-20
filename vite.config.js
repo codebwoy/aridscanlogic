@@ -9,6 +9,18 @@ import { resolveAnthropicModel } from './server/llmModel.mjs'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
+  for (const key of [
+    'VITE_SUPABASE_SECRET_KEY',
+    'VITE_SUPABASE_SERVICE_ROLE_KEY',
+    'VITE_ANTHROPIC_API_KEY',
+  ]) {
+    if ((env[key] || '').trim()) {
+      console.warn(
+        `[scanlogic] Remove ${key} from .env — VITE_* values can be embedded in the client bundle. Use a server-only variable instead.`
+      )
+    }
+  }
+
   const siteUrl = (env.VITE_SITE_URL || 'https://codebwoy.github.io/aridscanlogic').replace(
     /\/$/,
     ''

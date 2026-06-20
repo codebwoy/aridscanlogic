@@ -56,8 +56,8 @@ export default function CaseTimeline({ conversationId, timeline = [], onUpdate }
       ) : (
         <ul className="space-y-1">
           {timeline.slice(0, 5).map((e) => (
-            <li key={e.id} className="flex justify-between text-[11px]">
-              <span className="text-slate-300">{e.title}</span>
+            <li key={e.id} className="flex min-w-0 justify-between gap-2 text-[11px]">
+              <span className="min-w-0 flex-1 break-words text-slate-300">{e.title}</span>
               <span className="text-slate-500">
                 {e.date} · {e.status}
               </span>

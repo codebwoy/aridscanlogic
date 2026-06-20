@@ -38,7 +38,7 @@ export default function QuickPrompts({ onSelect, language = 'de', compact }) {
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500/30 to-indigo-600/20">
                 <Icon className="h-4 w-4 text-brand-300" />
               </div>
-              <p className="text-sm font-semibold leading-tight text-white">{title}</p>
+              <p className="line-clamp-3 text-sm font-semibold leading-tight text-white">{title}</p>
             </motion.button>
           )
         })}

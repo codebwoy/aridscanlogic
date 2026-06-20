@@ -27,7 +27,7 @@ export default function CategoryPicker({ activeCategory, onSelect, language = 'd
               }`}
             >
               <Icon className={`h-4 w-4 ${active ? 'text-brand-300' : 'text-slate-500'}`} />
-              <span className="text-[10px] font-medium leading-tight text-slate-300">{label}</span>
+              <span className="line-clamp-2 text-[10px] font-medium leading-tight text-slate-300">{label}</span>
             </motion.button>
           )
         })}

@@ -53,6 +53,7 @@ Static hosts (GitHub Pages, S3-only) **cannot** run the LLM proxy. Options:
 - Optional cloud auth: set `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (client) and `SUPABASE_JWT_SECRET` (server) — see `.env.example`.
 - When JWT auth is active, the server ignores mismatched `user_id` query parameters.
 - Do **not** put `service_role` or database passwords in any `VITE_*` variable.
+- **Never** set `VITE_SUPABASE_SECRET_KEY` or `VITE_SUPABASE_SERVICE_ROLE_KEY` — use `SUPABASE_SERVICE_ROLE_KEY` (server-only) for cron/keep-alive.
 - Rotate database password and JWT secrets if they were shared in chat or committed.
 
 ## Admin console

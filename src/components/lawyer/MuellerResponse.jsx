@@ -19,7 +19,7 @@ export default function MuellerResponse({
   const body = children.replace(/^##\s*(Executive Summary|Zusammenfassung)\s*\n+/im, '')
 
   return (
-    <div className="mueller-summary">
+    <div className="mueller-summary min-w-0 max-w-full">
       <div className="mb-4 rounded-xl border border-brand-500/25 bg-gradient-to-r from-brand-600/15 via-indigo-900/20 to-slate-900/40 px-3 py-2.5">
         <div className="flex items-start gap-3">
           <BrandLogo size={36} rounded="rounded-lg" className="shrink-0 shadow-brand-900/40" />

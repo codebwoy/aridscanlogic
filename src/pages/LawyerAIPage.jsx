@@ -339,7 +339,7 @@ export default function LawyerAIPage() {
   const busy = loading || translating
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col">
+    <div className="flex h-full min-h-0 w-full min-w-0 max-w-full flex-col overflow-x-hidden">
       <header className="safe-top mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500/40 to-indigo-700/30 shadow-lg shadow-brand-600/20">
@@ -382,7 +382,7 @@ export default function LawyerAIPage() {
       <ModuleGuideBanner moduleId="lawyer" title="Lawyer AI" />
 
       {!llmReady && (
-        <div className="mb-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
+        <div className="mb-3 break-words rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
           {aiConfigError}
         </div>
       )}
@@ -486,25 +486,25 @@ export default function LawyerAIPage() {
         </>
       )}
 
-      <div className="flex-1 space-y-4 overflow-y-auto pb-4 scrollbar-hide">
+      <div className="flex min-w-0 flex-1 flex-col space-y-4 overflow-x-hidden overflow-y-auto pb-4 scrollbar-hide">
         {messages.map((msg, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`flex w-full min-w-0 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`rounded-2xl px-4 py-3 text-sm ${
+              className={`chat-bubble overflow-hidden rounded-2xl px-4 py-3 text-sm ${
                 msg.role === 'user'
-                  ? 'max-w-[92%] bg-gradient-to-br from-brand-600 to-brand-700 text-white shadow-lg shadow-brand-900/30 sm:max-w-[85%] lg:max-w-2xl'
+                  ? 'max-w-[min(92%,100%)] bg-gradient-to-br from-brand-600 to-brand-700 text-white shadow-lg shadow-brand-900/30 sm:max-w-[85%] lg:max-w-2xl'
                   : isExecutiveSummary(msg.content)
-                    ? 'premium-card-gradient w-full max-w-full border border-brand-500/20'
-                    : 'premium-card max-w-[92%] sm:max-w-[85%] lg:max-w-2xl'
+                    ? 'premium-card-gradient w-full min-w-0 max-w-full border border-brand-500/20'
+                    : 'premium-card max-w-[min(92%,100%)] sm:max-w-[85%] lg:max-w-2xl'
               }`}
             >
               {msg.role === 'user' ? (
-                msg.content
+                <span className="block whitespace-pre-wrap">{msg.content}</span>
               ) : (
                 <>
                   <MuellerResponse
@@ -544,7 +544,7 @@ export default function LawyerAIPage() {
         <div ref={bottomRef} />
       </div>
 
-      <div className="safe-bottom shrink-0 border-t border-slate-800/80 bg-slate-950/95 pt-2 backdrop-blur-xl">
+      <div className="safe-bottom min-w-0 shrink-0 border-t border-slate-800/80 bg-slate-950/95 pt-2 backdrop-blur-xl">
         <AiLanguageBar
           language={language}
           onChange={changeLanguage}
@@ -556,13 +556,13 @@ export default function LawyerAIPage() {
             e.preventDefault()
             send()
           }}
-          className="flex gap-2 pb-1"
+          className="flex min-w-0 gap-2 pb-1"
         >
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={language === 'en' ? 'Your question…' : 'Ihre Frage…'}
-            className="premium-card flex-1 rounded-xl px-4 py-3 text-sm outline-none ring-brand-500/50 focus:ring-2"
+            className="premium-card min-w-0 flex-1 rounded-xl px-4 py-3 text-sm outline-none ring-brand-500/50 focus:ring-2"
             disabled={busy}
           />
           <button

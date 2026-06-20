@@ -14,17 +14,17 @@ const schema = {
 
 const components = {
   h2: ({ children }) => (
-    <h2 className="mb-3 border-b border-brand-500/30 pb-2 text-lg font-bold tracking-tight text-white">
+    <h2 className="mb-3 break-words border-b border-brand-500/30 pb-2 text-base font-bold tracking-tight text-white sm:text-lg">
       {children}
     </h2>
   ),
   h3: ({ children }) => (
-    <h3 className="mb-2 mt-5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brand-300">
-      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" aria-hidden />
-      {children}
+    <h3 className="mb-2 mt-5 flex min-w-0 items-start gap-2 text-xs font-semibold uppercase tracking-wider text-brand-300">
+      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" aria-hidden />
+      <span className="min-w-0 flex-1 break-words">{children}</span>
     </h3>
   ),
-  p: ({ children }) => <p className="my-2 leading-relaxed text-slate-200">{children}</p>,
+  p: ({ children }) => <p className="my-2 break-words leading-relaxed text-slate-200">{children}</p>,
   strong: ({ children }) => <strong className="font-semibold text-brand-100">{children}</strong>,
   ul: ({ children }) => <ul className="my-2 list-none space-y-2 pl-0">{children}</ul>,
   ol: ({ children }) => (
@@ -45,8 +45,8 @@ const components = {
     )
   },
   table: ({ children }) => (
-    <div className="my-4 overflow-x-auto rounded-xl border border-brand-500/20 bg-slate-900/50">
-      <table className="w-full min-w-[280px] border-collapse text-left text-sm">{children}</table>
+    <div className="my-4 max-w-full overflow-x-auto rounded-xl border border-brand-500/20 bg-slate-900/50">
+      <table className="w-full min-w-0 border-collapse text-left text-sm">{children}</table>
     </div>
   ),
   thead: ({ children }) => (
@@ -57,12 +57,12 @@ const components = {
   tbody: ({ children }) => <tbody className="divide-y divide-slate-700/60">{children}</tbody>,
   tr: ({ children }) => <tr className="transition-colors hover:bg-brand-950/30">{children}</tr>,
   th: ({ children }) => (
-    <th className="px-3 py-2.5 font-semibold first:rounded-tl-xl last:rounded-tr-xl">{children}</th>
+    <th className="break-words px-3 py-2.5 font-semibold first:rounded-tl-xl last:rounded-tr-xl">{children}</th>
   ),
-  td: ({ children }) => <td className="px-3 py-2.5 text-slate-300">{children}</td>,
+  td: ({ children }) => <td className="break-words px-3 py-2.5 text-slate-300">{children}</td>,
   hr: () => <hr className="my-4 border-0 border-t border-brand-500/20" />,
   blockquote: ({ children }) => (
-    <blockquote className="my-3 border-l-2 border-brand-500/50 bg-brand-950/25 py-1 pl-3 text-slate-300">
+    <blockquote className="my-3 break-words border-l-2 border-brand-500/50 bg-brand-950/25 py-1 pl-3 text-slate-300">
       {children}
     </blockquote>
   ),
@@ -88,7 +88,7 @@ export default function LawyerMarkdown({ children, className = '' }) {
   const { body, disclaimer } = splitDisclaimer(normalized)
 
   return (
-    <div className={`lawyer-prose ${className}`}>
+    <div className={`lawyer-prose min-w-0 max-w-full ${className}`}>
       <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[[rehypeSanitize, schema]]} components={components}>
         {body}
       </ReactMarkdown>

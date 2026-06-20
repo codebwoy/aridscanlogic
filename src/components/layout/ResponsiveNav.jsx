@@ -32,7 +32,7 @@ export default function ResponsiveNav({
         onClick={() => onTabChange(id)}
         className={
           horizontal
-            ? 'relative flex min-h-[48px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium sm:text-xs'
+            ? 'relative flex min-h-[48px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-2 text-[10px] font-medium sm:text-xs'
             : `relative flex w-full min-h-[44px] items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors ${
                 active ? (isScanVault ? 'bg-[#007AFF]/15' : 'bg-brand-600/20') : 'hover:bg-white/5'
               }`
@@ -53,7 +53,7 @@ export default function ResponsiveNav({
           />
         )}
         <Icon className={`h-5 w-5 shrink-0 sm:h-[1.35rem] sm:w-[1.35rem] ${active ? activeIcon : inactive}`} />
-        <span className={`${horizontal ? '' : 'flex-1'} ${active ? activeText : inactive}`}>{label}</span>
+        <span className={`${horizontal ? 'max-w-full truncate px-0.5' : 'flex-1'} ${active ? activeText : inactive}`}>{label}</span>
       </button>
     )
   }

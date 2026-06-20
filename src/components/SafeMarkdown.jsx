@@ -10,9 +10,9 @@ const schema = {
 }
 
 /** Renders markdown with HTML stripped (XSS-safe for LLM/OCR output). */
-export default function SafeMarkdown({ children, className }) {
+export default function SafeMarkdown({ children, className = '' }) {
   return (
-    <div className={className}>
+    <div className={`safe-prose ${className}`}>
       <ReactMarkdown rehypePlugins={[[rehypeSanitize, schema]]}>{children}</ReactMarkdown>
     </div>
   )
