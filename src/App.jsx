@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import Dashboard from './pages/Dashboard'
 import ScanVaultRoot from './pages/scanvault/ScanVaultRoot'
+import AdminRoot from './pages/admin/AdminRoot'
 import { applySeo } from '@/lib/seo/applySeo'
-import { getAppMode, getShareToken, setAppMode, RETURN_TAB_KEY } from '@/lib/navigation/mode'
+import { getAppMode, getShareToken, setAppMode, RETURN_TAB_KEY, isAdminMode } from '@/lib/navigation/mode'
 import { setTabHash } from '@/lib/navigation/tabs'
 
 export default function App() {
@@ -11,6 +12,11 @@ export default function App() {
   const openSuite = () => {
     setAppMode('suite')
     setMode('suite')
+    if (isAdminMode()) {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('admin')
+      window.history.replaceState({}, '', url.pathname + url.search + url.hash)
+    }
     const returnTab = sessionStorage.getItem(RETURN_TAB_KEY)
     if (returnTab) {
       sessionStorage.removeItem(RETURN_TAB_KEY)
@@ -25,9 +31,14 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (mode === 'scanvault' || getShareToken()) applySeo('scanvault')
+    if (mode === 'admin') applySeo('suite')
+    else if (mode === 'scanvault' || getShareToken()) applySeo('scanvault')
     else applySeo('suite')
   }, [mode])
+
+  if (mode === 'admin') {
+    return <AdminRoot onExit={openSuite} />
+  }
 
   if (mode === 'scanvault' || getShareToken()) {
     return <ScanVaultRoot onOpenBusinessSuite={openSuite} />

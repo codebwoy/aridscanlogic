@@ -11,6 +11,7 @@ import './index.css'
 import { initPwa } from './lib/pwa/register'
 import { ensureLlmStatus } from './lib/anthropic'
 import { initAppStorage } from './lib/appApi'
+import { initActivityTracking } from './lib/activity/trackActivity'
 import { applySeo } from './lib/seo/applySeo'
 
 applySeo('suite')
@@ -24,6 +25,7 @@ if (import.meta.env.DEV && 'serviceWorker' in navigator) {
 initPwa()
 ensureLlmStatus()
 initAppStorage()
+initActivityTracking()
 
 const seoStatic = document.getElementById('seo-static')
 if (seoStatic) seoStatic.hidden = true

@@ -1,5 +1,6 @@
 import { getPool } from './db-pool.mjs'
 import { resolveAuthenticatedUserId } from './auth.mjs'
+import { logActivityEntries } from './activity-log.mjs'
 import { mergeEntityPayload, validateEntityPayload } from './entityValidate.mjs'
 import {
   clientSafeError,
@@ -66,6 +67,12 @@ function resolveGetter(getter, fallback) {
   if (typeof getter === 'function') return getter()
   if (typeof getter === 'string') return getter.trim()
   return fallback()
+}
+
+function logEntityActivity(pool, userId, action, entityType, entityId) {
+  logActivityEntries(pool, userId, [
+    { action, entity_type: entityType, entity_id: entityId },
+  ]).catch(() => {})
 }
 
 export function defaultGetDatabaseUrl() {
@@ -273,6 +280,7 @@ export async function handleDbApiRequest(
          VALUES ($1, $2, $3, $4::jsonb, $5::timestamptz)`,
         [id, entityType, userId, JSON.stringify(payload), created_date]
       )
+      logEntityActivity(pool, userId, 'entity.create', entityType, id)
       res.setHeader('Content-Type', 'application/json')
       res.end(JSON.stringify({ id, ...payload, created_date }))
       return
@@ -296,6 +304,7 @@ export async function handleDbApiRequest(
         `UPDATE scanlogic_records SET payload = $1::jsonb, updated_date = $2::timestamptz WHERE id = $3 AND entity_type = $4`,
         [JSON.stringify(merged), updated_date, recordId, entityType]
       )
+      logEntityActivity(pool, userId, 'entity.update', entityType, recordId)
       res.setHeader('Content-Type', 'application/json')
       res.end(JSON.stringify({ id: recordId, ...merged }))
       return
@@ -312,6 +321,7 @@ export async function handleDbApiRequest(
         res.end(JSON.stringify({ error: 'Not found' }))
         return
       }
+      logEntityActivity(pool, userId, 'entity.delete', entityType, recordId)
       res.setHeader('Content-Type', 'application/json')
       res.end(JSON.stringify({ success: true }))
       return

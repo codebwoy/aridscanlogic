@@ -10,6 +10,7 @@ import AppGuideDrawer from '@/components/guide/AppGuideDrawer'
 import GuideFab from '@/components/guide/GuideFab'
 import { applySeo } from '@/lib/seo/applySeo'
 import { tabFromHash, setTabHash, subscribeTabHash } from '@/lib/navigation/tabs'
+import { trackActivity } from '@/lib/activity/trackActivity'
 
 const DocsPage = lazy(() => import('./DocsPage'))
 const TaxVaultHome = lazy(() => import('./taxvault/TaxVaultHome'))
@@ -55,6 +56,7 @@ export default function Dashboard({ onOpenScanVault }) {
 
   useEffect(() => {
     applySeo(SEO_TAB_KEYS.has(activeTab) ? activeTab : 'suite')
+    trackActivity('module.view', { metadata: { module: activeTab } })
   }, [activeTab])
 
   return (

@@ -7,6 +7,7 @@ import {
   persistAuthSession,
 } from '@/lib/supabase/client'
 import { setRemoteUserId } from '@/lib/supabase/remoteStore'
+import { trackActivity } from '@/lib/activity/trackActivity'
 
 const AuthContext = createContext(null)
 
@@ -73,6 +74,7 @@ export function AuthProvider({ children }) {
       const supabase = getSupabaseClient()
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
+      trackActivity('auth.sign_in', { metadata: { email } })
       await refreshUser()
     },
     [refreshUser, supabaseReady]
@@ -84,12 +86,14 @@ export function AuthProvider({ children }) {
       const supabase = getSupabaseClient()
       const { error } = await supabase.auth.signUp({ email, password })
       if (error) throw error
+      trackActivity('auth.sign_up', { metadata: { email } })
       await refreshUser()
     },
     [refreshUser, supabaseReady]
   )
 
   const signOut = useCallback(async () => {
+    trackActivity('auth.sign_out')
     if (supabaseReady) {
       await getSupabaseClient().auth.signOut()
     }

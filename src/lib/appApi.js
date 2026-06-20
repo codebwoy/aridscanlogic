@@ -9,6 +9,7 @@ import {
   isDbConnected,
   createRemoteEntityClient,
 } from './supabase/remoteStore'
+import { trackActivity } from './activity/trackActivity'
 
 const USER_ID = 'local-user'
 const STORAGE_PREFIX = 'scanlogic_entities_'
@@ -113,16 +114,19 @@ function createHybridEntityClient(entityName) {
       return local.get(id)
     },
     async create(data) {
-      if (isDbConnected()) return remote.create(data)
-      return local.create(data)
+      const item = isDbConnected() ? await remote.create(data) : await local.create(data)
+      trackActivity('entity.create', { entity_type: entityName, entity_id: item?.id })
+      return item
     },
     async update(id, data) {
-      if (isDbConnected()) return remote.update(id, data)
-      return local.update(id, data)
+      const item = isDbConnected() ? await remote.update(id, data) : await local.update(id, data)
+      trackActivity('entity.update', { entity_type: entityName, entity_id: id })
+      return item
     },
     async delete(id) {
-      if (isDbConnected()) return remote.delete(id)
-      return local.delete(id)
+      const result = isDbConnected() ? await remote.delete(id) : await local.delete(id)
+      trackActivity('entity.delete', { entity_type: entityName, entity_id: id })
+      return result
     },
   }
 }

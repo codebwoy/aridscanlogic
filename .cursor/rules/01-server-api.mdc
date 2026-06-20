@@ -13,6 +13,9 @@ alwaysApply: false
 - `api/llm/index.js`, `api/llm/status.js` — Anthropic proxy on Vercel serverless (production).
 - `api/db/status.js`, `api/db/[...slug].js` — Postgres CRUD proxy on Vercel serverless (production).
 - `server/db-api.mjs` — `/api/db/*` CRUD + `/api/db/sync/:entity`.
+- `server/admin-api.mjs` — `/api/admin/*` cross-tenant analytics (requires `ADMIN_API_SECRET`).
+- `server/activity-api.mjs` — `POST /api/activity/events` user activity ingestion.
+- `api/admin/[...slug].js`, `api/activity/events.js` — Vercel serverless mirrors.
 - `server/db-pool.mjs` — Postgres pool singleton.
 - `server/security.mjs` — auth, rate limits, sanitization.
 
@@ -20,14 +23,15 @@ alwaysApply: false
 
 1. Security headers (`createSecurityHeadersMiddleware`)
 2. API access (`createApiAccessMiddleware`) — blocks non-local `/api` without Bearer secret
-3. Rate limits: `/api/db` 120/min, `/api/llm` 30/min
-4. DB middleware, then LLM middleware
+3. Rate limits: `/api/admin` 60/min, `/api/activity` 120/min, `/api/db` 120/min, `/api/llm` 30/min
+4. Admin middleware, activity middleware, DB middleware, then LLM middleware
 
 ## Env vars (server-only in `vite.config.js`)
 
 - `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`
 - `DATABASE_URL` or `SUPABASE_DB_URL`
 - `SCANLOGIC_API_SECRET` — required for non-local clients when using `dev:lan`
+- `ADMIN_API_SECRET` — admin dashboard Bearer token (server-only)
 
 **Never** read `VITE_ANTHROPIC_API_KEY` in vite config.
 

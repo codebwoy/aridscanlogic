@@ -5,6 +5,7 @@
 
 import { apiFetch } from './apiFetch'
 import { isSafeFetchUrl } from './security/safeUrl'
+import { trackActivity } from './activity/trackActivity'
 
 import { DEFAULT_ANTHROPIC_MODEL, resolveAnthropicModel } from '../../server/llmModel.mjs'
 
@@ -176,6 +177,10 @@ export async function invokeLLMViaAnthropic({ prompt, file_urls, response_json_s
     max_tokens: response_json_schema ? 4096 : 4096,
     system,
     messages: [{ role: 'user', content: userContent }],
+  })
+
+  trackActivity('llm.invoke', {
+    metadata: { json: !!response_json_schema, has_files: !!(file_urls?.length) },
   })
 
   const text = data.content?.find((b) => b.type === 'text')?.text || ''

@@ -5,8 +5,13 @@ export function getShareToken() {
   return new URLSearchParams(window.location.search).get('share')
 }
 
+export function isAdminMode() {
+  return new URLSearchParams(window.location.search).get('admin') === '1'
+}
+
 export function getAppMode() {
   if (getShareToken()) return 'scanvault'
+  if (isAdminMode()) return 'admin'
   return sessionStorage.getItem(MODE_KEY) || 'suite'
 }
 

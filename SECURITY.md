@@ -55,6 +55,14 @@ Static hosts (GitHub Pages, S3-only) **cannot** run the LLM proxy. Options:
 - Do **not** put `service_role` or database passwords in any `VITE_*` variable.
 - Rotate database password and JWT secrets if they were shared in chat or committed.
 
+## Admin console
+
+- Admin API routes (`/api/admin/*`) require `ADMIN_API_SECRET` as Bearer token or `X-Admin-Secret` header — server-only, never in `VITE_*`.
+- Open the dashboard at `?admin=1` on your deployed app; the secret is stored in **sessionStorage** only for the browser session.
+- Admin queries run cross-tenant against Postgres — use only with `DATABASE_URL` configured and the activity migration applied.
+- Activity ingestion (`POST /api/activity/events`) follows the same user auth rules as `/api/db`.
+- Do **not** expose `SUPABASE_SERVICE_ROLE_KEY` to the admin UI; admin uses the dedicated secret instead.
+
 ## Reporting
 
 Open a private security issue on the repository or contact the maintainer directly.
