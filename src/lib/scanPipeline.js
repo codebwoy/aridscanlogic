@@ -1,5 +1,5 @@
 import appApi from '@/lib/appApi'
-import { canvasDataUrlToJpegFile } from '@/lib/imageProcessing'
+import { capImageDataUrl } from '@/lib/imageProcessing'
 import { aiLanguageInstruction } from '@/lib/ai/promptLanguage'
 
 export const DOCUMENT_TYPES = [
@@ -36,9 +36,7 @@ export const SCAN_ANALYSIS_SCHEMA = {
 export async function uploadScanPages(dataUrlPages) {
   const urls = []
   for (let i = 0; i < dataUrlPages.length; i++) {
-    const file = await canvasDataUrlToJpegFile(dataUrlPages[i], i)
-    const result = await appApi.integrations.Core.UploadFile({ file })
-    urls.push(result.file_url)
+    urls.push(await capImageDataUrl(dataUrlPages[i]))
   }
   return urls
 }

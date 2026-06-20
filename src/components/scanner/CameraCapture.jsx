@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { Camera, Plus, X, FlipHorizontal, ImagePlus, RefreshCw, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
-import { dataUrlToJpegFile } from '@/lib/imageProcessing'
+import { capImageDataUrl, dataUrlToJpegFile } from '@/lib/imageProcessing'
 import { useCameraStream, CAMERA_ERROR } from '@/lib/camera/useCameraStream'
 import { blobToDataUrl, captureVideoFrame } from '@/lib/camera/captureFrame'
 
@@ -37,7 +37,7 @@ export default function CameraCapture({ pages, onPagesChange, onDone }) {
           file.type === 'image/jpeg'
             ? file
             : await dataUrlToJpegFile(await blobToDataUrl(file), file.name.replace(/\.\w+$/, '.jpg'))
-        addPageDataUrl(await blobToDataUrl(jpegFile))
+        addPageDataUrl(await capImageDataUrl(await blobToDataUrl(jpegFile)))
       }
     } catch {
       toast.error('Bild-Upload fehlgeschlagen')

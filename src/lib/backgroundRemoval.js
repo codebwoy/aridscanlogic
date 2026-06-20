@@ -1,5 +1,5 @@
 import appApi from '@/lib/appApi'
-import { canvasDataUrlToJpegFile, loadImage, luminance } from '@/lib/imageProcessing'
+import { capImageDataUrl, loadImage, luminance } from '@/lib/imageProcessing'
 
 const BG_REMOVAL_PROMPT = `You are an edge-aware document segmentation assistant.
 Analyze this scanned document photo. Identify the document page boundaries versus table/surface shadows and background.
@@ -17,25 +17,25 @@ const BG_SCHEMA = {
 
 /** LLM edge-aware analysis + canvas white-background composite */
 export async function aiBackgroundRemoval(dataUrl) {
-  const file = await canvasDataUrlToJpegFile(dataUrl, 0)
-  const { file_url } = await appApi.integrations.Core.UploadFile({ file })
+  const capped = await capImageDataUrl(dataUrl, 2048, 0.9)
 
   try {
     await appApi.integrations.Core.InvokeLLM({
       prompt: BG_REMOVAL_PROMPT,
-      file_urls: [file_url],
+      file_urls: [capped],
       response_json_schema: BG_SCHEMA,
     })
   } catch {
     /* canvas fallback still runs */
   }
 
-  return applyWhiteDocumentBackground(dataUrl)
+  return applyWhiteDocumentBackground(capped)
 }
 
 /** Replace light pixels / edges with pure white while preserving document ink */
 export async function applyWhiteDocumentBackground(dataUrl) {
-  const img = await loadImage(dataUrl)
+  const capped = await capImageDataUrl(dataUrl, 2048, 0.9)
+  const img = await loadImage(capped)
   const canvas = document.createElement('canvas')
   canvas.width = img.width
   canvas.height = img.height

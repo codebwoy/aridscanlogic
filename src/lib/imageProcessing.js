@@ -18,15 +18,19 @@ export function loadImage(src) {
   })
 }
 
+const CANVAS_MAX_DIM = 2048
+
 function getImageDataFromSrc(imageSrc) {
-  return loadImage(imageSrc).then((img) => {
-    const canvas = document.createElement('canvas')
-    canvas.width = img.width
-    canvas.height = img.height
-    const ctx = canvas.getContext('2d')
-    ctx.drawImage(img, 0, 0)
-    return { canvas, ctx, imageData: ctx.getImageData(0, 0, canvas.width, canvas.height) }
-  })
+  return capImageDataUrl(imageSrc, CANVAS_MAX_DIM).then((capped) =>
+    loadImage(capped).then((img) => {
+      const canvas = document.createElement('canvas')
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0)
+      return { canvas, ctx, imageData: ctx.getImageData(0, 0, canvas.width, canvas.height) }
+    })
+  )
 }
 
 /** Grayscale: 0.2126 * r + 0.7152 * g + 0.0722 * b */
@@ -134,10 +138,17 @@ export function perspectiveCrop(imageSrc, corners, width = 800, height = 1100) {
   })
 }
 
-/** DataURL (JPEG) → Blob → File for appApi.integrations.Core.UploadFile({ file }) */
+/** DataURL (JPEG) → File — avoids fetch(data:) which breaks on large iOS uploads */
 export async function dataUrlToJpegFile(dataUrl, filename) {
-  const res = await fetch(dataUrl)
-  const blob = await res.blob()
+  const capped = await capImageDataUrl(dataUrl, CANVAS_MAX_DIM)
+  const img = await loadImage(capped)
+  const canvas = document.createElement('canvas')
+  canvas.width = img.width
+  canvas.height = img.height
+  canvas.getContext('2d').drawImage(img, 0, 0)
+  const blob = await new Promise((resolve, reject) => {
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('JPEG encode failed'))), 'image/jpeg', 0.9)
+  })
   return new File([blob], filename, { type: 'image/jpeg' })
 }
 
