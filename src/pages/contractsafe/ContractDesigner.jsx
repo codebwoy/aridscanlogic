@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import appApi from '@/lib/appApi'
 import { CONTRACT_TEMPLATES } from '@/lib/contractTemplates'
+import { isLegalTemplateKey, buildPopulatedLegalTemplate } from '@/lib/legal/contractSections'
+import { useAiLanguage } from '@/context/AiLanguageContext'
 
 export default function ContractDesigner({ contract, onSaved, onCancel, initialTemplate }) {
+  const { language } = useAiLanguage()
   const [form, setForm] = useState(
     contract || {
       title: '',
@@ -21,17 +24,23 @@ export default function ContractDesigner({ contract, onSaved, onCancel, initialT
 
   useEffect(() => {
     if (initialTemplate?.sections) {
+      const key = initialTemplate.template_type
+      const populated = isLegalTemplateKey(key)
+        ? buildPopulatedLegalTemplate(key, language)
+        : initialTemplate
       setForm((f) => ({
         ...f,
-        title: initialTemplate.title || f.title,
-        template_type: initialTemplate.template_type || f.template_type,
-        contract_body: { sections: initialTemplate.sections },
+        title: populated.title || f.title,
+        template_type: populated.template_type || f.template_type,
+        contract_body: { sections: populated.sections },
       }))
     }
-  }, [initialTemplate])
+  }, [initialTemplate, language])
 
   const loadTemplate = (key) => {
-    const t = CONTRACT_TEMPLATES[key]
+    const t = isLegalTemplateKey(key)
+      ? buildPopulatedLegalTemplate(key, language)
+      : CONTRACT_TEMPLATES[key]
     if (!t) return
     setForm({
       ...form,
@@ -39,6 +48,13 @@ export default function ContractDesigner({ contract, onSaved, onCancel, initialT
       template_type: t.template_type,
       contract_body: { sections: t.sections },
     })
+    if (isLegalTemplateKey(key)) {
+      toast.info(
+        language === 'de'
+          ? 'Aus BizStart/DocDraft-Profil befüllt — Rechtsanwalt prüfen lassen'
+          : 'Filled from BizStart/DocDraft profile — have a lawyer review'
+      )
+    }
   }
 
   const save = async () => {
@@ -74,7 +90,9 @@ export default function ContractDesigner({ contract, onSaved, onCancel, initialT
             key={k}
             type="button"
             onClick={() => loadTemplate(k)}
-            className="shrink-0 rounded-lg bg-slate-800 px-3 py-2 text-xs uppercase"
+            className={`shrink-0 rounded-lg px-3 py-2 text-xs uppercase ${
+              isLegalTemplateKey(k) ? 'bg-brand-600/30 text-brand-200' : 'bg-slate-800'
+            }`}
           >
             {k}
           </button>
@@ -97,7 +115,7 @@ export default function ContractDesigner({ contract, onSaved, onCancel, initialT
       {(form.contract_body?.sections || []).map((sec, i) => (
         <div key={i} className="rounded-xl bg-slate-800/60 p-3">
           <p className="font-medium text-brand-300">{sec.heading}</p>
-          <p className="mt-1 text-sm text-slate-400">{sec.body}</p>
+          <pre className="mt-1 whitespace-pre-wrap font-sans text-sm text-slate-400">{sec.body}</pre>
         </div>
       ))}
       <h4 className="text-sm font-medium text-slate-400">Unterzeichner (Reihenfolge = Index)</h4>

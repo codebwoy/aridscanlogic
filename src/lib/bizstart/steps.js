@@ -10,6 +10,7 @@ export const ALL_STEPS = [
   { id: 'handelsregister', key: 'handelsregister', estMin: 30, onlyFor: ['gmbh', 'ug'] },
   { id: 'ihk', key: 'ihk', estMin: 5, skipFor: ['freiberufler'] },
   { id: 'bank', key: 'bank', estMin: 5 },
+  { id: 'websiteLegal', key: 'websiteLegal', estMin: 25 },
   { id: 'complete', key: 'complete', estMin: 0 },
 ]
 
@@ -100,6 +101,7 @@ export const STEP_LABELS = {
     handelsregister: 'Handelsregister',
     ihk: 'IHK / HWK membership',
     bank: 'Business bank account',
+    websiteLegal: 'Website legal pages (Impressum, Privacy, AVV)',
     complete: 'Done — Tax Vault activated',
   },
   de: {
@@ -112,6 +114,7 @@ export const STEP_LABELS = {
     handelsregister: 'Handelsregister',
     ihk: 'IHK / HWK Mitgliedschaft',
     bank: 'Geschäftskonto',
+    websiteLegal: 'Website-Rechtliches (Impressum, Datenschutz, AVV)',
     complete: 'Fertig — Tax Vault aktiv',
   },
 }

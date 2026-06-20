@@ -13,6 +13,8 @@ export const STRINGS = {
     confirmed: 'Confirmed',
     disclaimer:
       'This guide provides general information only. Consult a licensed Steuerberater or Rechtsanwalt for your specific situation.',
+    websiteLegalTitle: 'Website legal pages',
+    websiteLegalDesc: 'Impressum, Privacy Policy & AVV — guided drafts for your lawyer review',
   },
   de: {
     title: 'Gewerbe in Deutschland anmelden — Schritt für Schritt',
@@ -28,6 +30,8 @@ export const STRINGS = {
     confirmed: 'Bestätigt',
     disclaimer:
       'Dieser Leitfaden bietet nur allgemeine Informationen. Für Ihre Situation konsultieren Sie einen Steuerberater oder Rechtsanwalt.',
+    websiteLegalTitle: 'Website-Rechtliches',
+    websiteLegalDesc: 'Impressum, Datenschutz & AVV — Entwürfe zur Anwaltsvorbereitung',
   },
 }
 

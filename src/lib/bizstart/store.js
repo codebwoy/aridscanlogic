@@ -5,6 +5,7 @@ import {
   krankenkasseRegistrationDueDate,
   shouldShowKrankenkasseDeadline,
 } from '@/lib/taxvault/krankenkasse'
+import { syncLegalToDocDraft } from '@/lib/legal/sync'
 
 const FORM_KEY = 'scanlogic_bizstart_form'
 const STEP_KEY = 'scanlogic_bizstart_steps'
@@ -151,6 +152,8 @@ export async function syncRegistrationToTaxVault(formData, stepStatus) {
     healthInsuranceZusatzbeitrag: formData.healthInsuranceZusatzbeitrag ?? 1.7,
     healthInsuranceAge: formData.healthInsuranceAge ?? 35,
   })
+
+  syncLegalToDocDraft(formData)
 
   return reg
 }

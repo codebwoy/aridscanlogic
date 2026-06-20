@@ -28,6 +28,7 @@ export default function StepComplete({ formData, onFinish }) {
           <li>✓ VAT scheme & filing schedule</li>
           <li>✓ German deadlines loaded</li>
           <li>✓ SKR03 expense categories</li>
+          <li>✓ Website legal drafts (Impressum, Datenschutz, AVV)</li>
         </ul>
       </div>
       <button type="button" onClick={onFinish} className="btn-primary mt-6 w-full rounded-xl py-3 font-semibold">

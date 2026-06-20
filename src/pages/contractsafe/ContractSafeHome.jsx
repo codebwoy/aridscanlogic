@@ -100,7 +100,11 @@ export default function ContractSafeHome() {
         onSelect={(key, t) => {
           setTemplateSeed({ templateKey: key, ...t })
           setShowTemplates(false)
-          setEditing({ title: t.title, template_type: t.template_type, sections: t.sections })
+          setEditing({
+            title: t.title,
+            template_type: t.template_type,
+            contract_body: { sections: t.sections },
+          })
         }}
       />
     )
@@ -198,7 +202,7 @@ export default function ContractSafeHome() {
         <EmptyState
           icon={FileSignature}
           title="Keine Verträge"
-          description="NDA, Freelance, SaaS, Employment — 6 templates available."
+          description="NDA, Freelance, SaaS, Impressum, Datenschutz, AVV — 9+ templates."
         />
       ) : (
         <div className="grid-cards">

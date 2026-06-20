@@ -30,6 +30,7 @@ import StepHandelsregister from './StepHandelsregister'
 import StepIhk from './StepIhk'
 import StepKrankenkasse from './StepKrankenkasse'
 import StepBank from './StepBank'
+import StepWebsiteLegal from './StepWebsiteLegal'
 import StepComplete from './StepComplete'
 import ComplianceCalendar from './ComplianceCalendar'
 import RegistrationChat from './RegistrationChat'
@@ -156,6 +157,7 @@ export default function BizStartGermany({ onExit, onComplete }) {
     ihk: StepIhk,
     krankenkasse: StepKrankenkasse,
     bank: StepBank,
+    websiteLegal: StepWebsiteLegal,
     complete: StepComplete,
     calendar: ComplianceCalendar,
   }

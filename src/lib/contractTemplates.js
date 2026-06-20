@@ -65,4 +65,49 @@ export const CONTRACT_TEMPLATES = {
       { heading: 'Geschäftsführung', body: 'Gesamtvertretungsbefugnis.' },
     ],
   },
+  impressum: {
+    title: 'Impressum (Website-Footer)',
+    template_type: 'impressum',
+    category: 'legal',
+    sections: [
+      {
+        heading: 'Impressum — Vorbereitungsentwurf',
+        body: 'Wird aus BizStart-/DocDraft-Profil befüllt. Enthält § 5 DDG Pflichtangaben: Anbieter, ladungsfähige Anschrift (kein Postfach), Kontakt, Steuernummer.',
+      },
+      {
+        heading: 'Footer-Hinweis',
+        body: 'Im Website-Footer als „Impressum" verlinken. Vor Veröffentlichung Rechtsanwalt konsultieren.',
+      },
+    ],
+  },
+  datenschutz: {
+    title: 'Datenschutzerklärung (DSGVO)',
+    template_type: 'datenschutz',
+    category: 'legal',
+    sections: [
+      {
+        heading: 'Datenschutzerklärung — Vorbereitungsentwurf',
+        body: 'Wird aus Fragebogen (Kontaktformular, Cookies, Hosting, Analyse) und Profildaten befüllt. Art. 13/14 DSGVO.',
+      },
+      {
+        heading: 'Cookie-Banner',
+        body: 'Bei Analyse- oder Marketing-Cookies Cookie-Einwilligung einrichten (TTDSG §25).',
+      },
+    ],
+  },
+  avv: {
+    title: 'Auftragsverarbeitungsvertrag (AVV)',
+    template_type: 'avv',
+    category: 'legal',
+    sections: [
+      {
+        heading: 'AVV — Vorbereitungsentwurf',
+        body: 'Vertrag gemäß Art. 28 DSGVO zwischen Verantwortlichem (Auftraggeber/Kunde) und Auftragsverarbeiter (Sie als Web-Agentur oder Ihr Hosting-Anbieter).',
+      },
+      {
+        heading: 'Verwendung',
+        body: 'Nicht im Website-Footer — Vertrag zur Unterzeichnung. TOMs, Unterauftragsverarbeiter und Löschfristen vom Rechtsanwalt prüfen lassen.',
+      },
+    ],
+  },
 }

@@ -10,7 +10,7 @@ export default function StepBank({ onUpdateStep, onNext }) {
         <li>Kontist — for freelancers</li>
         <li>Qonto — GmbH-friendly</li>
       </ul>
-      <button type="button" onClick={() => { onUpdateStep('bank', 'confirmed'); onNext('complete') }} className="btn-primary w-full rounded-xl py-3">
+      <button type="button" onClick={() => { onUpdateStep('bank', 'confirmed'); onNext('websiteLegal') }} className="btn-primary w-full rounded-xl py-3">
         Bank setup done / not needed yet
       </button>
     </div>
