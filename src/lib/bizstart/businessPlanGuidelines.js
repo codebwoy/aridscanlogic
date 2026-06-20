@@ -3,10 +3,177 @@
 export const PLAN_AUDIENCES = [
   { id: 'bank', de: 'Bank / Kredit', en: 'Bank / loan' },
   { id: 'investor', de: 'Investor / Förderung', en: 'Investor / grant' },
+  { id: 'award', de: 'Award / Pitch-Wettbewerb', en: 'Award / pitch competition' },
+  { id: 'sponsor', de: 'Sponsor / Partner', en: 'Sponsor / partner' },
   { id: 'employment', de: 'Agentur für Arbeit / Gründungszuschuss', en: 'Employment agency / startup grant' },
   { id: 'advisor', de: 'Berater / IHK', en: 'Advisor / chamber' },
   { id: 'general', de: 'Eigene Planung', en: 'Personal planning' },
 ]
+
+/** Static priority guidance per target reader — instant fallback before / without AI. */
+export const AUDIENCE_PLAYBOOK = {
+  bank: {
+    prioritySteps: ['summary', 'finances', 'risks', 'competencies', 'market', 'company'],
+    summaryFocus: {
+      de: [
+        'Klarer Kapitalbedarf und Verwendung der Mittel',
+        'Rückzahlungsfähigkeit und konservative Umsatzprognose',
+        'Eigenkapital, Sicherheiten und persönliche Qualifikation',
+        'Realistische Risiken mit Gegenmaßnahmen',
+      ],
+      en: [
+        'Clear capital need and use of funds',
+        'Repayment ability and conservative revenue forecast',
+        'Equity, collateral, and personal qualifications',
+        'Realistic risks with mitigations',
+      ],
+    },
+    tone: {
+      de: 'Sachlich, vorsichtig, zahlenbasiert — Vertrauen durch Nachvollziehbarkeit.',
+      en: 'Factual, cautious, numbers-driven — build trust through traceability.',
+    },
+  },
+  investor: {
+    prioritySteps: ['summary', 'market', 'idea', 'sales', 'finances', 'competencies', 'partners'],
+    summaryFocus: {
+      de: [
+        'Marktgröße, Wachstumspotenzial und Alleinstellungsmerkmal',
+        'Skalierbares Geschäftsmodell und Nutzen für Kunden',
+        'Team-Expertise und Meilensteine',
+        'Kapitalbedarf, Mittelverwendung und erwartete Rendite',
+      ],
+      en: [
+        'Market size, growth potential, and unique advantage',
+        'Scalable business model and customer value',
+        'Team expertise and milestones',
+        'Funding need, use of funds, and expected return',
+      ],
+    },
+    tone: {
+      de: 'Visionär aber belegbar — Wachstum und Differenzierung betonen.',
+      en: 'Visionary but evidence-based — emphasise growth and differentiation.',
+    },
+  },
+  award: {
+    prioritySteps: ['summary', 'idea', 'market', 'competencies', 'values', 'sales', 'annexes'],
+    summaryFocus: {
+      de: [
+        'Innovation, gesellschaftlicher Nutzen oder Branchenbeitrag',
+        'Überzeugende Story: Problem, Lösung, Wirkung',
+        'Gründerpassion, Expertise und bisherige Erfolge',
+        'Klares Alleinstellungsmerkmal und Zukunftspotenzial',
+      ],
+      en: [
+        'Innovation, social impact, or industry contribution',
+        'Compelling story: problem, solution, impact',
+        'Founder passion, expertise, and track record',
+        'Clear unique advantage and future potential',
+      ],
+    },
+    tone: {
+      de: 'Inspirierend und prägnant — Jury soll sich an Ihre Idee erinnern.',
+      en: 'Inspiring and concise — make the jury remember your idea.',
+    },
+  },
+  sponsor: {
+    prioritySteps: ['summary', 'customers', 'sales', 'values', 'idea', 'partners', 'annexes'],
+    summaryFocus: {
+      de: [
+        'Sichtbarkeit und Markenfit für den Sponsor',
+        'Zielgruppe, Reichweite und gemeinsame Werte',
+        'Konkretes Gegenleistungsmodell (Logo, Events, Content)',
+        'Glaubwürdigkeit und professionelle Umsetzung',
+      ],
+      en: [
+        'Visibility and brand fit for the sponsor',
+        'Audience, reach, and shared values',
+        'Concrete value exchange (logo, events, content)',
+        'Credibility and professional delivery',
+      ],
+    },
+    tone: {
+      de: 'Partnerschaftlich und wertschätzend — Nutzen für beide Seiten zeigen.',
+      en: 'Partnership-oriented — show mutual benefit.',
+    },
+  },
+  employment: {
+    prioritySteps: ['summary', 'finances', 'competencies', 'customers', 'production', 'risks', 'company'],
+    summaryFocus: {
+      de: [
+        'Tragfähigkeit der Selbstständigkeit und realistisches Einkommen',
+        'Arbeitszeitmodell und konkrete Kunden/Aufträge',
+        'Fachliche Qualifikation und Marktchancen',
+        'Konservative Finanzplanung (Liquidität, Lebenshaltung)',
+      ],
+      en: [
+        'Viability of self-employment and realistic income',
+        'Working hours model and concrete clients/orders',
+        'Professional qualifications and market opportunity',
+        'Conservative finance plan (liquidity, living costs)',
+      ],
+    },
+    tone: {
+      de: 'Ernsthaft und nachvollziehbar — Lebensunterhalt muss plausibel gedeckt sein.',
+      en: 'Serious and plausible — living expenses must be credibly covered.',
+    },
+  },
+  advisor: {
+    prioritySteps: ['summary', 'production', 'market', 'finances', 'risks', 'organization', 'annexes'],
+    summaryFocus: {
+      de: [
+        'Vollständiges Bild: Tätigkeit, Markt, Organisation',
+        'Offene Fragen und Annahmen transparent benennen',
+        'Strukturierter Finanzplan mit nachvollziehbaren Annahmen',
+        'Was Sie bereits recherchiert vs. was noch fehlt',
+      ],
+      en: [
+        'Complete picture: activity, market, organisation',
+        'Name open questions and assumptions transparently',
+        'Structured finance plan with traceable assumptions',
+        'What you researched vs. what is still missing',
+      ],
+    },
+    tone: {
+      de: 'Ehrlich und strukturiert — Berater soll Lücken erkennen können.',
+      en: 'Honest and structured — advisor should spot gaps easily.',
+    },
+  },
+  general: {
+    prioritySteps: ['summary', 'production', 'customers', 'idea', 'market', 'finances', 'risks'],
+    summaryFocus: {
+      de: [
+        'Geschäftsidee und Zielgruppe in eigenen Worten',
+        'Ihre Stärken und erste Schritte',
+        'Umsatz- und Kostenübersicht',
+        'Persönliche Ziele für die nächsten 3 Jahre',
+      ],
+      en: [
+        'Business idea and target customers in your own words',
+        'Your strengths and first steps',
+        'Revenue and cost overview',
+        'Personal goals for the next 3 years',
+      ],
+    },
+    tone: {
+      de: 'Praktisch und klar — Plan als persönlicher Leitfaden.',
+      en: 'Practical and clear — plan as your personal roadmap.',
+    },
+  },
+}
+
+export function getAudiencePlaybook(audienceId, lang = 'de') {
+  const book = AUDIENCE_PLAYBOOK[audienceId] || AUDIENCE_PLAYBOOK.general
+  return {
+    audience: audienceId || 'general',
+    prioritySteps: book.prioritySteps,
+    summaryFocus: book.summaryFocus[lang] || book.summaryFocus.en,
+    tone: book.tone[lang] || book.tone.en,
+  }
+}
+
+export function isPriorityStep(stepId, prioritySteps) {
+  return Array.isArray(prioritySteps) && prioritySteps.includes(stepId)
+}
 
 export const BP_GUIDELINES = {
   meta: {

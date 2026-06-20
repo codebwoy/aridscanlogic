@@ -9,16 +9,26 @@ import {
   fmtEuro,
 } from '@/lib/bizstart/businessPlanConfig'
 import { bpT, bpStepLabel, bpProgressPct } from '@/lib/bizstart/businessPlanI18n'
-import { getBpGuidelines, PLAN_AUDIENCES } from '@/lib/bizstart/businessPlanGuidelines'
+import { getBpGuidelines, PLAN_AUDIENCES, isPriorityStep } from '@/lib/bizstart/businessPlanGuidelines'
 import {
   getBusinessPlanDraft,
   patchBusinessPlanDraft,
   initBusinessPlanDraft,
   importProfileIntoBusinessPlanDraft,
 } from '@/lib/bizstart/businessPlanDraft'
-import { rewriteBusinessPlanField, polishBusinessPlanDraft, countPolishableFields, BP_TEXT_FIELDS } from '@/lib/bizstart/businessPlanAi'
+import {
+  rewriteBusinessPlanField,
+  polishBusinessPlanDraft,
+  countPolishableFields,
+  BP_TEXT_FIELDS,
+  generateAudienceStrategy,
+  generateTargetedSummary,
+  buildStaticAudienceStrategy,
+  getActiveAudienceStrategy,
+} from '@/lib/bizstart/businessPlanAi'
 import ScanLogicAiTextarea, { ScanLogicAiOverlay } from '@/components/bizstart/ScanLogicAiTextarea'
 import BusinessPlanTitleField from '@/components/bizstart/BusinessPlanTitleField'
+import BusinessPlanAudienceStrategy from '@/components/bizstart/BusinessPlanAudienceStrategy'
 
 function FormLabel({ children, hint }) {
   return (
@@ -198,7 +208,7 @@ function YearlyFinanceTable({ lang, lines, years, onChange, onAdd, onRemove, tot
   )
 }
 
-function Sidebar({ lang, stepIndex, onJump }) {
+function Sidebar({ lang, stepIndex, onJump, prioritySteps }) {
   return (
     <nav className="hidden shrink-0 lg:block lg:w-52">
       <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.14em] text-brand-400">
@@ -208,6 +218,7 @@ function Sidebar({ lang, stepIndex, onJump }) {
         {BUSINESS_PLAN_STEPS.map((id, i) => {
           const done = i < stepIndex
           const current = i === stepIndex
+          const priority = isPriorityStep(id, prioritySteps)
           return (
             <li key={id}>
               <button
@@ -219,7 +230,7 @@ function Sidebar({ lang, stepIndex, onJump }) {
               >
                 <span
                   className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
-                    done ? 'bg-emerald-500 text-white' : current ? 'bg-brand-600 text-white' : 'bg-slate-200 text-slate-500'
+                    done ? 'bg-emerald-500 text-white' : current ? 'bg-brand-600 text-white' : priority ? 'bg-amber-400 text-amber-950' : 'bg-slate-200 text-slate-500'
                   }`}
                 >
                   {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
@@ -231,6 +242,11 @@ function Sidebar({ lang, stepIndex, onJump }) {
                   {current && (
                     <span className="mt-0.5 inline-block rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-semibold text-brand-700">
                       {bpT(lang, 'current')}
+                    </span>
+                  )}
+                  {!current && priority && (
+                    <span className="mt-0.5 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-800">
+                      {bpT(lang, 'strategyPriorityBadge')}
                     </span>
                   )}
                 </span>
@@ -252,6 +268,8 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
   const stepId = BUSINESS_PLAN_STEPS[stepIndex]
   const d = getBusinessPlanDraft(formData)
   const years = planningYearLabels(d)
+  const activeStrategy = getActiveAudienceStrategy(d, lang)
+  const prioritySteps = activeStrategy.prioritySteps || []
 
   const patch = (fields) => {
     onChange({ ...patchBusinessPlanDraft(formData, fields), businessPlanWizardStep: stepIndex })
@@ -326,6 +344,77 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
     }
   }, [d, lang, formData, stepIndex])
 
+  const runAudienceStrategy = useCallback(
+    async (audience, { silent = false } = {}) => {
+      if (!audience) return
+      patch({ planAudienceStrategy: buildStaticAudienceStrategy(audience, lang) })
+      setAiLoading('strategy')
+      try {
+        const enhanced = await generateAudienceStrategy({
+          lang,
+          planAudience: audience,
+          planTitle: d.planTitle,
+          formData,
+          draft: { ...d, planAudience: audience },
+        })
+        patch({ planAudienceStrategy: enhanced })
+        if (!silent) toast.success(bpT(lang, 'strategyReady'))
+      } catch {
+        if (!silent) toast.error(bpT(lang, 'aiFailed'))
+      } finally {
+        setAiLoading(null)
+      }
+    },
+    [d, lang, formData, stepIndex]
+  )
+
+  const handleAudienceChange = useCallback(
+    async (audience) => {
+      if (!audience) return
+      patch({
+        planAudience: audience,
+        planAudienceStrategy: buildStaticAudienceStrategy(audience, lang),
+      })
+      await runAudienceStrategy(audience, { silent: true })
+      toast.success(bpT(lang, 'strategyReady'))
+    },
+    [runAudienceStrategy, lang, formData, stepIndex]
+  )
+
+  const handleGenerateSummary = useCallback(async () => {
+    if (!d.planAudience) {
+      toast.error(bpT(lang, 'strategySelectAudience'))
+      return
+    }
+    setAiLoading('summary')
+    try {
+      const strategy = getActiveAudienceStrategy(d, lang)
+      const summary = await generateTargetedSummary({
+        lang,
+        planAudience: d.planAudience,
+        planTitle: d.planTitle,
+        formData,
+        draft: d,
+        strategy,
+      })
+      if (!summary?.trim()) {
+        toast.error(bpT(lang, 'aiFailed'))
+        return
+      }
+      const polished = { ...(d.businessPlanAiPolished || {}) }
+      delete polished.summary
+      patch({
+        summary,
+        businessPlanAiPolished: { ...polished, summary: true },
+      })
+      toast.success(bpT(lang, 'strategySummaryReady'))
+    } catch {
+      toast.error(bpT(lang, 'aiFailed'))
+    } finally {
+      setAiLoading(null)
+    }
+  }, [d, lang, formData, stepIndex])
+
   const aiFieldProps = (fieldKey, titleKey, rows, placeholder) => ({
     lang,
     fieldKey,
@@ -341,6 +430,19 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
   useEffect(() => {
     const init = initBusinessPlanDraft(formData)
     if (Object.keys(init).length) onChange(init)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    const draft = getBusinessPlanDraft(formData)
+    if (draft.planAudience && draft.planAudienceStrategy?.audience !== draft.planAudience) {
+      onChange({
+        ...patchBusinessPlanDraft(formData, {
+          planAudienceStrategy: buildStaticAudienceStrategy(draft.planAudience, lang),
+        }),
+        businessPlanWizardStep: stepIndex,
+      })
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -429,7 +531,7 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
               <FormLabel hint={bpT(lang, 'planAudienceHint')}>{bpT(lang, 'planAudience')}</FormLabel>
               <FormSelect
                 value={d.planAudience || ''}
-                onChange={(e) => f('planAudience', e.target.value)}
+                onChange={(e) => handleAudienceChange(e.target.value)}
                 placeholder={bpT(lang, 'selectAudience')}
                 required
               >
@@ -440,6 +542,21 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
                 ))}
               </FormSelect>
             </FormSection>
+            {d.planAudience ? (
+              <BusinessPlanAudienceStrategy
+                lang={lang}
+                audienceId={d.planAudience}
+                strategy={activeStrategy}
+                loadingStrategy={aiLoading === 'strategy'}
+                loadingSummary={aiLoading === 'summary'}
+                onRefreshStrategy={() => runAudienceStrategy(d.planAudience)}
+                onGenerateSummary={handleGenerateSummary}
+              />
+            ) : (
+              <p className="rounded-xl border border-dashed border-brand-200 bg-brand-50/40 px-4 py-3 text-xs text-slate-500">
+                {bpT(lang, 'strategySelectAudience')}
+              </p>
+            )}
             <FormSection title={bpT(lang, 'planPeriod')}>
               <p className="mb-3 text-[11px] text-slate-500">{bpT(lang, 'planPeriodHint')}</p>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -464,10 +581,24 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
 
       case 'summary':
         return (
-          <FormSection>
-            <FormLabel hint={bpT(lang, 'summaryHint')}>{bpT(lang, 'summaryDesc')}</FormLabel>
-            <BusinessPlanAiField {...aiFieldProps('summary', 'summaryTitle', 10, bpT(lang, 'phSummary'))} />
-          </FormSection>
+          <div className="space-y-4">
+            {d.planAudience && (
+              <BusinessPlanAudienceStrategy
+                lang={lang}
+                audienceId={d.planAudience}
+                strategy={activeStrategy}
+                loadingStrategy={aiLoading === 'strategy'}
+                loadingSummary={aiLoading === 'summary'}
+                onRefreshStrategy={() => runAudienceStrategy(d.planAudience)}
+                onGenerateSummary={handleGenerateSummary}
+                compact
+              />
+            )}
+            <FormSection>
+              <FormLabel hint={bpT(lang, 'summaryHint')}>{bpT(lang, 'summaryDesc')}</FormLabel>
+              <BusinessPlanAiField {...aiFieldProps('summary', 'summaryTitle', 10, bpT(lang, 'phSummary'))} />
+            </FormSection>
+          </div>
         )
 
       case 'production':
@@ -763,6 +894,12 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
   return (
     <>
       {aiLoading === 'all' && <ScanLogicAiOverlay lang={lang} fieldLabel={aiFieldLabel} progress={aiProgress} />}
+      {(aiLoading === 'strategy' || aiLoading === 'summary') && (
+        <ScanLogicAiOverlay
+          lang={lang}
+          fieldLabel={aiLoading === 'strategy' ? bpT(lang, 'strategyGenerating') : bpT(lang, 'strategyGeneratingSummary')}
+        />
+      )}
       <div className="light-form-surface overflow-hidden rounded-2xl border border-brand-200/60 bg-white text-slate-900 shadow-xl">
       <div className="bg-gradient-to-r from-brand-950 via-brand-800 to-brand-600 px-4 py-5 sm:px-6">
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-200">{bpT(lang, 'wizardSubtitle')}</p>
@@ -779,7 +916,7 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
       </div>
 
       <div className="flex flex-col gap-6 p-4 sm:p-6 lg:flex-row">
-        <Sidebar lang={lang} stepIndex={stepIndex} onJump={setStepIndex} />
+        <Sidebar lang={lang} stepIndex={stepIndex} onJump={setStepIndex} prioritySteps={prioritySteps} />
 
         <div className="min-w-0 flex-1">
           {(stepId === 'meta' || stepId === 'summary') && (
