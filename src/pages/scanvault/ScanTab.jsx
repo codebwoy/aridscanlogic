@@ -1,32 +1,41 @@
 import { ScanLine, Cloud, CloudOff } from 'lucide-react'
-import { isPremiumUser, canCloudSync } from '@/lib/scanvault/limits'
+import { canCloudSync, getEffectivePlan } from '@/lib/scanvault/limits'
+import { planDisplayName } from '@/lib/scanvault/plans'
 import { BrandMark } from '@/components/shared/BrandLogo'
 import { BRAND_SCANVAULT_NAME } from '@/lib/brand'
 
-export default function ScanTab({ user, onStartScan }) {
-  const premium = isPremiumUser(user)
+export default function ScanTab({ user, onStartScan, onUpgrade }) {
+  const plan = getEffectivePlan(user)
   const cloud = canCloudSync(user)
 
   return (
     <div className="flex flex-col items-center pt-6 sm:pt-10 lg:pt-16">
       <div className="mb-6 flex w-full items-center justify-between gap-3">
         <BrandMark title={BRAND_SCANVAULT_NAME} size={44} />
-        <div className="flex items-center gap-1 text-xs text-slate-500">
+        <div className="flex flex-col items-end gap-1 text-xs text-slate-500">
+          <span className="rounded-full bg-white/10 px-2 py-0.5 font-medium text-slate-300">
+            {planDisplayName(plan)}
+          </span>
           {cloud ? (
-            <>
-              <Cloud className="h-4 w-4 text-[#007AFF]" /> Synced
-            </>
+            <span className="flex items-center gap-1">
+              <Cloud className="h-3.5 w-3.5 text-[#007AFF]" /> Cloud sync
+            </span>
           ) : (
-            <>
-              <CloudOff className="h-4 w-4" /> Local only
-            </>
+            <span className="flex items-center gap-1">
+              <CloudOff className="h-3.5 w-3.5" /> Local only
+            </span>
           )}
         </div>
       </div>
-      {!premium && (
-        <p className="mb-4 w-full rounded-xl bg-amber-500/10 px-3 py-2 text-center text-xs text-amber-200">
-          Free plan: scans stored locally. Clearing browser data deletes them.
-        </p>
+      {plan === 'free' && (
+        <button
+          type="button"
+          onClick={onUpgrade}
+          className="mb-4 w-full rounded-xl bg-amber-500/10 px-3 py-2.5 text-center text-xs text-amber-200 hover:bg-amber-500/15"
+        >
+          Free plan: scans stored locally. Upgrade to Pro or Plus for more —{' '}
+          <span className="font-semibold text-[#007AFF]">View plans</span>
+        </button>
       )}
       <button
         type="button"

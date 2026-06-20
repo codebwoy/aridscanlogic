@@ -9,7 +9,8 @@ import {
   deleteDocument,
   clearSessionUser,
 } from '@/lib/scanvault/store'
-import { isPremiumUser, canCloudSync } from '@/lib/scanvault/limits'
+import { getEffectivePlan, canCloudSync } from '@/lib/scanvault/limits'
+import { planDisplayName } from '@/lib/scanvault/plans'
 import { exportScanVaultBackup, importScanVaultBackup } from '@/lib/scanvault/backup'
 import { syncToCloud, pullFromCloud, getLastSyncTime } from '@/lib/scanvault/cloudSync'
 import InstallPwaButton from '@/components/pwa/InstallPwaButton'
@@ -19,12 +20,11 @@ export default function ScanVaultSettings({
   onProfile,
   onUpgrade,
   onLogout,
-  onOpenBusinessSuite,
 }) {
   const confirm = useConfirm()
   const [settings, setSettings] = useState(getSettings())
   const [syncing, setSyncing] = useState(false)
-  const premium = isPremiumUser(user)
+  const plan = getEffectivePlan(user)
   const lastSync = getLastSyncTime()
 
   const patch = (p) => {
@@ -115,14 +115,14 @@ export default function ScanVaultSettings({
           <ChevronRight className="h-5 w-5 text-slate-500" />
         </button>
         <div className="mt-2 flex items-center justify-between rounded-xl bg-black/30 p-3">
-          <span className="text-sm">{premium ? 'Premium' : 'Free'}</span>
-          {!premium && (
+          <span className="text-sm">{planDisplayName(plan)}</span>
+          {plan === 'free' && (
             <button
               type="button"
               onClick={onUpgrade}
               className="flex items-center gap-1 rounded-lg bg-[#007AFF] px-3 py-1 text-xs font-medium"
             >
-              <Crown className="h-3 w-3" /> Upgrade
+              <Crown className="h-3 w-3" /> Plans
             </button>
           )}
         </div>
@@ -149,7 +149,7 @@ export default function ScanVaultSettings({
             </button>
           </div>
         ) : (
-          <p className="mt-2 text-xs text-slate-500">Cloud sync requires Premium</p>
+          <p className="mt-2 text-xs text-slate-500">Cloud sync requires Plus plan</p>
         )}
       </section>
 
@@ -218,16 +218,6 @@ export default function ScanVaultSettings({
           <Trash2 className="h-4 w-4" /> Clear all scans
         </button>
       </section>
-
-      {onOpenBusinessSuite && (
-        <button
-          type="button"
-          onClick={onOpenBusinessSuite}
-          className="mb-4 w-full rounded-xl border border-white/10 py-3 text-sm"
-        >
-          Open ScanLogic Business Suite
-        </button>
-      )}
 
       <button
         type="button"

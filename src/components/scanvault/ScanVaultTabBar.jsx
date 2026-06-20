@@ -1,5 +1,6 @@
-import { ScanLine, Files, FolderOpen, Settings } from 'lucide-react'
+import { ScanLine, Files, FolderOpen, Settings, LayoutGrid } from 'lucide-react'
 import ResponsiveNav from '@/components/layout/ResponsiveNav'
+import { BRAND_SUITE_NAME } from '@/lib/brand'
 
 const TABS = [
   { id: 'scan', label: 'Scan', icon: ScanLine },
@@ -8,7 +9,7 @@ const TABS = [
   { id: 'settings', label: 'Settings', icon: Settings },
 ]
 
-export default function ScanVaultTabBar({ activeTab, onTabChange }) {
+export default function ScanVaultTabBar({ activeTab, onTabChange, onBackToSuite }) {
   return (
     <ResponsiveNav
       tabs={TABS}
@@ -18,6 +19,15 @@ export default function ScanVaultTabBar({ activeTab, onTabChange }) {
       layoutId="sv-tab"
       brandTitle="ScanVault"
       brandSubtitle="Document scanner"
+      footerAction={
+        onBackToSuite
+          ? {
+              icon: LayoutGrid,
+              label: BRAND_SUITE_NAME,
+              onClick: onBackToSuite,
+            }
+          : undefined
+      }
     />
   )
 }

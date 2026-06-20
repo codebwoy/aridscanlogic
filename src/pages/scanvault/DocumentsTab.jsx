@@ -76,7 +76,7 @@ export default function DocumentsTab({ onOpenDoc, onSearch, folderId, user, onUp
 
   const bulkZip = async () => {
     if (!canBatchExport(user)) {
-      toast.error('Batch export is Premium')
+      toast.error('Batch export requires Pro or Plus')
       onUpgrade?.()
       return
     }

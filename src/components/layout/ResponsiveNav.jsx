@@ -94,10 +94,14 @@ export default function ResponsiveNav({
             <button
               type="button"
               onClick={footerAction.onClick}
-              className="flex w-full items-center gap-3 rounded-xl border border-brand-500/30 bg-brand-600/10 px-3 py-3 text-left text-sm font-medium text-brand-200 transition-colors hover:bg-brand-600/20"
+              className={`flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left text-sm font-medium transition-colors ${
+                isScanVault
+                  ? 'border-[#007AFF]/30 bg-[#007AFF]/10 text-slate-100 hover:bg-[#007AFF]/20'
+                  : 'border-brand-500/30 bg-brand-600/10 text-brand-200 hover:bg-brand-600/20'
+              }`}
             >
-              <footerAction.icon className="h-5 w-5 shrink-0 text-brand-400" />
-              <span>{footerAction.label}</span>
+              <footerAction.icon className={`h-5 w-5 shrink-0 ${isScanVault ? 'text-[#007AFF]' : 'text-brand-400'}`} />
+              <span className="min-w-0 truncate">{footerAction.label}</span>
             </button>
           </div>
         )}

@@ -90,17 +90,7 @@ export function loginWithGoogle() {
   return user
 }
 
-export function startPremiumTrial(user) {
-  const trialEnds = new Date()
-  trialEnds.setDate(trialEnds.getDate() + 3)
-  const updated = {
-    ...user,
-    plan: 'premium',
-    trialEndsAt: trialEnds.toISOString(),
-  }
-  saveSessionUser(updated)
-  return updated
-}
+export { startPremiumTrial, startPlanTrial, subscribeToPlan, setFreePlan, restorePurchases } from './subscription'
 
 export function getCurrentUser() {
   return getSessionUser()

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import AppShell from '@/components/layout/AppShell'
 import ScanVaultTabBar from '@/components/scanvault/ScanVaultTabBar'
+import ScanVaultSuiteBack from '@/components/scanvault/ScanVaultSuiteBack'
 import ScanTab from './ScanTab'
 import DocumentsTab from './DocumentsTab'
 import FoldersTab from './FoldersTab'
@@ -106,8 +107,17 @@ export default function ScanVaultApp({ onOpenBusinessSuite }) {
   return (
     <AppShell
       variant="scanvault"
-      nav={<ScanVaultTabBar activeTab={tab} onTabChange={setTab} />}
+      nav={
+        <ScanVaultTabBar
+          activeTab={tab}
+          onTabChange={setTab}
+          onBackToSuite={onOpenBusinessSuite}
+        />
+      }
     >
+      {onOpenBusinessSuite && (
+        <ScanVaultSuiteBack onBack={onOpenBusinessSuite} className="mb-4 lg:hidden" />
+      )}
       {folderFilter ? (
         <>
           <button
@@ -130,7 +140,7 @@ export default function ScanVaultApp({ onOpenBusinessSuite }) {
         </>
       ) : (
         <>
-          {tab === 'scan' && <ScanTab user={user} onStartScan={startScan} />}
+          {tab === 'scan' && <ScanTab user={user} onStartScan={startScan} onUpgrade={() => setShowPremium(true)} />}
           {tab === 'documents' && (
             <DocumentsTab
               user={user}
@@ -152,7 +162,6 @@ export default function ScanVaultApp({ onOpenBusinessSuite }) {
               onProfile={() => setShowProfile(true)}
               onUpgrade={() => setShowPremium(true)}
               onLogout={() => window.location.reload()}
-              onOpenBusinessSuite={onOpenBusinessSuite}
             />
           )}
         </>

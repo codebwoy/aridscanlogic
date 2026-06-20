@@ -1,9 +1,10 @@
 import { ChevronLeft } from 'lucide-react'
 import { saveSessionUser } from '@/lib/scanvault/store'
-import { isPremiumUser } from '@/lib/scanvault/limits'
+import { getEffectivePlan } from '@/lib/scanvault/limits'
+import { planDisplayName } from '@/lib/scanvault/plans'
 
 export default function Profile({ user, onBack, onUserChange }) {
-  const premium = isPremiumUser(user)
+  const plan = getEffectivePlan(user)
 
   const update = (patch) => {
     const updated = { ...user, ...patch }
@@ -23,7 +24,7 @@ export default function Profile({ user, onBack, onUserChange }) {
         <p className="mt-3 text-lg font-semibold">{user?.name}</p>
         <p className="text-sm text-slate-500">{user?.email}</p>
         <span className="mt-2 rounded-full bg-white/10 px-3 py-1 text-xs">
-          {premium ? 'Premium' : 'Free plan'}
+          {planDisplayName(plan)} plan
         </span>
       </div>
       <dl className="space-y-3 rounded-2xl bg-white/5 p-4 text-sm">
