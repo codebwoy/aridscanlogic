@@ -261,7 +261,7 @@ function Sidebar({ lang, stepIndex, onJump, prioritySteps }) {
   )
 }
 
-export default function BusinessPlanWizard({ lang, formData, onChange, onComplete }) {
+export default function BusinessPlanWizard({ lang, formData, onChange, onComplete, onOpenLebenslauf }) {
   const savedStep = Math.min(formData.businessPlanWizardStep || 0, BUSINESS_PLAN_STEPS.length - 1)
   const [stepIndex, setStepIndex] = useState(savedStep)
   const [aiLoading, setAiLoading] = useState(null)
@@ -860,10 +860,31 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
 
       case 'annexes':
         return (
-          <FormSection>
-            <FormLabel hint={bpT(lang, 'annexesDesc')}>{bpT(lang, 'annexesTitle')}</FormLabel>
-            <BusinessPlanAiField {...aiFieldProps('annexes', 'annexesTitle', 8, bpT(lang, 'phAnnexes'))} />
-          </FormSection>
+          <div className="space-y-4">
+            {onOpenLebenslauf && (
+              <div className="rounded-xl border border-brand-300/80 bg-gradient-to-r from-brand-50 to-indigo-50 p-4">
+                <p className="text-sm font-bold text-brand-900">
+                  {lang === 'de' ? 'Lebenslauf für Anhang A' : 'CV for annex A'}
+                </p>
+                <p className="mt-1 text-xs text-slate-600">
+                  {lang === 'de'
+                    ? 'Banken, Förderstellen und Wettbewerbe erwarten oft einen tabellarischen Lebenslauf als Anhang. Er wird automatisch ins Einreichungspaket aufgenommen.'
+                    : 'Banks, grants, and competitions often require a tabular CV as an annex. It is included automatically in the submission pack.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={onOpenLebenslauf}
+                  className="mt-3 w-full rounded-xl border border-brand-400 bg-white py-2.5 text-sm font-semibold text-brand-800 hover:bg-brand-50"
+                >
+                  {lang === 'de' ? 'Lebenslauf-Builder öffnen →' : 'Open CV builder →'}
+                </button>
+              </div>
+            )}
+            <FormSection>
+              <FormLabel hint={bpT(lang, 'annexesDesc')}>{bpT(lang, 'annexesTitle')}</FormLabel>
+              <BusinessPlanAiField {...aiFieldProps('annexes', 'annexesTitle', 8, bpT(lang, 'phAnnexes'))} />
+            </FormSection>
+          </div>
         )
 
       case 'review':

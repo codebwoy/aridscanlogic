@@ -2,6 +2,9 @@ import JSZip from 'jszip'
 import { businessPlanPdfBlob, buildFinanceSnapshotText } from '@/lib/bizstart/businessPlanPdf'
 import { mergeBusinessPlanForExport } from '@/lib/bizstart/businessPlanDraft'
 import { PLAN_AUDIENCES } from '@/lib/bizstart/businessPlanGuidelines'
+import { loadCv } from '@/lib/bizstart/lebenslauf/store'
+import { lebenslaufPdfBlob } from '@/lib/bizstart/lebenslauf/exportPdf'
+import { cvDisplayName, cvIsSubmissionReady } from '@/lib/bizstart/lebenslauf/schema'
 
 function audienceName(id, lang) {
   const a = PLAN_AUDIENCES.find((x) => x.id === id)
@@ -28,6 +31,7 @@ Inhalt dieses Pakets:
 3. Finanzuebersicht.pdf — Finanzplan & Tabellen
 4. Finanzuebersicht.txt — Finanzdaten als Text
 5. README.txt — diese Datei
+${cvIsSubmissionReady(loadCv()) ? '6. Lebenslauf.pdf — tabellarischer Lebenslauf (Anhang A)\n' : ''}
 
 Hinweis: Entwurf zur Vorbereitung — keine Rechts- oder Steuerberatung.
 Vor Einreichung bei Bank, Förderstelle oder Wettbewerb prüfen lassen.
@@ -44,6 +48,7 @@ This package contains:
 3. Finance_Overview.pdf — finance plan & tables
 4. Finance_Overview.txt — finance data as text
 5. README.txt — this file
+${cvIsSubmissionReady(loadCv()) ? '6. Lebenslauf.pdf — tabular CV (annex A)\n' : ''}
 
 Note: Draft for preparation only — not legal or tax advice.
 Have reviewed by bank, funding agency, or competition jury before submission.
@@ -77,6 +82,12 @@ export async function downloadBusinessPlanSubmissionPack(formData, lang = 'de') 
   folder.file(lang === 'de' ? '03_Finanzuebersicht.pdf' : '03_Finance_Overview.pdf', financeBlob)
   folder.file(lang === 'de' ? '04_Finanzuebersicht.txt' : '04_Finance_Overview.txt', buildFinanceSnapshotText(formData, lang))
   folder.file('README.txt', buildReadme(d, lang))
+
+  const cv = loadCv()
+  if (cvIsSubmissionReady(cv)) {
+    const cvBlob = lebenslaufPdfBlob(cv)
+    folder.file(`05_Lebenslauf_${cvDisplayName(cv).replace(/\s+/g, '_')}.pdf`, cvBlob)
+  }
 
   const blob = await zip.generateAsync({ type: 'blob' })
   downloadBlob(blob, `${lang === 'de' ? 'Einreichungspaket' : 'Submission_Pack'}_${name}.zip`)

@@ -3,6 +3,8 @@ import { aiLanguageInstruction } from '@/lib/ai/promptLanguage'
 import { bpT, bpStepLabel } from '@/lib/bizstart/businessPlanI18n'
 import { getAudiencePlaybook, PLAN_AUDIENCES } from '@/lib/bizstart/businessPlanGuidelines'
 import { BP_TEXT_FIELDS, buildBusinessPlanProfileContext } from '@/lib/bizstart/businessPlanAi'
+import { loadCv } from '@/lib/bizstart/lebenslauf/store'
+import { cvIsSubmissionReady } from '@/lib/bizstart/lebenslauf/schema'
 
 const FIELD_WEIGHT = {
   summary: 12,
@@ -73,6 +75,18 @@ export function computeStaticReadiness(draft, lang = 'de') {
   possible += 5
   if (draft.planTitle?.trim()) earned += 5
   else gaps.unshift({ id: 'planTitle', label: bpT(lang, 'planTitle'), priority: 'high' })
+
+  if (['bank', 'investor', 'award', 'sponsor', 'employment'].includes(audience)) {
+    possible += 8
+    if (cvIsSubmissionReady(loadCv())) earned += 8
+    else if ((draft.annexes || '').toLowerCase().includes('lebenslauf')) earned += 3
+    else
+      gaps.push({
+        id: 'lebenslauf',
+        label: lang === 'de' ? 'Lebenslauf (Anhang A)' : 'CV (annex A)',
+        priority: 'high',
+      })
+  }
 
   const score = possible > 0 ? Math.min(100, Math.round((earned / possible) * 100)) : 0
   const uniqueGaps = gaps.filter((g, i, arr) => arr.findIndex((x) => x.id === g.id) === i).slice(0, 8)

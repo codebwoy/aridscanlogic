@@ -1,6 +1,8 @@
 import { getApplicableSteps, STEP_LABELS } from '@/lib/bizstart/steps'
 import { getBusinessPlanDraft } from '@/lib/bizstart/businessPlanDraft'
 import { computeStaticReadiness } from '@/lib/bizstart/businessPlanReadiness'
+import { loadCv } from '@/lib/bizstart/lebenslauf/store'
+import { cvCompleteness, cvIsSubmissionReady } from '@/lib/bizstart/lebenslauf/schema'
 
 const STATUS_WEIGHT = {
   confirmed: 1,
@@ -41,12 +43,27 @@ export function buildFounderCommandCenter(formData, stepStatus, lang = 'de') {
   const draft = getBusinessPlanDraft(formData)
   const planReadiness = computeStaticReadiness(draft, lang)
   const planStarted = formData.businessPlanComplete || formData.businessPlanWizardStep > 0
+  const cv = loadCv()
+  const cvScore = cvCompleteness(cv)
+  const cvReady = cvIsSubmissionReady(cv)
+  const fundingAudience = ['bank', 'investor', 'award', 'sponsor', 'employment'].includes(draft.planAudience)
 
   const nextSteps = stepRows
     .filter((s) => s.status !== 'confirmed' && s.status !== 'submitted')
     .slice(0, 3)
 
   const blockers = []
+  if (planStarted && fundingAudience && !cvReady) {
+    blockers.unshift({
+      id: 'cv-missing',
+      label: lang === 'de' ? 'Lebenslauf für Anhang erstellen' : 'Create CV for annex',
+      detail:
+        lang === 'de'
+          ? `Tabellarischer Lebenslauf (${cvScore}% — wichtig für ${planReadiness.audienceLabel})`
+          : `Tabular CV (${cvScore}% — important for ${planReadiness.audienceLabel})`,
+      screen: 'lebenslauf',
+    })
+  }
   if (planStarted && planReadiness.score < 65) {
     blockers.push({
       id: 'plan-gaps',
@@ -79,13 +96,15 @@ export function buildFounderCommandCenter(formData, stepStatus, lang = 'de') {
   }
 
   const overallScore = planStarted
-    ? Math.round(registrationScore * 0.55 + planReadiness.score * 0.45)
+    ? Math.round(registrationScore * 0.4 + planReadiness.score * 0.35 + cvScore * 0.25)
     : registrationScore
 
   return {
     overallScore,
     registrationScore,
     planReadiness,
+    cvScore,
+    cvReady,
     planStarted,
     planComplete: !!formData.businessPlanComplete,
     planTitle: draft.planTitle?.trim() || '',

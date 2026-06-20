@@ -1,4 +1,4 @@
-import { LayoutDashboard, ChevronRight, Target, FileText, AlertTriangle } from 'lucide-react'
+import { LayoutDashboard, ChevronRight, Target, FileText, AlertTriangle, FileUser } from 'lucide-react'
 import { buildFounderCommandCenter } from '@/lib/bizstart/commandCenter'
 import { readinessColor } from '@/lib/bizstart/businessPlanReadiness'
 
@@ -38,7 +38,7 @@ export default function FounderCommandCenter({ lang, formData, stepStatus, onNav
         </div>
       </div>
 
-      <div className="grid gap-3 p-4 sm:grid-cols-2">
+      <div className="grid gap-3 p-4 sm:grid-cols-3">
         <MetricCard
           icon={Target}
           label={lang === 'de' ? 'Registrierung' : 'Registration'}
@@ -59,6 +59,20 @@ export default function FounderCommandCenter({ lang, formData, stepStatus, onNav
                 : lang === 'de'
                   ? 'Noch nicht gestartet'
                   : 'Not started'
+          }
+        />
+        <MetricCard
+          icon={FileUser}
+          label={lang === 'de' ? 'Lebenslauf' : 'CV'}
+          value={cc.cvScore > 0 ? `${cc.cvScore}%` : '—'}
+          sub={
+            cc.cvReady
+              ? lang === 'de'
+                ? 'Anhang bereit'
+                : 'Annex ready'
+              : lang === 'de'
+                ? 'Für Förderung empfohlen'
+                : 'Recommended for funding'
           }
         />
       </div>
@@ -118,13 +132,20 @@ export default function FounderCommandCenter({ lang, formData, stepStatus, onNav
         </div>
       )}
 
-      <div className="border-t border-slate-800 px-4 py-2 text-center">
+      <div className="border-t border-slate-800 px-4 py-2 flex justify-center gap-4">
         <button
           type="button"
           onClick={() => onNavigate?.('businessPlan')}
           className="text-xs font-medium text-brand-400 hover:text-brand-300"
         >
-          {lang === 'de' ? 'Businessplan öffnen →' : 'Open business plan →'}
+          {lang === 'de' ? 'Businessplan →' : 'Business plan →'}
+        </button>
+        <button
+          type="button"
+          onClick={() => onNavigate?.('lebenslauf')}
+          className="text-xs font-medium text-brand-400 hover:text-brand-300"
+        >
+          {lang === 'de' ? 'Lebenslauf →' : 'CV →'}
         </button>
       </div>
     </div>

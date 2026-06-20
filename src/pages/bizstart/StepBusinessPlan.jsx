@@ -16,6 +16,8 @@ import BusinessPlanWizard from '@/components/bizstart/BusinessPlanWizard'
 import BusinessPlanTitleField from '@/components/bizstart/BusinessPlanTitleField'
 import BusinessPlanPdfOptions from '@/components/bizstart/BusinessPlanPdfOptions'
 import BusinessPlanReadinessPanel from '@/components/bizstart/BusinessPlanReadinessPanel'
+import { loadCv } from '@/lib/bizstart/lebenslauf/store'
+import { cvIsSubmissionReady, cvCompleteness } from '@/lib/bizstart/lebenslauf/schema'
 import { ScanLogicAiOverlay } from '@/components/bizstart/ScanLogicAiTextarea'
 
 function HowToSection({ lang }) {
@@ -45,7 +47,7 @@ function HowToSection({ lang }) {
   )
 }
 
-export default function StepBusinessPlan({ lang, formData, onUpdateForm, onUpdateStep, onNext }) {
+export default function StepBusinessPlan({ lang, formData, onUpdateForm, onUpdateStep, onNext, onOpenLebenslauf }) {
   const [showWizard, setShowWizard] = useState(!formData.businessPlanComplete)
   const [aiLoading, setAiLoading] = useState(false)
   const [packLoading, setPackLoading] = useState(false)
@@ -140,7 +142,13 @@ export default function StepBusinessPlan({ lang, formData, onUpdateForm, onUpdat
 
       {showWizard ? (
         <div className="mt-4">
-          <BusinessPlanWizard lang={lang} formData={formData} onChange={onUpdateForm} onComplete={handleFormComplete} />
+          <BusinessPlanWizard
+            lang={lang}
+            formData={formData}
+            onChange={onUpdateForm}
+            onComplete={handleFormComplete}
+            onOpenLebenslauf={onOpenLebenslauf}
+          />
         </div>
       ) : (
         <div className="mt-4 space-y-3">
@@ -186,6 +194,20 @@ export default function StepBusinessPlan({ lang, formData, onUpdateForm, onUpdat
             {bpT(lang, 'submissionPack')}
           </button>
           <p className="text-center text-[11px] text-slate-500">{bpT(lang, 'submissionPackHint')}</p>
+          {onOpenLebenslauf && (
+            <button
+              type="button"
+              onClick={onOpenLebenslauf}
+              className="premium-card flex w-full items-center justify-center gap-2 py-3 text-sm font-medium text-slate-300"
+            >
+              {lang === 'de' ? 'Lebenslauf-Builder' : 'CV builder'}
+              {cvIsSubmissionReady(loadCv())
+                ? ` ✓`
+                : cvCompleteness(loadCv()) > 0
+                  ? ` (${cvCompleteness(loadCv())}%)`
+                  : ''}
+            </button>
+          )}
           <button type="button" onClick={markSubmitted} className="premium-card flex w-full items-center justify-center gap-2 py-3 text-sm font-medium text-brand-300">
             {bpT(lang, 'markSubmitted')}
           </button>

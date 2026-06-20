@@ -9,6 +9,7 @@ import {
   Rocket,
   ChevronRight,
   Download,
+  FileUser,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { t } from '@/lib/bizstart/i18n'
@@ -32,12 +33,15 @@ import StepKrankenkasse from './StepKrankenkasse'
 import StepBank from './StepBank'
 import StepWebsiteLegal from './StepWebsiteLegal'
 import StepBusinessPlan from './StepBusinessPlan'
+import StepLebenslauf from './StepLebenslauf'
 import StepComplete from './StepComplete'
 import ComplianceCalendar from './ComplianceCalendar'
 import RegistrationChat from './RegistrationChat'
 import FounderCommandCenter from '@/components/bizstart/FounderCommandCenter'
 import PremiumCard from '@/components/shared/PremiumCard'
 import { exportRegistrationChecklistPdf } from '@/lib/bizstart/exportChecklist'
+import { loadCv } from '@/lib/bizstart/lebenslauf/store'
+import { cvCompleteness, cvIsSubmissionReady } from '@/lib/bizstart/lebenslauf/schema'
 
 const STATUS_COLORS = {
   not_started: 'bg-slate-700 text-slate-400',
@@ -165,6 +169,19 @@ export default function BizStartGermany({ onExit, onComplete }) {
     calendar: ComplianceCalendar,
   }
 
+  if (screen === 'lebenslauf') {
+    return (
+      <div className="w-full">
+        <StepLebenslauf
+          formData={formData}
+          onUpdateForm={updateForm}
+          onBack={() => setScreen('home')}
+        />
+        <RegistrationChat lang={lang} open={chatOpen} onClose={setChatOpen} />
+      </div>
+    )
+  }
+
   if (stepScreens[screen]) {
     const Step = stepScreens[screen]
     return (
@@ -178,6 +195,7 @@ export default function BizStartGermany({ onExit, onComplete }) {
           onUpdateStep={updateStep}
           onNext={(next) => setScreen(next || 'home')}
           onFinish={finishModule}
+          onOpenLebenslauf={screen === 'businessPlan' ? () => setScreen('lebenslauf') : undefined}
         />
         <RegistrationChat lang={lang} open={chatOpen} onClose={setChatOpen} />
       </div>
@@ -224,6 +242,39 @@ export default function BizStartGermany({ onExit, onComplete }) {
         stepStatus={stepStatus}
         onNavigate={(id) => setScreen(id)}
       />
+
+      <button
+        type="button"
+        onClick={() => setScreen('lebenslauf')}
+        className="premium-card mb-4 flex w-full items-center gap-3 p-4 text-left"
+      >
+        <FileUser className="h-5 w-5 shrink-0 text-brand-400" />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold">{lang === 'de' ? 'Lebenslauf-Builder' : 'CV builder'}</p>
+          <p className="text-xs text-slate-500">
+            {lang === 'de'
+              ? 'Tabellarischer Lebenslauf für Businessplan-Anhang & Förderung'
+              : 'Tabular CV for business plan annex & funding'}
+          </p>
+          {(() => {
+            const cv = loadCv()
+            const pct = cvCompleteness(cv)
+            if (pct > 0) {
+              return (
+                <p className="mt-1 text-[10px] text-brand-300">
+                  {cvIsSubmissionReady(cv)
+                    ? lang === 'de'
+                      ? 'Einreichungsreif'
+                      : 'Submission-ready'
+                    : `${pct}% ${lang === 'de' ? 'ausgefüllt' : 'complete'}`}
+                </p>
+              )
+            }
+            return null
+          })()}
+        </div>
+        <ChevronRight className="h-5 w-5 shrink-0 text-brand-400" />
+      </button>
 
       <button
         type="button"
