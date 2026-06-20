@@ -10,7 +10,7 @@
 ## Dev server & LAN access
 
 - Default `npm run dev` binds to **localhost** so `/api/llm` and `/api/db` are not exposed on your network.
-- Use `npm run dev:lan` only when you need LAN access; set `SCANLOGIC_API_SECRET` in `.env` and enter the same value under **Settings → Remote API access** (stored in `sessionStorage` for that tab only).
+- Use `npm run dev:lan` only when you need LAN access; set `SCANLOGIC_API_SECRET` in `.env`, then in the phone browser console run `sessionStorage.setItem('scanlogic_api_secret', 'same-secret')` and reload.
 - Non-local requests without a valid `Authorization: Bearer` token are rejected.
 
 ## API hardening

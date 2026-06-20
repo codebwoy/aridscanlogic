@@ -1,20 +1,35 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
-import { Crown, User, Database, Receipt, ChevronRight, Sparkles, CloudUpload, BookOpen } from 'lucide-react'
+import { Crown, User, Receipt, ChevronRight, BookOpen, Shield } from 'lucide-react'
 import { useGuide } from '@/context/GuideContext'
 import { useAiLanguage } from '@/context/AiLanguageContext'
 import AiLanguageBar from '@/components/shared/AiLanguageBar'
-import { checkDbConnected, isDbConnected } from '@/lib/supabase/remoteStore'
-import { getApiSecret, setApiSecret } from '@/lib/apiFetch'
-import { pushAllLocalDataToSupabase } from '@/lib/supabase/migrateLocal'
-import { initAppStorage } from '@/lib/appApi'
-import { isAnthropicConfigured, getAnthropicModel, refreshLlmStatus } from '@/lib/anthropic'
 import { useAuth } from '@/context/AuthContext'
 import { usePremium } from '@/context/PremiumContext'
 import TaxVaultSettings from './taxvault/TaxVaultSettings'
 import InstallPwaButton from '@/components/pwa/InstallPwaButton'
 import BrandLogo from '@/components/shared/BrandLogo'
 import { BRAND_SUITE_NAME } from '@/lib/brand'
+
+function SettingsRow({ icon: Icon, iconClass, title, subtitle, onClick, trailing }) {
+  const Comp = onClick ? 'button' : 'div'
+  return (
+    <Comp
+      type={onClick ? 'button' : undefined}
+      onClick={onClick}
+      className={`flex w-full items-center gap-3 rounded-2xl bg-slate-800/80 p-4 text-left ${onClick ? 'transition hover:bg-slate-800' : ''}`}
+    >
+      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-900/60 ${iconClass || ''}`}>
+        <Icon className="h-5 w-5" aria-hidden />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="font-medium text-slate-100">{title}</p>
+        {subtitle && <p className="text-xs text-slate-400">{subtitle}</p>}
+      </div>
+      {trailing || (onClick && <ChevronRight className="h-5 w-5 shrink-0 text-slate-500" aria-hidden />)}
+    </Comp>
+  )
+}
 
 export default function SettingsPage({ onOpenScanVault }) {
   const { user, supabaseReady, signIn, signUp, signOut } = useAuth()
@@ -23,269 +38,220 @@ export default function SettingsPage({ onOpenScanVault }) {
   const [authBusy, setAuthBusy] = useState(false)
   const { isPremium, setModalOpen } = usePremium()
   const [taxVaultSettings, setTaxVaultSettings] = useState(false)
-  const [llmReady, setLlmReady] = useState(isAnthropicConfigured())
-  const [dbReady, setDbReady] = useState(isDbConnected())
-  const [syncing, setSyncing] = useState(false)
-  const [apiSecret, setApiSecretState] = useState(() => getApiSecret())
   const { openGuide } = useGuide()
   const { language, setLanguage } = useAiLanguage()
-
-  useEffect(() => {
-    refreshLlmStatus().then(() => setLlmReady(isAnthropicConfigured()))
-    checkDbConnected().then(() => setDbReady(isDbConnected()))
-  }, [])
-
-  const pushToSupabase = async () => {
-    setSyncing(true)
-    try {
-      await initAppStorage()
-      if (!isDbConnected()) {
-        toast.error('Supabase not connected. Add DATABASE_URL to .env and restart the dev server.')
-        return
-      }
-      const results = await pushAllLocalDataToSupabase()
-      const total = results.reduce((n, r) => n + (r.count || 0), 0)
-      toast.success(`Pushed ${total} records to Supabase`)
-      setDbReady(true)
-    } catch (e) {
-      toast.error(e.message || 'Sync failed')
-    } finally {
-      setSyncing(false)
-    }
-  }
+  const de = language === 'de'
 
   if (taxVaultSettings) {
     return <TaxVaultSettings onBack={() => setTaxVaultSettings(false)} />
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full pb-8">
       <header className="safe-top mb-6">
-        <h1 className="text-2xl font-bold">Einstellungen</h1>
+        <h1 className="text-2xl font-bold text-slate-50">{de ? 'Einstellungen' : 'Settings'}</h1>
+        <p className="mt-1 text-sm text-slate-400">
+          {de ? 'Profil, Module & App-Einstellungen' : 'Profile, modules & app preferences'}
+        </p>
       </header>
 
-      <div className="space-y-3">
-        <AiLanguageBar language={language} onChange={setLanguage} />
-
-        <button
-          type="button"
-          onClick={() => openGuide('docs')}
-          className="flex w-full items-center justify-between rounded-2xl bg-gradient-to-r from-indigo-900/80 via-brand-900/60 to-slate-800 p-4"
-        >
-          <div className="flex items-center gap-3">
-            <BookOpen className="h-7 w-7 text-brand-300" />
-            <div className="text-left">
-              <p className="font-semibold">
-                {language === 'en' ? 'App Guide & AI Tour' : 'App-Guide & KI-Tour'}
-              </p>
-              <p className="text-xs text-slate-400">
-                {language === 'en'
-                  ? 'What Docs, Tax Vault, DocDraft, Contracts & more do'
-                  : 'Was Docs, Tax Vault, DocDraft, Contracts & mehr leisten'}
-              </p>
-            </div>
+      <div className="space-y-6">
+        <section>
+          <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+            {de ? 'Allgemein' : 'General'}
+          </p>
+          <div className="space-y-2">
+            <AiLanguageBar language={language} onChange={setLanguage} />
+            <InstallPwaButton />
           </div>
-          <ChevronRight className="h-5 w-5 text-brand-400" />
-        </button>
+        </section>
 
-        <InstallPwaButton />
-
-        <div className="flex items-center gap-4 rounded-2xl bg-slate-800/80 p-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-600/30">
-            <User className="h-6 w-6 text-brand-400" aria-hidden />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="font-medium">{user?.name || 'Benutzer'}</p>
-            <p className="text-sm text-slate-400">{user?.email}</p>
-            {user?.mode === 'supabase' && (
-              <p className="text-xs text-emerald-400">Supabase angemeldet</p>
-            )}
-          </div>
-          {user?.mode === 'supabase' && (
-            <button
-              type="button"
-              onClick={() => signOut().then(() => toast.success('Abgemeldet'))}
-              className="rounded-lg bg-slate-700 px-3 py-1.5 text-xs"
-            >
-              Abmelden
-            </button>
-          )}
-        </div>
-
-        {supabaseReady && user?.mode !== 'supabase' && (
-          <div className="rounded-2xl bg-slate-800/60 p-4">
-            <p className="mb-2 text-sm font-medium text-slate-300">Cloud-Konto (Supabase)</p>
-            <label className="mb-2 block text-xs text-slate-400" htmlFor="auth-email">
-              E-Mail
-            </label>
-            <input
-              id="auth-email"
-              type="email"
-              value={authEmail}
-              onChange={(e) => setAuthEmail(e.target.value)}
-              className="mb-2 w-full rounded-xl bg-slate-900 px-3 py-2 text-sm"
-              autoComplete="email"
-            />
-            <label className="mb-2 block text-xs text-slate-400" htmlFor="auth-password">
-              Passwort
-            </label>
-            <input
-              id="auth-password"
-              type="password"
-              value={authPassword}
-              onChange={(e) => setAuthPassword(e.target.value)}
-              className="mb-3 w-full rounded-xl bg-slate-900 px-3 py-2 text-sm"
-              autoComplete="current-password"
-            />
-            <div className="flex gap-2">
-              <button
-                type="button"
-                disabled={authBusy}
-                onClick={async () => {
-                  setAuthBusy(true)
-                  try {
-                    await signIn(authEmail, authPassword)
-                    toast.success('Angemeldet')
-                  } catch (e) {
-                    toast.error(e.message || 'Anmeldung fehlgeschlagen')
-                  } finally {
-                    setAuthBusy(false)
-                  }
-                }}
-                className="flex-1 rounded-xl bg-brand-600 py-2 text-sm font-semibold disabled:opacity-50"
-              >
-                Anmelden
-              </button>
-              <button
-                type="button"
-                disabled={authBusy}
-                onClick={async () => {
-                  setAuthBusy(true)
-                  try {
-                    await signUp(authEmail, authPassword)
-                    toast.success('Konto erstellt — E-Mail bestätigen falls erforderlich')
-                  } catch (e) {
-                    toast.error(e.message || 'Registrierung fehlgeschlagen')
-                  } finally {
-                    setAuthBusy(false)
-                  }
-                }}
-                className="flex-1 rounded-xl border border-slate-600 py-2 text-sm"
-              >
-                Registrieren
-              </button>
-            </div>
-          </div>
-        )}
-
-        {onOpenScanVault && (
+        <section>
+          <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+            {de ? 'Hilfe' : 'Help'}
+          </p>
           <button
             type="button"
-            onClick={onOpenScanVault}
-            className="flex w-full items-center justify-between rounded-2xl bg-slate-800/80 p-4"
+            onClick={() => openGuide('docs')}
+            className="flex w-full items-center justify-between rounded-2xl bg-gradient-to-r from-indigo-900/80 via-brand-900/60 to-slate-800 p-4 text-left transition hover:from-indigo-900 hover:to-slate-800"
           >
             <div className="flex items-center gap-3">
-              <Receipt className="h-6 w-6 text-[#007AFF]" />
-              <div className="text-left">
-                <p className="font-medium">ScanVault</p>
-                <p className="text-xs text-slate-400">Document scanner app</p>
+              <BookOpen className="h-7 w-7 text-brand-300" aria-hidden />
+              <div>
+                <p className="font-semibold text-slate-100">
+                  {de ? 'App-Guide & KI-Tour' : 'App guide & AI tour'}
+                </p>
+                <p className="text-xs text-slate-400">
+                  {de
+                    ? 'Docs, Tax Vault, DocDraft, Contracts & mehr'
+                    : 'Docs, Tax Vault, DocDraft, Contracts & more'}
+                </p>
               </div>
             </div>
-            <ChevronRight className="h-5 w-5 text-slate-500" />
+            <ChevronRight className="h-5 w-5 text-brand-400" aria-hidden />
           </button>
-        )}
+        </section>
 
-        <button
-          type="button"
-          onClick={() => setTaxVaultSettings(true)}
-          className="flex w-full items-center justify-between rounded-2xl bg-slate-800/80 p-4"
-        >
-          <div className="flex items-center gap-3">
-            <Receipt className="h-6 w-6 text-brand-400" />
-            <div className="text-left">
-              <p className="font-medium">Tax Vault Settings</p>
-              <p className="text-xs text-slate-400">Business profile, OCR, mileage</p>
+        <section>
+          <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+            {de ? 'Konto' : 'Account'}
+          </p>
+          <div className="space-y-2">
+            <div className="flex items-center gap-4 rounded-2xl bg-slate-800/80 p-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-600/30">
+                <User className="h-6 w-6 text-brand-400" aria-hidden />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-slate-100">{user?.name || (de ? 'Benutzer' : 'User')}</p>
+                <p className="truncate text-sm text-slate-400">{user?.email || (de ? 'Lokal auf diesem Gerät' : 'Local on this device')}</p>
+                {user?.mode === 'supabase' && (
+                  <p className="mt-0.5 text-xs text-emerald-400">
+                    {de ? 'Cloud-Konto aktiv' : 'Cloud account active'}
+                  </p>
+                )}
+              </div>
+              {user?.mode === 'supabase' && (
+                <button
+                  type="button"
+                  onClick={() => signOut().then(() => toast.success(de ? 'Abgemeldet' : 'Signed out'))}
+                  className="rounded-lg bg-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-600"
+                >
+                  {de ? 'Abmelden' : 'Sign out'}
+                </button>
+              )}
             </div>
-          </div>
-          <ChevronRight className="h-5 w-5 text-slate-500" />
-        </button>
 
-        <button
-          type="button"
-          onClick={() => setModalOpen(true)}
-          className="flex w-full items-center justify-between rounded-2xl bg-gradient-to-r from-brand-900/80 to-slate-800 p-4"
-        >
-          <div className="flex items-center gap-3">
-            <Crown className="h-6 w-6 text-amber-400" />
-            <div className="text-left">
-              <p className="font-medium">ScanLogic Premium</p>
-              <p className="text-xs text-slate-400">
-                {isPremium ? 'Aktiv' : '14 Tage testen'}
-              </p>
-            </div>
+            {supabaseReady && user?.mode !== 'supabase' && (
+              <div className="rounded-2xl border border-slate-700/80 bg-slate-800/60 p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-brand-400" aria-hidden />
+                  <p className="text-sm font-medium text-slate-200">
+                    {de ? 'Cloud-Konto (optional)' : 'Cloud account (optional)'}
+                  </p>
+                </div>
+                <p className="mb-3 text-xs text-slate-500">
+                  {de
+                    ? 'Melden Sie sich an, um Daten geräteübergreifend zu synchronisieren.'
+                    : 'Sign in to sync your data across devices.'}
+                </p>
+                <label className="mb-1.5 block text-xs text-slate-400" htmlFor="auth-email">
+                  E-Mail
+                </label>
+                <input
+                  id="auth-email"
+                  type="email"
+                  value={authEmail}
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  className="mb-3 w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-sm text-slate-100"
+                  autoComplete="email"
+                />
+                <label className="mb-1.5 block text-xs text-slate-400" htmlFor="auth-password">
+                  {de ? 'Passwort' : 'Password'}
+                </label>
+                <input
+                  id="auth-password"
+                  type="password"
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  className="mb-3 w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-sm text-slate-100"
+                  autoComplete="current-password"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    disabled={authBusy}
+                    onClick={async () => {
+                      setAuthBusy(true)
+                      try {
+                        await signIn(authEmail, authPassword)
+                        toast.success(de ? 'Angemeldet' : 'Signed in')
+                      } catch (e) {
+                        toast.error(e.message || (de ? 'Anmeldung fehlgeschlagen' : 'Sign-in failed'))
+                      } finally {
+                        setAuthBusy(false)
+                      }
+                    }}
+                    className="flex-1 rounded-xl bg-brand-600 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                  >
+                    {de ? 'Anmelden' : 'Sign in'}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={authBusy}
+                    onClick={async () => {
+                      setAuthBusy(true)
+                      try {
+                        await signUp(authEmail, authPassword)
+                        toast.success(
+                          de
+                            ? 'Konto erstellt — ggf. E-Mail bestätigen'
+                            : 'Account created — confirm email if required'
+                        )
+                      } catch (e) {
+                        toast.error(e.message || (de ? 'Registrierung fehlgeschlagen' : 'Sign-up failed'))
+                      } finally {
+                        setAuthBusy(false)
+                      }
+                    }}
+                    className="flex-1 rounded-xl border border-slate-600 py-2.5 text-sm font-medium text-slate-200 disabled:opacity-50"
+                  >
+                    {de ? 'Registrieren' : 'Register'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        </button>
+        </section>
 
-        <div className="rounded-2xl bg-slate-800/60 p-4">
-          <div className="flex items-center gap-2 text-sm text-slate-400">
-            <Sparkles className="h-4 w-4" />
-            Anthropic Claude
-          </div>
-          <p className="mt-2 text-xs text-slate-500">
-            {llmReady
-              ? `Active — ${getAnthropicModel()}. API key stays on the server (not in the browser).`
-              : 'Not configured. Add ANTHROPIC_API_KEY to .env and restart the dev server.'}
+        <section>
+          <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+            {de ? 'Module' : 'Modules'}
           </p>
-        </div>
-
-        <div className="rounded-2xl bg-slate-800/60 p-4">
-          <p className="text-sm text-slate-400">Remote API access (LAN dev)</p>
-          <p className="mt-1 text-xs text-slate-500">
-            Only needed with <code className="text-slate-400">npm run dev:lan</code>. Set{' '}
-            <code className="text-slate-400">SCANLOGIC_API_SECRET</code> in .env, then paste the same
-            value here (stored in this tab&apos;s session only).
-          </p>
-          <input
-            type="password"
-            autoComplete="off"
-            value={apiSecret}
-            onChange={(e) => {
-              setApiSecretState(e.target.value)
-              setApiSecret(e.target.value)
-            }}
-            placeholder="SCANLOGIC_API_SECRET"
-            className="mt-3 w-full rounded-xl border border-slate-600 bg-slate-900/80 px-3 py-2 text-sm"
-          />
-        </div>
-
-        <div className="rounded-2xl bg-slate-800/60 p-4">
-          <div className="flex items-center gap-2 text-sm text-slate-400">
-            <Database className="h-4 w-4" />
-            Supabase PostgreSQL
+          <div className="space-y-2">
+            {onOpenScanVault && (
+              <SettingsRow
+                icon={Receipt}
+                iconClass="text-[#007AFF]"
+                title="ScanVault"
+                subtitle={de ? 'Fokussierter Dokumenten-Scanner' : 'Focused document scanner'}
+                onClick={onOpenScanVault}
+              />
+            )}
+            <SettingsRow
+              icon={Receipt}
+              iconClass="text-brand-400"
+              title={de ? 'Tax Vault' : 'Tax Vault'}
+              subtitle={de ? 'Geschäftsprofil, OCR & Fahrtenbuch' : 'Business profile, OCR & mileage'}
+              onClick={() => setTaxVaultSettings(true)}
+            />
+            <button
+              type="button"
+              onClick={() => setModalOpen(true)}
+              className="flex w-full items-center gap-3 rounded-2xl bg-gradient-to-r from-brand-900/80 to-slate-800 p-4 text-left transition hover:from-brand-900"
+            >
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/10">
+                <Crown className="h-5 w-5 text-amber-400" aria-hidden />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-slate-100">ScanLogic Premium</p>
+                <p className="text-xs text-slate-400">
+                  {isPremium ? (de ? 'Aktiv' : 'Active') : de ? '14 Tage kostenlos testen' : '14-day free trial'}
+                </p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-slate-500" aria-hidden />
+            </button>
           </div>
-          <p className="mt-2 text-xs text-slate-500">
-            {dbReady
-              ? 'Connected. New saves go to Supabase (server proxy). Credentials stay in .env only.'
-              : 'Not connected. Set DATABASE_URL in .env and restart npm run dev.'}
-          </p>
-          <button
-            type="button"
-            disabled={syncing}
-            onClick={pushToSupabase}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 py-2.5 text-sm font-medium disabled:opacity-50"
-          >
-            <CloudUpload className="h-4 w-4" />
-            {syncing ? 'Pushing…' : 'Push local data to Supabase'}
-          </button>
-        </div>
+        </section>
 
-        <div className="flex items-start gap-3 rounded-2xl bg-slate-800/40 p-4 text-xs text-slate-500">
+        <footer className="flex items-start gap-3 rounded-2xl border border-slate-800 bg-slate-900/40 p-4 text-xs leading-relaxed text-slate-500">
           <BrandLogo size={36} className="shrink-0" />
           <p>
-            {BRAND_SUITE_NAME} v1.0 — Steuer- und Rechtsangaben sind vereinfachte Schätzungen,
-            keine professionelle Beratung.
+            {BRAND_SUITE_NAME} v1.0 —{' '}
+            {de
+              ? 'Steuer- und Rechtsangaben sind vereinfachte Schätzungen, keine professionelle Beratung.'
+              : 'Tax and legal information are simplified estimates, not professional advice.'}
           </p>
-        </div>
+        </footer>
       </div>
     </div>
   )

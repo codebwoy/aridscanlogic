@@ -132,8 +132,8 @@ ENTITY_NAMES.forEach((name) => {
   entities[name] = createHybridEntityClient(name)
 })
 
-export async function initAppStorage() {
-  return checkDbConnected()
+export async function initAppStorage(force = false) {
+  return checkDbConnected(force)
 }
 
 async function invokeLLMDemo({ prompt, response_json_schema }) {

@@ -35,8 +35,9 @@ alwaysApply: false
 
 ## Settings (`SettingsPage.jsx`)
 
-- Anthropic status, Supabase push (`pushAllLocalDataToSupabase`), PWA install, ScanVault link.
-- **LAN API secret** field → `setApiSecret` (sessionStorage only).
+- User-facing: AI language, app guide, PWA install, optional cloud sign-in, ScanVault link, Tax Vault settings, Premium.
+- Server config (Anthropic, DATABASE_URL, LAN secret) lives in `.env` only — not exposed in Settings UI.
+- One-time local→Supabase migration: use `pushAllLocalDataToSupabase` from dev console or a script if needed.
 
 ## PWA
 

@@ -15,23 +15,57 @@ export function setRemoteUserId(id) {
 }
 
 let dbConnected = null
+let dbStatus = { connected: false, configured: false, blocked: false, hint: null }
 let dbStatusPromise = null
 
-export async function checkDbConnected() {
-  if (dbStatusPromise) return dbStatusPromise
+export function getDbStatus() {
+  return { ...dbStatus }
+}
+
+function applyStatus(partial) {
+  dbStatus = { ...dbStatus, ...partial }
+  dbConnected = dbStatus.connected === true
+}
+
+export async function checkDbConnected(force = false) {
+  if (dbStatusPromise && !force) return dbStatusPromise
 
   dbStatusPromise = (async () => {
     try {
       const res = await apiFetch('/api/db/status', { cache: 'no-store' })
+      if (res.status === 401 || res.status === 403) {
+        applyStatus({
+          connected: false,
+          configured: null,
+          blocked: true,
+          hint: 'api_secret',
+        })
+        return false
+      }
       if (!res.ok) {
-        dbConnected = false
+        applyStatus({
+          connected: false,
+          configured: false,
+          blocked: false,
+          hint: 'unavailable',
+        })
         return false
       }
       const data = await res.json()
-      dbConnected = !!data.connected
+      applyStatus({
+        connected: !!data.connected,
+        configured: !!data.configured,
+        blocked: false,
+        hint: data.connected ? null : data.hint || (data.configured ? 'connection_failed' : 'not_configured'),
+      })
       return dbConnected
     } catch {
-      dbConnected = false
+      applyStatus({
+        connected: false,
+        configured: false,
+        blocked: false,
+        hint: 'network',
+      })
       return false
     } finally {
       dbStatusPromise = null
@@ -43,6 +77,44 @@ export async function checkDbConnected() {
 
 export function isDbConnected() {
   return dbConnected === true
+}
+
+/** User-facing hint when Supabase sync is unavailable. */
+export function dbConnectionMessage(lang = 'de') {
+  const s = getDbStatus()
+  if (s.connected) {
+    return lang === 'de'
+      ? 'Verbunden. Neue Speicherungen gehen an Supabase.'
+      : 'Connected. New saves go to Supabase.'
+  }
+  if (s.blocked || s.hint === 'api_secret') {
+    return lang === 'de'
+      ? 'LAN-Zugriff blockiert. SCANLOGIC_API_SECRET in .env setzen und per sessionStorage im Browser hinterlegen.'
+      : 'LAN access blocked. Set SCANLOGIC_API_SECRET in .env and store it via sessionStorage in the browser.'
+  }
+  if (!s.configured || s.hint === 'not_configured') {
+    return lang === 'de'
+      ? 'Nicht konfiguriert. DATABASE_URL in .env setzen und Dev-Server neu starten.'
+      : 'Not configured. Set DATABASE_URL in .env and restart the dev server.'
+  }
+  if (s.hint === 'ssl') {
+    return lang === 'de'
+      ? 'SSL-Fehler. Für Supabase SCANLOGIC_PG_SSL_REJECT_UNAUTHORIZED=false in .env setzen oder Dev-Server neu starten.'
+      : 'SSL error. For Supabase set SCANLOGIC_PG_SSL_REJECT_UNAUTHORIZED=false in .env or restart dev server.'
+  }
+  if (s.hint === 'auth') {
+    return lang === 'de'
+      ? 'Anmeldung fehlgeschlagen. Passwort in DATABASE_URL prüfen (Supabase → Database settings).'
+      : 'Authentication failed. Check the password in DATABASE_URL (Supabase → Database settings).'
+  }
+  if (s.hint === 'network' || s.hint === 'unavailable') {
+    return lang === 'de'
+      ? 'Server nicht erreichbar. npm run dev starten — GitHub Pages hat kein /api/db.'
+      : 'Server unreachable. Run npm run dev — GitHub Pages has no /api/db.'
+  }
+  return lang === 'de'
+    ? 'Verbindung fehlgeschlagen. DATABASE_URL prüfen und Dev-Server neu starten.'
+    : 'Connection failed. Check DATABASE_URL and restart the dev server.'
 }
 
 function qs(params) {

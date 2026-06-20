@@ -117,8 +117,13 @@ export async function handleDbApiRequest(
     try {
       await getPool(dbUrl).query('SELECT 1')
       res.end(JSON.stringify({ connected: true, configured: true }))
-    } catch {
-      res.end(JSON.stringify({ connected: false, configured: true }))
+    } catch (err) {
+      const msg = err?.message || ''
+      let hint = 'connection_failed'
+      if (/certificate|ssl|self-signed/i.test(msg)) hint = 'ssl'
+      else if (/password|authentication|28P01/i.test(msg)) hint = 'auth'
+      else if (/timeout|ENOTFOUND|ECONNREFUSED/i.test(msg)) hint = 'network'
+      res.end(JSON.stringify({ connected: false, configured: true, hint }))
     }
     return
   }
