@@ -3,10 +3,10 @@
 export const ALL_STEPS = [
   { id: 'structure', key: 'structure', estMin: 5 },
   { id: 'info', key: 'info', estMin: 15 },
-  { id: 'gewerbe', key: 'gewerbe', estMin: 10, skipFor: ['freiberufler'] },
+  { id: 'gewerbe', key: 'gewerbe', estMin: 15, skipFor: ['freiberufler'] },
   { id: 'finanzamt', key: 'finanzamt', estMin: 20 },
   { id: 'krankenkasse', key: 'krankenkasse', estMin: 15 },
-  { id: 'vat', key: 'vat', estMin: 10, skipFor: ['kleinunternehmer'], skipIfKlein: true },
+  { id: 'vat', key: 'vat', estMin: 20, skipFor: ['kleinunternehmer'], skipIfKlein: true },
   { id: 'handelsregister', key: 'handelsregister', estMin: 30, onlyFor: ['gmbh', 'ug'] },
   { id: 'ihk', key: 'ihk', estMin: 5, skipFor: ['freiberufler'] },
   { id: 'bank', key: 'bank', estMin: 5 },
@@ -40,8 +40,8 @@ export const STRUCTURES = [
     icon: 'sparkles',
     nameEn: 'Kleinunternehmer (§19 UStG)',
     nameDe: 'Kleinunternehmer (§19 UStG)',
-    descEn: 'Under €22,000 revenue in year 1. No VAT charged, no VAT returns.',
-    descDe: 'Unter 22.000 € Umsatz im 1. Jahr. Keine USt auf Rechnungen.',
+    descEn: 'Under €25,000 net prior year / €100,000 forecast. No VAT on invoices, no pre-returns.',
+    descDe: 'Bis 25.000 € netto (Vorjahr) / 100.000 € (laufend). Keine USt auf Rechnungen.',
     forWho: 'side businesses, micro-businesses',
   },
   {
@@ -94,7 +94,7 @@ export const STEP_LABELS = {
   en: {
     structure: 'Choose business structure',
     info: 'Personal & business information',
-    gewerbe: 'Gewerbeanmeldung (Trade office)',
+    gewerbe: 'Gewerbeanmeldung (GewA 1) — online beantragen',
     finanzamt: 'Fragebogen zur steuerlichen Erfassung',
     krankenkasse: 'Health insurance (Krankenkasse)',
     vat: 'VAT registration (USt-IdNr.)',
@@ -107,7 +107,7 @@ export const STEP_LABELS = {
   de: {
     structure: 'Rechtsform wählen',
     info: 'Persönliche & geschäftliche Daten',
-    gewerbe: 'Gewerbeanmeldung',
+    gewerbe: 'Gewerbeanmeldung (GewA 1) — online beantragen',
     finanzamt: 'Fragebogen zur steuerlichen Erfassung',
     krankenkasse: 'Krankenkasse / Krankenversicherung',
     vat: 'Umsatzsteuer / USt-IdNr.',

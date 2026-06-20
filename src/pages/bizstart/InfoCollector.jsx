@@ -1,5 +1,7 @@
 import { useState } from 'react'
 
+import { KLEINUNTERNEHMER_LIMITS } from '@/lib/vat/germanVatRules'
+
 const ACTIVITIES = [
   'IT & Software',
   'Beratung',
@@ -114,14 +116,18 @@ export default function InfoCollector({ lang, formData, onChange, onComplete }) 
 
       {section === 3 && (
         <div className="space-y-3">
-          {Number(formData.expectedRevenueYear1) < 22000 && (
+          {Number(formData.expectedRevenueYear1) < KLEINUNTERNEHMER_LIMITS.priorYearNetMax && (
             <button
               type="button"
               onClick={() => f('vatScheme', 'kleinunternehmer')}
               className={`premium-card w-full p-4 text-left ${formData.vatScheme === 'kleinunternehmer' ? 'ring-2 ring-brand-500' : ''}`}
             >
               <p className="font-semibold">Kleinunternehmer §19</p>
-              <p className="text-xs text-slate-400">No VAT on invoices under €22k revenue</p>
+              <p className="text-xs text-slate-400">
+                {lang === 'de'
+                  ? `Keine USt auf Rechnungen — bis ${KLEINUNTERNEHMER_LIMITS.priorYearNetMax.toLocaleString('de-DE')} € (Vorjahr) / ${KLEINUNTERNEHMER_LIMITS.currentYearForecastNetMax.toLocaleString('de-DE')} € (laufend) netto`
+                  : `No VAT on invoices — up to €${KLEINUNTERNEHMER_LIMITS.priorYearNetMax.toLocaleString()} (prior) / €${KLEINUNTERNEHMER_LIMITS.currentYearForecastNetMax.toLocaleString()} (current) net`}
+              </p>
             </button>
           )}
           <button

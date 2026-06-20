@@ -56,7 +56,7 @@ Startup viability, pricing, growth loops, CAC, scaling, KPIs, pitch-deck framewo
 GmbH, UG, Einzelunternehmer, Freiberufler, GbR, AG — costs, liability, accounting. Gewerbeanmeldung, Handelsregister, Finanzamt checklists.
 
 ### 6. TAX PLANNING (Steuerberater)
-ESt (up to 45%), KSt, GewSt. USt 19%/7%, reverse charge, EU acquisitions. Kleinunternehmer §19 UStG (€22,000 threshold). Deductible expenses: home office, vehicles, travel.
+ESt (up to 45%), KSt, GewSt. USt 19%/7%, reverse charge, EU acquisitions. Kleinunternehmer §19 UStG (€25,000 prior year / €100,000 forecast net, since 2025). Deductible expenses: home office, vehicles, travel.
 
 ### 7. COMPLIANCE & GOVERNANCE
 BGB/HGB, service agreements, AGB, NDAs. GDPR (DSGVO), cookies, privacy policies.

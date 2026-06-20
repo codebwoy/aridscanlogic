@@ -130,7 +130,7 @@ Zwischen **Auftraggeber** und **Auftragnehmer** (Freelancer Software).
 ### Umsatzsteuer
 - **Regelsteuersatz:** 19%
 - **Ermäßigt:** 7%
-- **Kleinunternehmer §19 UStG:** Umsatz Vorjahr ≤ €22.000, laufend ≤ €50.000 — keine USt-Ausweisung
+- **Kleinunternehmer §19 UStG:** Umsatz Vorjahr ≤ €25.000 netto, laufend ≤ €100.000 netto (seit 2025) — keine USt-Ausweisung, kein Vorsteuerabzug
 
 ### Einkommensteuer
 Progressiv bis ca. **45%** zuzüglich Solidaritätszuschlag.

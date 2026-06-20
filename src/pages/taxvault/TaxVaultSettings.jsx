@@ -17,6 +17,7 @@ import {
   estimateHealthInsuranceMonthly,
   KRANKENKASSE_DISCLAIMER_DE,
 } from '@/lib/taxvault/krankenkasse'
+import { KLEINUNTERNEHMER_LIMITS } from '@/lib/vat/germanVatRules'
 
 export default function TaxVaultSettings({ onBack }) {
   const [profile, setProfile] = useState(loadTaxVaultProfile())
@@ -115,6 +116,11 @@ export default function TaxVaultSettings({ onBack }) {
             <option value="kleinunternehmer">Kleinunternehmer §19</option>
             <option value="standard">Regelbesteuerung</option>
           </select>
+          <p className="mt-1 text-[10px] text-slate-500">
+            §19 UStG: bis {KLEINUNTERNEHMER_LIMITS.priorYearNetMax.toLocaleString('de-DE')} € netto (Vorjahr) /
+            {KLEINUNTERNEHMER_LIMITS.currentYearForecastNetMax.toLocaleString('de-DE')} € (laufend). Option zur
+            Regelbesteuerung: {KLEINUNTERNEHMER_LIMITS.optInBindingYears} Jahre bindend.
+          </p>
         </label>
         <button type="button" onClick={saveProfile} className="w-full rounded-xl bg-slate-700 py-2 text-sm">
           Save overhead settings

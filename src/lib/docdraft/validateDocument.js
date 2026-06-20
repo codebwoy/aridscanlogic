@@ -23,13 +23,21 @@ export function validateInvoice(doc, profile, client) {
     if (!l.description) errors.push(`Line ${i + 1}: description required`)
   })
 
-  if (profile?.isKleinunternehmer && !doc.legal_footnote?.includes('§19')) {
-    doc.legal_footnote = KLEINUNTERNEHMER_FOOTNOTE
+  if (profile?.isKleinunternehmer) {
+    if (!doc.legal_footnote?.includes('§19')) {
+      doc.legal_footnote = KLEINUNTERNEHMER_FOOTNOTE
+    }
+    if ((doc.total_vat || 0) > 0) {
+      errors.push('Kleinunternehmer: keine USt auf Rechnung ausweisen (§ 14c UStG)')
+    }
   }
 
   if (!profile?.isKleinunternehmer && (doc.total_gross || 0) > 250) {
-    if ((doc.total_vat || 0) === 0 && !profile?.isKleinunternehmer) {
-      warnings.push('VAT breakdown required for invoices over €250')
+    if ((doc.total_vat || 0) === 0) {
+      warnings.push('VAT breakdown required for invoices over €250 (§ 14 UStG)')
+    }
+    if (!profile?.steuernummer && !profile?.ustIdNr) {
+      warnings.push('Steuernummer or USt-IdNr. required on invoice (§ 14 Abs. 4 UStG)')
     }
   }
 
