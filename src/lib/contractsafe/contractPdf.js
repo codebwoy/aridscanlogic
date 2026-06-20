@@ -14,23 +14,26 @@ function sectionBodyLooksLikeMarkdown(body = '') {
   return /(\*\*|^#+\s|^- )/m.test(body)
 }
 
-export async function generateSignedContractPdf(contract, signers = []) {
+export async function generateSignedContractPdf(contract, signers = [], { branding } = {}) {
   const pdf = createBrandedPdf()
+  const pdfOpts = { branding, module: 'Contract Safe' }
+
   let y = drawBrandedHeader(pdf, {
     title: contract.title || 'Vertrag',
     subtitle: contract.template_type ? `Typ: ${contract.template_type}` : undefined,
-    module: 'Contract Safe',
+    ...pdfOpts,
   })
 
   const sections = contract.contract_body?.sections || contract.sections || []
   sections.forEach((sec, i) => {
-    y = ensureSpace(pdf, y, 20, { title: contract.title, module: 'Contract Safe' })
+    y = ensureSpace(pdf, y, 20, { title: contract.title, ...pdfOpts })
     y = drawSectionTitle(pdf, y, sec.heading || `Abschnitt ${i + 1}`)
     if (sectionBodyLooksLikeMarkdown(sec.body)) {
       y = drawLegalMarkdownBody(pdf, y, sec.body || '', {
         module: 'Contract Safe',
         docTitle: contract.title,
         fragment: true,
+        branding,
       })
     } else {
       y = drawBodyParagraph(pdf, y, sec.body || '')
@@ -38,11 +41,11 @@ export async function generateSignedContractPdf(contract, signers = []) {
     y += 4
   })
 
-  y = ensureSpace(pdf, y, 16, { title: contract.title, module: 'Contract Safe' })
+  y = ensureSpace(pdf, y, 16, { title: contract.title, ...pdfOpts })
   y = drawSectionTitle(pdf, y, 'Unterschriften')
 
   signers.forEach((s) => {
-    y = ensureSpace(pdf, y, 30, { module: 'Contract Safe' })
+    y = ensureSpace(pdf, y, 30, pdfOpts)
     y = drawFieldRow(
       pdf,
       y,
@@ -55,7 +58,7 @@ export async function generateSignedContractPdf(contract, signers = []) {
       try {
         if (y + 28 > PDF_THEME.footerY) {
           pdf.addPage()
-          y = drawBrandedHeader(pdf, { title: contract.title, module: 'Contract Safe' })
+          y = drawBrandedHeader(pdf, { title: contract.title, ...pdfOpts })
         }
         pdf.addImage(sig, 'JPEG', PDF_THEME.margin, y, 55, 22)
         y += 28
@@ -68,6 +71,7 @@ export async function generateSignedContractPdf(contract, signers = []) {
   saveBrandedPdf(
     pdf,
     `${(contract.title || 'contract').replace(/\s+/g, '_')}_signed.pdf`,
-    'Contract Safe — Entwurf, keine Rechtsberatung. Vor Unterzeichnung Rechtsanwalt konsultieren.'
+    'Contract Safe — Entwurf, keine Rechtsberatung. Vor Unterzeichnung Rechtsanwalt konsultieren.',
+    { branding }
   )
 }

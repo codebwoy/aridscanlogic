@@ -19,7 +19,7 @@ export function drawLegalMarkdownBody(
   pdf,
   startY,
   markdown,
-  { module, docTitle, forceTitle, fragment = false } = {}
+  { module, docTitle, forceTitle, fragment = false, branding } = {}
 ) {
   const blocks = parseLegalMarkdown(markdown)
   let y = startY
@@ -33,6 +33,7 @@ export function drawLegalMarkdownBody(
     y = drawBrandedHeader(pdf, {
       title,
       module: module || 'Website-Rechtliches',
+      branding,
     })
     headerDrawn = true
   }
@@ -41,7 +42,7 @@ export function drawLegalMarkdownBody(
     if (fragment && (block.type === 'disclaimer' || block.type === 'h1')) continue
     if (block.type === 'h1' && block.text === title) continue
 
-    y = ensureSpace(pdf, y, 14, { title, module })
+    y = ensureSpace(pdf, y, 14, { title, module, branding })
 
     switch (block.type) {
       case 'disclaimer':
@@ -58,7 +59,7 @@ export function drawLegalMarkdownBody(
         break
       case 'list':
         block.items.forEach((item) => {
-          y = ensureSpace(pdf, y, 8, { module, title })
+          y = ensureSpace(pdf, y, 8, { module, title, branding })
           pdf.setFont(PDF_FONTS.family, 'normal')
           pdf.setFontSize(PDF_FONTS.bodySize)
           pdf.setTextColor(...PDF_THEME.slate800)

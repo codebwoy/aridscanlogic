@@ -4,6 +4,7 @@ import { Plus, Download, Send, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { calcDocDraftTotals } from '@/lib/docCalculations'
 import { DOC_TYPES, UNIT_TYPES, TEMPLATES } from '@/lib/docdraft/constants'
+import { DOC_LANGUAGES } from '@/lib/docdraft/documentI18n'
 import { validateInvoice } from '@/lib/docdraft/validateDocument'
 import {
   saveDocument,
@@ -14,6 +15,7 @@ import {
   addAuditEntry,
 } from '@/lib/docdraft/store'
 import DocumentPreview from '@/components/docdraft/DocumentPreview'
+import DocumentBrandingToggle, { useDocumentBranding } from '@/components/shared/DocumentBrandingToggle'
 import { generateInvoicePdf } from '@/lib/pdfUtils'
 
 const EMPTY_LINE = () => ({
@@ -60,10 +62,12 @@ export default function DocumentBuilder({
       templateId: profile?.defaultTemplateId || 'classic',
       linked_invoice_number: '',
       credit_reason: '',
+      language: existingDoc?.language || profile?.defaultLanguage || 'de',
     }
   })
 
   const [reservedNumber, setReservedNumber] = useState(false)
+  const { includeBranding, setIncludeBranding } = useDocumentBranding()
 
   const clients = loadClients(profile.id)
   const client = form.client_id ? getClient(profile.id, form.client_id) : null
@@ -164,14 +168,10 @@ export default function DocumentBuilder({
         {
           ...previewDoc,
           document_type: form.document_type,
-          company_name: profile.businessName,
         },
-        {
-          company_name: profile.businessName,
-          steuernummer: profile.steuernummer,
-          ust_id_nr: profile.ustIdNr,
-          is_kleinunternehmer: profile.isKleinunternehmer,
-        }
+        profile,
+        client,
+        { branding: includeBranding, lang: form.language }
       )
     } catch {
       toast.error('PDF failed')
@@ -255,6 +255,19 @@ export default function DocumentBuilder({
               />
             </>
           )}
+          <select
+            value={form.language}
+            onChange={(e) => setForm({ ...form, language: e.target.value })}
+            className="w-full rounded-lg bg-slate-800 px-3 py-2 text-sm"
+            aria-label="Document language"
+          >
+            {DOC_LANGUAGES.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.label}
+              </option>
+            ))}
+          </select>
+
           <select
             value={form.templateId}
             onChange={(e) => setForm({ ...form, templateId: e.target.value })}
@@ -358,9 +371,11 @@ export default function DocumentBuilder({
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="lg:sticky lg:top-4">
           <p className="mb-2 text-xs font-medium text-slate-500">Live preview</p>
-          <DocumentPreview doc={previewDoc} profile={profile} client={client} />
+          <DocumentPreview doc={previewDoc} profile={profile} client={client} lang={form.language} />
         </motion.div>
       </div>
+
+      <DocumentBrandingToggle checked={includeBranding} onChange={setIncludeBranding} className="mb-2" />
 
       <div className="flex flex-wrap gap-2">
         <button type="button" onClick={onCancel} className="flex-1 rounded-xl bg-slate-800 py-3 text-sm">

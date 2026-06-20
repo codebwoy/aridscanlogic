@@ -5,6 +5,7 @@
 
 import { jsPDF } from 'jspdf'
 import { BRAND_NAME, BRAND_SUITE_NAME } from '@/lib/brand'
+import { resolvePdfBranding } from '@/lib/documentBranding'
 
 export const PDF_THEME = {
   brand600: [79, 70, 229],
@@ -52,10 +53,11 @@ export function pageHeight(pdf) {
 }
 
 /** Branded header band + document title. Returns start Y for body content. */
-export function drawBrandedHeader(pdf, { title, subtitle, module, branding = 'full', lang = 'de' } = {}) {
+export function drawBrandedHeader(pdf, { title, subtitle, module, branding, lang = 'de' } = {}) {
+  const mode = resolvePdfBranding(branding)
   const w = pageWidth(pdf)
 
-  if (branding === 'clean') {
+  if (mode === 'clean') {
     let y = 20
     pdf.setFont(PDF_FONTS.family, 'normal')
     pdf.setFontSize(9)
@@ -197,30 +199,32 @@ function drawCleanContinuationHeader(pdf, { title } = {}) {
 }
 
 /** Ensure enough vertical space; adds branded continuation page if needed. */
-export function ensureSpace(pdf, y, needed, { title, module, branding = 'full', lang = 'de' } = {}) {
+export function ensureSpace(pdf, y, needed, { title, module, branding, lang = 'de' } = {}) {
+  const mode = resolvePdfBranding(branding)
   const limit = PDF_THEME.footerY - 8
   if (y + needed <= limit) return y
   pdf.addPage()
-  if (branding === 'clean') {
+  if (mode === 'clean') {
     return drawCleanContinuationHeader(pdf, { title })
   }
   return drawBrandedHeader(pdf, {
     title: title || 'Fortsetzung',
     subtitle: '—',
     module,
-    branding,
+    branding: mode,
     lang,
   })
 }
 
-export function applyBrandedFooters(pdf, disclaimer = DEFAULT_DISCLAIMER, { branding = 'full' } = {}) {
+export function applyBrandedFooters(pdf, disclaimer = DEFAULT_DISCLAIMER, { branding } = {}) {
+  const mode = resolvePdfBranding(branding)
   const total = pdf.internal.getNumberOfPages()
   const w = pageWidth(pdf)
   const h = pageHeight(pdf)
 
   for (let i = 1; i <= total; i++) {
     pdf.setPage(i)
-    pdf.setDrawColor(...(branding === 'clean' ? PDF_THEME.slate200 : PDF_THEME.brand200))
+    pdf.setDrawColor(...(mode === 'clean' ? PDF_THEME.slate200 : PDF_THEME.brand200))
     pdf.setLineWidth(0.25)
     pdf.line(PDF_THEME.margin, h - 16, w - PDF_THEME.margin, h - 16)
 
@@ -228,7 +232,7 @@ export function applyBrandedFooters(pdf, disclaimer = DEFAULT_DISCLAIMER, { bran
     pdf.setFontSize(PDF_FONTS.footerSize)
     pdf.setTextColor(...PDF_THEME.slate500)
 
-    if (branding === 'clean') {
+    if (mode === 'clean') {
       if (disclaimer) {
         pdf.text(disclaimer, PDF_THEME.margin, h - 11, { maxWidth: w - PDF_THEME.margin * 2 - 24 })
       }
@@ -241,13 +245,13 @@ export function applyBrandedFooters(pdf, disclaimer = DEFAULT_DISCLAIMER, { bran
   }
 }
 
-export function saveBrandedPdf(pdf, filename, disclaimer, { branding = 'full' } = {}) {
+export function saveBrandedPdf(pdf, filename, disclaimer, { branding } = {}) {
   applyBrandedFooters(pdf, disclaimer, { branding })
   pdf.save(filename)
 }
 
 /** Apply footers and return pdf for blob export (no download). */
-export function finalizeBrandedPdf(pdf, disclaimer, { branding = 'full' } = {}) {
+export function finalizeBrandedPdf(pdf, disclaimer, { branding } = {}) {
   applyBrandedFooters(pdf, disclaimer, { branding })
   return pdf
 }
@@ -257,7 +261,7 @@ export function brandedPdfToBlob(pdf) {
 }
 
 /** Branded multi-section document (legal packs, contracts). */
-export function buildBrandedSectionsPdf(sections, { module, disclaimer } = {}) {
+export function buildBrandedSectionsPdf(sections, { module, disclaimer, branding } = {}) {
   const pdf = createBrandedPdf()
   let first = true
 
@@ -268,10 +272,11 @@ export function buildBrandedSectionsPdf(sections, { module, disclaimer } = {}) {
       title: sec.title,
       subtitle: sec.subtitle,
       module: module || 'Website-Rechtliches',
+      branding,
     })
     y = drawBodyParagraph(pdf, y, sec.content)
   })
 
-  applyBrandedFooters(pdf, disclaimer)
+  applyBrandedFooters(pdf, disclaimer, { branding })
   return pdf
 }

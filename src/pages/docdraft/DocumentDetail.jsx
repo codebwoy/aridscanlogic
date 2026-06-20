@@ -6,11 +6,14 @@ import { getAuditLog, addPayment, getTotalPaid, loadPayments } from '@/lib/docdr
 import { convertQuoteToInvoice } from '@/lib/docdraft/convertQuote'
 import { generateInvoicePdf } from '@/lib/pdfUtils'
 import DocumentPreview from '@/components/docdraft/DocumentPreview'
+import DocumentBrandingToggle, { useDocumentBranding } from '@/components/shared/DocumentBrandingToggle'
+import { DOC_LANGUAGES } from '@/lib/docdraft/documentI18n'
 import { getClient } from '@/lib/docdraft/store'
 
 export default function DocumentDetail({ doc, profile, onBack, onUpdated, onSend }) {
   const [payments, setPayments] = useState(() => loadPayments(doc.id))
   const [converting, setConverting] = useState(false)
+  const { includeBranding, setIncludeBranding } = useDocumentBranding()
   const audit = getAuditLog(doc.id)
   const client = doc.client_id ? getClient(profile.id, doc.client_id) : null
   const paid = getTotalPaid(doc.id)
@@ -33,13 +36,9 @@ export default function DocumentDetail({ doc, profile, onBack, onUpdated, onSend
   }
 
   const downloadPdf = async () => {
-    await generateInvoicePdf(doc, {
-      company_name: profile.businessName,
-      steuernummer: profile.steuernummer,
-      ust_id_nr: profile.ustIdNr,
-      iban: profile.iban,
-      bic: profile.bic,
-      is_kleinunternehmer: profile.isKleinunternehmer,
+    await generateInvoicePdf(doc, profile, client, {
+      branding: includeBranding,
+      lang: doc.language,
     })
     toast.success('PDF downloaded')
   }
@@ -106,13 +105,34 @@ export default function DocumentDetail({ doc, profile, onBack, onUpdated, onSend
         )}
       </div>
 
+      <DocumentBrandingToggle checked={includeBranding} onChange={setIncludeBranding} className="mb-4" />
+
+      <label className="mb-4 block">
+        <span className="mb-1 block text-xs text-slate-500">Document language</span>
+        <select
+          value={doc.language || profile?.defaultLanguage || 'de'}
+          onChange={async (e) => {
+            const language = e.target.value
+            await appApi.entities.DocDraftDocument.update(doc.id, { language })
+            onUpdated?.()
+          }}
+          className="w-full rounded-lg bg-slate-800 px-3 py-2 text-sm"
+        >
+          {DOC_LANGUAGES.map((l) => (
+            <option key={l.id} value={l.id}>
+              {l.label}
+            </option>
+          ))}
+        </select>
+      </label>
+
       {paid > 0 && (
         <p className="mb-4 text-sm text-slate-400">
           €{paid.toFixed(2)} of €{doc.total_gross?.toFixed(2)} paid — €{remaining.toFixed(2)} remaining
         </p>
       )}
 
-      <DocumentPreview doc={doc} profile={profile} client={client} />
+      <DocumentPreview doc={doc} profile={profile} client={client} lang={doc.language} />
 
       <div className="premium-card mt-4 p-4">
         <p className="mb-2 text-xs font-semibold uppercase text-slate-500">Audit trail</p>

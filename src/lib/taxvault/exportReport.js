@@ -1,5 +1,6 @@
 import JSZip from 'jszip'
 import { downloadTextFile } from '@/lib/pdfUtils'
+import { disclaimerForBranding } from '@/lib/documentBranding'
 import { getTaxYearLabel } from './stats'
 import {
   createBrandedPdf,
@@ -55,15 +56,16 @@ export function exportReceiptsCsv(receipts, profile, taxYear) {
   )
 }
 
-export async function exportTaxReportPdf(receipts, stats, profile, taxYear) {
+export async function exportTaxReportPdf(receipts, stats, profile, taxYear, { branding } = {}) {
   const pdf = createBrandedPdf()
   const sym = profile.homeCurrency === 'EUR' ? '€' : profile.homeCurrency
   const startMonth = profile.taxYearStartMonth || 1
+  const pdfOpts = { branding, module: 'Tax Vault' }
 
   let y = drawBrandedHeader(pdf, {
     title: 'Tax Vault — Jahresbericht',
     subtitle: getTaxYearLabel(taxYear, startMonth),
-    module: 'Tax Vault',
+    ...pdfOpts,
   })
 
   y = drawFieldRow(pdf, y, 'Unternehmen', profile.businessName, { alt: true })
@@ -89,7 +91,7 @@ export async function exportTaxReportPdf(receipts, stats, profile, taxYear) {
 
   y = drawSectionTitle(pdf, y + 4, 'Nach Kategorie')
   Object.entries(stats.byCategory).forEach(([cat, d], i) => {
-    y = ensureSpace(pdf, y, 10, { title: 'Jahresbericht', module: 'Tax Vault' })
+    y = ensureSpace(pdf, y, 10, { title: 'Jahresbericht', ...pdfOpts })
     y = drawFieldRow(
       pdf,
       y,
@@ -103,7 +105,7 @@ export async function exportTaxReportPdf(receipts, stats, profile, taxYear) {
     y += 6
     y = drawSectionTitle(pdf, y, 'Fahrtenbuch')
     stats.mileage.forEach((m, i) => {
-      y = ensureSpace(pdf, y, 10, { module: 'Tax Vault' })
+      y = ensureSpace(pdf, y, 10, pdfOpts)
       y = drawFieldRow(
         pdf,
         y,
@@ -115,11 +117,11 @@ export async function exportTaxReportPdf(receipts, stats, profile, taxYear) {
   }
 
   pdf.addPage()
-  y = drawBrandedHeader(pdf, { title: 'Belegdetails', subtitle: getTaxYearLabel(taxYear, startMonth), module: 'Tax Vault' })
+  y = drawBrandedHeader(pdf, { title: 'Belegdetails', subtitle: getTaxYearLabel(taxYear, startMonth), ...pdfOpts })
 
   for (let i = 0; i < receipts.length; i++) {
     const r = receipts[i]
-    y = ensureSpace(pdf, y, 20, { title: 'Belegdetails', module: 'Tax Vault' })
+    y = ensureSpace(pdf, y, 20, { title: 'Belegdetails', ...pdfOpts })
     y = drawSectionTitle(pdf, y, `${r.vendor_name} — ${r.purchase_date}`)
     y = drawFieldRow(
       pdf,
@@ -150,7 +152,7 @@ export async function exportTaxReportPdf(receipts, stats, profile, taxYear) {
         const h = img.height * ratio
         if (y + h > PDF_THEME.footerY) {
           pdf.addPage()
-          y = drawBrandedHeader(pdf, { title: 'Belegdetails', module: 'Tax Vault' })
+          y = drawBrandedHeader(pdf, { title: 'Belegdetails', ...pdfOpts })
         }
         pdf.addImage(r.image_url, 'JPEG', PDF_THEME.margin, y, w, h)
         y += h + 8
@@ -164,14 +166,22 @@ export async function exportTaxReportPdf(receipts, stats, profile, taxYear) {
   }
 
   pdf.addPage()
-  y = drawBrandedHeader(pdf, { title: 'Gesamtsumme', module: 'Tax Vault' })
+  y = drawBrandedHeader(pdf, { title: 'Gesamtsumme', ...pdfOpts })
   drawFieldRow(pdf, y + 4, 'Abzugsfähig', `${sym}${stats.totalDeductible.toFixed(2)} (Steuerjahr ${taxYear})`, { alt: true })
 
-  applyBrandedFooters(pdf, 'Tax Vault — Schätzungen, keine Steuerberatung. Export für Steuerberater prüfen lassen.')
+  applyBrandedFooters(
+    pdf,
+    disclaimerForBranding(
+      'Tax Vault — Schätzungen, keine Steuerberatung. Export für Steuerberater prüfen lassen.',
+      'Schätzungen, keine Steuerberatung. Export für Steuerberater prüfen lassen.',
+      branding
+    ),
+    { branding }
+  )
   pdf.save(`Tax_Report_${taxYear}_${(profile.businessName || 'business').replace(/\s+/g, '_')}.pdf`)
 }
 
-export async function exportReceiptPdf(receipt, profile) {
+export async function exportReceiptPdf(receipt, profile, { branding } = {}) {
   const pdf = createBrandedPdf()
   const sym = profile.homeCurrency === 'EUR' ? '€' : profile.homeCurrency
 
@@ -179,6 +189,7 @@ export async function exportReceiptPdf(receipt, profile) {
     title: 'Tax Vault — Beleg',
     subtitle: receipt.vendor_name,
     module: 'Tax Vault',
+    branding,
   })
 
   if (profile.businessName) y = drawFieldRow(pdf, y, 'Unternehmen', profile.businessName, { alt: true })
@@ -202,7 +213,7 @@ export async function exportReceiptPdf(receipt, profile) {
     }
   }
 
-  applyBrandedFooters(pdf)
+  applyBrandedFooters(pdf, undefined, { branding })
   pdf.save(`receipt_${(receipt.vendor_name || 'scan').replace(/\s+/g, '_')}.pdf`)
 }
 

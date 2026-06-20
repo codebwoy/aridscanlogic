@@ -5,18 +5,19 @@
 import { createBrandedPdf, applyBrandedFooters } from '@/lib/pdf/brandedPdf'
 import { drawLegalMarkdownBody } from '@/lib/pdf/drawLegalMarkdownBody'
 
-export function buildLegalDocumentPdf(title, markdown, { module, disclaimer } = {}) {
+export function buildLegalDocumentPdf(title, markdown, { module, disclaimer, branding } = {}) {
   const pdf = createBrandedPdf()
-  drawLegalMarkdownBody(pdf, 0, markdown, { module, docTitle: title, forceTitle: title })
+  drawLegalMarkdownBody(pdf, 0, markdown, { module, docTitle: title, forceTitle: title, branding })
   applyBrandedFooters(
     pdf,
     disclaimer ||
-      'Entwurf zur Vorbereitung — keine Rechtsberatung. Vor Veröffentlichung Rechtsanwalt konsultieren.'
+      'Entwurf zur Vorbereitung — keine Rechtsberatung. Vor Veröffentlichung Rechtsanwalt konsultieren.',
+    { branding }
   )
   return pdf
 }
 
-export function buildBrandedLegalSectionsPdf(sections, { module, disclaimer } = {}) {
+export function buildBrandedLegalSectionsPdf(sections, { module, disclaimer, branding } = {}) {
   const pdf = createBrandedPdf()
   let first = true
 
@@ -27,9 +28,10 @@ export function buildBrandedLegalSectionsPdf(sections, { module, disclaimer } = 
       module: module || 'Website-Rechtliches',
       docTitle: sec.title,
       forceTitle: sec.title,
+      branding,
     })
   })
 
-  applyBrandedFooters(pdf, disclaimer)
+  applyBrandedFooters(pdf, disclaimer, { branding })
   return pdf
 }

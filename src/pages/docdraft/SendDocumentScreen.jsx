@@ -2,9 +2,11 @@ import { Mail, MessageCircle, Link2, Download, Printer } from 'lucide-react'
 import { toast } from 'sonner'
 import appApi from '@/lib/appApi'
 import { addAuditEntry } from '@/lib/docdraft/store'
+import DocumentBrandingToggle, { useDocumentBranding } from '@/components/shared/DocumentBrandingToggle'
 import { generateInvoicePdf } from '@/lib/pdfUtils'
 
 export default function SendDocumentScreen({ doc, profile, client, onBack, onSent }) {
+  const { includeBranding, setIncludeBranding } = useDocumentBranding()
   const subject = `${doc.document_type} ${doc.document_number} — ${profile?.businessName}`
   const body = encodeURIComponent(
     `Sehr geehrte Damen und Herren,\n\nanbei erhalten Sie ${doc.document_number}.\n\nMit freundlichen Grüßen\n${profile?.businessName}`
@@ -39,13 +41,9 @@ export default function SendDocumentScreen({ doc, profile, client, onBack, onSen
   }
 
   const download = async () => {
-    await generateInvoicePdf(doc, {
-      company_name: profile.businessName,
-      steuernummer: profile.steuernummer,
-      ust_id_nr: profile.ustIdNr,
-      iban: profile.iban,
-      bic: profile.bic,
-      is_kleinunternehmer: profile.isKleinunternehmer,
+    await generateInvoicePdf(doc, profile, client, {
+      branding: includeBranding,
+      lang: doc.language,
     })
     toast.success('PDF downloaded')
   }
@@ -64,7 +62,8 @@ export default function SendDocumentScreen({ doc, profile, client, onBack, onSen
         ← Back
       </button>
       <h2 className="mb-2 text-lg font-bold">Send document</h2>
-      <p className="mb-6 text-sm text-slate-500">{doc.document_number}</p>
+      <p className="mb-4 text-sm text-slate-500">{doc.document_number}</p>
+      <DocumentBrandingToggle checked={includeBranding} onChange={setIncludeBranding} className="mb-4" />
       <div className="grid gap-2">
         {options.map(({ icon: Icon, label, onClick }) => (
           <button

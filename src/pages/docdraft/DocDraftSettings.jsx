@@ -1,11 +1,14 @@
 import { Download, Upload } from 'lucide-react'
 import { toast } from 'sonner'
-import { loadSettings, saveSettings } from '@/lib/docdraft/store'
+import { loadSettings, saveSettings, saveProfile } from '@/lib/docdraft/store'
 import { TEMPLATES } from '@/lib/docdraft/constants'
+import { DOC_LANGUAGES } from '@/lib/docdraft/documentI18n'
 import { exportDocDraftBackup, importDocDraftBackup } from '@/lib/docdraft/backup'
+import DocumentBrandingToggle, { useDocumentBranding } from '@/components/shared/DocumentBrandingToggle'
 
 export default function DocDraftSettings({ profile, onBack, onChanged }) {
   const settings = loadSettings()
+  const { includeBranding, setIncludeBranding } = useDocumentBranding()
 
   return (
     <div className="w-full">
@@ -14,6 +17,7 @@ export default function DocDraftSettings({ profile, onBack, onChanged }) {
       </button>
       <h2 className="mb-4 text-lg font-bold">DocDraft Settings</h2>
       <div className="space-y-4">
+        <DocumentBrandingToggle checked={includeBranding} onChange={setIncludeBranding} />
         <label className="premium-card flex items-center justify-between p-4">
           <span className="text-sm">GoBD compliance mode</span>
           <input
@@ -29,6 +33,24 @@ export default function DocDraftSettings({ profile, onBack, onChanged }) {
             checked={!!settings.autoReminders}
             onChange={(e) => saveSettings({ autoReminders: e.target.checked })}
           />
+        </label>
+        <label className="premium-card block p-4">
+          <span className="text-sm">Default document language</span>
+          <select
+            value={profile?.defaultLanguage || 'de'}
+            onChange={(e) => {
+              saveProfile({ ...profile, defaultLanguage: e.target.value })
+              toast.success('Saved')
+              onChanged?.()
+            }}
+            className="mt-2 w-full rounded-lg bg-slate-900/80 px-3 py-2 text-sm"
+          >
+            {DOC_LANGUAGES.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.label}
+              </option>
+            ))}
+          </select>
         </label>
         <div className="premium-card p-4 text-sm">
           <p className="mb-2 text-slate-400">Default template</p>

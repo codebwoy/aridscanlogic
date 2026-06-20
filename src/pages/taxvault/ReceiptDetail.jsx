@@ -7,10 +7,12 @@ import { loadTaxVaultProfile } from '@/lib/taxvault/profile'
 import { getCategoryByName, getAllCategories } from '@/lib/taxvault/categories'
 import { calcDeductibleAmount } from '@/lib/taxvault/stats'
 import { exportReceiptPdf } from '@/lib/taxvault/exportReport'
+import DocumentBrandingToggle, { useDocumentBranding } from '@/components/shared/DocumentBrandingToggle'
 
 export default function ReceiptDetail({ receipt, onBack, onUpdated }) {
   const confirm = useConfirm()
   const profile = loadTaxVaultProfile()
+  const { includeBranding, setIncludeBranding } = useDocumentBranding()
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({ ...receipt })
   const sym = profile.homeCurrency === 'EUR' ? '€' : profile.homeCurrency
@@ -66,7 +68,7 @@ export default function ReceiptDetail({ receipt, onBack, onUpdated }) {
 
   const exportPdf = async () => {
     try {
-      await exportReceiptPdf(editing ? { ...receipt, ...form } : receipt, profile)
+      await exportReceiptPdf(editing ? { ...receipt, ...form } : receipt, profile, { branding: includeBranding })
       toast.success('PDF downloaded')
     } catch {
       toast.error('PDF export failed')
@@ -194,7 +196,8 @@ export default function ReceiptDetail({ receipt, onBack, onUpdated }) {
           )}
         </dl>
       )}
-      <div className="mt-6 flex flex-wrap gap-2">
+      <DocumentBrandingToggle checked={includeBranding} onChange={setIncludeBranding} className="mt-4" />
+      <div className="mt-4 flex flex-wrap gap-2">
         <button
           type="button"
           onClick={() => setEditing(!editing)}

@@ -46,10 +46,11 @@ export function exportLegalDraftHtml(type, content, businessName = 'legal') {
   )
 }
 
-export function exportLegalDraftPdf(type, content, businessName = 'legal') {
+export function exportLegalDraftPdf(type, content, businessName = 'legal', { branding } = {}) {
   buildLegalDocumentPdf(type, content, {
     module: 'Website-Rechtliches',
     disclaimer: LEGAL_DISCLAIMER,
+    branding,
   }).save(`${type}_${safeName(businessName)}.pdf`)
 }
 
@@ -57,19 +58,19 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-export async function exportAllLegalDraftsSeparate(drafts, businessName, format = 'md') {
+export async function exportAllLegalDraftsSeparate(drafts, businessName, format = 'md', { branding } = {}) {
   const items = LEGAL_DOC_TYPES.filter(({ key }) => drafts[key])
   for (let i = 0; i < items.length; i++) {
     const { key, label } = items[i]
     const content = drafts[key]
     if (format === 'html') exportLegalDraftHtml(label, content, businessName)
-    else if (format === 'pdf') exportLegalDraftPdf(label, content, businessName)
+    else if (format === 'pdf') exportLegalDraftPdf(label, content, businessName, { branding })
     else exportLegalDraftMarkdown(label, content, businessName)
     if (i < items.length - 1) await delay(400)
   }
 }
 
-export function exportAllLegalDraftsCombined(drafts, businessName, format = 'md') {
+export function exportAllLegalDraftsCombined(drafts, businessName, format = 'md', { branding } = {}) {
   const sections = LEGAL_DOC_TYPES.filter(({ key }) => drafts[key]).map(({ key, label }) => ({
     title: label,
     content: drafts[key],
@@ -88,7 +89,7 @@ export function exportAllLegalDraftsCombined(drafts, businessName, format = 'md'
   }
 
   if (format === 'pdf') {
-    buildBrandedLegalSectionsPdf(sections, { module: 'Website-Rechtliches', disclaimer: LEGAL_DISCLAIMER }).save(
+    buildBrandedLegalSectionsPdf(sections, { module: 'Website-Rechtliches', disclaimer: LEGAL_DISCLAIMER, branding }).save(
       `Website_Rechtliches_${name}.pdf`
     )
     return
@@ -98,7 +99,7 @@ export function exportAllLegalDraftsCombined(drafts, businessName, format = 'md'
   downloadTextFile(`Website_Rechtliches_${name}.md`, md, 'text/markdown;charset=utf-8')
 }
 
-export async function exportAllLegalDraftsZip(drafts, businessName, format = 'md') {
+export async function exportAllLegalDraftsZip(drafts, businessName, format = 'md', { branding } = {}) {
   const zip = new JSZip()
   const folder = zip.folder('Website_Rechtliches')
   const ext = format === 'html' ? 'html' : format === 'pdf' ? 'pdf' : 'md'
@@ -110,7 +111,7 @@ export async function exportAllLegalDraftsZip(drafts, businessName, format = 'md
     if (format === 'html') {
       folder.file(filename, legalMarkdownToHtml(label, content))
     } else if (format === 'pdf') {
-      const pdf = buildLegalDocumentPdf(label, content, { disclaimer: LEGAL_DISCLAIMER })
+      const pdf = buildLegalDocumentPdf(label, content, { disclaimer: LEGAL_DISCLAIMER, branding })
       folder.file(filename, pdf.output('arraybuffer'))
     } else {
       folder.file(filename, content)

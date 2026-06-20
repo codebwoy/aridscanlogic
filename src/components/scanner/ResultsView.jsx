@@ -3,9 +3,11 @@ import SafeMarkdown from '@/components/SafeMarkdown'
 import { Copy, Download, FileText, Mail, Image } from 'lucide-react'
 import { toast } from 'sonner'
 import { downloadTextFile, generateScanPdf } from '@/lib/pdfUtils'
+import DocumentBrandingToggle, { useDocumentBranding } from '@/components/shared/DocumentBrandingToggle'
 
 export default function ResultsView({ pages, ocrText, markdownResult, title, onEmail }) {
   const [tab, setTab] = useState('markdown')
+  const { includeBranding, setIncludeBranding } = useDocumentBranding()
 
   const copyText = async () => {
     try {
@@ -23,7 +25,7 @@ export default function ResultsView({ pages, ocrText, markdownResult, title, onE
 
   const downloadPdf = async () => {
     try {
-      await generateScanPdf(pages, title)
+      await generateScanPdf(pages, title, { branding: includeBranding })
       toast.success('PDF erstellt')
     } catch {
       toast.error('PDF-Erstellung fehlgeschlagen')
@@ -62,6 +64,8 @@ export default function ResultsView({ pages, ocrText, markdownResult, title, onE
           <SafeMarkdown>{markdownResult || ocrText || '*Kein Text erkannt*'}</SafeMarkdown>
         </div>
       )}
+
+      <DocumentBrandingToggle checked={includeBranding} onChange={setIncludeBranding} className="mb-2" />
 
       <div className="grid grid-cols-2 gap-2">
         <button

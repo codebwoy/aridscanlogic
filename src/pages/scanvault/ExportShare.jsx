@@ -9,14 +9,16 @@ import {
 } from '@/lib/scanvault/export'
 import { createShareLink } from '@/lib/scanvault/store'
 import { hasWatermark } from '@/lib/scanvault/limits'
+import DocumentBrandingToggle, { useDocumentBranding } from '@/components/shared/DocumentBrandingToggle'
 
 export default function ExportShare({ document: doc, user, onBack, onUpgrade }) {
   const watermark = hasWatermark(user)
   const [linkDays, setLinkDays] = useState(7)
+  const { includeBranding, setIncludeBranding } = useDocumentBranding()
 
   const shareEmail = async () => {
     if (watermark) toast.info('PDF will include ScanVault Free watermark')
-    await exportDocumentPdf(doc, user)
+    await exportDocumentPdf(doc, user, undefined, { branding: includeBranding })
     const subject = encodeURIComponent(doc.name)
     window.location.href = `mailto:?subject=${subject}&body=See attached PDF from ScanVault`
   }
@@ -50,10 +52,11 @@ export default function ExportShare({ document: doc, user, onBack, onUpgrade }) 
         </p>
       )}
       <h3 className="mt-6 mb-2 text-sm font-semibold text-slate-400">Export</h3>
+      <DocumentBrandingToggle checked={includeBranding} onChange={setIncludeBranding} className="mb-3" />
       <div className="space-y-2">
         <button
           type="button"
-          onClick={() => exportDocumentPdf(doc, user)}
+          onClick={() => exportDocumentPdf(doc, user, undefined, { branding: includeBranding })}
           className="flex min-h-[48px] w-full items-center gap-3 rounded-xl bg-white/10 px-4"
         >
           Export as PDF

@@ -6,6 +6,7 @@ import appApi from '@/lib/appApi'
 import { analyzeScannedDocument } from '@/lib/scanPipeline'
 import { useAiLanguage } from '@/context/AiLanguageContext'
 import AiLanguageBar from '@/components/shared/AiLanguageBar'
+import DocumentBrandingToggle from '@/components/shared/DocumentBrandingToggle'
 import ResultsView from './ResultsView'
 
 export default function DocumentDetail({
@@ -17,6 +18,8 @@ export default function DocumentDetail({
   folders = [],
   onMoveFolder,
   onExportPdf,
+  includeBranding,
+  onBrandingChange,
 }) {
   const confirm = useConfirm()
   const { language, setLanguage } = useAiLanguage()
@@ -126,6 +129,13 @@ export default function DocumentDetail({
         disabled={reprocessing}
         className="mb-3"
       />
+      {onExportPdf && onBrandingChange && (
+        <DocumentBrandingToggle
+          checked={includeBranding}
+          onChange={onBrandingChange}
+          className="mb-3"
+        />
+      )}
       <div className="mb-3 flex flex-wrap gap-2">
         <button type="button" onClick={reOcr} disabled={reprocessing} className="flex items-center gap-1 rounded-lg bg-slate-800 px-3 py-2 text-xs">
           <RefreshCw className={`h-3 w-3 ${reprocessing ? 'animate-spin' : ''}`} /> Re-OCR

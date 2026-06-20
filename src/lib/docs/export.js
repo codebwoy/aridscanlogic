@@ -16,18 +16,19 @@ async function loadImage(src) {
   })
 }
 
-export async function exportDocumentPdf(doc) {
+export async function exportDocumentPdf(doc, { branding } = {}) {
   const pdf = createBrandedPdf()
   const pages = doc.pages || []
   const pageW = pdf.internal.pageSize.getWidth()
   const pageH = pdf.internal.pageSize.getHeight()
+  const pdfOpts = { branding, module: 'Docs' }
 
   for (let i = 0; i < pages.length; i++) {
     if (i > 0) pdf.addPage()
     drawBrandedHeader(pdf, {
       title: doc.title || 'Scan',
       subtitle: `Seite ${i + 1} von ${pages.length}`,
-      module: 'Docs',
+      ...pdfOpts,
     })
     try {
       const img = await loadImage(pages[i])
@@ -41,10 +42,10 @@ export async function exportDocumentPdf(doc) {
   }
   if (doc.ocr_text) {
     pdf.addPage()
-    let y = drawBrandedHeader(pdf, { title: doc.title || 'Scan', subtitle: 'OCR-Text', module: 'Docs' })
+    let y = drawBrandedHeader(pdf, { title: doc.title || 'Scan', subtitle: 'OCR-Text', ...pdfOpts })
     drawBodyParagraph(pdf, y, doc.ocr_text.slice(0, 12000))
   }
-  applyBrandedFooters(pdf)
+  applyBrandedFooters(pdf, undefined, { branding })
   pdf.save(`${(doc.title || 'document').replace(/\s+/g, '_')}.pdf`)
 }
 

@@ -10,6 +10,7 @@ import TemplateLibrary from './TemplateLibrary'
 import EmptyState from '@/components/shared/EmptyState'
 import ModuleGuideBanner from '@/components/guide/ModuleGuideBanner'
 import { generateSignedContractPdf } from '@/lib/contractsafe/contractPdf'
+import DocumentBrandingToggle, { useDocumentBranding } from '@/components/shared/DocumentBrandingToggle'
 import { logContractEvent } from '@/lib/contractsafe/auditLog'
 
 const STATUS_FILTERS = ['all', 'draft', 'sent', 'partially_signed', 'fully_signed', 'voided']
@@ -25,6 +26,7 @@ export default function ContractSafeHome() {
   const [templateSeed, setTemplateSeed] = useState(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const { includeBranding, setIncludeBranding } = useDocumentBranding()
 
   const load = async () => {
     setLoading(true)
@@ -58,7 +60,7 @@ export default function ContractSafeHome() {
   const exportPdf = async (c) => {
     try {
       const signers = await appApi.entities.ContractSigner.list({ contract_id: c.id })
-      await generateSignedContractPdf(c, signers)
+      await generateSignedContractPdf(c, signers, { branding: includeBranding })
       toast.success('PDF downloaded')
     } catch {
       toast.error('PDF export failed')
@@ -191,6 +193,8 @@ export default function ContractSafeHome() {
           <Library className="h-5 w-5" />
         </button>
       </div>
+
+      <DocumentBrandingToggle checked={includeBranding} onChange={setIncludeBranding} className="mb-4" />
 
       {loading ? (
         <div className="grid-cards" aria-busy="true" aria-label="Verträge werden geladen">

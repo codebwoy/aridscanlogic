@@ -20,6 +20,7 @@ import { getNextStepId } from '@/lib/bizstart/steps'
 import { persistLegalProfile } from '@/lib/legal/sync'
 import LegalProfileForm from '@/components/legal/LegalProfileForm'
 import LegalDocumentPreview from '@/components/legal/LegalDocumentPreview'
+import DocumentBrandingToggle, { useDocumentBranding } from '@/components/shared/DocumentBrandingToggle'
 
 const PHASES = ['impressum', 'datenschutz', 'avv']
 
@@ -132,6 +133,8 @@ export default function StepWebsiteLegal({ lang, formData, onUpdateForm, onUpdat
   const [drafts, setDrafts] = useState(() => loadLegalData().drafts)
   const [preview, setPreview] = useState('')
   const autoGenRef = useRef(null)
+  const { includeBranding, setIncludeBranding } = useDocumentBranding()
+  const pdfBrandingOpts = { branding: includeBranding }
 
   const profile = useMemo(
     () =>
@@ -347,19 +350,19 @@ export default function StepWebsiteLegal({ lang, formData, onUpdateForm, onUpdat
 
   const downloadAllSeparate = async (format) => {
     const all = ensureAllDrafts()
-    await exportAllLegalDraftsSeparate(all, profile.businessName, format)
+    await exportAllLegalDraftsSeparate(all, profile.businessName, format, pdfBrandingOpts)
     toast.success(lang === 'de' ? '3 Dateien werden heruntergeladen…' : 'Downloading 3 separate files…')
   }
 
   const downloadAllCombined = (format) => {
     const all = ensureAllDrafts()
-    exportAllLegalDraftsCombined(all, profile.businessName, format)
+    exportAllLegalDraftsCombined(all, profile.businessName, format, pdfBrandingOpts)
     toast.success(lang === 'de' ? 'Kombinierte Datei heruntergeladen' : 'Combined file downloaded')
   }
 
   const downloadAllZip = async (format) => {
     const all = ensureAllDrafts()
-    await exportAllLegalDraftsZip(all, profile.businessName, format)
+    await exportAllLegalDraftsZip(all, profile.businessName, format, pdfBrandingOpts)
     toast.success(lang === 'de' ? 'ZIP heruntergeladen' : 'ZIP downloaded')
   }
 
@@ -415,6 +418,7 @@ export default function StepWebsiteLegal({ lang, formData, onUpdateForm, onUpdat
             <LegalDocumentPreview content={currentText} />
           </div>
           <p className="mt-3 text-xs font-semibold text-slate-400">{s.exportThis}</p>
+          <DocumentBrandingToggle checked={includeBranding} onChange={setIncludeBranding} className="mt-2" />
           <div className="mt-2 flex flex-wrap gap-2">
             <button type="button" onClick={copyPreview} className="flex items-center gap-1 rounded-lg bg-slate-800 px-3 py-1.5 text-xs">
               <Copy className="h-3 w-3" /> {s.copy}
@@ -435,7 +439,7 @@ export default function StepWebsiteLegal({ lang, formData, onUpdateForm, onUpdat
             </button>
             <button
               type="button"
-              onClick={() => exportLegalDraftPdf(s[phaseId].title, currentText, profile.businessName)}
+              onClick={() => exportLegalDraftPdf(s[phaseId].title, currentText, profile.businessName, pdfBrandingOpts)}
               className="flex items-center gap-1 rounded-lg bg-slate-800 px-3 py-1.5 text-xs"
             >
               <Download className="h-3 w-3" /> {s.exportPdf}
@@ -449,6 +453,7 @@ export default function StepWebsiteLegal({ lang, formData, onUpdateForm, onUpdat
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-300">
             {lang === 'de' ? 'Alle drei Dokumente' : 'All three documents'}
           </p>
+          <DocumentBrandingToggle checked={includeBranding} onChange={setIncludeBranding} />
           <div>
             <p className="text-sm font-medium">{s.exportSeparate}</p>
             <p className="text-xs text-slate-500">{s.exportSeparateHint}</p>

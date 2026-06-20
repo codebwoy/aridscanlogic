@@ -18,12 +18,13 @@ function loadImage(src) {
   })
 }
 
-export async function exportDocumentPdf(doc, user, title) {
+export async function exportDocumentPdf(doc, user, title, { branding } = {}) {
   const pdf = createBrandedPdf()
   const pageW = pdf.internal.pageSize.getWidth()
   const pageH = pdf.internal.pageSize.getHeight()
   const pages = doc.pages || []
   const watermark = hasWatermark(user)
+  const pdfOpts = { branding, module: 'ScanVault' }
 
   for (let i = 0; i < pages.length; i++) {
     if (i > 0) pdf.addPage()
@@ -31,7 +32,7 @@ export async function exportDocumentPdf(doc, user, title) {
     drawBrandedHeader(pdf, {
       title: title || doc.name || 'Scan',
       subtitle: `Seite ${i + 1} von ${pages.length}`,
-      module: 'ScanVault',
+      ...pdfOpts,
     })
     try {
       const img = await loadImage(src)
@@ -53,11 +54,11 @@ export async function exportDocumentPdf(doc, user, title) {
     let y = drawBrandedHeader(pdf, {
       title: title || doc.name || 'Scan',
       subtitle: 'Extrahierter Text',
-      module: 'ScanVault',
+      ...pdfOpts,
     })
     drawBodyParagraph(pdf, y, doc.extractedText.slice(0, 8000))
   }
-  applyBrandedFooters(pdf)
+  applyBrandedFooters(pdf, undefined, { branding })
   pdf.save(`${(title || doc.name || 'scan').replace(/\s+/g, '_')}.pdf`)
 }
 

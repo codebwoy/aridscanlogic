@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext'
 import { usePremium } from '@/context/PremiumContext'
 import TaxVaultSettings from './taxvault/TaxVaultSettings'
 import InstallPwaButton from '@/components/pwa/InstallPwaButton'
+import DocumentBrandingToggle, { useDocumentBranding } from '@/components/shared/DocumentBrandingToggle'
 import BrandLogo from '@/components/shared/BrandLogo'
 import { BRAND_SUITE_NAME } from '@/lib/brand'
 
@@ -40,6 +41,7 @@ export default function SettingsPage({ onOpenScanVault }) {
   const [taxVaultSettings, setTaxVaultSettings] = useState(false)
   const { openGuide } = useGuide()
   const { language, setLanguage } = useAiLanguage()
+  const { includeBranding, setIncludeBranding } = useDocumentBranding()
   const de = language === 'de'
 
   if (taxVaultSettings) {
@@ -62,6 +64,7 @@ export default function SettingsPage({ onOpenScanVault }) {
           </p>
           <div className="space-y-2">
             <AiLanguageBar language={language} onChange={setLanguage} />
+            <DocumentBrandingToggle checked={includeBranding} onChange={setIncludeBranding} />
             <InstallPwaButton />
           </div>
         </section>

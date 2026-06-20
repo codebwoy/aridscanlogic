@@ -11,6 +11,7 @@ import {
   shareAccountantPackage,
 } from '@/lib/taxvault/exportReport'
 import { getTaxYearLabel } from '@/lib/taxvault/stats'
+import DocumentBrandingToggle, { useDocumentBranding } from '@/components/shared/DocumentBrandingToggle'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -18,6 +19,7 @@ export default function TaxSummaryReport({ receipts, mileageLogs = [], taxYear, 
   const profile = loadTaxVaultProfile()
   const stats = computeReceiptStats(receipts, taxYear, mileageLogs)
   const sym = profile.homeCurrency === 'EUR' ? '€' : profile.homeCurrency
+  const { includeBranding, setIncludeBranding } = useDocumentBranding()
 
   return (
     <div className="w-full">
@@ -153,10 +155,11 @@ export default function TaxSummaryReport({ receipts, mileageLogs = [], taxYear, 
       </div>
 
       <h3 className="mb-2 font-semibold">Export</h3>
+      <DocumentBrandingToggle checked={includeBranding} onChange={setIncludeBranding} className="mb-3" />
       <div className="space-y-2">
         <button
           type="button"
-          onClick={() => exportTaxReportPdf(stats.receipts, stats, profile, taxYear)}
+          onClick={() => exportTaxReportPdf(stats.receipts, stats, profile, taxYear, { branding: includeBranding })}
           className="flex w-full items-center gap-3 rounded-xl bg-brand-600/20 p-3 text-left text-sm"
         >
           <FileText className="h-5 w-5 text-brand-400" />

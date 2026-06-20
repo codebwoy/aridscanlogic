@@ -12,11 +12,13 @@ import ModuleGuideBanner from '@/components/guide/ModuleGuideBanner'
 import { BrandMark } from '@/components/shared/BrandLogo'
 import { BRAND_NAME } from '@/lib/brand'
 import { useConfirm } from '@/context/ConfirmContext'
+import DocumentBrandingToggle, { useDocumentBranding } from '@/components/shared/DocumentBrandingToggle'
 
 const FOLDERS = ['Inbox', 'Receipts', 'Contracts', 'Archive']
 
 export default function DocsPage({ onOpenTaxVault, onOpenDocDraft }) {
   const confirm = useConfirm()
+  const { includeBranding, setIncludeBranding } = useDocumentBranding()
   const [scanning, setScanning] = useState(false)
   const [documents, setDocuments] = useState([])
   const [loading, setLoading] = useState(true)
@@ -145,9 +147,11 @@ export default function DocsPage({ onOpenTaxVault, onOpenDocDraft }) {
         folders={FOLDERS}
         onMoveFolder={(f) => moveFolder(selectedDoc, f)}
         onExportPdf={async () => {
-          await exportDocumentPdf(selectedDoc)
+          await exportDocumentPdf(selectedDoc, { branding: includeBranding })
           toast.success('PDF downloaded')
         }}
+        includeBranding={includeBranding}
+        onBrandingChange={setIncludeBranding}
       />
     )
   }
@@ -276,7 +280,7 @@ export default function DocsPage({ onOpenTaxVault, onOpenDocDraft }) {
                     type="button"
                     onClick={async (e) => {
                       e.stopPropagation()
-                      await exportDocumentPdf(doc)
+                      await exportDocumentPdf(doc, { branding: includeBranding })
                       toast.success('PDF')
                     }}
                     className="self-center rounded-lg bg-slate-800 p-2"
