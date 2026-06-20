@@ -75,6 +75,19 @@ A successful response must include `"method": "rest-scanlogic_records"` and `"at
 {"success":true,"message":"Database keep-alive ping successful — Supabase kept active","attempts":1,"method":"rest-scanlogic_records"}
 ```
 
+### Live AI (Lawyer AI / Claude)
+
+| Variable | Where |
+|---|---|
+| `ANTHROPIC_API_KEY` | Vercel → Project → Settings → Environment Variables (Production) |
+| `ANTHROPIC_MODEL` | Optional — default is now `claude-sonnet-4-6` |
+
+As of **2026-06-15**, Anthropic retired `claude-sonnet-4-20250514`. If Live AI fails or `/api/llm` returns 404/502, remove the old `ANTHROPIC_MODEL` on Vercel or set `claude-sonnet-4-6`, then **Redeploy**.
+
+**Custom domain:** use `https://aridscanlogic.cycroommedia.com` (double **c** in cycroommedia). `cyroommedia.com` is not configured.
+
+GitHub Pages is **static only** — no `/api/llm`. Use Vercel for Live AI.
+
 ### Stale deployment on `aridscanlogic-tau.vercel.app`
 
 This repo is linked to **two** Vercel projects. After pushes to `main`, only one may auto-deploy:

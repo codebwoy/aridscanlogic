@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 import { llmProxyPlugin } from './server/vite-llm-proxy.js'
+import { resolveAnthropicModel } from './server/llmModel.mjs'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -17,7 +18,7 @@ export default defineConfig(({ mode }) => {
     (process.env.GITHUB_PAGES === 'true' ? '/aridscanlogic/' : '/')
 
   const getApiKey = () => (env.ANTHROPIC_API_KEY || '').trim()
-  const getModel = () => env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514'
+  const getModel = () => resolveAnthropicModel(env.ANTHROPIC_MODEL)
   const getDatabaseUrl = () => (env.DATABASE_URL || env.SUPABASE_DB_URL || '').trim()
   const getApiSecret = () => (env.SCANLOGIC_API_SECRET || '').trim()
   const getJwtSecret = () => (env.SUPABASE_JWT_SECRET || env.JWT_SECRET || '').trim()

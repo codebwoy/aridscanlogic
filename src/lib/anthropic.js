@@ -6,7 +6,9 @@
 import { apiFetch } from './apiFetch'
 import { isSafeFetchUrl } from './security/safeUrl'
 
-const DEFAULT_MODEL = 'claude-sonnet-4-20250514'
+import { DEFAULT_ANTHROPIC_MODEL, resolveAnthropicModel } from '../../server/llmModel.mjs'
+
+const DEFAULT_MODEL = DEFAULT_ANTHROPIC_MODEL
 const LLM_ENDPOINT = '/api/llm'
 const STATUS_ENDPOINT = '/api/llm/status'
 
@@ -22,7 +24,7 @@ export async function refreshLlmStatus() {
     if (!res.ok) throw new Error('status failed')
     const data = await res.json()
     llmConfigured = !!data.configured
-    llmModel = data.model || DEFAULT_MODEL
+    llmModel = resolveAnthropicModel(data.model || DEFAULT_MODEL)
   } catch {
     llmConfigured = false
     llmModel = DEFAULT_MODEL
@@ -122,6 +124,13 @@ async function postToLlmProxy(payload) {
   if (!res.ok) {
     if (res.status === 404) throw new Error('LLM_API_NOT_FOUND')
     if (res.status === 503) throw new Error('ANTHROPIC_NOT_CONFIGURED')
+    if (res.status === 502) {
+      const errText = await res.text()
+      if (errText.includes('claude-sonnet-4-6') || errText.includes('model unavailable')) {
+        throw new Error('ANTHROPIC_MODEL_OUTDATED')
+      }
+      throw new Error(errText || 'LLM proxy error 502')
+    }
     const err = await res.text()
     throw new Error(err || `LLM proxy error ${res.status}`)
   }

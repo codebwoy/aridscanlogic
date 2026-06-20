@@ -81,8 +81,21 @@ export default function LawyerAIPage() {
       ? 'Live AI is off — add ANTHROPIC_API_KEY to your server (.env locally, Vercel env on production) and redeploy.'
       : 'Live-KI ist aus — ANTHROPIC_API_KEY auf dem Server setzen (.env lokal, Vercel Env in Produktion) und neu deployen.'
 
+  const aiModelError =
+    language === 'en'
+      ? 'Claude model outdated — set ANTHROPIC_MODEL=claude-sonnet-4-6 on Vercel (or remove it to use the new default), then redeploy.'
+      : 'Claude-Modell veraltet — ANTHROPIC_MODEL=claude-sonnet-4-6 auf Vercel setzen (oder entfernen für Standard), dann neu deployen.'
+
+  const aiErrorMessage = (err, fallbackDe, fallbackEn) => {
+    if (isAiModelError(err)) return aiModelError
+    if (isAiConfigError(err)) return aiConfigError
+    return language === 'en' ? fallbackEn : fallbackDe
+  }
+
   const isAiConfigError = (err) =>
     ['ANTHROPIC_NOT_CONFIGURED', 'LLM_API_NOT_FOUND'].includes(err?.message)
+
+  const isAiModelError = (err) => err?.message === 'ANTHROPIC_MODEL_OUTDATED'
 
   const refreshCase = useCallback(() => {
     setCaseData(getActiveCase(conversationId.current))
@@ -150,11 +163,11 @@ export default function LawyerAIPage() {
       refreshCase()
     } catch (err) {
       toast.error(
-        isAiConfigError(err)
-          ? aiConfigError
-          : lang === 'en'
-            ? 'Could not reach Herr Müller'
-            : 'Beratung konnte nicht geladen werden'
+        aiErrorMessage(
+          err,
+          'Beratung konnte nicht geladen werden',
+          'Could not reach Herr Müller'
+        )
       )
       setMessages((m) => [
         ...m,
@@ -237,7 +250,9 @@ export default function LawyerAIPage() {
       toast.success(language === 'en' ? 'Summary generated' : 'Zusammenfassung erstellt')
     } catch (err) {
       const code = err?.message || ''
-      if (code === 'ANTHROPIC_NOT_CONFIGURED' || code === 'LLM_API_NOT_FOUND') {
+      if (code === 'ANTHROPIC_MODEL_OUTDATED') {
+        toast.error(aiModelError)
+      } else if (code === 'ANTHROPIC_NOT_CONFIGURED' || code === 'LLM_API_NOT_FOUND') {
         toast.error(aiConfigError)
       } else {
         toast.error(language === 'en' ? 'Summary failed' : 'Zusammenfassung fehlgeschlagen')

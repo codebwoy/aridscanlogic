@@ -3,6 +3,7 @@
  */
 
 import { clientSafeError, sanitizeLlmPayload } from './security.mjs'
+import { DEFAULT_ANTHROPIC_MODEL, resolveAnthropicModel } from './llmModel.mjs'
 
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages'
 const ANTHROPIC_VERSION = '2023-06-01'
@@ -42,7 +43,7 @@ function resolveApiKey(getApiKey) {
 
 function resolveModel(getModel) {
   const model = typeof getModel === 'function' ? getModel() : getModel
-  return model || 'claude-sonnet-4-20250514'
+  return resolveAnthropicModel(model)
 }
 
 export function defaultGetApiKey() {
@@ -50,7 +51,7 @@ export function defaultGetApiKey() {
 }
 
 export function defaultGetModel() {
-  return process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514'
+  return resolveAnthropicModel(process.env.ANTHROPIC_MODEL)
 }
 
 export async function handleLlmStatusRequest(req, res, { getApiKey = defaultGetApiKey, getModel = defaultGetModel } = {}) {
@@ -107,8 +108,15 @@ export async function handleLlmPostRequest(req, res, { getApiKey = defaultGetApi
     res.setHeader('Content-Type', 'application/json')
     res.setHeader('Cache-Control', 'no-store')
     if (!upstream.ok) {
-      res.statusCode = upstream.status >= 500 ? 502 : upstream.status
-      res.end(JSON.stringify({ error: clientSafeError(null) }))
+      const isModelError = upstream.status === 404 || upstream.status === 400
+      res.statusCode = isModelError ? 502 : upstream.status >= 500 ? 502 : upstream.status
+      res.end(
+        JSON.stringify({
+          error: isModelError
+            ? 'Claude model unavailable — set ANTHROPIC_MODEL=claude-sonnet-4-6 on the server and redeploy'
+            : clientSafeError(null),
+        })
+      )
       return
     }
     res.statusCode = upstream.status
