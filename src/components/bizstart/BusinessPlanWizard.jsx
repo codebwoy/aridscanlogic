@@ -18,6 +18,7 @@ import {
 } from '@/lib/bizstart/businessPlanDraft'
 import { rewriteBusinessPlanField, polishBusinessPlanDraft, countPolishableFields, BP_TEXT_FIELDS } from '@/lib/bizstart/businessPlanAi'
 import ScanLogicAiTextarea, { ScanLogicAiOverlay } from '@/components/bizstart/ScanLogicAiTextarea'
+import BusinessPlanTitleField from '@/components/bizstart/BusinessPlanTitleField'
 
 function FormLabel({ children, hint }) {
   return (
@@ -99,6 +100,22 @@ function ReviewBlock({ title, text }) {
       <p className="text-[10px] font-bold uppercase tracking-wide text-brand-600">{title}</p>
       <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-slate-700">{text}</p>
     </div>
+  )
+}
+
+/** Stable module-level wrapper — must not be defined inside BusinessPlanWizard (focus loss on type). */
+function BusinessPlanAiField({ lang, value, onChange, onRewrite, loading, polished, rows, placeholder }) {
+  return (
+    <ScanLogicAiTextarea
+      lang={lang}
+      value={value || ''}
+      onChange={onChange}
+      onRewrite={onRewrite}
+      loading={loading}
+      polished={polished}
+      rows={rows}
+      placeholder={placeholder}
+    />
   )
 }
 
@@ -309,22 +326,17 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
     }
   }, [d, lang, formData, stepIndex])
 
-  const AiField = ({ fieldKey, titleKey, rows, placeholder, value }) => {
-    const title = bpT(lang, titleKey)
-    const loading = aiLoading === fieldKey || aiLoading === 'all'
-    return (
-      <ScanLogicAiTextarea
-        lang={lang}
-        value={value || ''}
-        onChange={(v) => f(fieldKey, v)}
-        onRewrite={() => rewriteField(fieldKey, title)}
-        loading={loading}
-        polished={!!d.businessPlanAiPolished?.[fieldKey]}
-        rows={rows}
-        placeholder={placeholder}
-      />
-    )
-  }
+  const aiFieldProps = (fieldKey, titleKey, rows, placeholder) => ({
+    lang,
+    fieldKey,
+    rows,
+    placeholder,
+    value: d[fieldKey],
+    polished: !!d.businessPlanAiPolished?.[fieldKey],
+    loading: aiLoading === fieldKey || aiLoading === 'all',
+    onChange: (v) => f(fieldKey, v),
+    onRewrite: () => rewriteField(fieldKey, bpT(lang, titleKey)),
+  })
 
   useEffect(() => {
     const init = initBusinessPlanDraft(formData)
@@ -414,10 +426,6 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
         return (
           <div className="space-y-4">
             <FormSection>
-              <FormLabel hint={bpT(lang, 'planTitleHint')}>{bpT(lang, 'planTitle')}</FormLabel>
-              <FormInput placeholder={bpT(lang, 'phPlanTitle')} value={d.planTitle || ''} onChange={(e) => f('planTitle', e.target.value)} />
-            </FormSection>
-            <FormSection>
               <FormLabel hint={bpT(lang, 'planAudienceHint')}>{bpT(lang, 'planAudience')}</FormLabel>
               <FormSelect
                 value={d.planAudience || ''}
@@ -458,7 +466,7 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
         return (
           <FormSection>
             <FormLabel hint={bpT(lang, 'summaryHint')}>{bpT(lang, 'summaryDesc')}</FormLabel>
-            <AiField fieldKey="summary" titleKey="summaryTitle" rows={10} placeholder={bpT(lang, 'phSummary')} value={d.summary} />
+            <BusinessPlanAiField {...aiFieldProps('summary', 'summaryTitle', 10, bpT(lang, 'phSummary'))} />
           </FormSection>
         )
 
@@ -466,7 +474,7 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
         return (
           <FormSection>
             <FormLabel hint={bpT(lang, 'productionHint')}>{bpT(lang, 'productionDesc')}</FormLabel>
-            <AiField fieldKey="production" titleKey="productionTitle" rows={8} placeholder={bpT(lang, 'phProduction')} value={d.production} />
+            <BusinessPlanAiField {...aiFieldProps('production', 'productionTitle', 8, bpT(lang, 'phProduction'))} />
           </FormSection>
         )
 
@@ -474,7 +482,7 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
         return (
           <FormSection>
             <FormLabel hint={bpT(lang, 'customersHint')}>{bpT(lang, 'customersDesc')}</FormLabel>
-            <AiField fieldKey="customers" titleKey="customersTitle" rows={8} placeholder={bpT(lang, 'phCustomers')} value={d.customers} />
+            <BusinessPlanAiField {...aiFieldProps('customers', 'customersTitle', 8, bpT(lang, 'phCustomers'))} />
           </FormSection>
         )
 
@@ -483,11 +491,11 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
           <div className="space-y-4">
             <FormSection title={bpT(lang, 'offer')}>
               <FormLabel hint={bpT(lang, 'offerHint')}>{bpT(lang, 'offer')}</FormLabel>
-              <AiField fieldKey="offer" titleKey="offer" rows={6} placeholder={bpT(lang, 'phOffer')} value={d.offer} />
+              <BusinessPlanAiField {...aiFieldProps('offer', 'offer', 6, bpT(lang, 'phOffer'))} />
             </FormSection>
             <FormSection title={bpT(lang, 'benefit')}>
               <FormLabel hint={bpT(lang, 'benefitHint')}>{bpT(lang, 'benefit')}</FormLabel>
-              <AiField fieldKey="benefit" titleKey="benefit" rows={5} placeholder={bpT(lang, 'phBenefit')} value={d.benefit} />
+              <BusinessPlanAiField {...aiFieldProps('benefit', 'benefit', 5, bpT(lang, 'phBenefit'))} />
             </FormSection>
           </div>
         )
@@ -496,7 +504,7 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
         return (
           <FormSection>
             <FormLabel hint={bpT(lang, 'marketHint')}>{bpT(lang, 'marketDesc')}</FormLabel>
-            <AiField fieldKey="market" titleKey="marketTitle" rows={10} placeholder={bpT(lang, 'phMarket')} value={d.market} />
+            <BusinessPlanAiField {...aiFieldProps('market', 'marketTitle', 10, bpT(lang, 'phMarket'))} />
           </FormSection>
         )
 
@@ -504,7 +512,7 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
         return (
           <FormSection>
             <FormLabel>{bpT(lang, 'valuesDesc')}</FormLabel>
-            <AiField fieldKey="values" titleKey="valuesTitle" rows={5} placeholder={bpT(lang, 'phValues')} value={d.values} />
+            <BusinessPlanAiField {...aiFieldProps('values', 'valuesTitle', 5, bpT(lang, 'phValues'))} />
           </FormSection>
         )
 
@@ -512,7 +520,7 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
         return (
           <FormSection>
             <FormLabel hint={bpT(lang, 'salesHint')}>{bpT(lang, 'salesDesc')}</FormLabel>
-            <AiField fieldKey="sales" titleKey="salesTitle" rows={8} placeholder={bpT(lang, 'phSales')} value={d.sales} />
+            <BusinessPlanAiField {...aiFieldProps('sales', 'salesTitle', 8, bpT(lang, 'phSales'))} />
           </FormSection>
         )
 
@@ -520,7 +528,7 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
         return (
           <FormSection>
             <FormLabel hint={bpT(lang, 'organizationHint')}>{bpT(lang, 'organizationDesc')}</FormLabel>
-            <AiField fieldKey="organization" titleKey="organizationTitle" rows={6} placeholder={bpT(lang, 'phOrganization')} value={d.organization} />
+            <BusinessPlanAiField {...aiFieldProps('organization', 'organizationTitle', 6, bpT(lang, 'phOrganization'))} />
           </FormSection>
         )
 
@@ -528,7 +536,7 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
         return (
           <FormSection>
             <FormLabel>{bpT(lang, 'competenciesDesc')}</FormLabel>
-            <AiField fieldKey="competencies" titleKey="competenciesTitle" rows={6} placeholder={bpT(lang, 'phCompetencies')} value={d.competencies} />
+            <BusinessPlanAiField {...aiFieldProps('competencies', 'competenciesTitle', 6, bpT(lang, 'phCompetencies'))} />
           </FormSection>
         )
 
@@ -536,7 +544,7 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
         return (
           <FormSection>
             <FormLabel>{bpT(lang, 'partnersDesc')}</FormLabel>
-            <AiField fieldKey="partners" titleKey="partnersTitle" rows={5} placeholder={bpT(lang, 'phPartners')} value={d.partners} />
+            <BusinessPlanAiField {...aiFieldProps('partners', 'partnersTitle', 5, bpT(lang, 'phPartners'))} />
           </FormSection>
         )
 
@@ -545,15 +553,15 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
           <div className="space-y-4">
             <FormSection title={bpT(lang, 'foundersTeam')}>
               <FormLabel hint={bpT(lang, 'foundersHint')}>{bpT(lang, 'foundersTeam')}</FormLabel>
-              <AiField fieldKey="foundersTeam" titleKey="foundersTeam" rows={6} placeholder={bpT(lang, 'phFounders')} value={d.foundersTeam} />
+              <BusinessPlanAiField {...aiFieldProps('foundersTeam', 'foundersTeam', 6, bpT(lang, 'phFounders'))} />
             </FormSection>
             <FormSection title={bpT(lang, 'location')}>
               <FormLabel hint={bpT(lang, 'locationHint')}>{bpT(lang, 'location')}</FormLabel>
-              <AiField fieldKey="location" titleKey="location" rows={3} placeholder={bpT(lang, 'phLocation')} value={d.location} />
+              <BusinessPlanAiField {...aiFieldProps('location', 'location', 3, bpT(lang, 'phLocation'))} />
             </FormSection>
             <FormSection title={bpT(lang, 'legalForm')}>
               <FormLabel hint={bpT(lang, 'legalHint')}>{bpT(lang, 'legalForm')}</FormLabel>
-              <AiField fieldKey="legalFormNotes" titleKey="legalForm" rows={3} placeholder={bpT(lang, 'phLegal')} value={d.legalFormNotes} />
+              <BusinessPlanAiField {...aiFieldProps('legalFormNotes', 'legalForm', 3, bpT(lang, 'phLegal'))} />
             </FormSection>
           </div>
         )
@@ -562,7 +570,7 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
         return (
           <FormSection>
             <FormLabel>{bpT(lang, 'risksDesc')}</FormLabel>
-            <AiField fieldKey="risks" titleKey="risksTitle" rows={6} placeholder={bpT(lang, 'phRisks')} value={d.risks} />
+            <BusinessPlanAiField {...aiFieldProps('risks', 'risksTitle', 6, bpT(lang, 'phRisks'))} />
           </FormSection>
         )
 
@@ -584,17 +592,17 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
                 </div>
               </div>
               <FormLabel hint={bpT(lang, 'financeAssumptionsHint')}>{bpT(lang, 'financeAssumptions')}</FormLabel>
-              <AiField fieldKey="financeAssumptions" titleKey="financeAssumptions" rows={4} placeholder={bpT(lang, 'phFinanceAssumptions')} value={d.financeAssumptions} />
+              <BusinessPlanAiField {...aiFieldProps('financeAssumptions', 'financeAssumptions', 4, bpT(lang, 'phFinanceAssumptions'))} />
             </FormSection>
 
             <FormSection title={bpT(lang, 'profitabilitySection')}>
               <FormLabel hint={bpT(lang, 'profitabilityHint')}>{bpT(lang, 'profitabilitySection')}</FormLabel>
-              <AiField fieldKey="profitabilityNotes" titleKey="profitabilitySection" rows={4} placeholder={bpT(lang, 'phProfitability')} value={d.profitabilityNotes} />
+              <BusinessPlanAiField {...aiFieldProps('profitabilityNotes', 'profitabilitySection', 4, bpT(lang, 'phProfitability'))} />
             </FormSection>
 
             <FormSection title={bpT(lang, 'liquiditySection')}>
               <FormLabel hint={bpT(lang, 'liquidityHint')}>{bpT(lang, 'liquiditySection')}</FormLabel>
-              <AiField fieldKey="liquidityNotes" titleKey="liquiditySection" rows={4} placeholder={bpT(lang, 'phLiquidity')} value={d.liquidityNotes} />
+              <BusinessPlanAiField {...aiFieldProps('liquidityNotes', 'liquiditySection', 4, bpT(lang, 'phLiquidity'))} />
             </FormSection>
 
             <FormSection title={bpT(lang, 'revenueSection')}>
@@ -682,7 +690,7 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
               </div>
               <div className="mt-4">
                 <FormLabel hint={bpT(lang, 'capitalNotesHint')}>{bpT(lang, 'capitalNotesSection')}</FormLabel>
-                <AiField fieldKey="capitalNotes" titleKey="capitalNotesSection" rows={3} placeholder={bpT(lang, 'phCapitalNotes')} value={d.capitalNotes} />
+                <BusinessPlanAiField {...aiFieldProps('capitalNotes', 'capitalNotesSection', 3, bpT(lang, 'phCapitalNotes'))} />
               </div>
             </FormSection>
           </div>
@@ -692,7 +700,7 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
         return (
           <FormSection>
             <FormLabel hint={bpT(lang, 'annexesDesc')}>{bpT(lang, 'annexesTitle')}</FormLabel>
-            <AiField fieldKey="annexes" titleKey="annexesTitle" rows={8} placeholder={bpT(lang, 'phAnnexes')} value={d.annexes} />
+            <BusinessPlanAiField {...aiFieldProps('annexes', 'annexesTitle', 8, bpT(lang, 'phAnnexes'))} />
           </FormSection>
         )
 
@@ -758,7 +766,7 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
       <div className="light-form-surface overflow-hidden rounded-2xl border border-brand-200/60 bg-white text-slate-900 shadow-xl">
       <div className="bg-gradient-to-r from-brand-950 via-brand-800 to-brand-600 px-4 py-5 sm:px-6">
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-200">{bpT(lang, 'wizardSubtitle')}</p>
-        <h2 className="mt-1 text-lg font-bold text-white sm:text-xl">{bpT(lang, 'wizardTitle')}</h2>
+        <BusinessPlanTitleField lang={lang} value={d.planTitle} onChange={(v) => f('planTitle', v)} />
         <div className="mt-4">
           <div className="mb-1 flex justify-between text-[10px] text-brand-100">
             <span>{bpStepLabel(stepId, lang)}</span>

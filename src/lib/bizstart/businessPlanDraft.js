@@ -104,7 +104,12 @@ export function initBusinessPlanDraft(formData) {
     return {}
   }
   return {
-    ...patchBusinessPlanDraft(formData, defaultBusinessPlanDraft()),
+    ...patchBusinessPlanDraft(formData, {
+      ...defaultBusinessPlanDraft(),
+      ...(formData.intendedBusinessName || formData.businessName
+        ? { planTitle: formData.intendedBusinessName || formData.businessName }
+        : {}),
+    }),
     businessPlanDraftInitialized: true,
   }
 }

@@ -12,6 +12,7 @@ import {
 } from '@/lib/bizstart/businessPlanDraft'
 import { polishBusinessPlanDraft, isBusinessPlanAiComplete, countPolishableFields } from '@/lib/bizstart/businessPlanAi'
 import BusinessPlanWizard from '@/components/bizstart/BusinessPlanWizard'
+import BusinessPlanTitleField from '@/components/bizstart/BusinessPlanTitleField'
 import { ScanLogicAiOverlay } from '@/components/bizstart/ScanLogicAiTextarea'
 
 function HowToSection({ lang }) {
@@ -74,6 +75,11 @@ export default function StepBusinessPlan({ lang, formData, onUpdateForm, onUpdat
   }
 
   const downloadPdf = async () => {
+    const draft = getBusinessPlanDraft(formData)
+    if (!draft.planTitle?.trim()) {
+      toast.error(bpT(lang, 'requiredHint'))
+      return
+    }
     toast.message(bpT(lang, 'aiBeforeDownload'))
     const merged = await ensurePolished()
     if (!merged) return
@@ -114,16 +120,18 @@ export default function StepBusinessPlan({ lang, formData, onUpdateForm, onUpdat
         </div>
       ) : (
         <div className="mt-4 space-y-3">
-          <div className="premium-card p-4">
+          <div className="premium-card p-4 space-y-3">
+            <BusinessPlanTitleField
+              variant="download"
+              lang={lang}
+              value={draft.planTitle}
+              onChange={(v) => onUpdateForm(patchBusinessPlanDraft(formData, { planTitle: v }))}
+            />
             <p className="text-sm font-semibold text-emerald-300">
               {lang === 'de' ? 'Businessplan ausgefüllt' : 'Business plan completed'}
             </p>
-            <p className="mt-1 text-xs text-slate-400">
-              {mergeBusinessPlanForExport(formData).planTitle ||
-                (lang === 'de' ? 'Ihr Businessplan-Entwurf ist bereit.' : 'Your draft is ready.')}
-            </p>
             {aiDone && (
-              <p className="mt-2 flex items-center gap-1 text-xs text-brand-300">
+              <p className="flex items-center gap-1 text-xs text-brand-300">
                 <Sparkles className="h-3.5 w-3.5" aria-hidden />
                 ScanLogic AI — {bpT(lang, 'aiPolishComplete')}
               </p>
