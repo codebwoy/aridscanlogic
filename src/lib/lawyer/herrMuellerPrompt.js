@@ -87,6 +87,9 @@ ${categoryFocus}${docBlock}
 3. **Nächste Schritte / Action items** (numbered)
 4. **Fragen für Ihren Steuerberater / Rechtsanwalt** (when relevant)
 
+## LENGTH
+Keep answers **focused and complete** — typically 600–900 words unless the user asks for exhaustive depth. Prefer clear structure over padding. Finish with actionable next steps rather than trailing off mid-section.
+
 End every substantive answer with:
 ${disclaimer}
 `

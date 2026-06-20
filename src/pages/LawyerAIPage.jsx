@@ -86,7 +86,13 @@ export default function LawyerAIPage() {
       ? 'Claude model outdated — set ANTHROPIC_MODEL=claude-sonnet-4-6 on Vercel (or remove it to use the new default), then redeploy.'
       : 'Claude-Modell veraltet — ANTHROPIC_MODEL=claude-sonnet-4-6 auf Vercel setzen (oder entfernen für Standard), dann neu deployen.'
 
+  const aiTimeoutError =
+    language === 'en'
+      ? 'Herr Müller took too long to respond — please try again with a shorter question.'
+      : 'Herr Müller brauchte zu lange — bitte erneut versuchen oder die Frage kürzer formulieren.'
+
   const aiErrorMessage = (err, fallbackDe, fallbackEn) => {
+    if (isAiTimeoutError(err)) return aiTimeoutError
     if (isAiModelError(err)) return aiModelError
     if (isAiConfigError(err)) return aiConfigError
     return language === 'en' ? fallbackEn : fallbackDe
@@ -96,6 +102,8 @@ export default function LawyerAIPage() {
     ['ANTHROPIC_NOT_CONFIGURED', 'LLM_API_NOT_FOUND'].includes(err?.message)
 
   const isAiModelError = (err) => err?.message === 'ANTHROPIC_MODEL_OUTDATED'
+
+  const isAiTimeoutError = (err) => err?.message === 'LLM_TIMEOUT'
 
   const refreshCase = useCallback(() => {
     setCaseData(getActiveCase(conversationId.current))
@@ -162,21 +170,17 @@ export default function LawyerAIPage() {
       if (documentContext) setDocumentContext(null)
       refreshCase()
     } catch (err) {
-      toast.error(
-        aiErrorMessage(
-          err,
-          'Beratung konnte nicht geladen werden',
-          'Could not reach Herr Müller'
-        )
+      const errMsg = aiErrorMessage(
+        err,
+        'Beratung konnte nicht geladen werden',
+        'Could not reach Herr Müller'
       )
+      toast.error(errMsg)
       setMessages((m) => [
         ...m,
         {
           role: 'assistant',
-          content:
-            lang === 'en'
-              ? 'An error occurred. Please try again.'
-              : 'Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.',
+          content: errMsg,
           language: lang,
         },
       ])
@@ -252,6 +256,8 @@ export default function LawyerAIPage() {
       const code = err?.message || ''
       if (code === 'ANTHROPIC_MODEL_OUTDATED') {
         toast.error(aiModelError)
+      } else if (code === 'LLM_TIMEOUT') {
+        toast.error(aiTimeoutError)
       } else if (code === 'ANTHROPIC_NOT_CONFIGURED' || code === 'LLM_API_NOT_FOUND') {
         toast.error(aiConfigError)
       } else {

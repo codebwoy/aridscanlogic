@@ -124,6 +124,7 @@ async function postToLlmProxy(payload) {
   if (!res.ok) {
     if (res.status === 404) throw new Error('LLM_API_NOT_FOUND')
     if (res.status === 503) throw new Error('ANTHROPIC_NOT_CONFIGURED')
+    if (res.status === 504) throw new Error('LLM_TIMEOUT')
     if (res.status === 502) {
       const errText = await res.text()
       if (errText.includes('claude-sonnet-4-6') || errText.includes('model unavailable')) {
@@ -141,7 +142,7 @@ async function postToLlmProxy(payload) {
 export async function anthropicChat({
   system,
   messages,
-  maxTokens = 8192,
+  maxTokens = 4096,
   model = getAnthropicModel(),
 }) {
   const apiMessages = messages
@@ -172,7 +173,7 @@ export async function invokeLLMViaAnthropic({ prompt, file_urls, response_json_s
 
   const data = await postToLlmProxy({
     model: getAnthropicModel(),
-    max_tokens: response_json_schema ? 4096 : 8192,
+    max_tokens: response_json_schema ? 4096 : 4096,
     system,
     messages: [{ role: 'user', content: userContent }],
   })

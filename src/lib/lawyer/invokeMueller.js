@@ -35,7 +35,7 @@ export async function invokeHerrMueller({
   const text = await anthropicChat({
     system,
     messages: chatMessages,
-    maxTokens: 8192,
+    maxTokens: 1536,
   })
 
   return { text, language: lang }
@@ -64,7 +64,7 @@ export async function generateExecutiveSummary(messages, language = 'de') {
   const text = await anthropicChat({
     system,
     messages: [{ role: 'user', content: userPrompt }],
-    maxTokens: 4096,
+    maxTokens: 2048,
   })
 
   if (!text?.trim()) {
@@ -89,6 +89,6 @@ export async function translateMuellerContent(content, targetLang) {
   return anthropicChat({
     system: instruction,
     messages: [{ role: 'user', content }],
-    maxTokens: 4096,
+    maxTokens: 2048,
   })
 }

@@ -8,6 +8,8 @@ import { DEFAULT_ANTHROPIC_MODEL, resolveAnthropicModel } from './llmModel.mjs'
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages'
 const ANTHROPIC_VERSION = '2023-06-01'
 const MAX_BODY_BYTES = 12 * 1024 * 1024
+/** Stay under Vercel serverless maxDuration (60s on Pro) */
+const UPSTREAM_TIMEOUT_MS = 55_000
 
 function readBody(req) {
   return new Promise((resolve, reject) => {
@@ -94,15 +96,36 @@ export async function handleLlmPostRequest(req, res, { getApiKey = defaultGetApi
     const parsed = JSON.parse(raw || '{}')
     const payload = sanitizeLlmPayload(parsed, resolveModel(getModel))
 
-    const upstream = await fetch(ANTHROPIC_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': ANTHROPIC_VERSION,
-      },
-      body: JSON.stringify(payload),
-    })
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(new Error('upstream_timeout')), UPSTREAM_TIMEOUT_MS)
+
+    let upstream
+    try {
+      upstream = await fetch(ANTHROPIC_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': ANTHROPIC_VERSION,
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      })
+    } catch (err) {
+      clearTimeout(timeoutId)
+      const timedOut = err?.message === 'upstream_timeout' || err?.name === 'AbortError'
+      res.statusCode = timedOut ? 504 : 502
+      res.setHeader('Content-Type', 'application/json')
+      res.end(
+        JSON.stringify({
+          error: timedOut
+            ? 'LLM request timed out — try a shorter question or retry in a moment'
+            : clientSafeError(err),
+        })
+      )
+      return
+    }
+    clearTimeout(timeoutId)
 
     const text = await upstream.text()
     res.setHeader('Content-Type', 'application/json')
