@@ -1,5 +1,6 @@
 import { cvDisplayName } from '@/lib/bizstart/lebenslauf/schema'
 import { bulletsFromMultiline, formatGeburtsdatum, familienstandLabel } from '@/lib/bizstart/lebenslauf/formatters'
+import { cvForPreview, hasCvUserData } from '@/lib/bizstart/bewerbungTemplate'
 
 function Section({ title, children }) {
   if (!children) return null
@@ -18,58 +19,73 @@ function Timeline({ entries, renderEntry }) {
   return <div className="cv-timeline">{items}</div>
 }
 
-function PersonalRow({ label, value }) {
+function PersonalRow({ label, value, placeholder = false }) {
   if (!value?.trim()) return null
   return (
     <div className="cv-personal-row">
       <span className="cv-personal-label">{label}</span>
-      <span className="cv-personal-value">{value}</span>
+      <span className={`cv-personal-value${placeholder ? ' cv-ph' : ''}`}>{value}</span>
     </div>
   )
 }
 
 export default function LebenslaufPreview({ cv, printRef }) {
-  const name = cvDisplayName(cv)
-  const sigName = cv.unterschriftName?.trim() || name
+  const raw = cv
+  const p = cvForPreview(cv)
+  const name = cvDisplayName(p)
+  const sigName = p.unterschriftName?.trim() || name
+  const showTemplateHint = !hasCvUserData(raw)
+  const ph = (key) => !raw?.[key]?.trim()
 
   return (
     <div ref={printRef} className="cv-a4-page" id="lebenslauf-print-root">
+      {showTemplateHint && (
+        <p className="cv-template-banner no-print" role="note">
+          Vorlage mit Platzhaltern — ersetzen Sie alle Angaben durch Ihre eigenen Daten.
+        </p>
+      )}
       <header className="cv-header">
         <div className="cv-header-text">
-          <h1 className="cv-name">{name || 'Lebenslauf'}</h1>
-          {cv.job_title?.trim() && <p className="cv-job-title">{cv.job_title}</p>}
+          <h1 className={`cv-name${ph('vorname') && ph('nachname') ? ' cv-ph' : ''}`}>{name || 'Lebenslauf'}</h1>
+          {p.job_title?.trim() && (
+            <p className={`cv-job-title${ph('job_title') ? ' cv-ph' : ''}`}>{p.job_title}</p>
+          )}
         </div>
-        {cv.photo?.startsWith('data:image') && (
-          <img src={cv.photo} alt="" className="cv-photo" />
+        {raw?.photo?.startsWith('data:image') && (
+          <img src={raw.photo} alt="" className="cv-photo" />
         )}
       </header>
 
       <Section title="Persönliche Daten">
         <div className="cv-personal-grid">
-          <PersonalRow label="Adresse" value={[cv.strasse, `${cv.plz} ${cv.stadt}`.trim()].filter(Boolean).join(', ')} />
-          <PersonalRow label="Telefon" value={cv.telefon} />
-          <PersonalRow label="E-Mail" value={cv.email} />
-          <PersonalRow label="LinkedIn" value={cv.linkedin} />
-          <PersonalRow label="Geburtsdatum" value={formatGeburtsdatum(cv.geburtsdatum)} />
-          <PersonalRow label="Geburtsort" value={cv.geburtsort} />
-          <PersonalRow label="Staatsangehörigkeit" value={cv.nationalitaet} />
-          <PersonalRow label="Familienstand" value={familienstandLabel(cv.familienstand)} />
-          {cv.fuehrerschein && cv.fuehrerschein !== 'Kein' && (
-            <PersonalRow label="Führerschein" value={cv.fuehrerschein} />
+          <PersonalRow
+            label="Adresse"
+            value={[p.strasse, `${p.plz} ${p.stadt}`.trim()].filter(Boolean).join(', ')}
+            placeholder={ph('strasse') && ph('plz') && ph('stadt')}
+          />
+          <PersonalRow label="Telefon" value={p.telefon} placeholder={ph('telefon')} />
+          <PersonalRow label="E-Mail" value={p.email} placeholder={ph('email')} />
+          <PersonalRow label="LinkedIn" value={raw?.linkedin} />
+          <PersonalRow label="Geburtsdatum" value={formatGeburtsdatum(raw?.geburtsdatum)} />
+          <PersonalRow label="Geburtsort" value={raw?.geburtsort} />
+          <PersonalRow label="Staatsangehörigkeit" value={raw?.nationalitaet} />
+          <PersonalRow label="Familienstand" value={familienstandLabel(raw?.familienstand)} />
+          {raw?.fuehrerschein && raw.fuehrerschein !== 'Kein' && (
+            <PersonalRow label="Führerschein" value={raw.fuehrerschein} />
           )}
         </div>
       </Section>
 
-      {cv.profil?.trim() && (
+      {p.profil?.trim() && (
         <Section title="Profil">
-          <p className="cv-body whitespace-pre-wrap">{cv.profil}</p>
+          <p className={`cv-body whitespace-pre-wrap${ph('profil') ? ' cv-ph' : ''}`}>{p.profil}</p>
         </Section>
       )}
 
-      {(cv.erfahrung || []).some((e) => e.titel?.trim() || e.unternehmen?.trim()) && (
+      {(raw?.erfahrung || []).some((e) => e.titel?.trim() || e.unternehmen?.trim()) && (
       <Section title="Berufserfahrung">
         <Timeline
-          entries={cv.erfahrung}
+          entries={raw.erfahrung}
           renderEntry={(e) => {
             if (!e.titel?.trim() && !e.unternehmen?.trim()) return null
             const bullets = bulletsFromMultiline(e.aufgaben)
@@ -96,10 +112,10 @@ export default function LebenslaufPreview({ cv, printRef }) {
       </Section>
       )}
 
-      {(cv.ausbildung || []).some((e) => e.abschluss?.trim() || e.institution?.trim()) && (
+      {(raw?.ausbildung || []).some((e) => e.abschluss?.trim() || e.institution?.trim()) && (
       <Section title="Ausbildung">
         <Timeline
-          entries={cv.ausbildung}
+          entries={raw.ausbildung}
           renderEntry={(e) => {
             if (!e.abschluss?.trim() && !e.institution?.trim()) return null
             const bullets = bulletsFromMultiline(e.schwerpunkte)
@@ -127,10 +143,10 @@ export default function LebenslaufPreview({ cv, printRef }) {
       </Section>
       )}
 
-      {(cv.weiterbildung || []).some((w) => w.titel?.trim()) && (
+      {(raw?.weiterbildung || []).some((w) => w.titel?.trim()) && (
       <Section title="Weiterbildung & Zertifikate">
         <Timeline
-          entries={cv.weiterbildung}
+          entries={raw.weiterbildung}
           renderEntry={(w) =>
             w.titel?.trim() ? (
               <div key={`${w.jahr}-${w.titel}`} className="cv-simple-entry">
@@ -143,9 +159,9 @@ export default function LebenslaufPreview({ cv, printRef }) {
       </Section>
       )}
 
-      {(cv.sprachen || []).some((s) => s.sprache?.trim()) && (
+      {(raw?.sprachen || []).some((s) => s.sprache?.trim()) && (
       <Section title="Sprachkenntnisse">
-        {(cv.sprachen || [])
+        {(raw.sprachen || [])
           .filter((s) => s.sprache?.trim())
           .map((s, i) => (
             <p key={i} className="cv-line">
@@ -156,9 +172,9 @@ export default function LebenslaufPreview({ cv, printRef }) {
       </Section>
       )}
 
-      {(cv.itSkills || []).some((s) => s.software?.trim()) && (
+      {(raw?.itSkills || []).some((s) => s.software?.trim()) && (
       <Section title="IT-Kenntnisse">
-        {(cv.itSkills || [])
+        {(raw.itSkills || [])
           .filter((s) => s.software?.trim())
           .map((s, i) => (
             <p key={i} className="cv-line">
@@ -168,20 +184,20 @@ export default function LebenslaufPreview({ cv, printRef }) {
       </Section>
       )}
 
-      {cv.weitereKenntnisse?.trim() && (
+      {raw?.weitereKenntnisse?.trim() && (
         <Section title="Weitere Kenntnisse">
           <ul className="cv-bullets">
-            {bulletsFromMultiline(cv.weitereKenntnisse).map((b, i) => (
+            {bulletsFromMultiline(raw.weitereKenntnisse).map((b, i) => (
               <li key={i}>{b}</li>
             ))}
           </ul>
         </Section>
       )}
 
-      {(cv.ehrenamt || []).some((e) => e.taetigkeit?.trim()) && (
+      {(raw?.ehrenamt || []).some((e) => e.taetigkeit?.trim()) && (
       <Section title="Ehrenamt & Engagement">
         <Timeline
-          entries={cv.ehrenamt}
+          entries={raw.ehrenamt}
           renderEntry={(e) =>
             e.taetigkeit?.trim() ? (
               <div key={`${e.zeitraum}-${e.taetigkeit}`} className="cv-simple-entry">
@@ -194,15 +210,17 @@ export default function LebenslaufPreview({ cv, printRef }) {
       </Section>
       )}
 
-      {cv.interessen?.trim() && (
+      {raw?.interessen?.trim() && (
         <Section title="Interessen">
-          <p className="cv-body">{cv.interessen}</p>
+          <p className="cv-body">{raw.interessen}</p>
         </Section>
       )}
 
       <footer className="cv-signature">
-        <p>{[cv.unterschriftOrt, cv.unterschriftDatum].filter(Boolean).join(', ')}</p>
-        <p className="cv-sig-name">{sigName}</p>
+        <p className={!raw?.unterschriftOrt?.trim() && !raw?.unterschriftDatum?.trim() ? 'cv-ph' : ''}>
+          {[p.unterschriftOrt, p.unterschriftDatum].filter(Boolean).join(', ')}
+        </p>
+        <p className={`cv-sig-name${ph('unterschriftName') && ph('vorname') && ph('nachname') ? ' cv-ph' : ''}`}>{sigName}</p>
         <p className="cv-sig-label">Unterschrift</p>
       </footer>
     </div>

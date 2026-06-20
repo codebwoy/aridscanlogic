@@ -13,6 +13,9 @@ import {
   emptyITSkill,
   emptyVolunteering,
 } from '@/lib/bizstart/lebenslauf/schema'
+import { BEWERBUNG_TEMPLATE } from '@/lib/bizstart/bewerbungTemplate'
+
+const T = BEWERBUNG_TEMPLATE
 
 function Accordion({ id, title, open, onToggle, children }) {
   return (
@@ -137,31 +140,31 @@ export default function LebenslaufForm({
       >
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Vorname *">
-            <TextInput value={cv.vorname} onChange={(v) => set('vorname', v)} autoComplete="given-name" />
+            <TextInput value={cv.vorname} onChange={(v) => set('vorname', v)} autoComplete="given-name" placeholder={T.vorname} />
           </Field>
           <Field label="Nachname *">
-            <TextInput value={cv.nachname} onChange={(v) => set('nachname', v)} autoComplete="family-name" />
+            <TextInput value={cv.nachname} onChange={(v) => set('nachname', v)} autoComplete="family-name" placeholder={T.nachname} />
           </Field>
         </div>
         <Field label="Berufsbezeichnung" hint="Erscheint unter dem Namen im Kopf des Lebenslaufs">
-          <TextInput value={cv.job_title} onChange={(v) => set('job_title', v)} placeholder="z. B. Webentwickler/in" />
+          <TextInput value={cv.job_title} onChange={(v) => set('job_title', v)} placeholder={T.jobTitle} />
         </Field>
         <Field label="Straße & Hausnummer">
-          <TextInput value={cv.strasse} onChange={(v) => set('strasse', v)} autoComplete="street-address" />
+          <TextInput value={cv.strasse} onChange={(v) => set('strasse', v)} autoComplete="street-address" placeholder={T.strasse} />
         </Field>
         <div className="grid gap-3 sm:grid-cols-3">
           <Field label="PLZ">
-            <TextInput value={cv.plz} onChange={(v) => set('plz', v)} autoComplete="postal-code" />
+            <TextInput value={cv.plz} onChange={(v) => set('plz', v)} autoComplete="postal-code" placeholder={T.plz} />
           </Field>
           <Field label="Stadt">
-            <TextInput value={cv.stadt} onChange={(v) => set('stadt', v)} autoComplete="address-level2" />
+            <TextInput value={cv.stadt} onChange={(v) => set('stadt', v)} autoComplete="address-level2" placeholder={T.stadt} />
           </Field>
           <Field label="Telefon">
-            <TextInput value={cv.telefon} onChange={(v) => set('telefon', v)} type="tel" autoComplete="tel" />
+            <TextInput value={cv.telefon} onChange={(v) => set('telefon', v)} type="tel" autoComplete="tel" placeholder={T.telefon} />
           </Field>
         </div>
         <Field label="E-Mail">
-          <TextInput value={cv.email} onChange={(v) => set('email', v)} type="email" autoComplete="email" />
+          <TextInput value={cv.email} onChange={(v) => set('email', v)} type="email" autoComplete="email" placeholder={T.email} />
         </Field>
         <Field label="LinkedIn (optional)">
           <TextInput value={cv.linkedin} onChange={(v) => set('linkedin', v)} placeholder="linkedin.com/in/…" />

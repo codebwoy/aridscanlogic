@@ -261,7 +261,7 @@ function Sidebar({ lang, stepIndex, onJump, prioritySteps }) {
   )
 }
 
-export default function BusinessPlanWizard({ lang, formData, onChange, onComplete, onOpenLebenslauf }) {
+export default function BusinessPlanWizard({ lang, formData, onChange, onComplete, onOpenLebenslauf, onOpenAnschreiben }) {
   const savedStep = Math.min(formData.businessPlanWizardStep || 0, BUSINESS_PLAN_STEPS.length - 1)
   const [stepIndex, setStepIndex] = useState(savedStep)
   const [aiLoading, setAiLoading] = useState(null)
@@ -864,20 +864,31 @@ export default function BusinessPlanWizard({ lang, formData, onChange, onComplet
             {onOpenLebenslauf && (
               <div className="rounded-xl border border-brand-300/80 bg-gradient-to-r from-brand-50 to-indigo-50 p-4">
                 <p className="text-sm font-bold text-brand-900">
-                  {lang === 'de' ? 'Lebenslauf für Anhang A' : 'CV for annex A'}
+                  {lang === 'de' ? 'Bewerbungspaket — Anhänge' : 'Application pack — annexes'}
                 </p>
                 <p className="mt-1 text-xs text-slate-600">
                   {lang === 'de'
-                    ? 'Banken, Förderstellen und Wettbewerbe erwarten oft einen tabellarischen Lebenslauf als Anhang. Er wird automatisch ins Einreichungspaket aufgenommen.'
-                    : 'Banks, grants, and competitions often require a tabular CV as an annex. It is included automatically in the submission pack.'}
+                    ? 'Lebenslauf, Anschreiben und Businessplan zusammen stärken Ihre Chancen bei Bank, Förderung und Wettbewerb.'
+                    : 'CV, cover letter, and business plan together strengthen bank, grant, and award applications.'}
                 </p>
-                <button
-                  type="button"
-                  onClick={onOpenLebenslauf}
-                  className="mt-3 w-full rounded-xl border border-brand-400 bg-white py-2.5 text-sm font-semibold text-brand-800 hover:bg-brand-50"
-                >
-                  {lang === 'de' ? 'Lebenslauf-Builder öffnen →' : 'Open CV builder →'}
-                </button>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={onOpenLebenslauf}
+                    className="rounded-xl border border-brand-400 bg-white py-2.5 text-sm font-semibold text-brand-800 hover:bg-brand-50"
+                  >
+                    {lang === 'de' ? 'Lebenslauf →' : 'CV →'}
+                  </button>
+                  {onOpenAnschreiben && (
+                    <button
+                      type="button"
+                      onClick={onOpenAnschreiben}
+                      className="rounded-xl border border-brand-400 bg-white py-2.5 text-sm font-semibold text-brand-800 hover:bg-brand-50"
+                    >
+                      {lang === 'de' ? 'Anschreiben →' : 'Cover letter →'}
+                    </button>
+                  )}
+                </div>
               </div>
             )}
             <FormSection>

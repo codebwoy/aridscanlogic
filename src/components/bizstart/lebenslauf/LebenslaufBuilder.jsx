@@ -19,13 +19,15 @@ import {
 } from '@/lib/bizstart/lebenslauf/lebenslaufAi'
 import { downloadLebenslaufPdf } from '@/lib/bizstart/lebenslauf/exportPdf'
 import { downloadLebenslaufWord } from '@/lib/bizstart/lebenslauf/exportWord'
-import { syncBusinessPlanAnnexesWithCv } from '@/lib/bizstart/lebenslauf/businessPlanLink'
+import { syncBewerbungDocuments } from '@/lib/bizstart/bewerbungLink'
+import { loadAnschreiben } from '@/lib/bizstart/anschreiben/store'
+import BewerbungNav from '@/components/bizstart/BewerbungNav'
 import './lebenslauf.css'
 
 const LANG = 'de'
 const AUTOSAVE_MS = 30_000
 
-export default function LebenslaufBuilder({ formData, onUpdateForm, onBack }) {
+export default function LebenslaufBuilder({ formData, onUpdateForm, onBack, onNavigate }) {
   const [cv, setCv] = useState(loadCv)
   const [savedLabel, setSavedLabel] = useState(() => cvSavedAt(loadCv()))
   const [mobileView, setMobileView] = useState('form')
@@ -43,7 +45,7 @@ export default function LebenslaufBuilder({ formData, onUpdateForm, onBack }) {
       setCv(saved)
       setSavedLabel(cvSavedAt(saved))
       if (syncPlan && onUpdateForm) {
-        onUpdateForm(syncBusinessPlanAnnexesWithCv(formData, saved))
+        onUpdateForm(syncBewerbungDocuments(formData, { cv: saved, anschreiben: loadAnschreiben() }))
       }
       if (!silent) toast.success('Lebenslauf gespeichert')
       return saved
@@ -176,7 +178,7 @@ export default function LebenslaufBuilder({ formData, onUpdateForm, onBack }) {
     setCv(fresh)
     setSavedLabel(null)
     setResetOpen(false)
-    if (onUpdateForm) onUpdateForm(syncBusinessPlanAnnexesWithCv(formData, fresh))
+    if (onUpdateForm) onUpdateForm(syncBewerbungDocuments(formData, { cv: fresh, anschreiben: loadAnschreiben() }))
     toast.message('Lebenslauf zurückgesetzt')
   }
 
@@ -184,7 +186,7 @@ export default function LebenslaufBuilder({ formData, onUpdateForm, onBack }) {
 
   const handlePdf = async () => {
     if (!cvDisplayName(cv)) {
-      toast.error('Bitte Vor- und Nachname ausfüllen.')
+      toast.error('Bitte zuerst Ihre eigenen Daten eintragen — die Vorschau zeigt nur Platzhalter.')
       return
     }
     toast.message('ScanLogic AI bereitet Texte für den Export vor …')
@@ -197,7 +199,7 @@ export default function LebenslaufBuilder({ formData, onUpdateForm, onBack }) {
 
   const handleWord = async () => {
     if (!cvDisplayName(cv)) {
-      toast.error('Bitte Vor- und Nachname ausfüllen.')
+      toast.error('Bitte zuerst Ihre eigenen Daten eintragen — die Vorschau zeigt nur Platzhalter.')
       return
     }
     toast.message('ScanLogic AI bereitet Texte für den Export vor …')
@@ -293,6 +295,10 @@ export default function LebenslaufBuilder({ formData, onUpdateForm, onBack }) {
           )}
         </div>
       </header>
+
+      <div className="px-3 pt-3 sm:px-4">
+        {onNavigate && <BewerbungNav current="lebenslauf" onNavigate={onNavigate} />}
+      </div>
 
       <div className="cv-split">
         <aside className={`cv-form-panel ${mobileView === 'preview' ? 'cv-panel-hidden-mobile' : ''}`}>

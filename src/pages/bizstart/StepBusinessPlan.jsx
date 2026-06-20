@@ -18,6 +18,8 @@ import BusinessPlanPdfOptions from '@/components/bizstart/BusinessPlanPdfOptions
 import BusinessPlanReadinessPanel from '@/components/bizstart/BusinessPlanReadinessPanel'
 import { loadCv } from '@/lib/bizstart/lebenslauf/store'
 import { cvIsSubmissionReady, cvCompleteness } from '@/lib/bizstart/lebenslauf/schema'
+import { loadAnschreiben } from '@/lib/bizstart/anschreiben/store'
+import { anschreibenIsSubmissionReady, anschreibenCompleteness } from '@/lib/bizstart/anschreiben/schema'
 import { ScanLogicAiOverlay } from '@/components/bizstart/ScanLogicAiTextarea'
 
 function HowToSection({ lang }) {
@@ -47,7 +49,7 @@ function HowToSection({ lang }) {
   )
 }
 
-export default function StepBusinessPlan({ lang, formData, onUpdateForm, onUpdateStep, onNext, onOpenLebenslauf }) {
+export default function StepBusinessPlan({ lang, formData, onUpdateForm, onUpdateStep, onNext, onOpenLebenslauf, onOpenAnschreiben }) {
   const [showWizard, setShowWizard] = useState(!formData.businessPlanComplete)
   const [aiLoading, setAiLoading] = useState(false)
   const [packLoading, setPackLoading] = useState(false)
@@ -148,6 +150,7 @@ export default function StepBusinessPlan({ lang, formData, onUpdateForm, onUpdat
             onChange={onUpdateForm}
             onComplete={handleFormComplete}
             onOpenLebenslauf={onOpenLebenslauf}
+            onOpenAnschreiben={onOpenAnschreiben}
           />
         </div>
       ) : (
@@ -205,6 +208,20 @@ export default function StepBusinessPlan({ lang, formData, onUpdateForm, onUpdat
                 ? ` ✓`
                 : cvCompleteness(loadCv()) > 0
                   ? ` (${cvCompleteness(loadCv())}%)`
+                  : ''}
+            </button>
+          )}
+          {onOpenAnschreiben && (
+            <button
+              type="button"
+              onClick={onOpenAnschreiben}
+              className="premium-card flex w-full items-center justify-center gap-2 py-3 text-sm font-medium text-slate-300"
+            >
+              {lang === 'de' ? 'Anschreiben-Builder' : 'Cover letter'}
+              {anschreibenIsSubmissionReady(loadAnschreiben())
+                ? ` ✓`
+                : anschreibenCompleteness(loadAnschreiben()) > 0
+                  ? ` (${anschreibenCompleteness(loadAnschreiben())}%)`
                   : ''}
             </button>
           )}

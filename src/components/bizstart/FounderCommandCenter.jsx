@@ -1,4 +1,4 @@
-import { LayoutDashboard, ChevronRight, Target, FileText, AlertTriangle, FileUser } from 'lucide-react'
+import { LayoutDashboard, ChevronRight, Target, FileText, AlertTriangle, FileUser, Mail } from 'lucide-react'
 import { buildFounderCommandCenter } from '@/lib/bizstart/commandCenter'
 import { readinessColor } from '@/lib/bizstart/businessPlanReadiness'
 
@@ -38,7 +38,7 @@ export default function FounderCommandCenter({ lang, formData, stepStatus, onNav
         </div>
       </div>
 
-      <div className="grid gap-3 p-4 sm:grid-cols-3">
+      <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           icon={Target}
           label={lang === 'de' ? 'Registrierung' : 'Registration'}
@@ -73,6 +73,20 @@ export default function FounderCommandCenter({ lang, formData, stepStatus, onNav
               : lang === 'de'
                 ? 'Für Förderung empfohlen'
                 : 'Recommended for funding'
+          }
+        />
+        <MetricCard
+          icon={Mail}
+          label={lang === 'de' ? 'Anschreiben' : 'Cover letter'}
+          value={cc.letterScore > 0 ? `${cc.letterScore}%` : '—'}
+          sub={
+            cc.letterReady
+              ? lang === 'de'
+                ? 'DIN 5008 bereit'
+                : 'DIN 5008 ready'
+              : lang === 'de'
+                ? 'Für Bewerbung & Förderung'
+                : 'For jobs & funding'
           }
         />
       </div>
@@ -146,6 +160,13 @@ export default function FounderCommandCenter({ lang, formData, stepStatus, onNav
           className="text-xs font-medium text-brand-400 hover:text-brand-300"
         >
           {lang === 'de' ? 'Lebenslauf →' : 'CV →'}
+        </button>
+        <button
+          type="button"
+          onClick={() => onNavigate?.('anschreiben')}
+          className="text-xs font-medium text-brand-400 hover:text-brand-300"
+        >
+          {lang === 'de' ? 'Anschreiben →' : 'Cover letter →'}
         </button>
       </div>
     </div>

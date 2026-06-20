@@ -3,6 +3,8 @@ import { getBusinessPlanDraft } from '@/lib/bizstart/businessPlanDraft'
 import { computeStaticReadiness } from '@/lib/bizstart/businessPlanReadiness'
 import { loadCv } from '@/lib/bizstart/lebenslauf/store'
 import { cvCompleteness, cvIsSubmissionReady } from '@/lib/bizstart/lebenslauf/schema'
+import { loadAnschreiben } from '@/lib/bizstart/anschreiben/store'
+import { anschreibenCompleteness, anschreibenIsSubmissionReady } from '@/lib/bizstart/anschreiben/schema'
 
 const STATUS_WEIGHT = {
   confirmed: 1,
@@ -46,6 +48,9 @@ export function buildFounderCommandCenter(formData, stepStatus, lang = 'de') {
   const cv = loadCv()
   const cvScore = cvCompleteness(cv)
   const cvReady = cvIsSubmissionReady(cv)
+  const letter = loadAnschreiben()
+  const letterScore = anschreibenCompleteness(letter)
+  const letterReady = anschreibenIsSubmissionReady(letter)
   const fundingAudience = ['bank', 'investor', 'award', 'sponsor', 'employment'].includes(draft.planAudience)
 
   const nextSteps = stepRows
@@ -53,6 +58,17 @@ export function buildFounderCommandCenter(formData, stepStatus, lang = 'de') {
     .slice(0, 3)
 
   const blockers = []
+  if (planStarted && fundingAudience && !letterReady) {
+    blockers.unshift({
+      id: 'letter-missing',
+      label: lang === 'de' ? 'Anschreiben erstellen (DIN 5008)' : 'Create cover letter (DIN 5008)',
+      detail:
+        lang === 'de'
+          ? `${letterScore}% — Motivationsschreiben für ${planReadiness.audienceLabel}`
+          : `${letterScore}% — cover letter for ${planReadiness.audienceLabel}`,
+      screen: 'anschreiben',
+    })
+  }
   if (planStarted && fundingAudience && !cvReady) {
     blockers.unshift({
       id: 'cv-missing',
@@ -96,7 +112,12 @@ export function buildFounderCommandCenter(formData, stepStatus, lang = 'de') {
   }
 
   const overallScore = planStarted
-    ? Math.round(registrationScore * 0.4 + planReadiness.score * 0.35 + cvScore * 0.25)
+    ? Math.round(
+        registrationScore * 0.3 +
+          planReadiness.score * 0.3 +
+          cvScore * 0.2 +
+          letterScore * 0.2
+      )
     : registrationScore
 
   return {
@@ -105,12 +126,14 @@ export function buildFounderCommandCenter(formData, stepStatus, lang = 'de') {
     planReadiness,
     cvScore,
     cvReady,
+    letterScore,
+    letterReady,
     planStarted,
     planComplete: !!formData.businessPlanComplete,
     planTitle: draft.planTitle?.trim() || '',
     planAudience: planReadiness.audienceLabel,
     nextSteps,
-    blockers: blockers.slice(0, 4),
+    blockers: blockers.slice(0, 5),
     structure,
   }
 }

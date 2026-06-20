@@ -5,6 +5,8 @@ import { getAudiencePlaybook, PLAN_AUDIENCES } from '@/lib/bizstart/businessPlan
 import { BP_TEXT_FIELDS, buildBusinessPlanProfileContext } from '@/lib/bizstart/businessPlanAi'
 import { loadCv } from '@/lib/bizstart/lebenslauf/store'
 import { cvIsSubmissionReady } from '@/lib/bizstart/lebenslauf/schema'
+import { loadAnschreiben } from '@/lib/bizstart/anschreiben/store'
+import { anschreibenIsSubmissionReady } from '@/lib/bizstart/anschreiben/schema'
 
 const FIELD_WEIGHT = {
   summary: 12,
@@ -85,6 +87,16 @@ export function computeStaticReadiness(draft, lang = 'de') {
         id: 'lebenslauf',
         label: lang === 'de' ? 'Lebenslauf (Anhang A)' : 'CV (annex A)',
         priority: 'high',
+      })
+
+    possible += 6
+    if (anschreibenIsSubmissionReady(loadAnschreiben())) earned += 6
+    else if ((draft.annexes || '').toLowerCase().includes('anschreiben')) earned += 2
+    else
+      gaps.push({
+        id: 'anschreiben',
+        label: lang === 'de' ? 'Anschreiben (DIN 5008)' : 'Cover letter (DIN 5008)',
+        priority: audience === 'employment' ? 'high' : 'medium',
       })
   }
 

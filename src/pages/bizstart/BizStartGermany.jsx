@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Download,
   FileUser,
+  Mail,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { t } from '@/lib/bizstart/i18n'
@@ -34,6 +35,7 @@ import StepBank from './StepBank'
 import StepWebsiteLegal from './StepWebsiteLegal'
 import StepBusinessPlan from './StepBusinessPlan'
 import StepLebenslauf from './StepLebenslauf'
+import StepAnschreiben from './StepAnschreiben'
 import StepComplete from './StepComplete'
 import ComplianceCalendar from './ComplianceCalendar'
 import RegistrationChat from './RegistrationChat'
@@ -42,6 +44,8 @@ import PremiumCard from '@/components/shared/PremiumCard'
 import { exportRegistrationChecklistPdf } from '@/lib/bizstart/exportChecklist'
 import { loadCv } from '@/lib/bizstart/lebenslauf/store'
 import { cvCompleteness, cvIsSubmissionReady } from '@/lib/bizstart/lebenslauf/schema'
+import { loadAnschreiben } from '@/lib/bizstart/anschreiben/store'
+import { anschreibenCompleteness, anschreibenIsSubmissionReady } from '@/lib/bizstart/anschreiben/schema'
 
 const STATUS_COLORS = {
   not_started: 'bg-slate-700 text-slate-400',
@@ -169,6 +173,8 @@ export default function BizStartGermany({ onExit, onComplete }) {
     calendar: ComplianceCalendar,
   }
 
+  const navigateBewerbung = (id) => setScreen(id)
+
   if (screen === 'lebenslauf') {
     return (
       <div className="w-full">
@@ -176,6 +182,21 @@ export default function BizStartGermany({ onExit, onComplete }) {
           formData={formData}
           onUpdateForm={updateForm}
           onBack={() => setScreen('home')}
+          onNavigate={navigateBewerbung}
+        />
+        <RegistrationChat lang={lang} open={chatOpen} onClose={setChatOpen} />
+      </div>
+    )
+  }
+
+  if (screen === 'anschreiben') {
+    return (
+      <div className="w-full">
+        <StepAnschreiben
+          formData={formData}
+          onUpdateForm={updateForm}
+          onBack={() => setScreen('home')}
+          onNavigate={navigateBewerbung}
         />
         <RegistrationChat lang={lang} open={chatOpen} onClose={setChatOpen} />
       </div>
@@ -196,6 +217,7 @@ export default function BizStartGermany({ onExit, onComplete }) {
           onNext={(next) => setScreen(next || 'home')}
           onFinish={finishModule}
           onOpenLebenslauf={screen === 'businessPlan' ? () => setScreen('lebenslauf') : undefined}
+          onOpenAnschreiben={screen === 'businessPlan' ? () => setScreen('anschreiben') : undefined}
         />
         <RegistrationChat lang={lang} open={chatOpen} onClose={setChatOpen} />
       </div>
@@ -263,6 +285,39 @@ export default function BizStartGermany({ onExit, onComplete }) {
               return (
                 <p className="mt-1 text-[10px] text-brand-300">
                   {cvIsSubmissionReady(cv)
+                    ? lang === 'de'
+                      ? 'Einreichungsreif'
+                      : 'Submission-ready'
+                    : `${pct}% ${lang === 'de' ? 'ausgefüllt' : 'complete'}`}
+                </p>
+              )
+            }
+            return null
+          })()}
+        </div>
+        <ChevronRight className="h-5 w-5 shrink-0 text-brand-400" />
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setScreen('anschreiben')}
+        className="premium-card mb-4 flex w-full items-center gap-3 p-4 text-left"
+      >
+        <Mail className="h-5 w-5 shrink-0 text-brand-400" />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold">{lang === 'de' ? 'Anschreiben-Builder' : 'Cover letter builder'}</p>
+          <p className="text-xs text-slate-500">
+            {lang === 'de'
+              ? 'DIN 5008 Anschreiben — Job, Förderung & Wettbewerb'
+              : 'DIN 5008 cover letter — job, grant & award'}
+          </p>
+          {(() => {
+            const letter = loadAnschreiben()
+            const pct = anschreibenCompleteness(letter)
+            if (pct > 0) {
+              return (
+                <p className="mt-1 text-[10px] text-brand-300">
+                  {anschreibenIsSubmissionReady(letter)
                     ? lang === 'de'
                       ? 'Einreichungsreif'
                       : 'Submission-ready'
