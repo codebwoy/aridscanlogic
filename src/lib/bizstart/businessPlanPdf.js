@@ -18,8 +18,24 @@ import {
 import { mergeBusinessPlanForExport } from '@/lib/bizstart/businessPlanDraft'
 import { PLAN_AUDIENCES } from '@/lib/bizstart/businessPlanGuidelines'
 
-const DISCLAIMER =
+const DISCLAIMER_BRANDED_DE =
   'Erstellt mit ScanLogic BizStart — Entwurf zur Vorbereitung. Keine Rechts- oder Steuerberatung. Vor Einreichung prüfen lassen.'
+const DISCLAIMER_BRANDED_EN =
+  'Created with ScanLogic BizStart — draft for preparation only, not legal or tax advice. Have it reviewed before submission.'
+const DISCLAIMER_CLEAN_DE =
+  'Entwurf zur Vorbereitung — keine Rechts- oder Steuerberatung. Vor Einreichung prüfen lassen.'
+const DISCLAIMER_CLEAN_EN =
+  'Draft for preparation only — not legal or tax advice. Have it reviewed before submission.'
+
+function pdfBranding(draft) {
+  return draft.planPdfBranding === 'branded' ? 'full' : 'clean'
+}
+
+function pdfDisclaimer(draft, lang) {
+  const branded = draft.planPdfBranding === 'branded'
+  if (lang === 'de') return branded ? DISCLAIMER_BRANDED_DE : DISCLAIMER_CLEAN_DE
+  return branded ? DISCLAIMER_BRANDED_EN : DISCLAIMER_CLEAN_EN
+}
 
 function periodLabel(draft, lang) {
   const sm = draft.planStartMonth || '01'
@@ -39,8 +55,18 @@ function audienceLabel(id, lang) {
   return lang === 'de' ? a.de : a.en
 }
 
-function drawFinanceTable(pdf, y, lang, title, lines, years) {
-  y = ensureSpace(pdf, y, 20, { title: 'Businessplan', module: 'BizStart Germany' })
+function spaceOpts(d, lang, title) {
+  return {
+    title: title || d.planTitle,
+    module: 'BizStart Germany',
+    branding: pdfBranding(d),
+    lang,
+  }
+}
+
+function drawFinanceTable(pdf, y, lang, title, lines, years, d) {
+  const opts = spaceOpts(d, lang)
+  y = ensureSpace(pdf, y, 20, opts)
   y = drawSectionTitle(pdf, y, title)
   const headers = [lang === 'de' ? 'Position' : 'Item', ...years.map(String)]
   const colW = [70, 30, 30, 30]
@@ -56,7 +82,7 @@ function drawFinanceTable(pdf, y, lang, title, lines, years) {
   })
   y += 8
   ;(lines || []).forEach((row, ri) => {
-    y = ensureSpace(pdf, y, 10, { title: 'Businessplan', module: 'BizStart Germany' })
+    y = ensureSpace(pdf, y, 10, opts)
     if (ri % 2 === 0) {
       pdf.setFillColor(238, 242, 255)
       pdf.rect(20, y - 4, 170, 7, 'F')
@@ -73,7 +99,7 @@ function drawFinanceTable(pdf, y, lang, title, lines, years) {
     })
     y += 7
   })
-  y = ensureSpace(pdf, y, 10, { title: 'Businessplan', module: 'BizStart Germany' })
+  y = ensureSpace(pdf, y, 10, opts)
   pdf.setFont('helvetica', 'bold')
   pdf.text(lang === 'de' ? 'Summe' : 'Total', 22, y)
   pdf.text(fmtEuro(sumYear(lines, 'y1'), lang), 92, y)
@@ -85,14 +111,21 @@ function drawFinanceTable(pdf, y, lang, title, lines, years) {
 export function generateBusinessPlanPdf(formData, lang = 'de') {
   const d = mergeBusinessPlanForExport(formData)
   const years = planningYearLabels(d)
+  const branding = pdfBranding(d)
+  const disclaimer = pdfDisclaimer(d, lang)
+  const docTitle = d.planTitle || (lang === 'de' ? 'Businessplan' : 'Business plan')
+  const subtitle =
+    lang === 'de'
+      ? `Planungszeitraum ${periodLabel(d, lang)} · Zielgruppe: ${audienceLabel(d.planAudience, lang)}`
+      : `Planning period ${periodLabel(d, lang)} · Audience: ${audienceLabel(d.planAudience, lang)}`
+
   const pdf = createBrandedPdf()
   let y = drawBrandedHeader(pdf, {
-    title: d.planTitle || (lang === 'de' ? 'Businessplan' : 'Business plan'),
-    subtitle:
-      lang === 'de'
-        ? `Planungszeitraum ${periodLabel(d, lang)} · Zielgruppe: ${audienceLabel(d.planAudience, lang)}`
-        : `Planning period ${periodLabel(d, lang)} · Audience: ${audienceLabel(d.planAudience, lang)}`,
+    title: docTitle,
+    subtitle,
     module: 'BizStart Germany',
+    branding,
+    lang,
   })
 
   const sections = [
@@ -126,15 +159,17 @@ export function generateBusinessPlanPdf(formData, lang = 'de') {
     { n: '10', title: lang === 'de' ? 'Chancen & Risiken' : 'Opportunities & risks', text: d.risks },
   ]
 
+  const opts = spaceOpts(d, lang)
+
   for (const sec of sections) {
     if (!sec.text?.trim()) continue
-    y = ensureSpace(pdf, y, 24, { title: d.planTitle, module: 'BizStart Germany' })
+    y = ensureSpace(pdf, y, 24, opts)
     y = drawSectionTitle(pdf, y, `${sec.n}  ${sec.title}`)
     y = drawBodyParagraph(pdf, y, sec.text)
   }
 
   if (d.financeAssumptions?.trim() || d.profitabilityNotes?.trim() || d.liquidityNotes?.trim()) {
-    y = ensureSpace(pdf, y, 20, { title: 'Finanzplan', module: 'BizStart Germany' })
+    y = ensureSpace(pdf, y, 20, { ...opts, title: lang === 'de' ? 'Finanzplan' : 'Finance plan' })
     y = drawSectionTitle(pdf, y, lang === 'de' ? '11 — Finanzplan' : '11 — Finance plan')
     if (d.financeAssumptions?.trim()) {
       y = drawBodyParagraph(pdf, y, `${lang === 'de' ? 'Annahmen' : 'Assumptions'}\n${d.financeAssumptions}`)
@@ -148,14 +183,7 @@ export function generateBusinessPlanPdf(formData, lang = 'de') {
   }
 
   if (d.revenueLines?.length) {
-    y = drawFinanceTable(
-      pdf,
-      y,
-      lang,
-      lang === 'de' ? '11.1 Ertragsquellen / Umsatz' : '11.1 Revenue',
-      d.revenueLines,
-      years
-    )
+    y = drawFinanceTable(pdf, y, lang, lang === 'de' ? '11.1 Ertragsquellen / Umsatz' : '11.1 Revenue', d.revenueLines, years, d)
   }
   if (d.operatingCosts?.length) {
     y = drawFinanceTable(
@@ -164,7 +192,8 @@ export function generateBusinessPlanPdf(formData, lang = 'de') {
       lang,
       lang === 'de' ? '11.2 Betriebsausgaben' : '11.2 Operating expenses',
       d.operatingCosts,
-      years
+      years,
+      d
     )
   }
   if (d.privateCosts?.length) {
@@ -174,11 +203,12 @@ export function generateBusinessPlanPdf(formData, lang = 'de') {
       lang,
       lang === 'de' ? '11.3 Private Ausgaben' : '11.3 Private expenses',
       d.privateCosts,
-      years
+      years,
+      d
     )
   }
 
-  y = ensureSpace(pdf, y, 30, { title: 'Kapital', module: 'BizStart Germany' })
+  y = ensureSpace(pdf, y, 30, { ...opts, title: lang === 'de' ? 'Kapital' : 'Capital' })
   y = drawSectionTitle(pdf, y, lang === 'de' ? '11.4 Kapitalbedarf & Finanzierung' : '11.4 Capital & financing')
   if (d.investments?.length) {
     d.investments.forEach((inv, i) => {
@@ -197,19 +227,19 @@ export function generateBusinessPlanPdf(formData, lang = 'de') {
     d.loanAmount ? `${fmtEuro(d.loanAmount, lang)}${d.loanInterest ? ` @ ${d.loanInterest}%` : ''}` : '—'
   )
   if (d.capitalNotes?.trim()) {
-    y = ensureSpace(pdf, y, 20, { title: 'Kapital', module: 'BizStart Germany' })
+    y = ensureSpace(pdf, y, 20, { ...opts, title: lang === 'de' ? 'Kapital' : 'Capital' })
     y = drawBodyParagraph(pdf, y, d.capitalNotes)
   }
 
   if (d.annexes?.trim()) {
-    y = ensureSpace(pdf, y, 24, { title: d.planTitle, module: 'BizStart Germany' })
+    y = ensureSpace(pdf, y, 24, opts)
     y = drawSectionTitle(pdf, y, lang === 'de' ? '12 — Anhang' : '12 — Annexes')
     y = drawBodyParagraph(pdf, y, d.annexes)
   }
 
-  y = ensureSpace(pdf, y + 6, 20, { title: d.planTitle, module: 'BizStart Germany' })
-  drawDisclaimerBox(pdf, y, DISCLAIMER)
+  y = ensureSpace(pdf, y + 6, 20, opts)
+  drawDisclaimerBox(pdf, y, disclaimer)
 
   const slug = (d.planTitle || 'businessplan').replace(/[^\wäöüß-]+/gi, '_').slice(0, 40)
-  saveBrandedPdf(pdf, `Businessplan_${slug}.pdf`, DISCLAIMER)
+  saveBrandedPdf(pdf, `Businessplan_${slug}.pdf`, disclaimer, { branding })
 }

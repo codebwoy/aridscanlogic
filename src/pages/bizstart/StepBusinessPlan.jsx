@@ -13,6 +13,7 @@ import {
 import { polishBusinessPlanDraft, isBusinessPlanAiComplete, countPolishableFields } from '@/lib/bizstart/businessPlanAi'
 import BusinessPlanWizard from '@/components/bizstart/BusinessPlanWizard'
 import BusinessPlanTitleField from '@/components/bizstart/BusinessPlanTitleField'
+import BusinessPlanPdfOptions from '@/components/bizstart/BusinessPlanPdfOptions'
 import { ScanLogicAiOverlay } from '@/components/bizstart/ScanLogicAiTextarea'
 
 function HowToSection({ lang }) {
@@ -126,6 +127,11 @@ export default function StepBusinessPlan({ lang, formData, onUpdateForm, onUpdat
               lang={lang}
               value={draft.planTitle}
               onChange={(v) => onUpdateForm(patchBusinessPlanDraft(formData, { planTitle: v }))}
+            />
+            <BusinessPlanPdfOptions
+              lang={lang}
+              value={draft.planPdfBranding || 'clean'}
+              onChange={(v) => onUpdateForm(patchBusinessPlanDraft(formData, { planPdfBranding: v }))}
             />
             <p className="text-sm font-semibold text-emerald-300">
               {lang === 'de' ? 'Businessplan ausgefüllt' : 'Business plan completed'}

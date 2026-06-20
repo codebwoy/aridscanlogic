@@ -52,8 +52,38 @@ export function pageHeight(pdf) {
 }
 
 /** Branded header band + document title. Returns start Y for body content. */
-export function drawBrandedHeader(pdf, { title, subtitle, module } = {}) {
+export function drawBrandedHeader(pdf, { title, subtitle, module, branding = 'full', lang = 'de' } = {}) {
   const w = pageWidth(pdf)
+
+  if (branding === 'clean') {
+    let y = 20
+    pdf.setFont(PDF_FONTS.family, 'normal')
+    pdf.setFontSize(9)
+    pdf.setTextColor(...PDF_THEME.slate500)
+    pdf.text(new Date().toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-GB'), w - PDF_THEME.margin, y, { align: 'right' })
+
+    y += 6
+    pdf.setTextColor(...PDF_THEME.slate800)
+    pdf.setFont(PDF_FONTS.family, 'bold')
+    pdf.setFontSize(PDF_FONTS.titleSize)
+    pdf.text(title || 'Document', PDF_THEME.margin, y)
+    y += 7
+
+    if (subtitle) {
+      pdf.setFont(PDF_FONTS.family, 'normal')
+      pdf.setFontSize(PDF_FONTS.bodySize)
+      pdf.setTextColor(...PDF_THEME.slate500)
+      const subLines = pdf.splitTextToSize(subtitle, PDF_THEME.contentWidth)
+      pdf.text(subLines, PDF_THEME.margin, y)
+      y += subLines.length * 4.5 + 2
+    }
+
+    pdf.setDrawColor(...PDF_THEME.brand600)
+    pdf.setLineWidth(0.6)
+    pdf.line(PDF_THEME.margin, y + 2, PDF_THEME.margin + 36, y + 2)
+    return y + 10
+  }
+
   const bandH = 26
 
   pdf.setFillColor(...PDF_THEME.brand900)
@@ -152,40 +182,67 @@ export function drawDisclaimerBox(pdf, y, text) {
   return y + 16
 }
 
+/** Minimal continuation header for clean exports (no app branding). */
+function drawCleanContinuationHeader(pdf, { title } = {}) {
+  const w = pageWidth(pdf)
+  let y = 16
+  pdf.setFont(PDF_FONTS.family, 'normal')
+  pdf.setFontSize(8)
+  pdf.setTextColor(...PDF_THEME.slate500)
+  pdf.text(title || '—', PDF_THEME.margin, y)
+  pdf.setDrawColor(...PDF_THEME.slate200)
+  pdf.setLineWidth(0.3)
+  pdf.line(PDF_THEME.margin, y + 3, w - PDF_THEME.margin, y + 3)
+  return y + 12
+}
+
 /** Ensure enough vertical space; adds branded continuation page if needed. */
-export function ensureSpace(pdf, y, needed, { title, module } = {}) {
+export function ensureSpace(pdf, y, needed, { title, module, branding = 'full', lang = 'de' } = {}) {
   const limit = PDF_THEME.footerY - 8
   if (y + needed <= limit) return y
   pdf.addPage()
+  if (branding === 'clean') {
+    return drawCleanContinuationHeader(pdf, { title })
+  }
   return drawBrandedHeader(pdf, {
     title: title || 'Fortsetzung',
     subtitle: '—',
     module,
+    branding,
+    lang,
   })
 }
 
-export function applyBrandedFooters(pdf, disclaimer = DEFAULT_DISCLAIMER) {
+export function applyBrandedFooters(pdf, disclaimer = DEFAULT_DISCLAIMER, { branding = 'full' } = {}) {
   const total = pdf.internal.getNumberOfPages()
   const w = pageWidth(pdf)
   const h = pageHeight(pdf)
 
   for (let i = 1; i <= total; i++) {
     pdf.setPage(i)
-    pdf.setDrawColor(...PDF_THEME.brand200)
+    pdf.setDrawColor(...(branding === 'clean' ? PDF_THEME.slate200 : PDF_THEME.brand200))
     pdf.setLineWidth(0.25)
     pdf.line(PDF_THEME.margin, h - 16, w - PDF_THEME.margin, h - 16)
 
     pdf.setFont(PDF_FONTS.family, 'normal')
     pdf.setFontSize(PDF_FONTS.footerSize)
     pdf.setTextColor(...PDF_THEME.slate500)
-    pdf.text(disclaimer, PDF_THEME.margin, h - 11, { maxWidth: w - PDF_THEME.margin * 2 - 30 })
-    pdf.setTextColor(...PDF_THEME.brand600)
-    pdf.text(`${BRAND_NAME} · ${i}/${total}`, w - PDF_THEME.margin, h - 11, { align: 'right' })
+
+    if (branding === 'clean') {
+      if (disclaimer) {
+        pdf.text(disclaimer, PDF_THEME.margin, h - 11, { maxWidth: w - PDF_THEME.margin * 2 - 24 })
+      }
+      pdf.text(`${i} / ${total}`, w - PDF_THEME.margin, h - 11, { align: 'right' })
+    } else {
+      pdf.text(disclaimer, PDF_THEME.margin, h - 11, { maxWidth: w - PDF_THEME.margin * 2 - 30 })
+      pdf.setTextColor(...PDF_THEME.brand600)
+      pdf.text(`${BRAND_NAME} · ${i}/${total}`, w - PDF_THEME.margin, h - 11, { align: 'right' })
+    }
   }
 }
 
-export function saveBrandedPdf(pdf, filename, disclaimer) {
-  applyBrandedFooters(pdf, disclaimer)
+export function saveBrandedPdf(pdf, filename, disclaimer, { branding = 'full' } = {}) {
+  applyBrandedFooters(pdf, disclaimer, { branding })
   pdf.save(filename)
 }
 
