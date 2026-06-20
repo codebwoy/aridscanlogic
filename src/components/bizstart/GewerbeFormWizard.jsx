@@ -11,12 +11,32 @@ import {
   labelForOption,
 } from '@/lib/bizstart/gewerbeConfig'
 import { gewerbeT, gewerbeStepLabel, gewerbeProgressPct } from '@/lib/bizstart/gewerbeI18n'
+import {
+  getGewerbeDraft,
+  patchGewerbeDraft,
+  emptyGewerbeDraftPatch,
+  importProfileIntoGewerbeDraft,
+} from '@/lib/bizstart/gewerbeDraft'
 
 function FormLabel({ children, hint }) {
   return (
-    <div className="mb-1.5">
-      <span className="block text-sm font-semibold text-slate-800">{children}</span>
-      {hint && <span className="mt-0.5 block text-xs text-slate-500">{hint}</span>}
+    <div className="mb-2">
+      <span className="block text-xs font-semibold uppercase tracking-wide text-brand-800">{children}</span>
+      {hint && <span className="mt-1 block text-[11px] leading-snug text-slate-500">{hint}</span>}
+    </div>
+  )
+}
+
+function FormSection({ title, children }) {
+  return (
+    <div className="rounded-2xl border border-brand-200/70 bg-gradient-to-br from-brand-50/50 via-white to-white p-4 shadow-sm ring-1 ring-brand-100/50">
+      {title && (
+        <div className="mb-4 flex items-center gap-2">
+          <span className="h-4 w-1 rounded-full bg-brand-500" aria-hidden />
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-brand-700">{title}</p>
+        </div>
+      )}
+      {children}
     </div>
   )
 }
@@ -25,7 +45,7 @@ function FormInput({ className = '', ...props }) {
   return (
     <input
       {...props}
-      className={`w-full border-0 border-b-2 border-slate-300 bg-slate-100/80 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:bg-white ${className}`}
+      className={`w-full rounded-xl border-2 border-brand-100 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25 ${className}`}
     />
   )
 }
@@ -34,7 +54,7 @@ function FormTextarea({ className = '', ...props }) {
   return (
     <textarea
       {...props}
-      className={`w-full rounded-lg border border-slate-200 bg-slate-100/80 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:bg-white ${className}`}
+      className={`w-full rounded-xl border-2 border-brand-100 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25 ${className}`}
     />
   )
 }
@@ -43,7 +63,7 @@ function FormSelect({ children, className = '', ...props }) {
   return (
     <select
       {...props}
-      className={`w-full border-0 border-b-2 border-slate-300 bg-slate-100/80 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:bg-white ${className}`}
+      className={`w-full rounded-xl border-2 border-brand-100 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25 ${className}`}
     >
       {children}
     </select>
@@ -52,8 +72,8 @@ function FormSelect({ children, className = '', ...props }) {
 
 function RadioRow({ name, value, checked, onChange, label }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 has-[:checked]:border-indigo-400 has-[:checked]:bg-indigo-50">
-      <input type="radio" name={name} value={value} checked={checked} onChange={onChange} className="accent-indigo-600" />
+    <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border-2 border-brand-100 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm transition has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50 has-[:checked]:ring-2 has-[:checked]:ring-brand-500/20">
+      <input type="radio" name={name} value={value} checked={checked} onChange={onChange} className="accent-brand-600" />
       {label}
     </label>
   )
@@ -62,8 +82,8 @@ function RadioRow({ name, value, checked, onChange, label }) {
 function ReviewRow({ label, value }) {
   if (!value && value !== 0) return null
   return (
-    <div className="grid grid-cols-[8.5rem_1fr] gap-3 border-b border-slate-100 py-2 text-sm last:border-0">
-      <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{label}</span>
+    <div className="grid grid-cols-[8.5rem_1fr] gap-3 border-b border-brand-100 py-2.5 text-sm last:border-0">
+      <span className="text-[10px] font-bold uppercase tracking-wide text-brand-600">{label}</span>
       <span className="font-medium text-slate-800">{value}</span>
     </div>
   )
@@ -142,7 +162,7 @@ function InlineSignature({ value, onChange, lang }) {
         onTouchMove={move}
         onTouchEnd={end}
       />
-      <button type="button" onClick={clear} className="mt-2 flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800">
+      <button type="button" onClick={clear} className="mt-2 flex items-center gap-1 text-xs text-brand-600 hover:text-brand-800">
         <Eraser className="h-3 w-3" /> {gewerbeT(lang, 'deleteSignature')}
       </button>
       {value && <p className="mt-1 text-xs text-emerald-600">✓ {lang === 'de' ? 'Unterschrift erfasst' : 'Signature captured'}</p>}
@@ -163,8 +183,8 @@ function StepSidebar({ lang, stepIndex, onJump }) {
                 type="button"
                 onClick={() => i < stepIndex && onJump(i)}
                 disabled={i > stepIndex}
-                className={`flex w-full items-start gap-2.5 rounded-lg px-2 py-2 text-left transition ${
-                  current ? 'bg-indigo-50' : done ? 'hover:bg-slate-50' : 'opacity-50'
+                className={`flex w-full items-start gap-2.5 rounded-xl px-2 py-2 text-left transition ${
+                  current ? 'bg-brand-50 ring-1 ring-brand-200' : done ? 'hover:bg-brand-50/60' : 'opacity-50'
                 }`}
               >
                 <span
@@ -172,18 +192,18 @@ function StepSidebar({ lang, stepIndex, onJump }) {
                     done
                       ? 'bg-emerald-500 text-white'
                       : current
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-slate-200 text-slate-500'
+                        ? 'bg-brand-600 text-white'
+                        : 'bg-brand-100 text-brand-600'
                   }`}
                 >
                   {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
                 </span>
                 <span>
-                  <span className={`block text-xs font-semibold ${current ? 'text-indigo-900' : 'text-slate-700'}`}>
+                  <span className={`block text-xs font-semibold ${current ? 'text-brand-900' : 'text-slate-700'}`}>
                     {gewerbeStepLabel(id, lang)}
                   </span>
                   {current && (
-                    <span className="mt-0.5 inline-block rounded bg-indigo-100 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700">
+                    <span className="mt-0.5 inline-block rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-semibold text-brand-700">
                       {gewerbeT(lang, 'current')}
                     </span>
                   )}
@@ -206,36 +226,47 @@ export default function GewerbeFormWizard({ lang, formData, onChange, onComplete
   const savedStep = Math.min(formData.gewerbeWizardStep || 0, GEWERBE_WIZARD_STEPS.length - 1)
   const [stepIndex, setStepIndex] = useState(savedStep)
   const stepId = GEWERBE_WIZARD_STEPS[stepIndex]
+  const d = getGewerbeDraft(formData)
 
   const patch = (fields) => {
-    onChange({ ...fields, gewerbeWizardStep: stepIndex })
+    onChange({ ...patchGewerbeDraft(formData, fields), gewerbeWizardStep: stepIndex })
   }
 
   const f = (key, val) => patch({ [key]: val })
 
-  const syncBirthDate = (d, m, y) => {
-    if (d && m && y) patch({ birthDay: d, birthMonth: m, birthYear: y, dateOfBirth: `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}` })
-    else patch({ birthDay: d, birthMonth: m, birthYear: y })
+  const syncBirthDate = (day, month, year) => {
+    if (day && month && year) {
+      patch({
+        birthDay: day,
+        birthMonth: month,
+        birthYear: year,
+        dateOfBirth: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+      })
+    } else patch({ birthDay: day, birthMonth: month, birthYear: year })
   }
 
-  const syncStartDate = (d, m, y) => {
-    if (d && m && y) {
+  const syncStartDate = (day, month, year) => {
+    if (day && month && year) {
       patch({
-        startDay: d,
-        startMonth: m,
-        startYear: y,
-        businessStartDate: `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
+        startDay: day,
+        startMonth: month,
+        startYear: year,
+        businessStartDate: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
       })
-    } else patch({ startDay: d, startMonth: m, startYear: y })
+    } else patch({ startDay: day, startMonth: month, startYear: year })
   }
 
   const initDefaults = () => {
+    if (!formData.gewerbeDraftInitialized) {
+      onChange(emptyGewerbeDraftPatch())
+      return
+    }
     const updates = {}
-    if (!formData.gewerbeRegistrationType) updates.gewerbeRegistrationType = 'neuanmeldung'
-    if (!formData.gewerbeLegalForm) updates.gewerbeLegalForm = defaultGewerbeLegalForm(formData.businessStructure)
-    if (formData.businessAddressSameAsHome === undefined) updates.businessAddressSameAsHome = true
-    if (formData.isSecondaryOccupation === undefined) updates.isSecondaryOccupation = false
-    if (Object.keys(updates).length) onChange(updates)
+    if (!d.gewerbeRegistrationType) updates.gewerbeRegistrationType = 'neuanmeldung'
+    if (!d.gewerbeLegalForm) updates.gewerbeLegalForm = defaultGewerbeLegalForm(formData.businessStructure)
+    if (d.businessAddressSameAsHome === undefined) updates.businessAddressSameAsHome = true
+    if (d.isSecondaryOccupation === undefined) updates.isSecondaryOccupation = false
+    if (Object.keys(updates).length) patch(updates)
   }
 
   useEffect(() => {
@@ -246,17 +277,17 @@ export default function GewerbeFormWizard({ lang, formData, onChange, onComplete
   const canProceed = () => {
     switch (stepId) {
       case 'registrationType':
-        return !!formData.gewerbeRegistrationType
+        return !!d.gewerbeRegistrationType
       case 'owner':
-        return !!formData.gewerbeLegalForm
+        return !!d.gewerbeLegalForm
       case 'personal':
-        return !!(formData.lastName && formData.firstName && formData.nationality)
+        return !!(d.lastName && d.firstName && d.nationality)
       case 'address':
-        return !!(formData.street && formData.plz && formData.city && formData.email)
+        return !!(d.street && d.plz && d.city && d.email)
       case 'business':
-        return !!(formData.businessActivityDescription && formData.businessTypeCategory)
+        return !!(d.businessActivityDescription && d.businessTypeCategory)
       case 'summary':
-        return !!(formData.gewerbePrivacyAccepted && formData.gewerbeDraftAccepted && formData.gewerbeSignatureDataUrl)
+        return !!(d.gewerbePrivacyAccepted && d.gewerbeDraftAccepted && d.gewerbeSignatureDataUrl)
       default:
         return true
     }
@@ -272,7 +303,8 @@ export default function GewerbeFormWizard({ lang, formData, onChange, onComplete
       setStepIndex(stepIndex + 1)
       toast.success(gewerbeT(lang, 'formSaved'))
     } else {
-      onChange({ gewerbeFormComplete: true, gewerbeWizardStep: stepIndex })
+      const draft = getGewerbeDraft({ ...formData, gewerbeDraft: { ...d } })
+      onChange({ gewerbeFormComplete: true, gewerbeWizardStep: stepIndex, ...draft })
       onComplete?.()
       toast.success(gewerbeT(lang, 'formComplete'))
     }
@@ -293,9 +325,9 @@ export default function GewerbeFormWizard({ lang, formData, onChange, onComplete
     switch (stepId) {
       case 'registrationType':
         return (
-          <div className="space-y-3">
+          <FormSection>
             <FormSelect
-              value={formData.gewerbeRegistrationType || 'neuanmeldung'}
+              value={d.gewerbeRegistrationType || 'neuanmeldung'}
               onChange={(e) => f('gewerbeRegistrationType', e.target.value)}
             >
               {REGISTRATION_TYPES.map((opt) => (
@@ -304,15 +336,15 @@ export default function GewerbeFormWizard({ lang, formData, onChange, onComplete
                 </option>
               ))}
             </FormSelect>
-          </div>
+          </FormSection>
         )
 
       case 'owner':
         return (
-          <div className="space-y-3">
+          <FormSection>
             <FormLabel hint={gewerbeT(lang, 'legalFormHint')}>{gewerbeT(lang, 'legalForm')}</FormLabel>
             <FormSelect
-              value={formData.gewerbeLegalForm || defaultGewerbeLegalForm(formData.businessStructure)}
+              value={d.gewerbeLegalForm || defaultGewerbeLegalForm(formData.businessStructure)}
               onChange={(e) => f('gewerbeLegalForm', e.target.value)}
             >
               <option value="">{gewerbeT(lang, 'selectPlaceholder')}</option>
@@ -322,20 +354,29 @@ export default function GewerbeFormWizard({ lang, formData, onChange, onComplete
                 </option>
               ))}
             </FormSelect>
-          </div>
+          </FormSection>
         )
 
       case 'personal':
         return (
           <div className="space-y-4">
+            <button
+              type="button"
+              onClick={() => onChange(importProfileIntoGewerbeDraft(formData))}
+              className="w-full rounded-xl border-2 border-dashed border-brand-300 bg-brand-50/50 px-3 py-2.5 text-xs font-semibold text-brand-700 transition hover:border-brand-500 hover:bg-brand-50"
+            >
+              {gewerbeT(lang, 'importFromProfile')}
+            </button>
+            <p className="text-[11px] text-slate-500">{gewerbeT(lang, 'importFromProfileHint')}</p>
+            <FormSection>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <FormLabel>{gewerbeT(lang, 'lastName')}</FormLabel>
-                <FormInput value={formData.lastName || ''} onChange={(e) => f('lastName', e.target.value)} />
+                <FormInput placeholder={gewerbeT(lang, 'phLastName')} value={d.lastName || ''} onChange={(e) => f('lastName', e.target.value)} />
               </div>
               <div>
                 <FormLabel hint={gewerbeT(lang, 'firstNamesHint')}>{gewerbeT(lang, 'firstNames')}</FormLabel>
-                <FormInput value={formData.firstName || ''} onChange={(e) => f('firstName', e.target.value)} />
+                <FormInput placeholder={gewerbeT(lang, 'phFirstName')} value={d.firstName || ''} onChange={(e) => f('firstName', e.target.value)} />
               </div>
             </div>
             <div>
@@ -346,7 +387,7 @@ export default function GewerbeFormWizard({ lang, formData, onChange, onComplete
                     key={opt.id}
                     name="gender"
                     value={opt.id}
-                    checked={formData.gender === opt.id}
+                    checked={d.gender === opt.id}
                     onChange={() => f('gender', opt.id)}
                     label={lang === 'de' ? opt.de : opt.en}
                   />
@@ -356,16 +397,16 @@ export default function GewerbeFormWizard({ lang, formData, onChange, onComplete
             <label className="flex items-center gap-2 text-sm text-slate-700">
               <input
                 type="checkbox"
-                checked={!!formData.birthNameDiffers}
+                checked={!!d.birthNameDiffers}
                 onChange={(e) => f('birthNameDiffers', e.target.checked)}
-                className="accent-indigo-600"
+                className="accent-brand-600"
               />
               {gewerbeT(lang, 'birthNameDiffers')}
             </label>
-            {formData.birthNameDiffers && (
+            {d.birthNameDiffers && (
               <div>
                 <FormLabel>{gewerbeT(lang, 'birthName')}</FormLabel>
-                <FormInput value={formData.birthName || ''} onChange={(e) => f('birthName', e.target.value)} />
+                <FormInput placeholder={gewerbeT(lang, 'phBirthName')} value={d.birthName || ''} onChange={(e) => f('birthName', e.target.value)} />
               </div>
             )}
             <div>
@@ -374,113 +415,106 @@ export default function GewerbeFormWizard({ lang, formData, onChange, onComplete
                 <FormInput
                   placeholder={gewerbeT(lang, 'birthDay')}
                   inputMode="numeric"
-                  value={formData.birthDay || ''}
-                  onChange={(e) => syncBirthDate(e.target.value, formData.birthMonth, formData.birthYear)}
+                  value={d.birthDay || ''}
+                  onChange={(e) => syncBirthDate(e.target.value, d.birthMonth, d.birthYear)}
                 />
                 <FormInput
                   placeholder={gewerbeT(lang, 'birthMonth')}
                   inputMode="numeric"
-                  value={formData.birthMonth || ''}
-                  onChange={(e) => syncBirthDate(formData.birthDay, e.target.value, formData.birthYear)}
+                  value={d.birthMonth || ''}
+                  onChange={(e) => syncBirthDate(d.birthDay, e.target.value, d.birthYear)}
                 />
                 <FormInput
                   placeholder={gewerbeT(lang, 'birthYear')}
                   inputMode="numeric"
-                  value={formData.birthYear || ''}
-                  onChange={(e) => syncBirthDate(formData.birthDay, formData.birthMonth, e.target.value)}
+                  value={d.birthYear || ''}
+                  onChange={(e) => syncBirthDate(d.birthDay, d.birthMonth, e.target.value)}
                 />
               </div>
             </div>
             <div>
               <FormLabel hint={gewerbeT(lang, 'birthplaceHint')}>{gewerbeT(lang, 'birthplace')}</FormLabel>
-              <FormInput value={formData.birthplace || ''} onChange={(e) => f('birthplace', e.target.value)} />
+              <FormInput placeholder={gewerbeT(lang, 'phBirthplace')} value={d.birthplace || ''} onChange={(e) => f('birthplace', e.target.value)} />
             </div>
             <div>
               <FormLabel>{gewerbeT(lang, 'nationality')}</FormLabel>
-              <FormInput value={formData.nationality || ''} onChange={(e) => f('nationality', e.target.value)} />
+              <FormInput placeholder={gewerbeT(lang, 'phNationality')} value={d.nationality || ''} onChange={(e) => f('nationality', e.target.value)} />
             </div>
+            </FormSection>
           </div>
         )
 
       case 'address':
         return (
-          <div className="space-y-5">
-            <div>
-              <p className="mb-3 text-xs font-bold uppercase tracking-wide text-indigo-700">{gewerbeT(lang, 'residentialAddress')}</p>
-              <div className="space-y-3">
-                <div className="grid gap-3 sm:grid-cols-[1fr_5rem]">
+          <div className="space-y-4">
+            <FormSection title={gewerbeT(lang, 'residentialAddress')}>
+              <div className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-[1fr_5.5rem]">
                   <div>
                     <FormLabel>{gewerbeT(lang, 'street')}</FormLabel>
-                    <FormInput value={formData.street || ''} onChange={(e) => f('street', e.target.value)} />
+                    <FormInput placeholder={gewerbeT(lang, 'phStreet')} value={d.street || ''} onChange={(e) => f('street', e.target.value)} />
                   </div>
                   <div>
                     <FormLabel>{gewerbeT(lang, 'houseNumber')}</FormLabel>
-                    <FormInput value={formData.houseNumber || ''} onChange={(e) => f('houseNumber', e.target.value)} />
+                    <FormInput placeholder={gewerbeT(lang, 'phHouseNumber')} value={d.houseNumber || ''} onChange={(e) => f('houseNumber', e.target.value)} />
                   </div>
                 </div>
-                <div className="grid gap-3 sm:grid-cols-[6rem_1fr]">
+                <div className="grid gap-3 sm:grid-cols-[6.5rem_1fr]">
                   <div>
                     <FormLabel>{gewerbeT(lang, 'plz')}</FormLabel>
-                    <FormInput value={formData.plz || ''} onChange={(e) => f('plz', e.target.value)} />
+                    <FormInput placeholder={gewerbeT(lang, 'phPlz')} value={d.plz || ''} onChange={(e) => f('plz', e.target.value)} />
                   </div>
                   <div>
                     <FormLabel>{gewerbeT(lang, 'city')}</FormLabel>
-                    <FormInput value={formData.city || ''} onChange={(e) => f('city', e.target.value)} />
+                    <FormInput placeholder={gewerbeT(lang, 'phCity')} value={d.city || ''} onChange={(e) => f('city', e.target.value)} />
                   </div>
                 </div>
                 <div>
                   <FormLabel hint={gewerbeT(lang, 'mobileHint')}>{gewerbeT(lang, 'mobile')}</FormLabel>
-                  <FormInput value={formData.phone || ''} onChange={(e) => f('phone', e.target.value)} />
+                  <FormInput placeholder={gewerbeT(lang, 'phPhone')} value={d.phone || ''} onChange={(e) => f('phone', e.target.value)} />
                 </div>
                 <div>
                   <FormLabel hint={gewerbeT(lang, 'emailHint')}>{gewerbeT(lang, 'email')}</FormLabel>
-                  <FormInput type="email" value={formData.email || ''} onChange={(e) => f('email', e.target.value)} />
+                  <FormInput type="email" placeholder={gewerbeT(lang, 'phEmail')} value={d.email || ''} onChange={(e) => f('email', e.target.value)} />
                 </div>
               </div>
-            </div>
-            <div>
-              <p className="mb-3 text-xs font-bold uppercase tracking-wide text-indigo-700">{gewerbeT(lang, 'businessPremises')}</p>
-              <label className="mb-3 flex items-center gap-2 text-sm text-slate-700">
+            </FormSection>
+            <FormSection title={gewerbeT(lang, 'businessPremises')}>
+              <label className="mb-4 flex items-center gap-2.5 rounded-xl border-2 border-brand-100 bg-white px-3 py-2.5 text-sm text-slate-700 shadow-sm">
                 <input
                   type="checkbox"
-                  checked={formData.businessAddressSameAsHome !== false}
+                  checked={d.businessAddressSameAsHome !== false}
                   onChange={(e) => f('businessAddressSameAsHome', e.target.checked)}
-                  className="accent-indigo-600"
+                  className="accent-brand-600"
                 />
                 {gewerbeT(lang, 'businessSameAsHome')}
               </label>
-              {!formData.businessAddressSameAsHome && (
+              {!d.businessAddressSameAsHome && (
                 <div className="space-y-3">
-                  <div className="grid gap-3 sm:grid-cols-[1fr_5rem]">
-                    <FormInput
-                      placeholder={gewerbeT(lang, 'street')}
-                      value={formData.businessStreet || ''}
-                      onChange={(e) => f('businessStreet', e.target.value)}
-                    />
-                    <FormInput
-                      placeholder={gewerbeT(lang, 'houseNumber')}
-                      value={formData.businessHouseNumber || ''}
-                      onChange={(e) => f('businessHouseNumber', e.target.value)}
-                    />
+                  <div className="grid gap-3 sm:grid-cols-[1fr_5.5rem]">
+                    <FormInput placeholder={gewerbeT(lang, 'phStreet')} value={d.businessStreet || ''} onChange={(e) => f('businessStreet', e.target.value)} />
+                    <FormInput placeholder={gewerbeT(lang, 'phHouseNumber')} value={d.businessHouseNumber || ''} onChange={(e) => f('businessHouseNumber', e.target.value)} />
                   </div>
-                  <div className="grid gap-3 sm:grid-cols-[6rem_1fr]">
-                    <FormInput placeholder={gewerbeT(lang, 'plz')} value={formData.businessPlz || ''} onChange={(e) => f('businessPlz', e.target.value)} />
-                    <FormInput placeholder={gewerbeT(lang, 'city')} value={formData.businessCity || ''} onChange={(e) => f('businessCity', e.target.value)} />
+                  <div className="grid gap-3 sm:grid-cols-[6.5rem_1fr]">
+                    <FormInput placeholder={gewerbeT(lang, 'phPlz')} value={d.businessPlz || ''} onChange={(e) => f('businessPlz', e.target.value)} />
+                    <FormInput placeholder={gewerbeT(lang, 'phCity')} value={d.businessCity || ''} onChange={(e) => f('businessCity', e.target.value)} />
                   </div>
                 </div>
               )}
-            </div>
+            </FormSection>
           </div>
         )
 
       case 'business':
         return (
+          <FormSection>
           <div className="space-y-4">
             <div>
               <FormLabel hint={gewerbeT(lang, 'registeredActivityHint')}>{gewerbeT(lang, 'registeredActivity')}</FormLabel>
               <FormTextarea
                 rows={4}
-                value={formData.businessActivityDescription || ''}
+                placeholder={gewerbeT(lang, 'phActivity')}
+                value={d.businessActivityDescription || ''}
                 onChange={(e) => f('businessActivityDescription', e.target.value)}
               />
               <p className="mt-1 text-xs text-slate-500">{gewerbeT(lang, 'registeredActivityFoot')}</p>
@@ -491,14 +525,14 @@ export default function GewerbeFormWizard({ lang, formData, onChange, onComplete
                 <RadioRow
                   name="secondary"
                   value="yes"
-                  checked={formData.isSecondaryOccupation === true}
+                  checked={d.isSecondaryOccupation === true}
                   onChange={() => f('isSecondaryOccupation', true)}
                   label={gewerbeT(lang, 'yes')}
                 />
                 <RadioRow
                   name="secondary"
                   value="no"
-                  checked={formData.isSecondaryOccupation === false}
+                  checked={d.isSecondaryOccupation === false}
                   onChange={() => f('isSecondaryOccupation', false)}
                   label={gewerbeT(lang, 'no')}
                 />
@@ -509,18 +543,18 @@ export default function GewerbeFormWizard({ lang, formData, onChange, onComplete
               <div className="grid grid-cols-3 gap-3">
                 <FormInput
                   placeholder={gewerbeT(lang, 'birthDay')}
-                  value={formData.startDay || ''}
-                  onChange={(e) => syncStartDate(e.target.value, formData.startMonth, formData.startYear)}
+                  value={d.startDay || ''}
+                  onChange={(e) => syncStartDate(e.target.value, d.startMonth, d.startYear)}
                 />
                 <FormInput
                   placeholder={gewerbeT(lang, 'birthMonth')}
-                  value={formData.startMonth || ''}
-                  onChange={(e) => syncStartDate(formData.startDay, e.target.value, formData.startYear)}
+                  value={d.startMonth || ''}
+                  onChange={(e) => syncStartDate(d.startDay, e.target.value, d.startYear)}
                 />
                 <FormInput
                   placeholder={gewerbeT(lang, 'birthYear')}
-                  value={formData.startYear || ''}
-                  onChange={(e) => syncStartDate(formData.startDay, formData.startMonth, e.target.value)}
+                  value={d.startYear || ''}
+                  onChange={(e) => syncStartDate(d.startDay, d.startMonth, e.target.value)}
                 />
               </div>
             </div>
@@ -532,7 +566,7 @@ export default function GewerbeFormWizard({ lang, formData, onChange, onComplete
                     key={opt.id}
                     name="bizType"
                     value={opt.id}
-                    checked={formData.businessTypeCategory === opt.id}
+                    checked={d.businessTypeCategory === opt.id}
                     onChange={() => f('businessTypeCategory', opt.id)}
                     label={lang === 'de' ? opt.de : opt.en}
                   />
@@ -547,7 +581,8 @@ export default function GewerbeFormWizard({ lang, formData, onChange, onComplete
                   <FormInput
                     type="number"
                     min="0"
-                    value={formData.employeesFullTime ?? ''}
+                    placeholder={gewerbeT(lang, 'phEmployees')}
+                    value={d.employeesFullTime ?? ''}
                     onChange={(e) => f('employeesFullTime', e.target.value === '' ? '' : Number(e.target.value))}
                   />
                 </div>
@@ -556,61 +591,62 @@ export default function GewerbeFormWizard({ lang, formData, onChange, onComplete
                   <FormInput
                     type="number"
                     min="0"
-                    value={formData.employeesPartTime ?? ''}
+                    placeholder={gewerbeT(lang, 'phEmployees')}
+                    value={d.employeesPartTime ?? ''}
                     onChange={(e) => f('employeesPartTime', e.target.value === '' ? '' : Number(e.target.value))}
                   />
                 </div>
               </div>
             </div>
           </div>
+          </FormSection>
         )
 
       case 'summary': {
-        const bizAddr = formData.businessAddressSameAsHome !== false
-          ? `${formData.street || ''} ${formData.houseNumber || ''}, ${formData.plz || ''} ${formData.city || ''}`.trim()
-          : `${formData.businessStreet || ''} ${formData.businessHouseNumber || ''}, ${formData.businessPlz || ''} ${formData.businessCity || ''}`.trim()
+        const bizAddr = d.businessAddressSameAsHome !== false
+          ? `${d.street || ''} ${d.houseNumber || ''}, ${d.plz || ''} ${d.city || ''}`.trim()
+          : `${d.businessStreet || ''} ${d.businessHouseNumber || ''}, ${d.businessPlz || ''} ${d.businessCity || ''}`.trim()
         return (
           <div className="space-y-5">
-            <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-4">
-              <p className="mb-2 text-xs font-bold uppercase tracking-wide text-indigo-700">{gewerbeT(lang, 'reviewSection')}</p>
-              <ReviewRow label={gewerbeT(lang, 'regTypeTitle')} value={labelForOption(REGISTRATION_TYPES, formData.gewerbeRegistrationType, lang)} />
-              <ReviewRow label={gewerbeT(lang, 'legalForm')} value={labelForOption(GEWERBE_LEGAL_FORMS, formData.gewerbeLegalForm, lang)} />
-              <ReviewRow label={gewerbeT(lang, 'lastName')} value={`${formData.firstName || ''} ${formData.lastName || ''}`.trim()} />
-              <ReviewRow label={gewerbeT(lang, 'birthDate')} value={formData.dateOfBirth} />
-              <ReviewRow label={gewerbeT(lang, 'nationality')} value={formData.nationality} />
+            <FormSection title={gewerbeT(lang, 'reviewSection')}>
+              <ReviewRow label={gewerbeT(lang, 'regTypeTitle')} value={labelForOption(REGISTRATION_TYPES, d.gewerbeRegistrationType, lang)} />
+              <ReviewRow label={gewerbeT(lang, 'legalForm')} value={labelForOption(GEWERBE_LEGAL_FORMS, d.gewerbeLegalForm, lang)} />
+              <ReviewRow label={gewerbeT(lang, 'lastName')} value={`${d.firstName || ''} ${d.lastName || ''}`.trim()} />
+              <ReviewRow label={gewerbeT(lang, 'birthDate')} value={d.dateOfBirth} />
+              <ReviewRow label={gewerbeT(lang, 'nationality')} value={d.nationality} />
               <ReviewRow
                 label={gewerbeT(lang, 'residentialAddress')}
-                value={`${formData.street || ''} ${formData.houseNumber || ''}, ${formData.plz || ''} ${formData.city || ''}`.trim()}
+                value={`${d.street || ''} ${d.houseNumber || ''}, ${d.plz || ''} ${d.city || ''}`.trim()}
               />
-              <ReviewRow label={gewerbeT(lang, 'email')} value={formData.email} />
+              <ReviewRow label={gewerbeT(lang, 'email')} value={d.email} />
               <ReviewRow label={gewerbeT(lang, 'businessPremises')} value={bizAddr} />
-              <ReviewRow label={gewerbeT(lang, 'registeredActivity')} value={formData.businessActivityDescription} />
-              <ReviewRow label={gewerbeT(lang, 'startDate')} value={formData.businessStartDate} />
-              <ReviewRow label={gewerbeT(lang, 'businessType')} value={labelForOption(BUSINESS_TYPE_OPTIONS, formData.businessTypeCategory, lang)} />
-            </div>
+              <ReviewRow label={gewerbeT(lang, 'registeredActivity')} value={d.businessActivityDescription} />
+              <ReviewRow label={gewerbeT(lang, 'startDate')} value={d.businessStartDate} />
+              <ReviewRow label={gewerbeT(lang, 'businessType')} value={labelForOption(BUSINESS_TYPE_OPTIONS, d.businessTypeCategory, lang)} />
+            </FormSection>
             <div>
               <FormLabel hint={gewerbeT(lang, 'signatureHint')}>{gewerbeT(lang, 'signature')}</FormLabel>
-              <InlineSignature lang={lang} value={formData.gewerbeSignatureDataUrl} onChange={(v) => f('gewerbeSignatureDataUrl', v)} />
+              <InlineSignature lang={lang} value={d.gewerbeSignatureDataUrl} onChange={(v) => f('gewerbeSignatureDataUrl', v)} />
             </div>
             <div>
               <FormLabel hint={gewerbeT(lang, 'idDocumentHint')}>{gewerbeT(lang, 'idDocument')}</FormLabel>
               <label className="mb-2 flex items-center gap-2 text-sm text-slate-700">
                 <input
                   type="checkbox"
-                  checked={!!formData.gewerbeIdLater}
+                  checked={!!d.gewerbeIdLater}
                   onChange={(e) => f('gewerbeIdLater', e.target.checked)}
-                  className="accent-indigo-600"
+                  className="accent-brand-600"
                 />
                 {gewerbeT(lang, 'idLater')}
               </label>
-              {!formData.gewerbeIdLater && (
+              {!d.gewerbeIdLater && (
                 <div className="grid gap-2 sm:grid-cols-2">
-                  <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 py-6 text-sm text-slate-600 hover:border-indigo-400 hover:bg-indigo-50/50">
+                  <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-brand-200 bg-brand-50/40 py-6 text-sm text-brand-700 transition hover:border-brand-400 hover:bg-brand-50">
                     <Camera className="h-5 w-5" />
                     {gewerbeT(lang, 'takePhoto')}
                     <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleIdFile(e.target.files?.[0])} />
                   </label>
-                  <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 py-6 text-sm text-slate-600 hover:border-indigo-400 hover:bg-indigo-50/50">
+                  <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-brand-200 bg-brand-50/40 py-6 text-sm text-brand-700 transition hover:border-brand-400 hover:bg-brand-50">
                     <Upload className="h-5 w-5" />
                     {gewerbeT(lang, 'uploadFile')}
                     <input type="file" accept="image/*,application/pdf" className="hidden" onChange={(e) => handleIdFile(e.target.files?.[0])} />
@@ -623,18 +659,18 @@ export default function GewerbeFormWizard({ lang, formData, onChange, onComplete
               <label className="flex items-start gap-2 text-sm text-slate-700">
                 <input
                   type="checkbox"
-                  checked={!!formData.gewerbePrivacyAccepted}
+                  checked={!!d.gewerbePrivacyAccepted}
                   onChange={(e) => f('gewerbePrivacyAccepted', e.target.checked)}
-                  className="mt-0.5 accent-indigo-600"
+                  className="mt-0.5 accent-brand-600"
                 />
                 {gewerbeT(lang, 'privacyAccept')}
               </label>
               <label className="flex items-start gap-2 text-sm text-slate-700">
                 <input
                   type="checkbox"
-                  checked={!!formData.gewerbeDraftAccepted}
+                  checked={!!d.gewerbeDraftAccepted}
                   onChange={(e) => f('gewerbeDraftAccepted', e.target.checked)}
-                  className="mt-0.5 accent-indigo-600"
+                  className="mt-0.5 accent-brand-600"
                 />
                 {gewerbeT(lang, 'draftAccept')}
               </label>
@@ -667,8 +703,8 @@ export default function GewerbeFormWizard({ lang, formData, onChange, onComplete
   }[stepId]
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-700/50 bg-white shadow-xl">
-      <div className="bg-gradient-to-br from-indigo-950 via-indigo-800 to-indigo-600 px-4 py-4 text-white sm:px-5">
+    <div className="overflow-hidden rounded-2xl border border-brand-700/30 bg-white shadow-2xl shadow-brand-900/10 ring-1 ring-brand-200/40">
+      <div className="bg-gradient-to-br from-brand-950 via-brand-800 to-brand-600 px-4 py-4 text-white sm:px-5">
         <div className="mb-2 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="text-lg" aria-hidden>
@@ -696,25 +732,25 @@ export default function GewerbeFormWizard({ lang, formData, onChange, onComplete
           <div className="mb-4 md:hidden">
             <div className="flex gap-1">
               {GEWERBE_WIZARD_STEPS.map((_, i) => (
-                <div key={i} className={`h-1 flex-1 rounded-full ${i <= stepIndex ? 'bg-indigo-500' : 'bg-slate-200'}`} />
+                <div key={i} className={`h-1 flex-1 rounded-full ${i <= stepIndex ? 'bg-brand-500' : 'bg-brand-100'}`} />
               ))}
             </div>
-            <p className="mt-2 text-xs font-medium text-indigo-700">
+            <p className="mt-2 text-xs font-medium text-brand-700">
               {stepIndex + 1}/{GEWERBE_WIZARD_STEPS.length} — {gewerbeStepLabel(stepId, lang)}
             </p>
           </div>
 
-          <h3 className="text-lg font-bold text-indigo-950">{gewerbeT(lang, stepTitleKey)}</h3>
+          <h3 className="text-lg font-bold text-brand-950">{gewerbeT(lang, stepTitleKey)}</h3>
           <p className="mb-4 text-sm text-slate-600">{gewerbeT(lang, stepDescKey)}</p>
 
           {renderStep()}
 
-          <div className="mt-6 flex gap-3 border-t border-slate-100 pt-4">
+          <div className="mt-6 flex gap-3 border-t border-brand-100 pt-4">
             {stepIndex > 0 && (
               <button
                 type="button"
                 onClick={back}
-                className="flex-1 rounded-xl border-2 border-indigo-600 bg-white py-3 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50"
+                className="flex-1 rounded-xl border-2 border-brand-600 bg-white py-3 text-sm font-semibold text-brand-700 transition hover:bg-brand-50"
               >
                 {gewerbeT(lang, 'back')}
               </button>
@@ -730,7 +766,7 @@ export default function GewerbeFormWizard({ lang, formData, onChange, onComplete
         </div>
       </div>
 
-      <p className="border-t border-slate-100 bg-indigo-50/50 px-4 py-2 text-center text-[10px] text-indigo-800/80">
+      <p className="border-t border-brand-100 bg-brand-50 px-4 py-2.5 text-center text-[10px] text-brand-800/80">
         {gewerbeT(lang, 'disclaimer')}
       </p>
     </div>

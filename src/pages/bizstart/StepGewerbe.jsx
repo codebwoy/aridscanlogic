@@ -5,6 +5,7 @@ import { generateGewerbePdf } from '@/lib/bizstart/pdfForms'
 import { addRegistrationDoc } from '@/lib/bizstart/store'
 import { getNextStepId } from '@/lib/bizstart/steps'
 import { gewerbeT } from '@/lib/bizstart/gewerbeI18n'
+import { mergeGewerbeForExport, emptyGewerbeDraftPatch } from '@/lib/bizstart/gewerbeDraft'
 import GewerbeFormWizard from '@/components/bizstart/GewerbeFormWizard'
 
 const CITY_LINKS = {
@@ -48,7 +49,7 @@ export default function StepGewerbe({ lang, formData, onUpdateForm, onUpdateStep
   const portal = CITY_LINKS[plzPrefix] || 'https://www.gewerbeamt.de'
 
   const downloadPdf = () => {
-    generateGewerbePdf(formData, lang)
+    generateGewerbePdf(mergeGewerbeForExport(formData), lang)
     toast.success(gewerbeT(lang, 'pdfDownloaded'))
   }
 
@@ -76,7 +77,7 @@ export default function StepGewerbe({ lang, formData, onUpdateForm, onUpdateStep
   }
 
   const restartForm = () => {
-    onUpdateForm({ gewerbeFormComplete: false, gewerbeWizardStep: 0 })
+    onUpdateForm({ gewerbeFormComplete: false, gewerbeWizardStep: 0, ...emptyGewerbeDraftPatch() })
     setShowWizard(true)
   }
 
