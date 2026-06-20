@@ -36,6 +36,8 @@ export const POPULAR_PKV = [
   'Debeka',
   'Allianz Private Krankenversicherung',
   'AXA',
+  'Techniker Krankenkasse (TK)',
+  'AOK',
   'DKV',
   'HanseMerkur',
   'Signal Iduna',
