@@ -10,6 +10,13 @@ import {
 } from '@/lib/taxvault/profile'
 import { getAllCategories } from '@/lib/taxvault/categories'
 import { exportEncryptedBackup, importEncryptedBackup } from '@/lib/taxvault/backup'
+import {
+  HEALTH_INSURANCE_TYPES,
+  POPULAR_GKV,
+  POPULAR_PKV,
+  estimateHealthInsuranceMonthly,
+  KRANKENKASSE_DISCLAIMER_DE,
+} from '@/lib/taxvault/krankenkasse'
 
 export default function TaxVaultSettings({ onBack }) {
   const [profile, setProfile] = useState(loadTaxVaultProfile())
@@ -17,6 +24,13 @@ export default function TaxVaultSettings({ onBack }) {
   const [resetConfirm, setResetConfirm] = useState('')
   const [backupPass, setBackupPass] = useState('')
   const [importPass, setImportPass] = useState('')
+
+  const healthEstimate = estimateHealthInsuranceMonthly({
+    healthInsuranceType: profile.healthInsuranceType,
+    expectedProfitYear1: profile.expectedProfitYear1,
+    zusatzbeitragPct: profile.healthInsuranceZusatzbeitrag,
+    healthInsuranceAge: profile.healthInsuranceAge,
+  })
 
   const saveProfile = () => {
     saveTaxVaultProfile(profile)
@@ -68,6 +82,136 @@ export default function TaxVaultSettings({ onBack }) {
         ))}
         <button type="button" onClick={saveProfile} className="w-full rounded-xl bg-brand-600 py-2 text-sm font-semibold">
           Save profile
+        </button>
+      </section>
+
+      <section className="mb-6 space-y-2 rounded-2xl bg-slate-800/60 p-4">
+        <h3 className="font-semibold">Gewerbe & Steuer-Overhead</h3>
+        <label className="block">
+          <span className="text-xs text-slate-400">Expected profit year 1 (EUR)</span>
+          <input
+            type="number"
+            value={profile.expectedProfitYear1 || ''}
+            onChange={(e) => setProfile({ ...profile, expectedProfitYear1: parseFloat(e.target.value) || 0 })}
+            className="mt-1 w-full rounded-lg bg-slate-900 px-3 py-2 text-sm"
+          />
+        </label>
+        <label className="block">
+          <span className="text-xs text-slate-400">Gewerbesteuer Hebesatz (e.g. 400)</span>
+          <input
+            type="number"
+            value={profile.gewerbesteuerHebesatz ?? 400}
+            onChange={(e) => setProfile({ ...profile, gewerbesteuerHebesatz: parseInt(e.target.value, 10) || 400 })}
+            className="mt-1 w-full rounded-lg bg-slate-900 px-3 py-2 text-sm"
+          />
+        </label>
+        <label className="block">
+          <span className="text-xs text-slate-400">VAT scheme</span>
+          <select
+            value={profile.vatScheme || 'kleinunternehmer'}
+            onChange={(e) => setProfile({ ...profile, vatScheme: e.target.value })}
+            className="mt-1 w-full rounded-lg bg-slate-900 px-3 py-2 text-sm"
+          >
+            <option value="kleinunternehmer">Kleinunternehmer §19</option>
+            <option value="standard">Regelbesteuerung</option>
+          </select>
+        </label>
+        <button type="button" onClick={saveProfile} className="w-full rounded-xl bg-slate-700 py-2 text-sm">
+          Save overhead settings
+        </button>
+      </section>
+
+      <section className="mb-6 space-y-2 rounded-2xl bg-slate-800/60 p-4">
+        <h3 className="font-semibold">Krankenkasse</h3>
+        <label className="block">
+          <span className="text-xs text-slate-400">Insurance type</span>
+          <select
+            value={profile.healthInsuranceType || 'pending'}
+            onChange={(e) => setProfile({ ...profile, healthInsuranceType: e.target.value })}
+            className="mt-1 w-full rounded-lg bg-slate-900 px-3 py-2 text-sm"
+          >
+            {HEALTH_INSURANCE_TYPES.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.labelDe}
+              </option>
+            ))}
+          </select>
+        </label>
+        {(profile.healthInsuranceType === 'gkv' || profile.healthInsuranceType === 'pending') && (
+          <label className="block">
+            <span className="text-xs text-slate-400">Krankenkasse (GKV)</span>
+            <select
+              value={profile.healthInsurerName || ''}
+              onChange={(e) => setProfile({ ...profile, healthInsurerName: e.target.value })}
+              className="mt-1 w-full rounded-lg bg-slate-900 px-3 py-2 text-sm"
+            >
+              <option value="">— Select —</option>
+              {POPULAR_GKV.map((k) => (
+                <option key={k} value={k}>
+                  {k}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        {profile.healthInsuranceType === 'pkv' && (
+          <label className="block">
+            <span className="text-xs text-slate-400">PKV provider</span>
+            <select
+              value={profile.healthInsurerName || ''}
+              onChange={(e) => setProfile({ ...profile, healthInsurerName: e.target.value })}
+              className="mt-1 w-full rounded-lg bg-slate-900 px-3 py-2 text-sm"
+            >
+              <option value="">— Select —</option>
+              {POPULAR_PKV.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        {profile.healthInsuranceType === 'gkv' && (
+          <label className="block">
+            <span className="text-xs text-slate-400">Zusatzbeitrag (%)</span>
+            <input
+              type="number"
+              step="0.1"
+              value={profile.healthInsuranceZusatzbeitrag ?? 1.7}
+              onChange={(e) =>
+                setProfile({ ...profile, healthInsuranceZusatzbeitrag: parseFloat(e.target.value) || 1.7 })
+              }
+              className="mt-1 w-full rounded-lg bg-slate-900 px-3 py-2 text-sm"
+            />
+          </label>
+        )}
+        {profile.healthInsuranceType === 'pkv' && (
+          <label className="block">
+            <span className="text-xs text-slate-400">Age (for estimate)</span>
+            <input
+              type="number"
+              value={profile.healthInsuranceAge ?? 35}
+              onChange={(e) => setProfile({ ...profile, healthInsuranceAge: parseInt(e.target.value, 10) || 35 })}
+              className="mt-1 w-full rounded-lg bg-slate-900 px-3 py-2 text-sm"
+            />
+          </label>
+        )}
+        <label className="block">
+          <span className="text-xs text-slate-400">Member ID (optional)</span>
+          <input
+            value={profile.healthInsuranceMemberId || ''}
+            onChange={(e) => setProfile({ ...profile, healthInsuranceMemberId: e.target.value })}
+            className="mt-1 w-full rounded-lg bg-slate-900 px-3 py-2 text-sm"
+          />
+        </label>
+        {healthEstimate.monthlyTotal > 0 && (
+          <p className="text-sm text-rose-300">
+            Estimated: {healthEstimate.monthlyTotal.toLocaleString('de-DE')} € / month
+          </p>
+        )}
+        <p className="text-[10px] leading-snug text-slate-500">{KRANKENKASSE_DISCLAIMER_DE}</p>
+        <button type="button" onClick={saveProfile} className="w-full rounded-xl bg-slate-700 py-2 text-sm">
+          Save Krankenkasse
         </button>
       </section>
 

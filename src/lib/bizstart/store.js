@@ -1,5 +1,10 @@
 import appApi from '@/lib/appApi'
 import { saveProfile, getActiveProfile, ensureDefaultProfile } from '@/lib/docdraft/store'
+import { saveTaxVaultProfile } from '@/lib/taxvault/profile'
+import {
+  krankenkasseRegistrationDueDate,
+  shouldShowKrankenkasseDeadline,
+} from '@/lib/taxvault/krankenkasse'
 
 const FORM_KEY = 'scanlogic_bizstart_form'
 const STEP_KEY = 'scanlogic_bizstart_steps'
@@ -129,6 +134,24 @@ export async function syncRegistrationToTaxVault(formData, stepStatus) {
     currentYearRevenue: formData.currentYearRevenue || 0,
   })
 
+  saveTaxVaultProfile({
+    businessName: formData.businessName || formData.intendedBusinessName || '',
+    ownerName: [formData.firstName, formData.lastName].filter(Boolean).join(' '),
+    taxId: formData.steuernummer || formData.taxId || '',
+    vatNumber: formData.ustIdNr || '',
+    address: [formData.street, formData.houseNumber, formData.plz, formData.city].filter(Boolean).join(', '),
+    businessStructure: structure,
+    vatScheme: formData.vatScheme || 'kleinunternehmer',
+    vatFilingFrequency: formData.vatFilingFrequency || 'quarterly',
+    expectedProfitYear1: Number(formData.expectedProfitYear1) || 0,
+    healthInsuranceType: formData.healthInsuranceType || 'pending',
+    healthInsurerName: formData.healthInsurerName || '',
+    healthInsuranceMemberId: formData.healthInsuranceMemberId || '',
+    healthInsuranceStatus: formData.healthInsuranceStatus || 'not_started',
+    healthInsuranceZusatzbeitrag: formData.healthInsuranceZusatzbeitrag ?? 1.7,
+    healthInsuranceAge: formData.healthInsuranceAge ?? 35,
+  })
+
   return reg
 }
 
@@ -168,6 +191,15 @@ export async function seedPersonalizedDeadlines(formData) {
         category: 'USt',
       })
     }
+  }
+
+  if (shouldShowKrankenkasseDeadline(formData)) {
+    deadlines.push({
+      deadline_name: 'Krankenkasse — Anmeldung Selbstständigkeit',
+      due_date: krankenkasseRegistrationDueDate(formData),
+      is_filed: false,
+      category: 'KV',
+    })
   }
 
   for (const d of deadlines) {

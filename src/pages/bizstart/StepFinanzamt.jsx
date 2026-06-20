@@ -15,7 +15,7 @@ export default function StepFinanzamt({ lang, formData, onUpdateForm, onUpdateSt
       onUpdateForm({ steuernummer: sn })
       onUpdateStep('finanzamt', 'confirmed')
       toast.success('Steuernummer saved to Tax Vault')
-      onNext(formData.vatScheme === 'kleinunternehmer' ? 'ihk' : 'vat')
+      onNext('krankenkasse')
     }
   }
 

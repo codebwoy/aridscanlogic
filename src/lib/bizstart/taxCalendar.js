@@ -1,5 +1,10 @@
 /** Personalized German tax deadlines for current year */
 
+import {
+  krankenkasseRegistrationDueDate,
+  shouldShowKrankenkasseDeadline,
+} from '@/lib/taxvault/krankenkasse'
+
 export function buildTaxCalendar(formData, year = new Date().getFullYear()) {
   const isKlein = formData.vatScheme === 'kleinunternehmer'
   const freq = formData.vatFilingFrequency || 'quarterly'
@@ -63,6 +68,20 @@ export function buildTaxCalendar(formData, year = new Date().getFullYear()) {
       name: 'Körperschaftsteuervorauszahlung',
       dueDate: `${year}-03-10`,
       category: 'KSt',
+    })
+  }
+
+  if (shouldShowKrankenkasseDeadline(formData)) {
+    const kvDue = krankenkasseRegistrationDueDate(formData)
+    items.push({
+      id: 'kv-register',
+      name: 'Krankenkasse — Anmeldung als Selbstständiger',
+      nameEn: 'Krankenkasse — register as self-employed',
+      dueDate: kvDue,
+      category: 'KV',
+      prepare:
+        'Gewerbe/Fragebogen-Nachweis an Krankenkasse senden; Beitragsbemessungsgrundlage klären',
+      prepareEn: 'Notify Krankenkasse of self-employment; submit Gewerbe/Finanzamt proof',
     })
   }
 

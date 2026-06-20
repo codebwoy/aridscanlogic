@@ -10,6 +10,7 @@ import {
   FileBarChart,
   Tags,
   PenLine,
+  Landmark,
 } from 'lucide-react'
 import {
   PieChart,
@@ -41,6 +42,8 @@ import BizStartGermany from '../bizstart/BizStartGermany'
 import IncomeOverview from './IncomeOverview'
 import EstimatedTaxes from './EstimatedTaxes'
 import ReceiptManager from './ReceiptManager'
+import TaxOverheadHub from './TaxOverheadHub'
+import { loadTaxOverheadConfig } from '@/lib/taxvault/overheadConfig'
 import { checkRecurringReminders } from '@/lib/taxvault/reminders'
 import { ensureDefaultProfile, loadDocuments } from '@/lib/docdraft/store'
 
@@ -93,6 +96,7 @@ export default function TaxVaultHome() {
     .slice(0, 5)
 
   const budgetWarnings = getAllCategories().filter((c) => isOverBudget(stats.receipts, c))
+  const overheadConfig = loadTaxOverheadConfig()
 
   if (!profileReady) {
     return <TaxVaultProfileSetup onComplete={() => setProfileReady(true)} />
@@ -158,6 +162,20 @@ export default function TaxVaultHome() {
 
   if (view === 'settings') {
     return <TaxVaultSettings onBack={() => setView('home')} />
+  }
+
+  if (view === 'overhead') {
+    return (
+      <TaxOverheadHub
+        receipts={receipts}
+        mileage={mileageLogs}
+        invoices={invoices}
+        expectedProfit={stats.totalDeductible}
+        onBack={() => setView('home')}
+        onOpenSettings={() => setView('settings')}
+        onOpenBizStart={() => setShowBizStart(true)}
+      />
+    )
   }
 
   if (view === 'summary') {
@@ -318,11 +336,37 @@ export default function TaxVaultHome() {
 
       <IncomeOverview invoices={invoices} receipts={receipts} />
 
+      <button
+        type="button"
+        onClick={() => setView('overhead')}
+        className="premium-card mb-4 w-full p-4 text-left"
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <p className="flex items-center gap-2 text-sm font-semibold">
+              <Landmark className="h-4 w-4 text-brand-400" />
+              Steuer-Overhead (Gewerbe)
+            </p>
+            <p className="mt-1 text-xs text-slate-400">
+              Krankenkasse, Gewerbesteuer & USt — Konfiguration & Schätzungen
+            </p>
+            {overheadConfig.healthEstimate?.monthlyTotal > 0 && (
+              <p className="mt-2 text-xs text-rose-300">
+                KV ~{overheadConfig.healthEstimate.monthlyTotal.toLocaleString('de-DE')} €/Monat
+                {overheadConfig.healthInsurerName ? ` · ${overheadConfig.healthInsurerName}` : ''}
+              </p>
+            )}
+          </div>
+          <ChevronRight className="h-5 w-5 shrink-0 text-brand-400" />
+        </div>
+      </button>
+
       <EstimatedTaxes
         receipts={receipts}
         mileage={mileageLogs}
         invoices={invoices}
         expectedProfit={stats.totalDeductible}
+        hebesatz={overheadConfig.hebesatz}
       />
 
       {stats.donutData.length > 0 && (

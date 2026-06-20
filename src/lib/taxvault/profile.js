@@ -12,6 +12,18 @@ export const DEFAULT_PROFILE = {
   taxYearStartMonth: 1,
   accountantName: '',
   accountantEmail: '',
+  /** Gewerbe overhead — synced from BizStart or Tax Vault settings */
+  businessStructure: '',
+  vatScheme: 'kleinunternehmer',
+  vatFilingFrequency: 'quarterly',
+  gewerbesteuerHebesatz: 400,
+  expectedProfitYear1: 0,
+  healthInsuranceType: 'pending',
+  healthInsurerName: '',
+  healthInsuranceMemberId: '',
+  healthInsuranceStatus: 'not_started',
+  healthInsuranceZusatzbeitrag: 1.7,
+  healthInsuranceAge: 35,
 }
 
 export const DEFAULT_SETTINGS = {

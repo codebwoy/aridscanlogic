@@ -5,6 +5,7 @@ export const ALL_STEPS = [
   { id: 'info', key: 'info', estMin: 15 },
   { id: 'gewerbe', key: 'gewerbe', estMin: 10, skipFor: ['freiberufler'] },
   { id: 'finanzamt', key: 'finanzamt', estMin: 20 },
+  { id: 'krankenkasse', key: 'krankenkasse', estMin: 15 },
   { id: 'vat', key: 'vat', estMin: 10, skipFor: ['kleinunternehmer'], skipIfKlein: true },
   { id: 'handelsregister', key: 'handelsregister', estMin: 30, onlyFor: ['gmbh', 'ug'] },
   { id: 'ihk', key: 'ihk', estMin: 5, skipFor: ['freiberufler'] },
@@ -82,12 +83,19 @@ export function getApplicableSteps(structureId, formData = {}) {
   })
 }
 
+export function getNextStepId(currentId, structureId, formData = {}) {
+  const steps = getApplicableSteps(structureId, formData)
+  const idx = steps.findIndex((s) => s.id === currentId)
+  return steps[idx + 1]?.id || 'complete'
+}
+
 export const STEP_LABELS = {
   en: {
     structure: 'Choose business structure',
     info: 'Personal & business information',
     gewerbe: 'Gewerbeanmeldung (Trade office)',
     finanzamt: 'Fragebogen zur steuerlichen Erfassung',
+    krankenkasse: 'Health insurance (Krankenkasse)',
     vat: 'VAT registration (USt-IdNr.)',
     handelsregister: 'Handelsregister',
     ihk: 'IHK / HWK membership',
@@ -99,6 +107,7 @@ export const STEP_LABELS = {
     info: 'Persönliche & geschäftliche Daten',
     gewerbe: 'Gewerbeanmeldung',
     finanzamt: 'Fragebogen zur steuerlichen Erfassung',
+    krankenkasse: 'Krankenkasse / Krankenversicherung',
     vat: 'Umsatzsteuer / USt-IdNr.',
     handelsregister: 'Handelsregister',
     ihk: 'IHK / HWK Mitgliedschaft',

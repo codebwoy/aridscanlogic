@@ -28,6 +28,7 @@ import StepFinanzamt from './StepFinanzamt'
 import StepVat from './StepVat'
 import StepHandelsregister from './StepHandelsregister'
 import StepIhk from './StepIhk'
+import StepKrankenkasse from './StepKrankenkasse'
 import StepBank from './StepBank'
 import StepComplete from './StepComplete'
 import ComplianceCalendar from './ComplianceCalendar'
@@ -153,6 +154,7 @@ export default function BizStartGermany({ onExit, onComplete }) {
     vat: StepVat,
     handelsregister: StepHandelsregister,
     ihk: StepIhk,
+    krankenkasse: StepKrankenkasse,
     bank: StepBank,
     complete: StepComplete,
     calendar: ComplianceCalendar,

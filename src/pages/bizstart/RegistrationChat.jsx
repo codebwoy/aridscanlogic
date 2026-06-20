@@ -18,8 +18,8 @@ export default function RegistrationChat({ open, onClose }) {
       role: 'assistant',
       content:
         language === 'de'
-          ? 'Hallo! Ich bin Ihr BizStart-Anmelde-Assistent. Fragen Sie mich zu Gewerbeanmeldung, Finanzamt, USt oder Kleinunternehmerregelung.'
-          : 'Hello! I am your BizStart registration guide. Ask about Gewerbeanmeldung, Finanzamt, VAT, or Kleinunternehmer rules.',
+          ? 'Hallo! Ich bin Ihr BizStart-Anmelde-Assistent. Fragen Sie mich zu Gewerbeanmeldung, Finanzamt, Krankenkasse, USt oder Kleinunternehmerregelung.'
+          : 'Hello! I am your BizStart registration guide. Ask about Gewerbeanmeldung, Finanzamt, Krankenkasse, VAT, or Kleinunternehmer rules.',
       language,
     },
   ])
@@ -36,7 +36,7 @@ export default function RegistrationChat({ open, onClose }) {
       const res = await appApi.integrations.Core.InvokeLLM({
         prompt: `${aiLanguageInstruction(language)}
 
-You are a German business registration guide (BizStart Germany). You are NOT a licensed Rechtsanwalt or Steuerberater. Be practical and step-by-step. Cover Gewerbeanmeldung, Finanzamt, USt, Handelsregister, IHK, and Kleinunternehmer §19 UStG when relevant. Always mention when the user should consult a licensed Steuerberater or lawyer.
+You are a German business registration guide (BizStart Germany). You are NOT a licensed Rechtsanwalt or Steuerberater. Be practical and step-by-step. Cover Gewerbeanmeldung, Finanzamt, Krankenkasse (GKV vs PKV for self-employed), USt, Handelsregister, IHK, and Kleinunternehmer §19 UStG when relevant. Always mention when the user should consult a licensed Steuerberater or lawyer.
 
 User question: ${text}`,
       })

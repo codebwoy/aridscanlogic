@@ -40,6 +40,8 @@ export default function EstimatedTaxes({
   mileage = [],
   invoices = [],
   expectedProfit = 80000,
+  hebesatz,
+  lang = 'de',
 }) {
   const stats = useMemo(
     () =>
@@ -48,25 +50,42 @@ export default function EstimatedTaxes({
         receipts,
         mileage,
         invoices,
+        hebesatz,
       }),
-    [receipts, mileage, invoices, expectedProfit]
+    [receipts, mileage, invoices, expectedProfit, hebesatz]
   )
 
   const max = Math.max(stats.gewerbesteuer, stats.einkommensteuer, stats.umsatzsteuer, 1)
+  const hebesatzLabel = hebesatz ?? 400
+
+  const labels =
+    lang === 'en'
+      ? {
+          title: 'Estimated taxes',
+          gewerbeNote: `Trade tax: €24,500 allowance · 3.5% × Hebesatz ${hebesatzLabel}`,
+          ustNote: `VAT: ${stats.vatCollected.toFixed(2)} € collected − ${stats.inputVat.toFixed(2)} € input VAT`,
+          gewerbe: 'Trade tax',
+          est: 'Income tax',
+          ust: 'VAT',
+        }
+      : {
+          title: 'Geschätzte Steuern',
+          gewerbeNote: `Gewerbe: Freibetrag 24.500 € · Messzahl 3,5 % × Hebesatz ${hebesatzLabel}`,
+          ustNote: `USt: ${stats.vatCollected.toFixed(2)} € gesammelt − ${stats.inputVat.toFixed(2)} € Vorsteuer`,
+          gewerbe: 'Gewerbesteuer',
+          est: 'Einkommensteuer',
+          ust: 'Umsatzsteuer',
+        }
 
   return (
     <div className="rounded-2xl bg-slate-800/60 p-4">
-      <h3 className="mb-4 text-center font-semibold">Geschätzte Steuern</h3>
-      <p className="mb-2 text-center text-xs text-slate-500">
-        Gewerbe: Freibetrag 24.500 € · Messzahl 3,5 % × Hebesatz 400
-      </p>
-      <p className="mb-4 text-center text-xs text-slate-500">
-        USt: {stats.vatCollected.toFixed(2)} € gesammelt − {stats.inputVat.toFixed(2)} € Vorsteuer
-      </p>
+      <h3 className="mb-4 text-center font-semibold">{labels.title}</h3>
+      <p className="mb-2 text-center text-xs text-slate-500">{labels.gewerbeNote}</p>
+      <p className="mb-4 text-center text-xs text-slate-500">{labels.ustNote}</p>
       <div className="flex justify-around">
-        <TaxWheel title="Gewerbesteuer" value={stats.gewerbesteuer} max={max} color={COLORS[0]} />
-        <TaxWheel title="Einkommensteuer" value={stats.einkommensteuer} max={max} color={COLORS[1]} />
-        <TaxWheel title="Umsatzsteuer" value={stats.umsatzsteuer} max={max} color={COLORS[2]} />
+        <TaxWheel title={labels.gewerbe} value={stats.gewerbesteuer} max={max} color={COLORS[0]} />
+        <TaxWheel title={labels.est} value={stats.einkommensteuer} max={max} color={COLORS[1]} />
+        <TaxWheel title={labels.ust} value={stats.umsatzsteuer} max={max} color={COLORS[2]} />
       </div>
     </div>
   )
