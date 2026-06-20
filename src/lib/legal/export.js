@@ -1,5 +1,6 @@
-import { jsPDF } from 'jspdf'
 import JSZip from 'jszip'
+import { buildBrandedSectionsPdf } from '@/lib/pdf/brandedPdf'
+import { BRAND_SUITE_NAME } from '@/lib/brand'
 
 export const LEGAL_DOC_TYPES = [
   { key: 'impressum', label: 'Impressum', labelDe: 'Impressum' },
@@ -30,8 +31,16 @@ export function downloadBlob(filename, blob) {
   URL.revokeObjectURL(url)
 }
 
-function escapeHtml(text) {
-  return text.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+function brandedHtmlStyles() {
+  return `
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem 3rem; line-height: 1.6; color: #1e293b; background: #f8fafc; }
+    .brand-header { background: linear-gradient(135deg, #312e81 0%, #4338ca 50%, #4f46e5 100%); color: #fff; padding: 1.25rem 1.5rem; border-radius: 12px 12px 0 0; margin: -1rem -1rem 1.5rem; }
+    .brand-header h2 { margin: 0; font-size: 0.75rem; font-weight: 600; opacity: 0.9; letter-spacing: 0.04em; text-transform: uppercase; }
+    .brand-header h1 { margin: 0.35rem 0 0; font-size: 1.35rem; font-weight: 700; }
+    h1.doc-title { color: #4338ca; font-size: 1.25rem; border-bottom: 2px solid #6366f1; padding-bottom: 0.35rem; }
+    pre { white-space: pre-wrap; font-family: inherit; font-size: 0.9rem; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; }
+    .footer { margin-top: 2rem; font-size: 0.75rem; color: #64748b; border-top: 1px solid #c7d2fe; padding-top: 0.75rem; }
+  `
 }
 
 export function exportLegalDraftMarkdown(type, content, businessName = 'legal') {
@@ -43,49 +52,43 @@ export function exportLegalDraftHtml(type, content, businessName = 'legal') {
   downloadTextFile(`${type}_${safeName(businessName)}.html`, html, 'text/html;charset=utf-8')
 }
 
+function escapeHtml(text) {
+  return text.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
 function buildSingleHtmlPage(title, content) {
   return `<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${title}</title>
-  <style>
-    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #1e293b; }
-    h1 { font-size: 1.5rem; } h2 { font-size: 1.1rem; margin-top: 1.5rem; }
-    pre { white-space: pre-wrap; font-family: inherit; }
-  </style>
+  <title>${title} — ${BRAND_SUITE_NAME}</title>
+  <style>${brandedHtmlStyles()}</style>
 </head>
 <body>
-<pre>${escapeHtml(content)}</pre>
+  <div class="brand-header">
+    <h2>${BRAND_SUITE_NAME}</h2>
+    <h1>${title}</h1>
+  </div>
+  <pre>${escapeHtml(content)}</pre>
+  <p class="footer">Entwurf zur Vorbereitung — keine Rechtsberatung. ${BRAND_SUITE_NAME}</p>
 </body>
 </html>`
 }
 
 export function exportLegalDraftPdf(type, content, businessName = 'legal') {
-  const pdf = buildPdfFromSections([{ title: type, content }])
+  const pdf = buildBrandedSectionsPdf([{ title: type, content }], {
+    module: 'Website-Rechtliches',
+    disclaimer: 'Entwurf zur Vorbereitung — keine Rechtsberatung. Vor Veröffentlichung Rechtsanwalt konsultieren.',
+  })
   pdf.save(`${type}_${safeName(businessName)}.pdf`)
 }
 
 function buildPdfFromSections(sections) {
-  const pdf = new jsPDF()
-  sections.forEach((sec, idx) => {
-    if (idx > 0) pdf.addPage()
-    pdf.setFontSize(14)
-    pdf.text(sec.title, 20, 20)
-    pdf.setFontSize(9)
-    const lines = pdf.splitTextToSize(sec.content, 170)
-    let y = 30
-    lines.forEach((line) => {
-      if (y > 280) {
-        pdf.addPage()
-        y = 20
-      }
-      pdf.text(line, 20, y)
-      y += 5
-    })
-  })
-  return pdf
+  return buildBrandedSectionsPdf(
+    sections.map((s) => ({ title: s.title, content: s.content })),
+    { module: 'Website-Rechtliches' }
+  )
 }
 
 function delay(ms) {
@@ -119,7 +122,7 @@ export function exportAllLegalDraftsCombined(drafts, businessName, format = 'md'
     const body = sections
       .map(
         (s) =>
-          `<section style="margin-bottom:3rem;padding-bottom:2rem;border-bottom:1px solid #e2e8f0"><h1>${s.title}</h1><pre>${escapeHtml(s.content)}</pre></section>`
+          `<section style="margin-bottom:2.5rem"><h1 class="doc-title">${s.title}</h1><pre>${escapeHtml(s.content)}</pre></section>`
       )
       .join('\n')
     const html = `<!DOCTYPE html>
@@ -128,14 +131,15 @@ export function exportAllLegalDraftsCombined(drafts, businessName, format = 'md'
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Website-Rechtliches — ${name}</title>
-  <style>
-    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #1e293b; }
-    h1 { font-size: 1.35rem; } pre { white-space: pre-wrap; font-family: inherit; font-size: 0.9rem; }
-  </style>
+  <style>${brandedHtmlStyles()}</style>
 </head>
 <body>
-<h1 style="font-size:1.75rem;margin-bottom:2rem">Website-Rechtliches</h1>
+  <div class="brand-header">
+    <h2>${BRAND_SUITE_NAME}</h2>
+    <h1>Website-Rechtliches</h1>
+  </div>
 ${body}
+  <p class="footer">Entwurf zur Vorbereitung — keine Rechtsberatung.</p>
 </body>
 </html>`
     downloadTextFile(`Website_Rechtliches_${name}.html`, html, 'text/html;charset=utf-8')

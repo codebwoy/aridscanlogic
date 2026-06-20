@@ -1,7 +1,16 @@
-import { jsPDF } from 'jspdf'
 import JSZip from 'jszip'
 import { downloadTextFile } from '@/lib/pdfUtils'
 import { getTaxYearLabel } from './stats'
+import {
+  createBrandedPdf,
+  drawBrandedHeader,
+  drawSectionTitle,
+  drawFieldRow,
+  drawBodyParagraph,
+  ensureSpace,
+  applyBrandedFooters,
+  PDF_THEME,
+} from '@/lib/pdf/brandedPdf'
 
 function loadImage(src) {
   return new Promise((resolve, reject) => {
@@ -47,129 +56,90 @@ export function exportReceiptsCsv(receipts, profile, taxYear) {
 }
 
 export async function exportTaxReportPdf(receipts, stats, profile, taxYear) {
-  const pdf = new jsPDF()
+  const pdf = createBrandedPdf()
   const sym = profile.homeCurrency === 'EUR' ? '€' : profile.homeCurrency
   const startMonth = profile.taxYearStartMonth || 1
 
-  let y = 20
-  pdf.setFontSize(18)
-  pdf.text('Tax Vault — Annual Report', 20, y)
-  y += 10
-  pdf.setFontSize(11)
-  pdf.text(profile.businessName || '', 20, y)
-  y += 6
-  pdf.text(profile.ownerName || '', 20, y)
-  y += 6
-  if (profile.taxId) {
-    pdf.text(`Tax ID: ${profile.taxId}`, 20, y)
-    y += 6
-  }
-  if (profile.vatNumber) {
-    pdf.text(`VAT: ${profile.vatNumber}`, 20, y)
-    y += 6
-  }
-  if (profile.address) {
-    const lines = pdf.splitTextToSize(profile.address, 170)
-    pdf.text(lines, 20, y)
-    y += lines.length * 5
-  }
-  y += 4
-  pdf.text(getTaxYearLabel(taxYear, startMonth), 20, y)
-  y += 12
+  let y = drawBrandedHeader(pdf, {
+    title: 'Tax Vault — Jahresbericht',
+    subtitle: getTaxYearLabel(taxYear, startMonth),
+    module: 'Tax Vault',
+  })
 
-  pdf.setFontSize(10)
-  pdf.text(`Total gross expenses: ${sym}${stats.totalExpenses.toFixed(2)}`, 20, y)
-  y += 6
-  pdf.text(`Total VAT paid: ${sym}${stats.totalVat.toFixed(2)}`, 20, y)
-  y += 6
-  pdf.text(`Total deductible (incl. mileage): ${sym}${stats.totalDeductible.toFixed(2)}`, 20, y)
-  y += 6
-  pdf.text(`Non-deductible (personal): ${sym}${stats.personalPortion.toFixed(2)}`, 20, y)
-  y += 6
-  pdf.text(`Receipts: ${stats.count}`, 20, y)
+  y = drawFieldRow(pdf, y, 'Unternehmen', profile.businessName, { alt: true })
+  y = drawFieldRow(pdf, y, 'Inhaber', profile.ownerName)
+  if (profile.taxId) y = drawFieldRow(pdf, y, 'St.-Nr.', profile.taxId, { alt: true })
+  if (profile.vatNumber) y = drawFieldRow(pdf, y, 'USt-IdNr.', profile.vatNumber)
+  if (profile.address) y = drawFieldRow(pdf, y, 'Adresse', profile.address, { alt: true })
+
+  y = drawSectionTitle(pdf, y + 4, 'Zusammenfassung')
+  y = drawFieldRow(pdf, y, 'Brutto-Ausgaben', `${sym}${stats.totalExpenses.toFixed(2)}`, { alt: true })
+  y = drawFieldRow(pdf, y, 'Vorsteuer', `${sym}${stats.totalVat.toFixed(2)}`)
+  y = drawFieldRow(pdf, y, 'Abzugsfähig', `${sym}${stats.totalDeductible.toFixed(2)}`, { alt: true })
+  y = drawFieldRow(pdf, y, 'Privatanteil', `${sym}${stats.personalPortion.toFixed(2)}`)
+  y = drawFieldRow(pdf, y, 'Belege', String(stats.count), { alt: true })
   if (stats.mileageTrips > 0) {
-    y += 6
-    pdf.text(`Mileage: ${stats.mileageKm.toFixed(1)} km — ${sym}${stats.mileageDeductible.toFixed(2)} deductible`, 20, y)
-  }
-  y += 10
-
-  pdf.setFontSize(12)
-  pdf.text('Summary by category', 20, y)
-  y += 8
-  pdf.setFontSize(9)
-  Object.entries(stats.byCategory).forEach(([cat, d]) => {
-    if (y > 270) {
-      pdf.addPage()
-      y = 20
-    }
-    pdf.text(
-      `${cat} | ${d.count} rcpt | Gross ${sym}${d.gross.toFixed(2)} | VAT ${sym}${d.vat.toFixed(2)} | Ded. ${sym}${d.deductible.toFixed(2)}`,
-      20,
-      y
+    y = drawFieldRow(
+      pdf,
+      y,
+      'Fahrtenbuch',
+      `${stats.mileageKm.toFixed(1)} km — ${sym}${stats.mileageDeductible.toFixed(2)}`
     )
-    y += 5
+  }
+
+  y = drawSectionTitle(pdf, y + 4, 'Nach Kategorie')
+  Object.entries(stats.byCategory).forEach(([cat, d], i) => {
+    y = ensureSpace(pdf, y, 10, { title: 'Jahresbericht', module: 'Tax Vault' })
+    y = drawFieldRow(
+      pdf,
+      y,
+      cat,
+      `${d.count} Belege · Brutto ${sym}${d.gross.toFixed(2)} · Abz. ${sym}${d.deductible.toFixed(2)}`,
+      { alt: i % 2 === 0 }
+    )
   })
 
   if (stats.mileage?.length) {
-    y += 8
-    if (y > 250) {
-      pdf.addPage()
-      y = 20
-    }
-    pdf.setFontSize(12)
-    pdf.text('Mileage log', 20, y)
-    y += 8
-    pdf.setFontSize(9)
-    stats.mileage.forEach((m) => {
-      if (y > 275) {
-        pdf.addPage()
-        y = 20
-      }
-      pdf.text(
-        `${m.trip_date} ${m.start_location} → ${m.end_location} | ${m.distance_km} km | ${sym}${m.deductible_amount?.toFixed(2)} | ${m.purpose || ''}`,
-        20,
+    y += 6
+    y = drawSectionTitle(pdf, y, 'Fahrtenbuch')
+    stats.mileage.forEach((m, i) => {
+      y = ensureSpace(pdf, y, 10, { module: 'Tax Vault' })
+      y = drawFieldRow(
+        pdf,
         y,
-        { maxWidth: 170 }
+        m.trip_date,
+        `${m.start_location} → ${m.end_location} · ${m.distance_km} km · ${sym}${m.deductible_amount?.toFixed(2)}`,
+        { alt: i % 2 === 0 }
       )
-      y += 5
     })
   }
 
   pdf.addPage()
-  y = 20
-  pdf.setFontSize(14)
-  pdf.text('Receipt detail (all items)', 20, y)
-  y += 10
+  y = drawBrandedHeader(pdf, { title: 'Belegdetails', subtitle: getTaxYearLabel(taxYear, startMonth), module: 'Tax Vault' })
 
   for (let i = 0; i < receipts.length; i++) {
     const r = receipts[i]
-    if (y > 240) {
-      pdf.addPage()
-      y = 20
-    }
-    pdf.setFontSize(10)
-    pdf.setFont(undefined, 'bold')
-    pdf.text(`${r.vendor_name} — ${r.purchase_date}`, 20, y)
-    y += 6
-    pdf.setFont(undefined, 'normal')
-    pdf.setFontSize(9)
-    pdf.text(
-      `Total: ${sym}${r.total_amount?.toFixed(2)} | VAT: ${sym}${r.vat_amount?.toFixed(2)} | Category: ${r.category} | Ded.: ${sym}${r.deductible_amount?.toFixed(2)}`,
-      20,
-      y
+    y = ensureSpace(pdf, y, 20, { title: 'Belegdetails', module: 'Tax Vault' })
+    y = drawSectionTitle(pdf, y, `${r.vendor_name} — ${r.purchase_date}`)
+    y = drawFieldRow(
+      pdf,
+      y,
+      'Betrag',
+      `${sym}${r.total_amount?.toFixed(2)} · MwSt ${sym}${r.vat_amount?.toFixed(2)} · ${r.category}`,
+      { alt: true }
     )
-    y += 5
+    y = drawFieldRow(pdf, y, 'Abzugsfähig', `${sym}${r.deductible_amount?.toFixed(2)}`)
     if (r.currency && r.currency !== profile.homeCurrency) {
-      pdf.text(`Original: ${r.currency} ${r.total_amount} → ${profile.homeCurrency} ${r.converted_amount || r.total_amount}`, 20, y)
-      y += 5
+      y = drawFieldRow(
+        pdf,
+        y,
+        'Original',
+        `${r.currency} ${r.total_amount} → ${profile.homeCurrency} ${r.converted_amount || r.total_amount}`,
+        { alt: true }
+      )
     }
-    if (r.note) {
-      const noteLines = pdf.splitTextToSize(`Note: ${r.note}`, 170)
-      pdf.text(noteLines, 20, y)
-      y += noteLines.length * 4
-    }
-    pdf.text(`Type: ${r.expense_type} | Business use: ${r.business_use_pct ?? 100}%`, 20, y)
-    y += 6
+    if (r.note) y = drawBodyParagraph(pdf, y, `Notiz: ${r.note}`)
+    y = drawFieldRow(pdf, y, 'Typ', `${r.expense_type} · ${r.business_use_pct ?? 100}% geschäftlich`)
     if (r.image_url) {
       try {
         const img = await loadImage(r.image_url)
@@ -178,77 +148,61 @@ export async function exportTaxReportPdf(receipts, stats, profile, taxYear) {
         const ratio = Math.min(maxW / img.width, maxH / img.height)
         const w = img.width * ratio
         const h = img.height * ratio
-        if (y + h > 280) {
+        if (y + h > PDF_THEME.footerY) {
           pdf.addPage()
-          y = 20
+          y = drawBrandedHeader(pdf, { title: 'Belegdetails', module: 'Tax Vault' })
         }
-        pdf.addImage(r.image_url, 'JPEG', 20, y, w, h)
+        pdf.addImage(r.image_url, 'JPEG', PDF_THEME.margin, y, w, h)
         y += h + 8
       } catch {
-        pdf.text('(image unavailable)', 20, y)
-        y += 6
+        y = drawBodyParagraph(pdf, y, '(Bild nicht verfügbar)')
       }
     } else {
-      pdf.setTextColor(180, 100, 0)
-      pdf.text('⚠ No receipt scan attached', 20, y)
-      pdf.setTextColor(0, 0, 0)
-      y += 6
+      y = drawBodyParagraph(pdf, y, '⚠ Kein Belegscan angehängt')
     }
     y += 4
   }
 
   pdf.addPage()
-  y = 20
-  pdf.setFontSize(14)
-  pdf.text('Grand total', 20, y)
-  y += 10
-  pdf.setFontSize(11)
-  pdf.text(`Total deductible for tax year ${taxYear}: ${sym}${stats.totalDeductible.toFixed(2)}`, 20, y)
+  y = drawBrandedHeader(pdf, { title: 'Gesamtsumme', module: 'Tax Vault' })
+  drawFieldRow(pdf, y + 4, 'Abzugsfähig', `${sym}${stats.totalDeductible.toFixed(2)} (Steuerjahr ${taxYear})`, { alt: true })
 
+  applyBrandedFooters(pdf, 'Tax Vault — Schätzungen, keine Steuerberatung. Export für Steuerberater prüfen lassen.')
   pdf.save(`Tax_Report_${taxYear}_${(profile.businessName || 'business').replace(/\s+/g, '_')}.pdf`)
 }
 
 export async function exportReceiptPdf(receipt, profile) {
-  const pdf = new jsPDF()
+  const pdf = createBrandedPdf()
   const sym = profile.homeCurrency === 'EUR' ? '€' : profile.homeCurrency
-  let y = 15
-  pdf.setFontSize(14)
-  pdf.text('Tax Vault — Receipt', 15, y)
-  y += 10
-  pdf.setFontSize(10)
-  if (profile.businessName) {
-    pdf.text(profile.businessName, 15, y)
-    y += 6
-  }
-  pdf.text(`Vendor: ${receipt.vendor_name}`, 15, y)
-  y += 6
-  pdf.text(`Date: ${receipt.purchase_date}`, 15, y)
-  y += 6
-  pdf.text(`Total: ${sym}${receipt.total_amount?.toFixed(2)}`, 15, y)
-  y += 6
-  pdf.text(`VAT: ${sym}${receipt.vat_amount?.toFixed(2)}`, 15, y)
-  y += 6
-  pdf.text(`Category: ${receipt.category}`, 15, y)
-  y += 6
-  pdf.text(`Deductible: ${sym}${receipt.deductible_amount?.toFixed(2)}`, 15, y)
-  y += 6
-  pdf.text(`Tax year: ${receipt.tax_year}`, 15, y)
-  if (receipt.note) {
-    y += 8
-    pdf.text(pdf.splitTextToSize(`Note: ${receipt.note}`, 180), 15, y)
-    y += 12
-  }
+
+  let y = drawBrandedHeader(pdf, {
+    title: 'Tax Vault — Beleg',
+    subtitle: receipt.vendor_name,
+    module: 'Tax Vault',
+  })
+
+  if (profile.businessName) y = drawFieldRow(pdf, y, 'Unternehmen', profile.businessName, { alt: true })
+  y = drawFieldRow(pdf, y, 'Datum', receipt.purchase_date)
+  y = drawFieldRow(pdf, y, 'Betrag', `${sym}${receipt.total_amount?.toFixed(2)}`, { alt: true })
+  y = drawFieldRow(pdf, y, 'MwSt', `${sym}${receipt.vat_amount?.toFixed(2)}`)
+  y = drawFieldRow(pdf, y, 'Kategorie', receipt.category, { alt: true })
+  y = drawFieldRow(pdf, y, 'Abzugsfähig', `${sym}${receipt.deductible_amount?.toFixed(2)}`)
+  y = drawFieldRow(pdf, y, 'Steuerjahr', String(receipt.tax_year), { alt: true })
+  if (receipt.note) y = drawBodyParagraph(pdf, y, `Notiz: ${receipt.note}`)
+
   if (receipt.image_url) {
     try {
       const img = await loadImage(receipt.image_url)
       const w = 180
       const h = Math.min((img.height / img.width) * w, 200)
-      if (y + h > 270) pdf.addPage()
-      pdf.addImage(receipt.image_url, 'JPEG', 15, y, w, h)
+      if (y + h > PDF_THEME.footerY) pdf.addPage()
+      pdf.addImage(receipt.image_url, 'JPEG', PDF_THEME.margin, y, w, h)
     } catch {
-      pdf.text('(Receipt image could not be embedded)', 15, y + 10)
+      drawBodyParagraph(pdf, y + 10, '(Belegbild konnte nicht eingebettet werden)')
     }
   }
+
+  applyBrandedFooters(pdf)
   pdf.save(`receipt_${(receipt.vendor_name || 'scan').replace(/\s+/g, '_')}.pdf`)
 }
 

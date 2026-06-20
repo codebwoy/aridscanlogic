@@ -1,6 +1,15 @@
-import { jsPDF } from 'jspdf'
 import { KLEINUNTERNEHMER_FOOTNOTE } from '@/lib/docCalculations'
 import { buildEpcQrPayload, epcQrImageUrl } from '@/lib/docdraft/epcQr'
+import {
+  createBrandedPdf,
+  drawBrandedHeader,
+  drawSectionTitle,
+  drawFieldRow,
+  drawBodyParagraph,
+  ensureSpace,
+  applyBrandedFooters,
+  PDF_THEME,
+} from '@/lib/pdf/brandedPdf'
 
 export function downloadTextFile(content, filename) {
   const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
@@ -13,88 +22,94 @@ export function downloadTextFile(content, filename) {
 }
 
 export async function generateScanPdf(pages, title = 'ScanLogic Document') {
-  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  const pdf = createBrandedPdf()
   const pageW = pdf.internal.pageSize.getWidth()
   const pageH = pdf.internal.pageSize.getHeight()
 
   for (let i = 0; i < pages.length; i++) {
     if (i > 0) pdf.addPage()
-    pdf.setFontSize(10)
-    pdf.text(title, 10, 10)
+    drawBrandedHeader(pdf, {
+      title: title,
+      subtitle: `Seite ${i + 1} von ${pages.length}`,
+      module: 'Docs',
+    })
     try {
       const img = await loadImageData(pages[i])
-      const ratio = Math.min((pageW - 20) / img.w, (pageH - 30) / img.h)
+      const ratio = Math.min((pageW - 24) / img.w, (pageH - 55) / img.h)
       const w = img.w * ratio
       const h = img.h * ratio
-      pdf.addImage(pages[i], 'JPEG', (pageW - w) / 2, 15, w, h)
+      pdf.addImage(pages[i], 'JPEG', (pageW - w) / 2, 42, w, h)
     } catch {
-      pdf.text('Image could not be embedded', 10, 40)
+      drawBodyParagraph(pdf, 42, 'Bild konnte nicht eingebettet werden.')
     }
   }
+  applyBrandedFooters(pdf)
   pdf.save(`${title.replace(/\s+/g, '_')}.pdf`)
 }
 
 export async function generateInvoicePdf(doc, profile) {
-  const pdf = new jsPDF()
-  let y = 20
-  const isKu = profile?.is_kleinunternehmer
+  const pdf = createBrandedPdf()
+  const isKu = profile?.is_kleinunternehmer || profile?.isKleinunternehmer
+  const company = profile?.company_name || profile?.businessName || 'DocDraft'
 
-  pdf.setFontSize(16)
-  pdf.text(profile?.company_name || 'DocDraft', 20, y)
-  y += 10
-  pdf.setFontSize(10)
-  if (profile?.steuernummer) pdf.text(`St.-Nr.: ${profile.steuernummer}`, 20, y)
-  if (profile?.ust_id_nr) {
-    y += 5
-    pdf.text(`USt-IdNr.: ${profile.ust_id_nr}`, 20, y)
-  }
-  y += 15
-  pdf.setFontSize(14)
-  pdf.text(`${doc.document_type?.toUpperCase()} ${doc.document_number}`, 20, y)
-  y += 10
-  pdf.setFontSize(10)
-  pdf.text(`Datum: ${doc.issue_date}`, 20, y)
-  y += 15
-
-  ;(doc.line_items || []).forEach((item) => {
-    const line = `${item.description} — ${item.quantity}x ${item.unit_price}€ (netto) = ${item.total_gross ?? item.total}€`
-    pdf.text(line, 20, y)
-    y += 7
+  let y = drawBrandedHeader(pdf, {
+    title: `${doc.document_type?.toUpperCase() || 'DOCUMENT'} ${doc.document_number}`,
+    subtitle: company,
+    module: 'DocDraft',
   })
 
-  y += 5
-  pdf.text(`Netto: ${doc.subtotal_net?.toFixed(2)} €`, 20, y)
-  y += 6
-  pdf.text(`MwSt: ${doc.total_vat?.toFixed(2)} €`, 20, y)
-  y += 6
-  pdf.text(`Brutto: ${doc.total_gross?.toFixed(2)} €`, 20, y)
+  if (profile?.steuernummer) y = drawFieldRow(pdf, y, 'St.-Nr.', profile.steuernummer, { alt: true })
+  if (profile?.ust_id_nr || profile?.ustIdNr) {
+    y = drawFieldRow(pdf, y, 'USt-IdNr.', profile.ust_id_nr || profile.ustIdNr)
+  }
+  y = drawFieldRow(pdf, y, 'Datum', doc.issue_date, { alt: true })
+
+  y = drawSectionTitle(pdf, y + 4, 'Positionen')
+  ;(doc.line_items || []).forEach((item, i) => {
+    y = ensureSpace(pdf, y, 10, { title: doc.document_number, module: 'DocDraft' })
+    y = drawFieldRow(
+      pdf,
+      y,
+      `${item.quantity}×`,
+      `${item.description} — ${item.unit_price}€ netto = ${item.total_gross ?? item.total}€`,
+      { alt: i % 2 === 0 }
+    )
+  })
+
+  y = drawSectionTitle(pdf, y + 4, 'Summen')
+  y = drawFieldRow(pdf, y, 'Netto', `${doc.subtotal_net?.toFixed(2)} €`, { alt: true })
+  y = drawFieldRow(pdf, y, 'MwSt', `${doc.total_vat?.toFixed(2)} €`)
+  y = drawFieldRow(pdf, y, 'Brutto', `${doc.total_gross?.toFixed(2)} €`, { alt: true })
 
   if (profile?.iban && doc.document_type === 'invoice') {
     try {
       const payload = buildEpcQrPayload({
         iban: profile.iban,
         bic: profile.bic,
-        name: profile.company_name,
+        name: company,
         amount: doc.total_gross,
         reference: doc.document_number,
       })
       const qrUrl = epcQrImageUrl(payload)
-      const img = await loadImageData(qrUrl)
-      pdf.addImage(qrUrl, 'PNG', 140, y, 40, 40)
-      y += 45
-      pdf.setFontSize(8)
-      pdf.text('SEPA QR payment', 140, y)
+      await loadImageData(qrUrl)
+      if (y + 48 > PDF_THEME.footerY) {
+        pdf.addPage()
+        y = drawBrandedHeader(pdf, { title: 'SEPA-Zahlung', module: 'DocDraft' })
+      }
+      pdf.addImage(qrUrl, 'PNG', PDF_THEME.margin + 100, y, 40, 40)
+      drawBodyParagraph(pdf, y + 42, 'SEPA QR-Zahlung')
+      y += 50
     } catch {
       /* QR optional */
     }
   }
 
   if (isKu || doc.legal_footnote) {
-    y += 12
-    pdf.setFontSize(8)
-    pdf.text(doc.legal_footnote || KLEINUNTERNEHMER_FOOTNOTE, 20, y, { maxWidth: 170 })
+    y = ensureSpace(pdf, y, 16, { module: 'DocDraft' })
+    drawBodyParagraph(pdf, y, doc.legal_footnote || KLEINUNTERNEHMER_FOOTNOTE)
   }
 
+  applyBrandedFooters(pdf, 'DocDraft — Rechnungsentwurf. Steuerliche Prüfung durch Steuerberater empfohlen.')
   pdf.save(`${doc.document_number}.pdf`)
 }
 

@@ -1,7 +1,13 @@
-import { jsPDF } from 'jspdf'
 import JSZip from 'jszip'
 import { downloadTextFile } from '@/lib/pdfUtils'
 import { hasWatermark } from './limits'
+import {
+  createBrandedPdf,
+  drawBrandedHeader,
+  drawBodyParagraph,
+  applyBrandedFooters,
+  PDF_THEME,
+} from '@/lib/pdf/brandedPdf'
 
 function loadImage(src) {
   return new Promise((resolve, reject) => {
@@ -13,7 +19,7 @@ function loadImage(src) {
 }
 
 export async function exportDocumentPdf(doc, user, title) {
-  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  const pdf = createBrandedPdf()
   const pageW = pdf.internal.pageSize.getWidth()
   const pageH = pdf.internal.pageSize.getHeight()
   const pages = doc.pages || []
@@ -22,28 +28,36 @@ export async function exportDocumentPdf(doc, user, title) {
   for (let i = 0; i < pages.length; i++) {
     if (i > 0) pdf.addPage()
     const src = pages[i].processedImageUrl || pages[i].imageUrl
+    drawBrandedHeader(pdf, {
+      title: title || doc.name || 'Scan',
+      subtitle: `Seite ${i + 1} von ${pages.length}`,
+      module: 'ScanVault',
+    })
     try {
       const img = await loadImage(src)
-      const ratio = Math.min((pageW - 20) / img.width, (pageH - 30) / img.height)
+      const ratio = Math.min((pageW - 24) / img.width, (pageH - 55) / img.height)
       const w = img.width * ratio
       const h = img.height * ratio
-      pdf.addImage(src, 'JPEG', (pageW - w) / 2, 15, w, h)
+      pdf.addImage(src, 'JPEG', (pageW - w) / 2, 42, w, h)
     } catch {
-      pdf.text('Page could not be embedded', 10, 40)
+      drawBodyParagraph(pdf, 42, 'Seite konnte nicht eingebettet werden.')
     }
     if (watermark) {
-      pdf.setFontSize(8)
-      pdf.setTextColor(150, 150, 150)
+      pdf.setFontSize(7)
+      pdf.setTextColor(...PDF_THEME.slate500)
       pdf.text('ScanVault Free', pageW - 35, pageH - 8)
     }
   }
   if (doc.extractedText) {
     pdf.addPage()
-    pdf.setFontSize(10)
-    pdf.text(title || doc.name, 10, 15)
-    const lines = pdf.splitTextToSize(doc.extractedText.slice(0, 8000), pageW - 20)
-    pdf.text(lines, 10, 25)
+    let y = drawBrandedHeader(pdf, {
+      title: title || doc.name || 'Scan',
+      subtitle: 'Extrahierter Text',
+      module: 'ScanVault',
+    })
+    drawBodyParagraph(pdf, y, doc.extractedText.slice(0, 8000))
   }
+  applyBrandedFooters(pdf)
   pdf.save(`${(title || doc.name || 'scan').replace(/\s+/g, '_')}.pdf`)
 }
 

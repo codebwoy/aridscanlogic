@@ -3,51 +3,45 @@
  */
 
 import { saveProfile, getActiveProfile, ensureDefaultProfile } from '@/lib/docdraft/store'
-import { loadLegalData, saveQuestionnaire } from './store'
-import { buildLegalProfile } from './profile'
+import { loadLegalData, saveQuestionnaire, saveLegalProfile } from './store'
+import { buildLegalProfileFromFields, profileFieldsToBizStartPatch } from './profile'
 
-export function syncLegalToDocDraft(formData = {}) {
-  ensureDefaultProfile()
-  const profile = getActiveProfile()
-  const legal = loadLegalData()
-  const merged = buildLegalProfile({
-    firstName: formData.firstName,
-    lastName: formData.lastName,
-    businessName: formData.intendedBusinessName || formData.businessName,
-    legalStructure: formData.businessStructure,
-    street: formData.street,
-    houseNumber: formData.houseNumber,
-    plz: formData.plz,
-    city: formData.city,
-    email: formData.email,
-    phone: formData.phone,
-    steuernummer: formData.steuernummer,
-    ustIdNr: formData.ustIdNr,
-    website: legal.questionnaire?.websiteUrl || formData.website,
+export function persistLegalProfile(profileFields, formData = {}, onUpdateForm) {
+  saveLegalProfile(profileFields)
+  saveQuestionnaire({
+    websiteUrl: profileFields.website || '',
   })
 
+  const patch = profileFieldsToBizStartPatch(profileFields)
+  onUpdateForm?.(patch)
+
+  ensureDefaultProfile()
+  const profile = getActiveProfile()
   if (profile) {
     saveProfile({
       ...profile,
-      businessName: merged.businessName || profile.businessName,
-      legalStructure: merged.legalStructure,
-      street: merged.street,
-      houseNumber: merged.houseNumber,
-      plz: merged.plz,
-      city: merged.city,
-      email: merged.email,
-      phone: merged.phone,
-      website: merged.website,
-      steuernummer: merged.steuernummer,
-      ustIdNr: merged.ustIdNr,
+      businessName: profileFields.businessName || profile.businessName,
+      legalStructure: profileFields.legalStructure || profile.legalStructure,
+      street: profileFields.street,
+      houseNumber: profileFields.houseNumber,
+      plz: profileFields.plz,
+      city: profileFields.city,
+      country: profileFields.country,
+      email: profileFields.email,
+      phone: profileFields.phone,
+      website: profileFields.website,
+      steuernummer: profileFields.steuernummer,
+      ustIdNr: profileFields.ustIdNr,
     })
   }
 
-  if (formData.website && !legal.questionnaire?.websiteUrl) {
-    saveQuestionnaire({ websiteUrl: formData.website })
-  }
+  return buildLegalProfileFromFields(profileFields, loadLegalData().questionnaire)
+}
 
-  return merged
+export function syncLegalToDocDraft(formData = {}, profileFields = null) {
+  const legal = loadLegalData()
+  const fields = profileFields || legal.profile
+  return persistLegalProfile(fields, formData)
 }
 
 export function getLegalDraftsForContracts() {

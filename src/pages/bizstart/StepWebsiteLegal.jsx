@@ -1,7 +1,11 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { FileText, Shield, FileSignature, ChevronRight, Download, Copy, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { buildLegalProfile } from '@/lib/legal/profile'
+import {
+  buildLegalProfileFromFields,
+  initLegalProfileFields,
+  getMissingProfileFields,
+} from '@/lib/legal/profile'
 import { loadLegalData, saveQuestionnaire, saveDrafts } from '@/lib/legal/store'
 import { generateImpressum, generateDatenschutz, generateAvv, generateAllDrafts } from '@/lib/legal/generators'
 import {
@@ -13,7 +17,8 @@ import {
   exportAllLegalDraftsZip,
 } from '@/lib/legal/export'
 import { getNextStepId } from '@/lib/bizstart/steps'
-import { syncLegalToDocDraft } from '@/lib/legal/sync'
+import { persistLegalProfile } from '@/lib/legal/sync'
+import LegalProfileForm from '@/components/legal/LegalProfileForm'
 import SafeMarkdown from '@/components/SafeMarkdown'
 
 const PHASES = ['impressum', 'datenschutz', 'avv']
@@ -25,7 +30,8 @@ const PHASE_META = {
     avv: { title: 'AVV', icon: FileSignature, desc: 'Auftragsverarbeitungsvertrag mit Kunden oder Dienstleistern' },
     disclaimer:
       'Entwürfe zur Vorbereitung — keine Rechtsberatung. Vor Veröffentlichung oder Unterzeichnung einen Rechtsanwalt konsultieren.',
-    generate: 'Entwurf erstellen',
+    generate: 'Entwurf erstellen / aktualisieren',
+    updateHint: 'Vorschau aktualisiert sich automatisch bei Änderungen.',
     next: 'Weiter',
     back: 'Zurück',
     done: 'Fertig — weiter',
@@ -33,8 +39,8 @@ const PHASE_META = {
     exportMd: 'Markdown',
     exportHtml: 'HTML',
     exportPdf: 'PDF',
-    confirm: 'Geprüft — Entwurf gespeichert',
-    website: 'Website-URL',
+    privacySection: 'Website & Datenverarbeitung',
+    avvSection: 'Vertragsdetails',
     contactForm: 'Kontaktformular auf der Website',
     newsletter: 'Newsletter / E-Mail-Marketing',
     analytics: 'Webanalyse (z. B. Google Analytics, Plausible)',
@@ -47,10 +53,10 @@ const PHASE_META = {
     payment: 'Zahlungsdienstleister',
     paymentProvider: 'Zahlungsanbieter',
     webAgency: 'Ich baue/hoste Websites für Kunden (Web-Agentur)',
-    clientCompany: 'Kundenfirma (Auftraggeber)',
+    clientCompany: 'Kundenfirma (Verantwortlicher)',
     clientContact: 'Kunden-Ansprechpartner',
     clientEmail: 'Kunden-E-Mail',
-    clientAddress: 'Kunden-Adresse',
+    clientAddress: 'Kunden-Adresse (kein Postfach)',
     processingPurpose: 'Verarbeitungszweck',
     preview: 'Vorschau',
     exportThis: 'Dieses Dokument',
@@ -60,8 +66,7 @@ const PHASE_META = {
     exportSeparateHint: '3 separate Dateien (Impressum, Datenschutz, AVV)',
     exportCombinedHint: 'Eine Datei mit allen drei Abschnitten',
     exportZipHint: 'ZIP-Archiv mit je einer Datei pro Dokument',
-    exportAll: 'Alle Entwürfe exportieren',
-    toContracts: 'In Contracts öffnen',
+    fillRequired: 'Bitte Pflichtfelder ausfüllen (markiert in Gelb).',
   },
   en: {
     impressum: { title: 'Imprint (Impressum)', icon: FileText, desc: 'Mandatory footer page (§ 5 DDG)' },
@@ -69,7 +74,8 @@ const PHASE_META = {
     avv: { title: 'DPA (AVV)', icon: FileSignature, desc: 'Data processing agreement with clients or vendors' },
     disclaimer:
       'Drafts for preparation only — not legal advice. Consult a lawyer before publishing or signing.',
-    generate: 'Generate draft',
+    generate: 'Generate / update draft',
+    updateHint: 'Preview updates automatically when you edit the form.',
     next: 'Next',
     back: 'Back',
     done: 'Done — continue',
@@ -77,8 +83,8 @@ const PHASE_META = {
     exportMd: 'Markdown',
     exportHtml: 'HTML',
     exportPdf: 'PDF',
-    confirm: 'Reviewed — draft saved',
-    website: 'Website URL',
+    privacySection: 'Website & data processing',
+    avvSection: 'Contract details',
     contactForm: 'Contact form on website',
     newsletter: 'Newsletter / email marketing',
     analytics: 'Web analytics (e.g. Google Analytics, Plausible)',
@@ -94,7 +100,7 @@ const PHASE_META = {
     clientCompany: 'Client company (controller)',
     clientContact: 'Client contact person',
     clientEmail: 'Client email',
-    clientAddress: 'Client address',
+    clientAddress: 'Client address (no P.O. box)',
     processingPurpose: 'Processing purpose',
     preview: 'Preview',
     exportThis: 'This document',
@@ -104,61 +110,109 @@ const PHASE_META = {
     exportSeparateHint: '3 separate files (Impressum, Privacy, AVV)',
     exportCombinedHint: 'Single file with all three sections',
     exportZipHint: 'ZIP archive with one file per document',
-    exportAll: 'Export all drafts',
-    toContracts: 'Open in Contracts',
+    fillRequired: 'Please fill required fields (highlighted in yellow).',
   },
+}
+
+function generatePhaseText(phaseId, profile, lang) {
+  if (phaseId === 'impressum') return generateImpressum(profile, lang)
+  if (phaseId === 'datenschutz') return generateDatenschutz(profile, lang)
+  return generateAvv(profile, lang)
 }
 
 export default function StepWebsiteLegal({ lang, formData, onUpdateForm, onUpdateStep, onNext }) {
   const s = PHASE_META[lang] || PHASE_META.en
   const [phase, setPhase] = useState(0)
-  const [questionnaire, setQuestionnaire] = useState(() => loadLegalData().questionnaire)
+  const [profileFields, setProfileFields] = useState(() => initLegalProfileFields(formData))
+  const [questionnaire, setQuestionnaire] = useState(() => {
+    const q = loadLegalData().questionnaire
+    const website = initLegalProfileFields(formData).website
+    return { ...q, websiteUrl: q.websiteUrl || website }
+  })
   const [drafts, setDrafts] = useState(() => loadLegalData().drafts)
   const [preview, setPreview] = useState('')
+  const autoGenRef = useRef(null)
 
   const profile = useMemo(
-    () => buildLegalProfile({ questionnaire }),
-    [questionnaire, formData]
+    () =>
+      buildLegalProfileFromFields(profileFields, {
+        ...questionnaire,
+        websiteUrl: profileFields.website || questionnaire.websiteUrl,
+      }),
+    [profileFields, questionnaire]
   )
 
-  useEffect(() => {
-    saveQuestionnaire(questionnaire)
-  }, [questionnaire])
+  const missing = useMemo(() => getMissingProfileFields(profileFields), [profileFields])
+
+  const persistAll = useCallback(
+    (nextProfile, nextQuestionnaire = questionnaire) => {
+      persistLegalProfile(nextProfile, formData, onUpdateForm)
+      saveQuestionnaire({
+        ...nextQuestionnaire,
+        websiteUrl: nextProfile.website || nextQuestionnaire.websiteUrl,
+      })
+    },
+    [formData, onUpdateForm, questionnaire]
+  )
+
+  const updateProfile = (next) => {
+    setProfileFields(next)
+    persistAll(next)
+  }
+
+  const setQ = (key, val) => {
+    const next = { ...questionnaire, [key]: val }
+    setQuestionnaire(next)
+    saveQuestionnaire(next)
+  }
 
   const phaseId = PHASES[phase]
   const PhaseIcon = s[phaseId]?.icon || FileText
 
-  const setQ = (key, val) => setQuestionnaire((q) => ({ ...q, [key]: val }))
-
-  const generateCurrent = () => {
-    let text = ''
-    if (phaseId === 'impressum') text = generateImpressum(profile, lang)
-    else if (phaseId === 'datenschutz') text = generateDatenschutz(profile, lang)
-    else text = generateAvv(profile, lang)
-
+  const applyDraft = (text) => {
     const nextDrafts = { ...drafts, [phaseId]: text, lastGeneratedAt: new Date().toISOString() }
     setDrafts(nextDrafts)
     setPreview(text)
     saveDrafts(nextDrafts)
-    toast.success(lang === 'de' ? 'Entwurf erstellt' : 'Draft generated')
   }
 
+  const generateCurrent = useCallback(() => {
+    if (phaseId === 'impressum' && missing.length > 0) {
+      toast.error(s.fillRequired)
+      return
+    }
+    const text = generatePhaseText(phaseId, profile, lang)
+    applyDraft(text)
+    toast.success(lang === 'de' ? 'Entwurf aktualisiert' : 'Draft updated')
+  }, [phaseId, profile, lang, missing, s.fillRequired])
+
+  useEffect(() => {
+    clearTimeout(autoGenRef.current)
+    autoGenRef.current = setTimeout(() => {
+      if (phaseId === 'impressum' && missing.length > 0) return
+      const text = generatePhaseText(phaseId, profile, lang)
+      applyDraft(text)
+    }, 600)
+    return () => clearTimeout(autoGenRef.current)
+  }, [profileFields, questionnaire, phaseId, lang, missing, profile])
+
   const confirmPhase = () => {
+    if (!preview && !drafts[phaseId]) {
+      generateCurrent()
+      return
+    }
     const key = `${phaseId}Confirmed`
     const nextDrafts = { ...drafts, [key]: true }
     setDrafts(nextDrafts)
     saveDrafts(nextDrafts)
+    persistAll(profileFields)
     if (phase < PHASES.length - 1) {
       setPhase(phase + 1)
       setPreview(drafts[PHASES[phase + 1]] || '')
     } else {
       onUpdateStep('websiteLegal', 'confirmed')
-      if (questionnaire.websiteUrl) {
-        onUpdateForm({ website: questionnaire.websiteUrl })
-      }
-      syncLegalToDocDraft(formData)
-      const next = getNextStepId('websiteLegal', formData.businessStructure, formData)
-      onNext(next)
+      persistAll(profileFields)
+      onNext(getNextStepId('websiteLegal', formData.businessStructure, formData))
     }
   }
 
@@ -173,7 +227,7 @@ export default function StepWebsiteLegal({ lang, formData, onUpdateForm, onUpdat
     }
   }
 
-  const field = (label, key, type = 'text') => (
+  const qField = (label, key, type = 'text') => (
     <label className="block">
       <span className="mb-1 block text-xs text-slate-500">{label}</span>
       <input
@@ -200,71 +254,88 @@ export default function StepWebsiteLegal({ lang, formData, onUpdateForm, onUpdat
   const renderQuestionnaire = () => {
     if (phaseId === 'impressum') {
       return (
-        <div className="space-y-3">
-          <p className="text-sm text-slate-400">
-            {lang === 'de'
-              ? 'Daten aus BizStart werden automatisch übernommen. Ergänzen Sie Ihre Website-URL.'
-              : 'Data from BizStart is pre-filled. Add your website URL.'}
-          </p>
-          {field(s.website, 'websiteUrl')}
-          <div className="premium-card space-y-1 p-3 text-xs text-slate-400">
-            <p>
-              <span className="text-slate-300">{profile.businessName}</span>
-            </p>
-            <p>{profile.ownerName}</p>
-            <p>
-              {[profile.street, profile.houseNumber, profile.plz, profile.city].filter(Boolean).join(', ')}
-            </p>
-            <p>{profile.email} · {profile.phone}</p>
-            {profile.steuernummer && <p>St.-Nr.: {profile.steuernummer}</p>}
-          </div>
-        </div>
+        <LegalProfileForm
+          lang={lang}
+          fields={profileFields}
+          onChange={updateProfile}
+          variant="full"
+        />
       )
     }
 
     if (phaseId === 'datenschutz') {
       return (
-        <div className="space-y-3">
-          {check(s.contactForm, 'hasContactForm')}
-          {check(s.newsletter, 'hasNewsletter')}
-          {check(s.analytics, 'hasAnalytics')}
-          {questionnaire.hasAnalytics && field(s.analyticsProvider, 'analyticsProvider')}
-          {check(s.cookies, 'hasCookies')}
-          {field(s.hosting, 'hostingProvider')}
-          {field(s.email, 'emailProvider')}
-          {check(s.aiApi, 'usesAiApi')}
-          {questionnaire.usesAiApi && field(s.aiProvider, 'aiApiProvider')}
-          {check(s.payment, 'usesPaymentProcessor')}
-          {questionnaire.usesPaymentProcessor && field(s.paymentProvider, 'paymentProvider')}
+        <div className="space-y-4">
+          <LegalProfileForm
+            lang={lang}
+            fields={profileFields}
+            onChange={updateProfile}
+            variant="controller"
+          />
+          <div className="space-y-3 rounded-xl border border-slate-700/60 bg-slate-900/40 p-4">
+            <p className="text-sm font-semibold text-brand-300">{s.privacySection}</p>
+            {check(s.contactForm, 'hasContactForm')}
+            {check(s.newsletter, 'hasNewsletter')}
+            {check(s.analytics, 'hasAnalytics')}
+            {questionnaire.hasAnalytics && qField(s.analyticsProvider, 'analyticsProvider')}
+            {check(s.cookies, 'hasCookies')}
+            {qField(s.hosting, 'hostingProvider')}
+            {qField(s.email, 'emailProvider')}
+            {check(s.aiApi, 'usesAiApi')}
+            {questionnaire.usesAiApi && qField(s.aiProvider, 'aiApiProvider')}
+            {check(s.payment, 'usesPaymentProcessor')}
+            {questionnaire.usesPaymentProcessor && qField(s.paymentProvider, 'paymentProvider')}
+          </div>
         </div>
       )
     }
 
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         {check(s.webAgency, 'isWebAgency')}
         {questionnaire.isWebAgency ? (
           <>
-            {field(s.clientCompany, 'clientCompanyName')}
-            {field(s.clientContact, 'clientContactName')}
-            {field(s.clientEmail, 'clientEmail')}
-            {field(s.clientAddress, 'clientAddress')}
+            <div className="space-y-3 rounded-xl border border-slate-700/60 bg-slate-900/40 p-4">
+              <p className="text-sm font-semibold text-brand-300">
+                {lang === 'de' ? 'Kunde (Verantwortlicher)' : 'Client (controller)'}
+              </p>
+              {qField(s.clientCompany, 'clientCompanyName')}
+              {qField(s.clientContact, 'clientContactName')}
+              {qField(s.clientEmail, 'clientEmail', 'email')}
+              {qField(s.clientAddress, 'clientAddress')}
+            </div>
+            <LegalProfileForm
+              lang={lang}
+              fields={profileFields}
+              onChange={updateProfile}
+              variant="processor"
+            />
           </>
         ) : (
-          <p className="text-sm text-slate-400">
-            {lang === 'de'
-              ? 'Für Ihre eigene Website: AVV mit Hosting-, E-Mail- und anderen Dienstleistern abschließen (nicht im Footer veröffentlichen).'
-              : 'For your own website: sign AVVs with hosting, email, and other vendors (not published in footer).'}
-          </p>
+          <>
+            <p className="text-sm text-slate-400">
+              {lang === 'de'
+                ? 'Für Ihre eigene Website: AVV mit Hosting-, E-Mail- und anderen Dienstleistern abschließen (nicht im Footer veröffentlichen).'
+                : 'For your own website: sign AVVs with hosting, email, and other vendors (not published in footer).'}
+            </p>
+            <LegalProfileForm
+              lang={lang}
+              fields={profileFields}
+              onChange={updateProfile}
+              variant="controller"
+            />
+          </>
         )}
-        {field(s.processingPurpose, 'processingPurpose')}
-        {field(s.hosting, 'hostingProvider')}
+        <div className="space-y-3 rounded-xl border border-slate-700/60 bg-slate-900/40 p-4">
+          <p className="text-sm font-semibold text-brand-300">{s.avvSection}</p>
+          {qField(s.processingPurpose, 'processingPurpose')}
+          {qField(s.hosting, 'hostingProvider')}
+        </div>
       </div>
     )
   }
 
   const currentText = preview || drafts[phaseId] || ''
-
   const allDraftsReady = drafts.impressum && drafts.datenschutz && drafts.avv
 
   const ensureAllDrafts = () => {
@@ -277,9 +348,7 @@ export default function StepWebsiteLegal({ lang, formData, onUpdateForm, onUpdat
   const downloadAllSeparate = async (format) => {
     const all = ensureAllDrafts()
     await exportAllLegalDraftsSeparate(all, profile.businessName, format)
-    toast.success(
-      lang === 'de' ? '3 Dateien werden heruntergeladen…' : 'Downloading 3 separate files…'
-    )
+    toast.success(lang === 'de' ? '3 Dateien werden heruntergeladen…' : 'Downloading 3 separate files…')
   }
 
   const downloadAllCombined = (format) => {
@@ -294,8 +363,8 @@ export default function StepWebsiteLegal({ lang, formData, onUpdateForm, onUpdat
     toast.success(lang === 'de' ? 'ZIP heruntergeladen' : 'ZIP downloaded')
   }
 
-  const FormatButtons = ({ onMd, onHtml, onPdf, compact }) => (
-    <div className={`flex flex-wrap gap-2 ${compact ? '' : 'mt-2'}`}>
+  const FormatButtons = ({ onMd, onHtml, onPdf }) => (
+    <div className="mt-2 flex flex-wrap gap-2">
       <button type="button" onClick={onMd} className="flex items-center gap-1 rounded-lg bg-slate-800 px-3 py-1.5 text-xs">
         <Download className="h-3 w-3" /> {s.exportMd}
       </button>
@@ -332,6 +401,8 @@ export default function StepWebsiteLegal({ lang, formData, onUpdateForm, onUpdat
       </p>
 
       {renderQuestionnaire()}
+
+      <p className="text-center text-xs text-slate-500">{s.updateHint}</p>
 
       <button type="button" onClick={generateCurrent} className="btn-primary w-full rounded-xl py-3 text-sm font-semibold">
         {s.generate}
@@ -378,7 +449,6 @@ export default function StepWebsiteLegal({ lang, formData, onUpdateForm, onUpdat
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-300">
             {lang === 'de' ? 'Alle drei Dokumente' : 'All three documents'}
           </p>
-
           <div>
             <p className="text-sm font-medium">{s.exportSeparate}</p>
             <p className="text-xs text-slate-500">{s.exportSeparateHint}</p>
@@ -388,7 +458,6 @@ export default function StepWebsiteLegal({ lang, formData, onUpdateForm, onUpdat
               onPdf={() => downloadAllSeparate('pdf')}
             />
           </div>
-
           <div className="border-t border-slate-700/60 pt-4">
             <p className="text-sm font-medium">{s.exportCombined}</p>
             <p className="text-xs text-slate-500">{s.exportCombinedHint}</p>
@@ -398,7 +467,6 @@ export default function StepWebsiteLegal({ lang, formData, onUpdateForm, onUpdat
               onPdf={() => downloadAllCombined('pdf')}
             />
           </div>
-
           <div className="border-t border-slate-700/60 pt-4">
             <p className="text-sm font-medium">{s.exportZip}</p>
             <p className="text-xs text-slate-500">{s.exportZipHint}</p>
@@ -427,12 +495,10 @@ export default function StepWebsiteLegal({ lang, formData, onUpdateForm, onUpdat
         <button
           type="button"
           onClick={confirmPhase}
-          disabled={!currentText}
+          disabled={phaseId === 'impressum' && missing.length > 0}
           className="btn-primary flex flex-1 items-center justify-center gap-1 rounded-xl py-3 text-sm font-semibold disabled:opacity-40"
         >
-          {drafts[`${phaseId}Confirmed`] ? (
-            <CheckCircle2 className="h-4 w-4" />
-          ) : null}
+          {drafts[`${phaseId}Confirmed`] ? <CheckCircle2 className="h-4 w-4" /> : null}
           {phase < PHASES.length - 1 ? s.next : s.done}
           <ChevronRight className="h-4 w-4" />
         </button>

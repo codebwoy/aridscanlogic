@@ -1,5 +1,10 @@
-import { jsPDF } from 'jspdf'
 import JSZip from 'jszip'
+import {
+  createBrandedPdf,
+  drawBrandedHeader,
+  drawBodyParagraph,
+  applyBrandedFooters,
+} from '@/lib/pdf/brandedPdf'
 
 async function loadImage(src) {
   return new Promise((resolve, reject) => {
@@ -12,28 +17,34 @@ async function loadImage(src) {
 }
 
 export async function exportDocumentPdf(doc) {
-  const pdf = new jsPDF()
+  const pdf = createBrandedPdf()
   const pages = doc.pages || []
+  const pageW = pdf.internal.pageSize.getWidth()
+  const pageH = pdf.internal.pageSize.getHeight()
+
   for (let i = 0; i < pages.length; i++) {
     if (i > 0) pdf.addPage()
+    drawBrandedHeader(pdf, {
+      title: doc.title || 'Scan',
+      subtitle: `Seite ${i + 1} von ${pages.length}`,
+      module: 'Docs',
+    })
     try {
       const img = await loadImage(pages[i])
-      const pageW = pdf.internal.pageSize.getWidth()
-      const pageH = pdf.internal.pageSize.getHeight()
-      const ratio = Math.min((pageW - 20) / img.width, (pageH - 30) / img.height)
+      const ratio = Math.min((pageW - 24) / img.width, (pageH - 55) / img.height)
       const w = img.width * ratio
       const h = img.height * ratio
-      pdf.addImage(pages[i], 'JPEG', (pageW - w) / 2, 15, w, h)
+      pdf.addImage(pages[i], 'JPEG', (pageW - w) / 2, 42, w, h)
     } catch {
-      pdf.text('Page could not be embedded', 10, 40)
+      drawBodyParagraph(pdf, 42, 'Seite konnte nicht eingebettet werden.')
     }
   }
   if (doc.ocr_text) {
     pdf.addPage()
-    pdf.setFontSize(10)
-    pdf.text(doc.title || 'Scan', 10, 15)
-    pdf.text(pdf.splitTextToSize(doc.ocr_text.slice(0, 12000), 180), 10, 25)
+    let y = drawBrandedHeader(pdf, { title: doc.title || 'Scan', subtitle: 'OCR-Text', module: 'Docs' })
+    drawBodyParagraph(pdf, y, doc.ocr_text.slice(0, 12000))
   }
+  applyBrandedFooters(pdf)
   pdf.save(`${(doc.title || 'document').replace(/\s+/g, '_')}.pdf`)
 }
 
