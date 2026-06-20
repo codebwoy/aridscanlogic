@@ -3,6 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import AppShell from '@/components/layout/AppShell'
 import TabBar from '@/components/layout/TabBar'
 import PremiumModal from '@/components/layout/PremiumModal'
+import SuitePlansPage from '@/pages/SuitePlansPage'
+import { usePremium } from '@/context/PremiumContext'
 import { GuideProvider } from '@/context/GuideContext'
 import AppGuideDrawer from '@/components/guide/AppGuideDrawer'
 import GuideFab from '@/components/guide/GuideFab'
@@ -36,6 +38,7 @@ function TabFallback() {
 
 export default function Dashboard({ onOpenScanVault }) {
   const [activeTab, setActiveTab] = useState(tabFromHash)
+  const { plansOpen, closePlans } = usePremium()
   const ActivePage = TAB_CONTENT[activeTab] || DocsPage
   const isLawyer = activeTab === 'lawyer'
 
@@ -85,6 +88,7 @@ export default function Dashboard({ onOpenScanVault }) {
           </motion.div>
         </AnimatePresence>
         <PremiumModal />
+        {plansOpen && <SuitePlansPage onBack={closePlans} />}
         <GuideFab />
         <AppGuideDrawer />
       </AppShell>

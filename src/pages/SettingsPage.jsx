@@ -37,7 +37,7 @@ export default function SettingsPage({ onOpenScanVault }) {
   const [authEmail, setAuthEmail] = useState('')
   const [authPassword, setAuthPassword] = useState('')
   const [authBusy, setAuthBusy] = useState(false)
-  const { isPremium, setModalOpen } = usePremium()
+  const { isPremium, plan, openPlans, planDisplayName } = usePremium()
   const [taxVaultSettings, setTaxVaultSettings] = useState(false)
   const { openGuide } = useGuide()
   const { language, setLanguage } = useAiLanguage()
@@ -229,7 +229,7 @@ export default function SettingsPage({ onOpenScanVault }) {
             />
             <button
               type="button"
-              onClick={() => setModalOpen(true)}
+              onClick={openPlans}
               className="flex w-full items-center gap-3 rounded-2xl bg-gradient-to-r from-brand-900/80 to-slate-800 p-4 text-left transition hover:from-brand-900"
             >
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/10">
@@ -238,7 +238,11 @@ export default function SettingsPage({ onOpenScanVault }) {
               <div className="flex-1">
                 <p className="font-medium text-slate-100">ScanLogic Premium</p>
                 <p className="text-xs text-slate-400">
-                  {isPremium ? (de ? 'Aktiv' : 'Active') : de ? '14 Tage kostenlos testen' : '14-day free trial'}
+                  {isPremium
+                    ? `${planDisplayName(de ? 'de' : 'en')} · ${de ? 'Aktiv' : 'Active'}`
+                    : de
+                      ? 'Pläne & Zahlung — 14 Tage testen'
+                      : 'Plans & billing — 14-day trial'}
                 </p>
               </div>
               <ChevronRight className="h-5 w-5 text-slate-500" aria-hidden />

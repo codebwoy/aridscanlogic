@@ -1,22 +1,42 @@
 import { createContext, useContext, useState, useCallback } from 'react'
+import {
+  getEffectiveSuitePlan,
+  isSuitePremium,
+  startSuitePlanTrial,
+  subscribeToSuitePlan,
+  setSuiteFreePlan,
+  restoreSuitePurchases,
+} from '@/lib/suite/subscription'
+import { suitePlanDisplayName } from '@/lib/suite/plans'
 
 const PremiumContext = createContext(null)
-const STORAGE_KEY = 'scanlogic_premium_trial'
 
 export function PremiumProvider({ children }) {
-  const [isPremium, setIsPremium] = useState(() => {
-    try {
-      return localStorage.getItem(STORAGE_KEY) === 'active'
-    } catch {
-      return false
-    }
-  })
+  const [plan, setPlan] = useState(() => getEffectiveSuitePlan())
+  const [isPremium, setIsPremium] = useState(() => isSuitePremium())
   const [modalOpen, setModalOpen] = useState(false)
+  const [plansOpen, setPlansOpen] = useState(false)
   const [modalFeature, setModalFeature] = useState('')
+
+  const refreshPlan = useCallback(() => {
+    const effective = getEffectiveSuitePlan()
+    setPlan(effective)
+    setIsPremium(isSuitePremium())
+  }, [])
+
+  const openPlans = useCallback(() => {
+    setModalOpen(false)
+    setPlansOpen(true)
+  }, [])
+
+  const closePlans = useCallback(() => {
+    setPlansOpen(false)
+    refreshPlan()
+  }, [refreshPlan])
 
   const requirePremium = useCallback(
     (featureName, onAllowed) => {
-      if (isPremium) {
+      if (isSuitePremium()) {
         onAllowed?.()
         return true
       }
@@ -24,24 +44,58 @@ export function PremiumProvider({ children }) {
       setModalOpen(true)
       return false
     },
-    [isPremium]
+    []
   )
 
   const activateTrial = useCallback(() => {
-    localStorage.setItem(STORAGE_KEY, 'active')
-    setIsPremium(true)
+    startSuitePlanTrial('pro')
+    refreshPlan()
     setModalOpen(false)
-  }, [])
+    setPlansOpen(false)
+  }, [refreshPlan])
+
+  const startTrial = useCallback(
+    (planId, billing) => {
+      startSuitePlanTrial(planId, billing)
+      refreshPlan()
+    },
+    [refreshPlan]
+  )
+
+  const subscribe = useCallback(
+    (planId, billing) => {
+      subscribeToSuitePlan(planId, billing)
+      refreshPlan()
+    },
+    [refreshPlan]
+  )
+
+  const setFree = useCallback(() => {
+    setSuiteFreePlan()
+    refreshPlan()
+  }, [refreshPlan])
+
+  const restore = useCallback(() => restoreSuitePurchases(), [])
 
   return (
     <PremiumContext.Provider
       value={{
+        plan,
         isPremium,
         modalOpen,
+        plansOpen,
         modalFeature,
         setModalOpen,
+        openPlans,
+        closePlans,
         requirePremium,
         activateTrial,
+        startTrial,
+        subscribe,
+        setFree,
+        restore,
+        refreshPlan,
+        planDisplayName: (lang) => suitePlanDisplayName(plan, lang),
       }}
     >
       {children}

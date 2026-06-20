@@ -1,15 +1,18 @@
 import { useRef, useState } from 'react'
-import { Camera, Plus, X, FlipHorizontal, ImagePlus } from 'lucide-react'
+import { Camera, Plus, X, FlipHorizontal, ImagePlus, RefreshCw, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { dataUrlToJpegFile } from '@/lib/imageProcessing'
-import { useCameraStream } from '@/lib/camera/useCameraStream'
+import { useCameraStream, CAMERA_ERROR } from '@/lib/camera/useCameraStream'
 import { blobToDataUrl, captureVideoFrame } from '@/lib/camera/captureFrame'
 
 /** Capture produces JPEG DataURL strings; upload path uses Blob → File */
 export default function CameraCapture({ pages, onPagesChange, onDone }) {
   const fileInputRef = useRef(null)
   const [facingMode, setFacingMode] = useState('environment')
-  const { videoRef, active } = useCameraStream({ facingMode })
+  const { videoRef, active, starting, errorKind, errorMessage, startCamera } = useCameraStream({
+    facingMode,
+    autoStart: false,
+  })
 
   const addPageDataUrl = (dataUrl) => {
     onPagesChange([...pages, dataUrl])
@@ -17,6 +20,10 @@ export default function CameraCapture({ pages, onPagesChange, onDone }) {
   }
 
   const capturePage = () => {
+    if (!active) {
+      startCamera()
+      return
+    }
     const dataUrl = captureVideoFrame(videoRef.current, 0.9)
     if (dataUrl) addPageDataUrl(dataUrl)
   }
@@ -42,13 +49,68 @@ export default function CameraCapture({ pages, onPagesChange, onDone }) {
     onPagesChange(pages.filter((_, i) => i !== idx))
   }
 
+  const enableCamera = () => {
+    startCamera()
+  }
+
+  const showOverlay = !active
+
   return (
     <div className="flex flex-col">
       <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-black">
-        <video ref={videoRef} className="h-full w-full object-cover" playsInline muted />
-        {!active && (
-          <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80">
-            <Camera className="h-12 w-12 animate-pulse text-slate-500" aria-hidden />
+        <video ref={videoRef} className="h-full w-full object-cover" playsInline muted autoPlay />
+        {showOverlay && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-900/90 px-6 text-center">
+            {errorKind ? (
+              <>
+                <AlertCircle className="h-10 w-10 text-amber-400" aria-hidden />
+                <p className="text-sm leading-relaxed text-slate-200">{errorMessage}</p>
+                <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={enableCamera}
+                    disabled={starting}
+                    className="flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${starting ? 'animate-spin' : ''}`} aria-hidden />
+                    Erneut versuchen
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-2 rounded-xl bg-slate-700 px-4 py-2.5 text-sm font-medium text-white"
+                  >
+                    <ImagePlus className="h-4 w-4" aria-hidden />
+                    Bild hochladen
+                  </button>
+                </div>
+                {errorKind === CAMERA_ERROR.DENIED && (
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    Tipp: Klicken Sie auf das Kamera-Symbol in der Adressleiste und wählen Sie „Zulassen“.
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <Camera className="h-12 w-12 text-brand-400" aria-hidden />
+                <p className="text-sm text-slate-300">Kamera für Dokumentenscan aktivieren</p>
+                <button
+                  type="button"
+                  onClick={enableCamera}
+                  disabled={starting}
+                  className="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                >
+                  {starting ? 'Wird gestartet…' : 'Kamera aktivieren'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-xs text-slate-400 underline"
+                >
+                  Stattdessen Bild hochladen
+                </button>
+              </>
+            )}
           </div>
         )}
         <div className="pointer-events-none absolute inset-4 rounded-lg border-2 border-dashed border-white/40" />
@@ -84,7 +146,8 @@ export default function CameraCapture({ pages, onPagesChange, onDone }) {
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept="image/jpeg,image/png,image/webp,image/*"
+          capture="environment"
           multiple
           className="hidden"
           onChange={handleFileUpload}
@@ -92,7 +155,8 @@ export default function CameraCapture({ pages, onPagesChange, onDone }) {
         <button
           type="button"
           onClick={() => setFacingMode((m) => (m === 'environment' ? 'user' : 'environment'))}
-          className="rounded-full bg-slate-800 p-3"
+          disabled={!active}
+          className="rounded-full bg-slate-800 p-3 disabled:opacity-40"
           aria-label="Kamera wechseln"
         >
           <FlipHorizontal className="h-5 w-5" aria-hidden />
