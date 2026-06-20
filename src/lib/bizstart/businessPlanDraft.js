@@ -97,6 +97,7 @@ export function initBusinessPlanDraft(formData) {
   if (formData.businessPlanDraftInitialized) {
     const draft = getBusinessPlanDraft(formData)
     const patch = {}
+    if (!draft.planAudience) patch.planAudience = 'general'
     if (!draft.revenueLines?.length) patch.revenueLines = defaultRevenueLines()
     if (!draft.operatingCosts?.length) patch.operatingCosts = defaultOperatingCosts()
     if (!draft.privateCosts?.length) patch.privateCosts = defaultPrivateCosts()

@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Download, RotateCcw, Sparkles, Loader2 } from 'lucide-react'
+import { Download, RotateCcw, Sparkles, Loader2, Archive } from 'lucide-react'
 import { toast } from 'sonner'
 import { getNextStepId } from '@/lib/bizstart/steps'
 import { bpT } from '@/lib/bizstart/businessPlanI18n'
 import { generateBusinessPlanPdf } from '@/lib/bizstart/businessPlanPdf'
+import { downloadBusinessPlanSubmissionPack } from '@/lib/bizstart/businessPlanSubmissionPack'
 import {
   getBusinessPlanDraft,
   mergeBusinessPlanForExport,
@@ -14,6 +15,7 @@ import { polishBusinessPlanDraft, isBusinessPlanAiComplete, countPolishableField
 import BusinessPlanWizard from '@/components/bizstart/BusinessPlanWizard'
 import BusinessPlanTitleField from '@/components/bizstart/BusinessPlanTitleField'
 import BusinessPlanPdfOptions from '@/components/bizstart/BusinessPlanPdfOptions'
+import BusinessPlanReadinessPanel from '@/components/bizstart/BusinessPlanReadinessPanel'
 import { ScanLogicAiOverlay } from '@/components/bizstart/ScanLogicAiTextarea'
 
 function HowToSection({ lang }) {
@@ -46,6 +48,7 @@ function HowToSection({ lang }) {
 export default function StepBusinessPlan({ lang, formData, onUpdateForm, onUpdateStep, onNext }) {
   const [showWizard, setShowWizard] = useState(!formData.businessPlanComplete)
   const [aiLoading, setAiLoading] = useState(false)
+  const [packLoading, setPackLoading] = useState(false)
   const [aiProgress, setAiProgress] = useState({ current: 0, total: 0 })
 
   const ensurePolished = async () => {
@@ -72,6 +75,26 @@ export default function StepBusinessPlan({ lang, formData, onUpdateForm, onUpdat
       return null
     } finally {
       setAiLoading(false)
+    }
+  }
+
+  const downloadPack = async () => {
+    const draft = getBusinessPlanDraft(formData)
+    if (!draft.planTitle?.trim()) {
+      toast.error(bpT(lang, 'requiredHint'))
+      return
+    }
+    setPackLoading(true)
+    toast.message(bpT(lang, 'submissionPackPreparing'))
+    try {
+      const merged = await ensurePolished()
+      if (!merged) return
+      await downloadBusinessPlanSubmissionPack(merged, lang)
+      toast.success(bpT(lang, 'submissionPackReady'))
+    } catch {
+      toast.error(bpT(lang, 'submissionPackFailed'))
+    } finally {
+      setPackLoading(false)
     }
   }
 
@@ -143,15 +166,26 @@ export default function StepBusinessPlan({ lang, formData, onUpdateForm, onUpdat
               </p>
             )}
           </div>
+          <BusinessPlanReadinessPanel lang={lang} formData={formData} draft={draft} autoAssess />
           <button
             type="button"
             onClick={downloadPdf}
-            disabled={aiLoading}
+            disabled={aiLoading || packLoading}
             className="btn-primary flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold disabled:opacity-50"
           >
             {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
             {bpT(lang, 'downloadPdf')}
           </button>
+          <button
+            type="button"
+            onClick={downloadPack}
+            disabled={aiLoading || packLoading}
+            className="premium-card flex w-full items-center justify-center gap-2 py-3 text-sm font-medium text-brand-300 disabled:opacity-50"
+          >
+            {packLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Archive className="h-4 w-4" />}
+            {bpT(lang, 'submissionPack')}
+          </button>
+          <p className="text-center text-[11px] text-slate-500">{bpT(lang, 'submissionPackHint')}</p>
           <button type="button" onClick={markSubmitted} className="premium-card flex w-full items-center justify-center gap-2 py-3 text-sm font-medium text-brand-300">
             {bpT(lang, 'markSubmitted')}
           </button>

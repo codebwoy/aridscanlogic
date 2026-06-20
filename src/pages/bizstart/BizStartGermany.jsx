@@ -35,6 +35,7 @@ import StepBusinessPlan from './StepBusinessPlan'
 import StepComplete from './StepComplete'
 import ComplianceCalendar from './ComplianceCalendar'
 import RegistrationChat from './RegistrationChat'
+import FounderCommandCenter from '@/components/bizstart/FounderCommandCenter'
 import PremiumCard from '@/components/shared/PremiumCard'
 import { exportRegistrationChecklistPdf } from '@/lib/bizstart/exportChecklist'
 
@@ -216,6 +217,13 @@ export default function BizStartGermany({ onExit, onComplete }) {
           </div>
         </div>
       </header>
+
+      <FounderCommandCenter
+        lang={lang}
+        formData={formData}
+        stepStatus={stepStatus}
+        onNavigate={(id) => setScreen(id)}
+      />
 
       <button
         type="button"

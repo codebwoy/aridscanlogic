@@ -246,6 +246,16 @@ export function saveBrandedPdf(pdf, filename, disclaimer, { branding = 'full' } 
   pdf.save(filename)
 }
 
+/** Apply footers and return pdf for blob export (no download). */
+export function finalizeBrandedPdf(pdf, disclaimer, { branding = 'full' } = {}) {
+  applyBrandedFooters(pdf, disclaimer, { branding })
+  return pdf
+}
+
+export function brandedPdfToBlob(pdf) {
+  return pdf.output('blob')
+}
+
 /** Branded multi-section document (legal packs, contracts). */
 export function buildBrandedSectionsPdf(sections, { module, disclaimer } = {}) {
   const pdf = createBrandedPdf()

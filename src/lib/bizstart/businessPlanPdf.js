@@ -7,6 +7,8 @@ import {
   drawDisclaimerBox,
   ensureSpace,
   saveBrandedPdf,
+  finalizeBrandedPdf,
+  brandedPdfToBlob,
 } from '@/lib/pdf/brandedPdf'
 import {
   planningYearLabels,
@@ -108,27 +110,8 @@ function drawFinanceTable(pdf, y, lang, title, lines, years, d) {
   return y + 10
 }
 
-export function generateBusinessPlanPdf(formData, lang = 'de') {
-  const d = mergeBusinessPlanForExport(formData)
-  const years = planningYearLabels(d)
-  const branding = pdfBranding(d)
-  const disclaimer = pdfDisclaimer(d, lang)
-  const docTitle = d.planTitle || (lang === 'de' ? 'Businessplan' : 'Business plan')
-  const subtitle =
-    lang === 'de'
-      ? `Planungszeitraum ${periodLabel(d, lang)} · Zielgruppe: ${audienceLabel(d.planAudience, lang)}`
-      : `Planning period ${periodLabel(d, lang)} · Audience: ${audienceLabel(d.planAudience, lang)}`
-
-  const pdf = createBrandedPdf()
-  let y = drawBrandedHeader(pdf, {
-    title: docTitle,
-    subtitle,
-    module: 'BizStart Germany',
-    branding,
-    lang,
-  })
-
-  const sections = [
+function textSections(d, lang) {
+  return [
     { n: '1', title: lang === 'de' ? 'Zusammenfassung' : 'Executive summary', text: d.summary },
     { n: '2', title: lang === 'de' ? 'Produktion (Kernaktivitäten)' : 'Core activities', text: d.production },
     { n: '3', title: lang === 'de' ? 'Kunden' : 'Customers', text: d.customers },
@@ -158,16 +141,18 @@ export function generateBusinessPlanPdf(formData, lang = 'de') {
     },
     { n: '10', title: lang === 'de' ? 'Chancen & Risiken' : 'Opportunities & risks', text: d.risks },
   ]
+}
 
-  const opts = spaceOpts(d, lang)
+function headerMeta(d, lang) {
+  const docTitle = d.planTitle || (lang === 'de' ? 'Businessplan' : 'Business plan')
+  const subtitle =
+    lang === 'de'
+      ? `Planungszeitraum ${periodLabel(d, lang)} · Zielgruppe: ${audienceLabel(d.planAudience, lang)}`
+      : `Planning period ${periodLabel(d, lang)} · Audience: ${audienceLabel(d.planAudience, lang)}`
+  return { docTitle, subtitle }
+}
 
-  for (const sec of sections) {
-    if (!sec.text?.trim()) continue
-    y = ensureSpace(pdf, y, 24, opts)
-    y = drawSectionTitle(pdf, y, `${sec.n}  ${sec.title}`)
-    y = drawBodyParagraph(pdf, y, sec.text)
-  }
-
+function drawFinanceSections(pdf, y, d, lang, years, opts) {
   if (d.financeAssumptions?.trim() || d.profitabilityNotes?.trim() || d.liquidityNotes?.trim()) {
     y = ensureSpace(pdf, y, 20, { ...opts, title: lang === 'de' ? 'Finanzplan' : 'Finance plan' })
     y = drawSectionTitle(pdf, y, lang === 'de' ? '11 — Finanzplan' : '11 — Finance plan')
@@ -181,42 +166,22 @@ export function generateBusinessPlanPdf(formData, lang = 'de') {
       y = drawBodyParagraph(pdf, y, `${lang === 'de' ? 'Liquiditätsplanung' : 'Liquidity planning'}\n${d.liquidityNotes}`)
     }
   }
-
   if (d.revenueLines?.length) {
     y = drawFinanceTable(pdf, y, lang, lang === 'de' ? '11.1 Ertragsquellen / Umsatz' : '11.1 Revenue', d.revenueLines, years, d)
   }
   if (d.operatingCosts?.length) {
-    y = drawFinanceTable(
-      pdf,
-      y,
-      lang,
-      lang === 'de' ? '11.2 Betriebsausgaben' : '11.2 Operating expenses',
-      d.operatingCosts,
-      years,
-      d
-    )
+    y = drawFinanceTable(pdf, y, lang, lang === 'de' ? '11.2 Betriebsausgaben' : '11.2 Operating expenses', d.operatingCosts, years, d)
   }
   if (d.privateCosts?.length) {
-    y = drawFinanceTable(
-      pdf,
-      y,
-      lang,
-      lang === 'de' ? '11.3 Private Ausgaben' : '11.3 Private expenses',
-      d.privateCosts,
-      years,
-      d
-    )
+    y = drawFinanceTable(pdf, y, lang, lang === 'de' ? '11.3 Private Ausgaben' : '11.3 Private expenses', d.privateCosts, years, d)
   }
-
   y = ensureSpace(pdf, y, 30, { ...opts, title: lang === 'de' ? 'Kapital' : 'Capital' })
   y = drawSectionTitle(pdf, y, lang === 'de' ? '11.4 Kapitalbedarf & Finanzierung' : '11.4 Capital & financing')
   if (d.investments?.length) {
     d.investments.forEach((inv, i) => {
       y = drawFieldRow(pdf, y, lineName(inv, lang), inv.amount ? fmtEuro(inv.amount, lang) : '—', { alt: i % 2 === 0 })
     })
-    y = drawFieldRow(pdf, y, lang === 'de' ? 'Summe Investitionen' : 'Total investments', fmtEuro(sumAmount(d.investments), lang), {
-      alt: true,
-    })
+    y = drawFieldRow(pdf, y, lang === 'de' ? 'Summe Investitionen' : 'Total investments', fmtEuro(sumAmount(d.investments), lang), { alt: true })
   }
   y = drawFieldRow(pdf, y, lang === 'de' ? 'Gründungskosten' : 'Startup costs', d.foundingCosts ? fmtEuro(d.foundingCosts, lang) : '—')
   y = drawFieldRow(pdf, y, lang === 'de' ? 'Eigenkapital' : 'Equity', d.equityCapital ? fmtEuro(d.equityCapital, lang) : '—', { alt: true })
@@ -230,16 +195,105 @@ export function generateBusinessPlanPdf(formData, lang = 'de') {
     y = ensureSpace(pdf, y, 20, { ...opts, title: lang === 'de' ? 'Kapital' : 'Capital' })
     y = drawBodyParagraph(pdf, y, d.capitalNotes)
   }
+  return y
+}
 
-  if (d.annexes?.trim()) {
-    y = ensureSpace(pdf, y, 24, opts)
-    y = drawSectionTitle(pdf, y, lang === 'de' ? '12 — Anhang' : '12 — Annexes')
-    y = drawBodyParagraph(pdf, y, d.annexes)
+/** @param {'full'|'summary'|'finance'} variant */
+export function buildBusinessPlanPdfDocument(formData, lang = 'de', { variant = 'full' } = {}) {
+  const d = mergeBusinessPlanForExport(formData)
+  const years = planningYearLabels(d)
+  const branding = pdfBranding(d)
+  const disclaimer = pdfDisclaimer(d, lang)
+  const { docTitle, subtitle } = headerMeta(d, lang)
+  const opts = spaceOpts(d, lang)
+  const pdf = createBrandedPdf()
+
+  const summarySubtitle =
+    variant === 'summary'
+      ? lang === 'de'
+        ? 'Executive Summary — Kurzfassung'
+        : 'Executive summary — one-page overview'
+      : variant === 'finance'
+        ? lang === 'de'
+          ? 'Finanzübersicht'
+          : 'Finance overview'
+        : subtitle
+
+  let y = drawBrandedHeader(pdf, {
+    title: docTitle,
+    subtitle: summarySubtitle,
+    module: 'BizStart Germany',
+    branding,
+    lang,
+  })
+
+  if (variant === 'summary') {
+    if (d.summary?.trim()) {
+      y = drawSectionTitle(pdf, y, lang === 'de' ? '1 — Zusammenfassung' : '1 — Executive summary')
+      y = drawBodyParagraph(pdf, y, d.summary)
+    } else {
+      y = drawBodyParagraph(pdf, y, lang === 'de' ? '(Noch keine Zusammenfassung eingetragen.)' : '(No executive summary entered yet.)')
+    }
+  } else if (variant === 'finance') {
+    y = drawFinanceSections(pdf, y, d, lang, years, opts)
+  } else {
+    for (const sec of textSections(d, lang)) {
+      if (!sec.text?.trim()) continue
+      y = ensureSpace(pdf, y, 24, opts)
+      y = drawSectionTitle(pdf, y, `${sec.n}  ${sec.title}`)
+      y = drawBodyParagraph(pdf, y, sec.text)
+    }
+    y = drawFinanceSections(pdf, y, d, lang, years, opts)
+    if (d.annexes?.trim()) {
+      y = ensureSpace(pdf, y, 24, opts)
+      y = drawSectionTitle(pdf, y, lang === 'de' ? '12 — Anhang' : '12 — Annexes')
+      y = drawBodyParagraph(pdf, y, d.annexes)
+    }
   }
 
   y = ensureSpace(pdf, y + 6, 20, opts)
   drawDisclaimerBox(pdf, y, disclaimer)
 
   const slug = (d.planTitle || 'businessplan').replace(/[^\wäöüß-]+/gi, '_').slice(0, 40)
+  return { pdf, disclaimer, branding, docTitle, slug }
+}
+
+export function businessPlanPdfBlob(formData, lang = 'de', options = {}) {
+  const { pdf, disclaimer, branding } = buildBusinessPlanPdfDocument(formData, lang, options)
+  return brandedPdfToBlob(finalizeBrandedPdf(pdf, disclaimer, { branding }))
+}
+
+export function generateBusinessPlanPdf(formData, lang = 'de') {
+  const { pdf, disclaimer, branding, slug } = buildBusinessPlanPdfDocument(formData, lang, { variant: 'full' })
   saveBrandedPdf(pdf, `Businessplan_${slug}.pdf`, disclaimer, { branding })
+}
+
+export function buildFinanceSnapshotText(formData, lang = 'de') {
+  const d = mergeBusinessPlanForExport(formData)
+  const years = planningYearLabels(d)
+  const lines = []
+  const L = (de, en) => (lang === 'de' ? de : en)
+  lines.push(`${d.planTitle || L('Businessplan', 'Business plan')}`)
+  lines.push(`${L('Planungszeitraum', 'Planning period')}: ${periodLabel(d, lang)}`)
+  lines.push(`${L('Zielgruppe', 'Audience')}: ${audienceLabel(d.planAudience, lang)}`)
+  lines.push('')
+  if (d.revenueLines?.length) {
+    lines.push(`=== ${L('Umsatz', 'Revenue')} ===`)
+    d.revenueLines.forEach((row) => {
+      lines.push(`${lineName(row, lang)}: ${years[0]} ${fmtEuro(row.y1, lang)} | ${years[1]} ${fmtEuro(row.y2, lang)} | ${years[2]} ${fmtEuro(row.y3, lang)}`)
+    })
+    lines.push(`${L('Summe', 'Total')}: ${fmtEuro(sumYear(d.revenueLines, 'y1'), lang)} (${years[0]})`)
+    lines.push('')
+  }
+  if (d.operatingCosts?.length) {
+    lines.push(`=== ${L('Betriebsausgaben', 'Operating costs')} ===`)
+    lines.push(`${L('Summe', 'Total')}: ${fmtEuro(sumYear(d.operatingCosts, 'y1'), lang)} (${years[0]})`)
+    lines.push('')
+  }
+  if (d.equityCapital || d.loanAmount) {
+    lines.push(`=== ${L('Finanzierung', 'Financing')} ===`)
+    if (d.equityCapital) lines.push(`${L('Eigenkapital', 'Equity')}: ${fmtEuro(d.equityCapital, lang)}`)
+    if (d.loanAmount) lines.push(`${L('Kredit', 'Loan')}: ${fmtEuro(d.loanAmount, lang)}`)
+  }
+  return lines.join('\n')
 }
