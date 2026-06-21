@@ -9,7 +9,10 @@ export function validateInvoice(doc, profile, client) {
     errors.push('Steuernummer or USt-IdNr. required on invoice')
   }
   if (!profile?.street || !profile?.city) errors.push('Business address incomplete')
-  if (!client && !doc.recipient_name) errors.push('Recipient (client) required')
+  if (!doc.recipient_name?.trim()) errors.push('Recipient name required (Empfänger)')
+  if (!client && !doc.recipient_address?.trim()) {
+    errors.push('Recipient address required (Rechnungsadresse)')
+  }
   if (!doc.issue_date) errors.push('Invoice date (Rechnungsdatum) required')
   if (!doc.document_number) errors.push('Invoice number required')
   if (!doc.delivery_date && doc.document_type === 'invoice') {

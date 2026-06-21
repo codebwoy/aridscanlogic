@@ -2,6 +2,21 @@ import { KLEINUNTERNEHMER_FOOTNOTE } from '@/lib/docCalculations'
 import { amountToWords } from '@/lib/docdraft/amountInWords'
 import { disclaimerForBranding } from '@/lib/documentBranding'
 import { buildEpcQrPayload, epcQrImageUrl } from '@/lib/docdraft/epcQr'
+import { buildInvoiceBarcodeDataUrl, shouldShowInvoiceBarcode } from '@/lib/docdraft/invoiceBarcode'
+import {
+  buildTableColumns,
+  customerNumber,
+  INVOICE_LAYOUT,
+  invoiceContentWidth,
+  formatVatRateLabel,
+  invoiceTotalsRows,
+  lineItemsHaveProductMeta,
+  profileAddressLines,
+  profileOneLineAddress,
+  recipientDisplayName,
+  recipientFrom,
+  resolveProcessor,
+} from '@/lib/docdraft/invoiceLayout'
 import { applyBrandedFooters, createBrandedPdf, PDF_THEME } from '@/lib/pdf/brandedPdf'
 import { BRAND_SUITE_NAME } from '@/lib/brand'
 import {
@@ -13,39 +28,30 @@ import {
   unitLabel,
 } from './documentI18n'
 
-const MARGIN = 18
-const PAGE_W = 210
-const CONTENT_W = PAGE_W - MARGIN * 2
-const FOOTER_Y = 272
+const { margin: MARGIN, pageWidth: PAGE_W, footerY: FOOTER_Y, companyFooterY: COMPANY_FOOTER_Y } = INVOICE_LAYOUT
+const CONTENT_W = invoiceContentWidth()
 
-const INK = [30, 41, 59]
-const MUTED = [100, 116, 139]
-const LINE = [226, 232, 240]
-const BOX_BG = [248, 250, 252]
-
-function recipientFrom(doc, client) {
-  if (client) return client
-  return {
-    companyName: doc.recipient_name,
-    contactName: doc.recipient_contact,
-    billingAddress: doc.recipient_address,
-    email: doc.recipient_email,
-  }
-}
-
-function profileAddress(profile) {
-  const street = [profile?.street, profile?.houseNumber].filter(Boolean).join(' ')
-  const city = [profile?.plz, profile?.city].filter(Boolean).join(' ')
-  return [street, city].filter(Boolean)
-}
+const INK = [15, 23, 42]
+const MUTED = [71, 85, 105]
+const LINE = [203, 213, 225]
 
 function ensureY(pdf, y, needed) {
   if (y + needed <= FOOTER_Y) return y
   pdf.addPage()
-  return MARGIN + 8
+  return drawContinuationHeader(pdf) + 4
 }
 
-function drawScanLogicBand(pdf, lang) {
+function drawContinuationHeader(pdf) {
+  const page = pdf.internal.getCurrentPageInfo().pageNumber
+  const total = pdf.internal.getNumberOfPages()
+  pdf.setFont('helvetica', 'normal')
+  pdf.setFontSize(7.5)
+  pdf.setTextColor(...MUTED)
+  pdf.text(`${docT('de', 'page')}: ${page} / ${total}`, PAGE_W - MARGIN, MARGIN, { align: 'right' })
+  return MARGIN + 6
+}
+
+function drawScanLogicBand(pdf) {
   pdf.setFillColor(...PDF_THEME.brand900)
   pdf.rect(0, 0, PAGE_W, 10, 'F')
   pdf.setTextColor(255, 255, 255)
@@ -57,147 +63,175 @@ function drawScanLogicBand(pdf, lang) {
   return 16
 }
 
-function drawSenderBlock(pdf, y, profile, lang) {
-  if (profile?.logoUrl) {
-    try {
-      pdf.addImage(profile.logoUrl, 'PNG', MARGIN, y, 28, 12)
-      y += 14
-    } catch {
-      /* optional logo */
-    }
-  }
-
-  pdf.setFont('helvetica', 'bold')
-  pdf.setFontSize(12)
-  pdf.setTextColor(...INK)
-  pdf.text(profile?.businessName || profile?.company_name || '—', MARGIN, y)
-  y += 5
-
+function drawReturnAddress(pdf, y, profile) {
+  const line = profileOneLineAddress(profile)
+  if (!line) return y
   pdf.setFont('helvetica', 'normal')
-  pdf.setFontSize(9)
+  pdf.setFontSize(6.5)
   pdf.setTextColor(...MUTED)
-  profileAddress(profile).forEach((line) => {
-    pdf.text(line, MARGIN, y)
-    y += 4.2
-  })
-
-  if (profile?.steuernummer) {
-    pdf.text(`${docT(lang, 'taxId')} ${profile.steuernummer}`, MARGIN, y)
-    y += 4.2
-  }
-  const vatId = profile?.ustIdNr || profile?.ust_id_nr
-  if (vatId) {
-    pdf.text(`${docT(lang, 'vatId')} ${vatId}`, MARGIN, y)
-    y += 4.2
-  }
-
-  if (profile?.email) {
-    pdf.text(profile.email, MARGIN, y)
-    y += 4.2
-  }
-
-  return y
+  pdf.text(pdf.splitTextToSize(line, CONTENT_W), MARGIN, y)
+  return y + 5
 }
 
-function drawMetaBlock(pdf, y, doc, lang) {
-  const type = docTypeLabels(doc.document_type, lang)
+async function drawDocumentBarcode(pdf, y, doc, profile) {
+  if (!shouldShowInvoiceBarcode(doc, profile)) return y
+  try {
+    const url = buildInvoiceBarcodeDataUrl(doc.document_number)
+    if (!url) return y
+    await loadImage(url)
+    pdf.addImage(url, 'PNG', MARGIN, y, 74, 13)
+    return y + 15
+  } catch {
+    return y
+  }
+}
+
+function drawLogoAndMeta(pdf, y, doc, profile, client, lang) {
   const right = PAGE_W - MARGIN
   let metaY = y
 
-  pdf.setFont('helvetica', 'bold')
-  pdf.setFontSize(14)
-  pdf.setTextColor(...INK)
-  pdf.text(type.title, right, metaY, { align: 'right' })
-  metaY += 7
+  if (profile?.logoUrl) {
+    try {
+      pdf.addImage(profile.logoUrl, 'PNG', right - 36, y - 2, 36, 14)
+      metaY = y + 16
+    } catch {
+      /* optional logo */
+    }
+  } else {
+    pdf.setFont('helvetica', 'bolditalic')
+    pdf.setFontSize(11)
+    pdf.setTextColor(...INK)
+    pdf.text(profile?.businessName || profile?.company_name || '—', right, metaY, { align: 'right' })
+    metaY += 6
+  }
 
   pdf.setFont('helvetica', 'normal')
-  pdf.setFontSize(9)
+  pdf.setFontSize(8)
   pdf.setTextColor(...MUTED)
 
-  const rows = [
-    [docT(lang, 'number'), doc.document_number || '—'],
-    [docT(lang, 'date'), formatDocumentDate(doc.issue_date, lang)],
-  ]
+  const page = pdf.internal.getCurrentPageInfo().pageNumber
+  const total = pdf.internal.getNumberOfPages()
+  const metaRows = [[`${docT(lang, 'page')}:`, `${page} / ${total}`]]
+
+  const custNo = customerNumber(client)
+  if (custNo) metaRows.push([`${docT(lang, 'customerNo')}`, custNo])
+
+  const processor = resolveProcessor(doc, profile)
+  if (processor) metaRows.push([`${docT(lang, 'processor')}`, processor])
+
+  metaRows.push([`${docT(lang, 'date')}`, formatDocumentDate(doc.issue_date, lang)])
+
   if (doc.delivery_date && doc.document_type !== 'receipt') {
-    rows.push([docT(lang, 'deliveryDate'), formatDocumentDate(doc.delivery_date, lang)])
-  }
-  if (doc.due_date && !['receipt', 'delivery_note', 'quote'].includes(doc.document_type)) {
-    rows.push([docT(lang, 'dueDate'), formatDocumentDate(doc.due_date, lang)])
-  }
-  if (doc.valid_until || doc.document_type === 'quote') {
-    rows.push([docT(lang, 'validUntil'), formatDocumentDate(doc.valid_until, lang)])
+    metaRows.push([`${docT(lang, 'deliveryDate')}:`, formatDocumentDate(doc.delivery_date, lang)])
+  } else if (doc.delivery_date) {
+    metaRows.push([`${docT(lang, 'serviceDate')}:`, formatDocumentDate(doc.delivery_date, lang)])
   }
 
-  rows.forEach(([label, value]) => {
-    pdf.text(`${label}: ${value}`, right, metaY, { align: 'right' })
-    metaY += 4.5
+  if (doc.due_date && !['receipt', 'delivery_note', 'quote'].includes(doc.document_type)) {
+    metaRows.push([`${docT(lang, 'dueDate')}:`, formatDocumentDate(doc.due_date, lang)])
+  }
+
+  metaRows.forEach(([label, value]) => {
+    pdf.text(`${label} ${value}`, right, metaY, { align: 'right' })
+    metaY += 4.2
   })
 
   return Math.max(y + 18, metaY)
 }
 
-function drawRecipientBox(pdf, y, doc, client, lang) {
-  y = ensureY(pdf, y, 22)
-  const boxH = 20
-  pdf.setFillColor(...BOX_BG)
-  pdf.setDrawColor(...LINE)
-  pdf.setLineWidth(0.3)
-  pdf.roundedRect(MARGIN, y, CONTENT_W, boxH, 2, 2, 'FD')
-
-  pdf.setFont('helvetica', 'bold')
-  pdf.setFontSize(8)
-  pdf.setTextColor(...INK)
-  pdf.text(docT(lang, 'recipient'), MARGIN + 4, y + 6)
-
-  pdf.setFont('helvetica', 'normal')
-  pdf.setFontSize(9)
-  pdf.setTextColor(...INK)
-  let ty = y + 11
-  const name = client?.companyName || client?.contactName || '—'
-  pdf.text(name, MARGIN + 4, ty)
-  ty += 4.2
-  if (client?.contactName && client?.companyName) {
-    pdf.text(client.contactName, MARGIN + 4, ty)
-    ty += 4.2
-  }
-  if (client?.billingAddress) {
-    const lines = pdf.splitTextToSize(client.billingAddress, CONTENT_W - 8)
-    pdf.text(lines.slice(0, 2), MARGIN + 4, ty)
-  }
-
-  return y + boxH + 8
+async function drawHeaderBlock(pdf, y, doc, profile, client, lang) {
+  const headerStart = y
+  const barcodeBottom = await drawDocumentBarcode(pdf, headerStart, doc, profile)
+  const metaBottom = drawLogoAndMeta(pdf, headerStart, doc, profile, client, lang)
+  y = Math.max(barcodeBottom, metaBottom) + 3
+  y = drawReturnAddress(pdf, y, profile)
+  return y + 4
 }
 
-function drawTableHeader(pdf, y, { showPrices, showVat, lang }) {
+function drawRecipientAddress(pdf, y, recipient) {
+  y = ensureY(pdf, y, 28)
+  pdf.setFont('helvetica', 'normal')
+  pdf.setFontSize(10)
+  pdf.setTextColor(...INK)
+
+  const name = recipientDisplayName(recipient)
+  pdf.text(name, MARGIN, y)
+  y += 5
+
+  if (recipient?.contactName && recipient?.companyName) {
+    pdf.text(recipient.contactName, MARGIN, y)
+    y += 5
+  }
+
+  if (recipient?.billingAddress) {
+    const lines = pdf.splitTextToSize(recipient.billingAddress, 90)
+    lines.forEach((line) => {
+      pdf.text(line, MARGIN, y)
+      y += 4.5
+    })
+  }
+
+  return y + 10
+}
+
+function drawDocumentTitle(pdf, y, doc, lang) {
+  y = ensureY(pdf, y, 16)
+  const type = docTypeLabels(doc.document_type, lang)
+  const right = PAGE_W - MARGIN
+
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(16)
+  pdf.setTextColor(...INK)
+  pdf.text(`${type.label} ${doc.document_number || ''}`.trim(), MARGIN, y)
+
+  if (doc.linked_invoice_number || doc.reference_number) {
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(8.5)
+    pdf.setTextColor(...MUTED)
+    const ref = doc.reference_number || doc.linked_invoice_number
+    const refDate = doc.reference_date ? formatDocumentDate(doc.reference_date, lang) : ''
+    const refText = refDate
+      ? `${docT(lang, 'orderRef')}: ${ref} ${docT(lang, 'orderFrom')} ${refDate}`
+      : `${docT(lang, 'linkedInvoice')} ${ref}`
+    pdf.text(refText, right, y - 1, { align: 'right' })
+  }
+
+  return y + 10
+}
+
+function drawDeliveryAddress(pdf, y, recipient, lang) {
+  if (!recipient?.shippingAddress || recipient.shippingAddress === recipient.billingAddress) return y
+  y = ensureY(pdf, y, 14)
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(9)
+  pdf.setTextColor(...INK)
+  pdf.text(`${docT(lang, 'deliveryTo')}: ${recipientDisplayName(recipient)}`, MARGIN, y)
+  y += 5
+  pdf.setFont('helvetica', 'normal')
+  pdf.setFontSize(9)
+  pdf.text(pdf.splitTextToSize(recipient.shippingAddress, CONTENT_W), MARGIN, y)
+  return y + 10
+}
+
+function drawTableHeader(pdf, y, { showPrices, showVat, showProductMeta, lang }) {
+  y = ensureY(pdf, y, 12)
+  const cols = buildTableColumns({
+    showPrices,
+    showVat,
+    showProductMeta,
+    lang,
+    margin: MARGIN,
+    contentWidth: CONTENT_W,
+  })
+
   pdf.setDrawColor(...INK)
-  pdf.setLineWidth(0.5)
+  pdf.setLineWidth(0.4)
   pdf.line(MARGIN, y, MARGIN + CONTENT_W, y)
   y += 5
 
   pdf.setFont('helvetica', 'bold')
-  pdf.setFontSize(8)
+  pdf.setFontSize(7.5)
   pdf.setTextColor(...MUTED)
-
-  const cols = showPrices
-    ? showVat
-      ? [
-          { label: docT(lang, 'description'), x: MARGIN, w: 78 },
-          { label: docT(lang, 'quantity'), x: MARGIN + 78, w: 22, align: 'right' },
-          { label: docT(lang, 'unitPrice'), x: MARGIN + 100, w: 24, align: 'right' },
-          { label: docT(lang, 'vat'), x: MARGIN + 124, w: 16, align: 'right' },
-          { label: docT(lang, 'total'), x: MARGIN + 140, w: 34, align: 'right' },
-        ]
-      : [
-          { label: docT(lang, 'description'), x: MARGIN, w: 90 },
-          { label: docT(lang, 'quantity'), x: MARGIN + 90, w: 24, align: 'right' },
-          { label: docT(lang, 'unitPrice'), x: MARGIN + 114, w: 28, align: 'right' },
-          { label: docT(lang, 'total'), x: MARGIN + 142, w: 32, align: 'right' },
-        ]
-    : [
-        { label: docT(lang, 'description'), x: MARGIN, w: 130 },
-        { label: docT(lang, 'quantity'), x: MARGIN + 130, w: 44, align: 'right' },
-      ]
-
   cols.forEach((c) => {
     pdf.text(c.label, c.align === 'right' ? c.x + c.w : c.x, y, { align: c.align || 'left' })
   })
@@ -206,129 +240,162 @@ function drawTableHeader(pdf, y, { showPrices, showVat, lang }) {
   pdf.setDrawColor(...LINE)
   pdf.setLineWidth(0.25)
   pdf.line(MARGIN, y, MARGIN + CONTENT_W, y)
-  return { y: y + 4, cols, showPrices, showVat }
+  return { y: y + 5, cols, showPrices, showVat }
 }
 
-function drawLineRow(pdf, y, line, layout, lang, currency) {
-  const { cols, showPrices, showVat } = layout
-  y = ensureY(pdf, y, 8)
+function colByKey(cols, key) {
+  return cols.find((c) => c.key === key)
+}
+
+function drawLineRow(pdf, y, line, layout, lang, currency, index) {
+  const { cols, showPrices } = layout
+  const descCol = colByKey(cols, 'desc')
+  const mainLines = pdf.splitTextToSize(line.description || '—', descCol.w - 2)
+  const skuLine = line.sku ? `${docT(lang, 'articleNo')} ${line.sku}` : null
+  const skuLines = skuLine ? pdf.splitTextToSize(skuLine, descCol.w - 2) : []
+  const rowH = Math.max(6, (mainLines.length + skuLines.length) * 4 + 2)
+  y = ensureY(pdf, y, rowH)
 
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(9)
   pdf.setTextColor(...INK)
 
-  const descLines = pdf.splitTextToSize(line.description || '—', cols[0].w - 2)
-  pdf.text(descLines[0], cols[0].x, y)
+  const posCol = colByKey(cols, 'pos')
+  pdf.text(String(index + 1), posCol.x, y)
+  pdf.text(mainLines, descCol.x, y)
 
-  if (!showPrices) {
-    const qty = `${line.quantity ?? 0} ${unitLabel(line.unit, lang)}`
-    pdf.text(qty, cols[1].x + cols[1].w, y, { align: 'right' })
-  } else if (showVat) {
-    pdf.text(`${line.quantity ?? 0} ${unitLabel(line.unit, lang)}`, cols[1].x + cols[1].w, y, { align: 'right' })
-    pdf.text(formatMoney(line.unit_price, currency, lang), cols[2].x + cols[2].w, y, { align: 'right' })
-    pdf.text(`${line.vat_rate ?? 0}%`, cols[3].x + cols[3].w, y, { align: 'right' })
-    pdf.text(formatMoney(line.total_gross ?? line.total, currency, lang), cols[4].x + cols[4].w, y, {
-      align: 'right',
-    })
-  } else {
-    pdf.text(`${line.quantity ?? 0} ${unitLabel(line.unit, lang)}`, cols[1].x + cols[1].w, y, { align: 'right' })
-    pdf.text(formatMoney(line.unit_price, currency, lang), cols[2].x + cols[2].w, y, { align: 'right' })
-    pdf.text(formatMoney(line.total_gross ?? line.total, currency, lang), cols[3].x + cols[3].w, y, {
+  if (skuLines.length) {
+    pdf.setFontSize(7)
+    pdf.setTextColor(...MUTED)
+    pdf.text(skuLines, descCol.x, y + mainLines.length * 4)
+    pdf.setFontSize(9)
+    pdf.setTextColor(...INK)
+  }
+
+  const lotCol = colByKey(cols, 'lot')
+  if (lotCol) {
+    pdf.setFontSize(7.5)
+    pdf.text(line.lot_number || '', lotCol.x, y)
+    pdf.setFontSize(9)
+  }
+
+  const eanCol = colByKey(cols, 'ean')
+  if (eanCol) {
+    pdf.setFontSize(7)
+    pdf.text(line.ean || '', eanCol.x, y)
+    pdf.setFontSize(9)
+  }
+
+  const expiryCol = colByKey(cols, 'expiry')
+  if (expiryCol) {
+    pdf.setFontSize(7.5)
+    pdf.text(line.expiry_date ? formatDocumentDate(line.expiry_date, lang) : '', expiryCol.x, y)
+    pdf.setFontSize(9)
+  }
+
+  const qtyCol = colByKey(cols, 'qty')
+  pdf.text(`${line.quantity ?? 0} ${unitLabel(line.unit, lang)}`, qtyCol.x + qtyCol.w, y, { align: 'right' })
+
+  if (showPrices) {
+    const priceCol = colByKey(cols, 'price')
+    pdf.text(formatMoney(line.unit_price, currency, lang), priceCol.x + priceCol.w, y, { align: 'right' })
+
+    const vatCol = colByKey(cols, 'vat')
+    if (vatCol) {
+      pdf.text(`${line.vat_rate ?? 0}%`, vatCol.x + vatCol.w, y, { align: 'right' })
+    }
+
+    const totalCol = colByKey(cols, 'total')
+    pdf.text(formatMoney(line.total_gross ?? line.total, currency, lang), totalCol.x + totalCol.w, y, {
       align: 'right',
     })
   }
 
-  y += 5
+  y += rowH
   pdf.setDrawColor(...LINE)
   pdf.setLineWidth(0.15)
   pdf.line(MARGIN, y, MARGIN + CONTENT_W, y)
-  return y + 3
+  return y + 2
 }
 
 function drawTotals(pdf, y, doc, profile, lang) {
   const currency = doc.currency || profile?.defaultCurrency || 'EUR'
   const isKu = profile?.isKleinunternehmer || profile?.is_kleinunternehmer
-  const blockW = 62
-  const x = MARGIN + CONTENT_W - blockW
-  y = ensureY(pdf, y, 28)
+  const rows = invoiceTotalsRows(doc, { isKu })
+  y = ensureY(pdf, y, 8 + rows.length * 5)
 
-  pdf.setFont('helvetica', 'normal')
-  pdf.setFontSize(9)
-  pdf.setTextColor(...MUTED)
-  pdf.text(`${docT(lang, 'net')}: ${formatMoney(doc.subtotal_net, currency, lang)}`, MARGIN + CONTENT_W, y, {
-    align: 'right',
-  })
-  y += 5
-
-  if (!isKu && doc.vat_breakdown) {
-    Object.entries(doc.vat_breakdown).forEach(([rate, amt]) => {
-      if (Number(rate) <= 0) return
-      pdf.text(
-        `${rate}% ${docT(lang, 'vat')}: ${formatMoney(amt, currency, lang)}`,
-        MARGIN + CONTENT_W,
-        y,
-        { align: 'right' }
-      )
-      y += 4.5
-    })
-  } else if (!isKu && doc.total_vat != null) {
-    pdf.text(
-      `${docT(lang, 'vat')}: ${formatMoney(doc.total_vat, currency, lang)}`,
-      MARGIN + CONTENT_W,
-      y,
-      { align: 'right' }
-    )
-    y += 4.5
-  }
-
-  pdf.setFont('helvetica', 'bold')
-  pdf.setFontSize(11)
-  pdf.setTextColor(...INK)
-  pdf.text(
-    `${docT(lang, 'gross')}: ${formatMoney(doc.total_gross, currency, lang)}`,
-    MARGIN + CONTENT_W,
-    y + 1,
-    { align: 'right' }
-  )
-  return y + 10
-}
-
-function drawPaymentBlock(pdf, y, doc, profile, lang) {
-  if (!profile?.iban) return y
-  y = ensureY(pdf, y, 32)
-
-  pdf.setDrawColor(...LINE)
-  pdf.setLineWidth(0.3)
-  pdf.line(MARGIN, y, MARGIN + CONTENT_W, y)
+  pdf.setDrawColor(...INK)
+  pdf.setLineWidth(0.35)
+  pdf.line(MARGIN + CONTENT_W - 72, y, MARGIN + CONTENT_W, y)
   y += 6
 
-  pdf.setFont('helvetica', 'bold')
-  pdf.setFontSize(9)
-  pdf.setTextColor(...INK)
-  pdf.text(docT(lang, 'payment'), MARGIN, y)
-  y += 5
+  const right = MARGIN + CONTENT_W
 
+  rows.forEach((row, index) => {
+    const isFinal = row.key === 'total'
+    if (isFinal) {
+      y += 1
+      pdf.setDrawColor(...INK)
+      pdf.setLineWidth(0.35)
+      pdf.line(MARGIN + CONTENT_W - 72, y, MARGIN + CONTENT_W, y)
+      y += 5
+    }
+
+    const label =
+      row.rate != null && row.key === 'net'
+        ? `${docT(lang, 'net')} ${formatVatRateLabel(row.rate)}`
+        : row.rate != null && row.key === 'vat'
+          ? `${docT(lang, 'vat')} ${formatVatRateLabel(row.rate)}`
+          : docT(lang, row.labelKey)
+
+    pdf.setFont('helvetica', row.bold ? 'bold' : 'normal')
+    pdf.setFontSize(row.key === 'total' ? 10 : row.bold ? 9 : 8.5)
+    pdf.setTextColor(...(row.bold ? INK : MUTED))
+    pdf.text(`${label}: ${formatMoney(row.amount, currency, lang)}`, right, y, { align: 'right' })
+    y += row.key === 'total' ? 6 : 4.5
+
+    if (index === 0 && !isKu) {
+      pdf.setTextColor(...INK)
+    }
+  })
+
+  return y + 6
+}
+
+function drawClosingBlock(pdf, y, doc, profile, lang) {
+  y = ensureY(pdf, y, 24)
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(8.5)
-  pdf.setTextColor(...MUTED)
-  if (profile.bankName) {
-    pdf.text(profile.bankName, MARGIN, y)
-    y += 4
-  }
-  pdf.text(`IBAN: ${profile.iban}`, MARGIN, y)
-  y += 4
-  if (profile.bic) {
-    pdf.text(`BIC: ${profile.bic}`, MARGIN, y)
-    y += 4
-  }
-  pdf.text(`${docT(lang, 'reference')}: ${doc.document_number || '—'}`, MARGIN, y)
-  y += 4
-  const terms = doc.payment_terms || profile.defaultPaymentTerms
+  pdf.setTextColor(...INK)
+
+  const terms = doc.payment_terms || profile?.defaultPaymentTerms
   if (terms) {
-    pdf.text(terms, MARGIN, y)
-    y += 4
+    pdf.text(`${docT(lang, 'paymentTermsLabel')}: ${terms}`, MARGIN, y)
+    y += 5
   }
-  return y + 4
+
+  if (profile?.iban) {
+    pdf.setTextColor(...MUTED)
+    pdf.setFontSize(8)
+    const bankParts = [
+      profile.bankName,
+      profile.iban ? `IBAN ${profile.iban}` : null,
+      profile.bic ? `BIC ${profile.bic}` : null,
+      `${docT(lang, 'reference')}: ${doc.document_number || '—'}`,
+    ].filter(Boolean)
+    pdf.text(bankParts.join(' · '), MARGIN, y)
+    y += 5
+  }
+
+  const footerText =
+    doc.footer ||
+    profile?.defaultFooter ||
+    `${docT(lang, 'thankYouTeam')} ${profile?.businessName || profile?.company_name || ''} Team`.trim()
+
+  pdf.setTextColor(...INK)
+  pdf.setFontSize(8.5)
+  pdf.text(footerText, MARGIN, y)
+  return y + 8
 }
 
 async function drawSepaQr(pdf, y, doc, profile, lang, currency) {
@@ -344,15 +411,76 @@ async function drawSepaQr(pdf, y, doc, profile, lang, currency) {
     })
     const qrUrl = epcQrImageUrl(payload)
     await loadImage(qrUrl)
-    y = ensureY(pdf, y, 48)
-    pdf.addImage(qrUrl, 'PNG', MARGIN + CONTENT_W - 42, y, 38, 38)
+    y = ensureY(pdf, y, 44)
+    pdf.addImage(qrUrl, 'PNG', MARGIN + CONTENT_W - 40, y, 36, 36)
     pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(7)
+    pdf.setFontSize(6.5)
     pdf.setTextColor(...MUTED)
-    pdf.text(docT(lang, 'sepaQr'), MARGIN + CONTENT_W - 42, y + 42)
-    return y + 46
+    pdf.text(docT(lang, 'sepaQr'), MARGIN + CONTENT_W - 40, y + 40)
+    return y + 44
   } catch {
     return y
+  }
+}
+
+function drawCompanyFooter(pdf, profile, lang) {
+  const total = pdf.internal.getNumberOfPages()
+  const colW = CONTENT_W / 4
+  const startX = MARGIN
+  const baseY = COMPANY_FOOTER_Y
+
+  for (let i = 1; i <= total; i++) {
+    pdf.setPage(i)
+    pdf.setDrawColor(...LINE)
+    pdf.setLineWidth(0.3)
+    pdf.line(MARGIN, baseY - 4, MARGIN + CONTENT_W, baseY - 4)
+
+    pdf.setFont('helvetica', 'bold')
+    pdf.setFontSize(6)
+    pdf.setTextColor(...INK)
+
+    const headers = [docT(lang, 'company'), docT(lang, 'contact'), docT(lang, 'bank'), docT(lang, 'legal')]
+    headers.forEach((h, idx) => {
+      pdf.text(h, startX + idx * colW, baseY)
+    })
+
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(6)
+    pdf.setTextColor(...MUTED)
+
+    const companyLines = [
+      profile?.businessName || profile?.company_name,
+      ...profileAddressLines(profile),
+      profile?.country,
+    ].filter(Boolean)
+
+    const contactLines = [
+      profile?.phone ? `${docT(lang, 'phone')} ${profile.phone}` : null,
+      profile?.email ? `${docT(lang, 'email')} ${profile.email}` : null,
+      profile?.website ? `${docT(lang, 'web')} ${profile.website}` : null,
+    ].filter(Boolean)
+
+    const bankLines = [
+      profile?.bankName,
+      profile?.iban ? `IBAN ${profile.iban}` : null,
+      profile?.bic ? `BIC ${profile.bic}` : null,
+    ].filter(Boolean)
+
+    const legalLines = [
+      profile?.legalStructure,
+      profile?.ustIdNr || profile?.ust_id_nr ? `${docT(lang, 'vatId')} ${profile.ustIdNr || profile.ust_id_nr}` : null,
+      profile?.steuernummer ? `${docT(lang, 'taxId')} ${profile.steuernummer}` : null,
+    ].filter(Boolean)
+
+    const columns = [companyLines, contactLines, bankLines, legalLines]
+    columns.forEach((lines, idx) => {
+      let lineY = baseY + 3.5
+      lines.slice(0, 4).forEach((line) => {
+        const wrapped = pdf.splitTextToSize(line, colW - 2)
+        pdf.text(wrapped, startX + idx * colW, lineY)
+        lineY += wrapped.length * 2.8
+      })
+    })
   }
 }
 
@@ -376,33 +504,25 @@ export async function exportInvoicePdf(doc, profile, client, { branding, lang: l
 
   let y = MARGIN
   if (branding) {
-    y = drawScanLogicBand(pdf, lang)
+    y = drawScanLogicBand(pdf)
   }
 
-  const headerStart = y
-  drawMetaBlock(pdf, headerStart, doc, lang)
-  y = drawSenderBlock(pdf, headerStart, profile, lang)
-  y = Math.max(y, headerStart + 28) + 6
+  y = await drawHeaderBlock(pdf, y, doc, profile, client, lang)
+  y = drawRecipientAddress(pdf, y, recipient)
+  y = drawDocumentTitle(pdf, y, doc, lang)
+  y = drawDeliveryAddress(pdf, y, recipient, lang)
 
-  if (doc.linked_invoice_number) {
-    pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(8)
-    pdf.setTextColor(180, 83, 9)
-    pdf.text(`${docT(lang, 'linkedInvoice')} ${doc.linked_invoice_number}`, MARGIN, y)
-    y += 6
-  }
-
-  y = drawRecipientBox(pdf, y, doc, recipient, lang)
-
+  const showProductMeta = lineItemsHaveProductMeta(doc.line_items)
   const layout = drawTableHeader(pdf, y, {
     showPrices: !isDelivery,
     showVat: !isDelivery && !isKu,
+    showProductMeta,
     lang,
   })
   y = layout.y
 
-  ;(doc.line_items || []).forEach((line) => {
-    y = drawLineRow(pdf, y, line, layout, lang, currency)
+  ;(doc.line_items || []).forEach((line, index) => {
+    y = drawLineRow(pdf, y, line, layout, lang, currency, index)
   })
 
   if (!isDelivery) {
@@ -419,23 +539,25 @@ export async function exportInvoicePdf(doc, profile, client, { branding, lang: l
     y += 8
   }
 
-  y = drawPaymentBlock(pdf, y, doc, profile, lang)
+  y = drawClosingBlock(pdf, y, doc, profile, lang)
   y = await drawSepaQr(pdf, y, doc, profile, lang, currency)
 
   if (isKu || doc.legal_footnote) {
     y = ensureY(pdf, y, 12)
     pdf.setFont('helvetica', 'italic')
-    pdf.setFontSize(7.5)
+    pdf.setFontSize(7)
     pdf.setTextColor(...MUTED)
     const footnote = doc.legal_footnote || (lang === 'en' ? docT('en', 'kleinunternehmer') : KLEINUNTERNEHMER_FOOTNOTE)
     const lines = pdf.splitTextToSize(footnote, CONTENT_W)
     pdf.text(lines, MARGIN, y)
-    y += lines.length * 3.5 + 4
+    y += lines.length * 3.2 + 4
   }
 
   if (doc.reverse_charge_notice) {
+    y = ensureY(pdf, y, 8)
     pdf.setFont('helvetica', 'bold')
     pdf.setFontSize(7.5)
+    pdf.setTextColor(...INK)
     pdf.text(docT(lang, 'reverseCharge'), MARGIN, y)
     y += 6
   }
@@ -443,23 +565,12 @@ export async function exportInvoicePdf(doc, profile, client, { branding, lang: l
   if (doc.notes) {
     y = ensureY(pdf, y, 10)
     pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(8.5)
+    pdf.setFontSize(8)
     pdf.setTextColor(...INK)
     pdf.text(pdf.splitTextToSize(doc.notes, CONTENT_W), MARGIN, y)
-    y += 8
   }
 
-  const footerText =
-    doc.footer ||
-    profile?.defaultFooter ||
-    (lang === 'en' ? docT('en', 'thankYou') : docT('de', 'thankYou'))
-  if (footerText) {
-    y = ensureY(pdf, y, 8)
-    pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(8.5)
-    pdf.setTextColor(...MUTED)
-    pdf.text(footerText, MARGIN, y)
-  }
+  drawCompanyFooter(pdf, profile, lang)
 
   applyBrandedFooters(
     pdf,

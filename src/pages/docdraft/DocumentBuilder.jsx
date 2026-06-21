@@ -4,7 +4,8 @@ import { Plus, Download, Send, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { calcDocDraftTotals } from '@/lib/docCalculations'
 import { DOC_TYPES, UNIT_TYPES, TEMPLATES } from '@/lib/docdraft/constants'
-import { DOC_LANGUAGES } from '@/lib/docdraft/documentI18n'
+import { DOC_LANGUAGES, docT, formatMoney } from '@/lib/docdraft/documentI18n'
+import { formatVatRateLabel, invoiceTotalsRows } from '@/lib/docdraft/invoiceLayout'
 import { validateInvoice } from '@/lib/docdraft/validateDocument'
 import {
   saveDocument,
@@ -24,6 +25,10 @@ const EMPTY_LINE = () => ({
   unit_price: 0,
   vat_rate: 19,
   unit: 'piece',
+  sku: '',
+  lot_number: '',
+  ean: '',
+  expiry_date: '',
 })
 
 export default function DocumentBuilder({
@@ -54,11 +59,16 @@ export default function DocumentBuilder({
       valid_until: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
       currency: profile?.defaultCurrency || 'EUR',
       client_id: '',
+      recipient_name: '',
+      recipient_contact: '',
+      recipient_address: '',
       line_items: [EMPTY_LINE()],
       discount_percent: 0,
       notes: '',
       footer: profile?.defaultFooter || '',
       payment_terms: profile?.defaultPaymentTerms || '',
+      processor: profile?.defaultProcessor || '',
+      prices_include_vat: profile?.pricesIncludeVat !== false,
       templateId: profile?.defaultTemplateId || 'classic',
       linked_invoice_number: '',
       credit_reason: '',
@@ -74,19 +84,35 @@ export default function DocumentBuilder({
   const products = loadProducts(profile.id)
 
   const totals = useMemo(
-    () => calcDocDraftTotals(form.line_items, form.discount_percent, isKu),
-    [form.line_items, form.discount_percent, isKu]
+    () =>
+      calcDocDraftTotals(
+        form.line_items,
+        form.discount_percent,
+        isKu,
+        form.prices_include_vat !== false
+      ),
+    [form.line_items, form.discount_percent, form.prices_include_vat, isKu]
   )
 
   const previewDoc = useMemo(
     () => ({
       ...form,
       ...totals,
-      recipient_name: client?.companyName || client?.contactName,
-      recipient_address: client?.billingAddress,
     }),
-    [form, totals, client]
+    [form, totals]
   )
+
+  const pickClient = (clientId) => {
+    const picked = clientId ? getClient(profile.id, clientId) : null
+    setForm((f) => ({
+      ...f,
+      client_id: clientId,
+      recipient_name: picked ? picked.companyName || picked.contactName || '' : f.recipient_name,
+      recipient_contact:
+        picked?.companyName && picked?.contactName ? picked.contactName : f.recipient_contact,
+      recipient_address: picked?.billingAddress || f.recipient_address,
+    }))
+  }
 
   const validation = useMemo(
     () => validateInvoice(previewDoc, profile, client),
@@ -120,6 +146,8 @@ export default function DocumentBuilder({
           vat_rate: isKu ? 0 : p.vatRate,
           unit: p.unit || 'piece',
           sku: p.sku,
+          ean: p.ean,
+          lot_number: p.lot_number,
         },
       ],
     })
@@ -132,6 +160,7 @@ export default function DocumentBuilder({
     status,
     legal_footnote: totals.legal_footnote,
     vat_breakdown: totals.vat_breakdown,
+    net_breakdown: totals.net_breakdown,
   })
 
   const handleSaveDraft = async () => {
@@ -197,16 +226,39 @@ export default function DocumentBuilder({
         <div className="space-y-3">
           <select
             value={form.client_id}
-            onChange={(e) => setForm({ ...form, client_id: e.target.value })}
+            onChange={(e) => pickClient(e.target.value)}
             className="w-full rounded-lg bg-slate-800 px-3 py-2 text-sm"
           >
-            <option value="">Select client</option>
+            <option value="">Kunde aus Liste wählen (optional)</option>
             {clients.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.companyName || c.contactName}
               </option>
             ))}
           </select>
+
+          <div className="premium-card space-y-2 p-3">
+            <p className="text-xs font-semibold text-slate-400">Empfänger</p>
+            <input
+              placeholder="Firma oder Name *"
+              value={form.recipient_name || ''}
+              onChange={(e) => setForm({ ...form, recipient_name: e.target.value })}
+              className="w-full rounded-lg bg-slate-900/80 px-3 py-2 text-sm"
+            />
+            <input
+              placeholder="Ansprechpartner (optional)"
+              value={form.recipient_contact || ''}
+              onChange={(e) => setForm({ ...form, recipient_contact: e.target.value })}
+              className="w-full rounded-lg bg-slate-900/80 px-3 py-2 text-sm"
+            />
+            <textarea
+              placeholder="Rechnungsadresse *"
+              rows={3}
+              value={form.recipient_address || ''}
+              onChange={(e) => setForm({ ...form, recipient_address: e.target.value })}
+              className="w-full rounded-lg bg-slate-900/80 px-3 py-2 text-sm"
+            />
+          </div>
 
           <input
             type="date"
@@ -268,6 +320,24 @@ export default function DocumentBuilder({
             ))}
           </select>
 
+          <input
+            placeholder="Bearbeiter (optional)"
+            value={form.processor || ''}
+            onChange={(e) => setForm({ ...form, processor: e.target.value })}
+            className="w-full rounded-lg bg-slate-800 px-3 py-2 text-sm"
+          />
+
+          {!isKu && !isDelivery && (
+            <label className="flex items-center gap-2 rounded-lg bg-slate-800/60 px-3 py-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.prices_include_vat !== false}
+                onChange={(e) => setForm({ ...form, prices_include_vat: e.target.checked })}
+              />
+              {docT(form.language || 'de', 'pricesIncludeVat')}
+            </label>
+          )}
+
           <select
             value={form.templateId}
             onChange={(e) => setForm({ ...form, templateId: e.target.value })}
@@ -307,6 +377,33 @@ export default function DocumentBuilder({
                 onChange={(e) => updateLine(i, 'description', e.target.value)}
                 className="w-full rounded-lg bg-slate-900/80 px-2 py-1.5 text-sm"
               />
+              <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
+                <input
+                  placeholder="Art.-Nr."
+                  value={line.sku || ''}
+                  onChange={(e) => updateLine(i, 'sku', e.target.value)}
+                  className="rounded-lg bg-slate-900/80 px-2 py-1.5 text-xs"
+                />
+                <input
+                  placeholder="Losnummer"
+                  value={line.lot_number || ''}
+                  onChange={(e) => updateLine(i, 'lot_number', e.target.value)}
+                  className="rounded-lg bg-slate-900/80 px-2 py-1.5 text-xs"
+                />
+                <input
+                  placeholder="EAN"
+                  value={line.ean || ''}
+                  onChange={(e) => updateLine(i, 'ean', e.target.value)}
+                  className="rounded-lg bg-slate-900/80 px-2 py-1.5 text-xs"
+                />
+                <input
+                  type="date"
+                  title="VerfallDatum"
+                  value={line.expiry_date || ''}
+                  onChange={(e) => updateLine(i, 'expiry_date', e.target.value)}
+                  className="rounded-lg bg-slate-900/80 px-2 py-1.5 text-xs"
+                />
+              </div>
               <div className="grid grid-cols-4 gap-1">
                 <input
                   type="number"
@@ -354,17 +451,24 @@ export default function DocumentBuilder({
           </button>
 
           {!isDelivery && (
-            <div className="premium-card p-3 text-sm">
-              <p>Subtotal (Net): {totals.subtotal_net?.toFixed(2)} €</p>
-              {!isKu &&
-                Object.entries(totals.vat_breakdown || {}).map(([r, a]) =>
-                  Number(r) > 0 ? (
-                    <p key={r} className="text-slate-400">
-                      VAT {r}%: {a.toFixed(2)} €
-                    </p>
-                  ) : null
-                )}
-              <p className="font-bold">Total Gross: {totals.total_gross?.toFixed(2)} €</p>
+            <div className="premium-card space-y-1 p-3 text-right text-sm">
+              {invoiceTotalsRows({ ...totals, total_gross: totals.total_gross }, { isKu }).map((row) => {
+                const lang = form.language || 'de'
+                const label =
+                  row.rate != null && row.key === 'net'
+                    ? `${docT(lang, 'net')} ${formatVatRateLabel(row.rate)}`
+                    : row.rate != null && row.key === 'vat'
+                      ? `${docT(lang, 'vat')} ${formatVatRateLabel(row.rate)}`
+                      : docT(lang, row.labelKey)
+                return (
+                  <p
+                    key={`${row.key}-${row.rate ?? 'x'}`}
+                    className={row.key === 'total' ? 'border-t border-slate-600 pt-1 font-bold' : row.bold ? 'font-semibold' : 'text-slate-400'}
+                  >
+                    {label}: {formatMoney(row.amount, form.currency, lang)}
+                  </p>
+                )
+              })}
             </div>
           )}
         </div>

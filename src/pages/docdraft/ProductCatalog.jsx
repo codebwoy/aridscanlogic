@@ -13,6 +13,8 @@ export default function ProductCatalog({ profileId, onBack, onSelect }) {
     vatRate: 19,
     unit: 'piece',
     sku: '',
+    ean: '',
+    lot_number: '',
     category: '',
     isActive: true,
   })
@@ -33,6 +35,8 @@ export default function ProductCatalog({ profileId, onBack, onSelect }) {
       vatRate: 19,
       unit: 'piece',
       sku: '',
+      ean: '',
+      lot_number: '',
       category: '',
       isActive: true,
     })
@@ -78,6 +82,26 @@ export default function ProductCatalog({ profileId, onBack, onSelect }) {
             <option value={7}>7%</option>
             <option value={0}>0%</option>
           </select>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <input
+            placeholder="Art.-Nr. / SKU"
+            value={form.sku}
+            onChange={(e) => setForm({ ...form, sku: e.target.value })}
+            className="rounded-lg bg-slate-900/80 px-3 py-2 text-sm"
+          />
+          <input
+            placeholder="EAN"
+            value={form.ean}
+            onChange={(e) => setForm({ ...form, ean: e.target.value })}
+            className="rounded-lg bg-slate-900/80 px-3 py-2 text-sm"
+          />
+          <input
+            placeholder="Losnummer"
+            value={form.lot_number}
+            onChange={(e) => setForm({ ...form, lot_number: e.target.value })}
+            className="rounded-lg bg-slate-900/80 px-3 py-2 text-sm"
+          />
         </div>
         <button type="submit" className="btn-primary w-full rounded-xl py-2.5 text-sm font-semibold">
           <Plus className="mr-1 inline h-4 w-4" /> Add product

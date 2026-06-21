@@ -32,7 +32,7 @@ export const UNIT_TYPES = [
 ]
 
 export const TEMPLATES = [
-  { id: 'classic', name: 'Classic German' },
+  { id: 'classic', name: 'Klassisch (DE)' },
   { id: 'minimal', name: 'Modern Minimal' },
   { id: 'bold', name: 'Bold Header' },
   { id: 'compact', name: 'Compact' },
@@ -61,6 +61,9 @@ export const DEFAULT_PROFILE = {
   defaultPaymentTerms: 'Zahlbar innerhalb von 14 Tagen',
   defaultLanguage: 'de',
   defaultFooter: 'Vielen Dank für Ihre Zusammenarbeit!',
+  defaultProcessor: '',
+  showInvoiceBarcode: true,
+  pricesIncludeVat: true,
   isKleinunternehmer: false,
   invoiceFormat: 'RE-{YEAR}-{NUMBER}',
   numberPadding: 4,
