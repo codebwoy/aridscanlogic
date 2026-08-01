@@ -1,0 +1,38 @@
+---
+description: TailorCV — job-targeted CV & cover letter inside BizStart
+globs: src/lib/tailorcv/**,src/components/bizstart/tailor/**,src/pages/bizstart/StepTailorCv.jsx
+alwaysApply: false
+---
+
+# TailorCV
+
+## Entry
+
+- **Not a top-level tab.** BizStart Germany → `tailorcv` screen (`StepTailorCv` → `TailorCvBuilder`).
+- Also linked from `BewerbungNav` next to Lebenslauf / Anschreiben.
+
+## Principles
+
+- Never invent employers, titles, dates, degrees, metrics.
+- Output is German tabular Lebenslauf + DIN-oriented Anschreiben (not US résumé).
+- Post-gen `validateNoFabrication` flags new entities for user review.
+- User always edits before export (drafts → Lebenslauf / Anschreiben stores).
+- Privacy banner + one-click `deleteTailorData()`.
+
+## Layout
+
+| Path | Role |
+|------|------|
+| `lib/tailorcv/schema.js` | Candidate / job / session schemas + LLM JSON schemas |
+| `lib/tailorcv/prompts/*` | Versioned prompt templates |
+| `lib/tailorcv/api.js` | InvokeLLM orchestration via `/api/llm` |
+| `lib/tailorcv/parseCvFile.js` | PDF/DOCX/TXT → text (5 MB cap) |
+| `lib/tailorcv/mapToLebenslauf.js` | ↔ Lebenslauf / Anschreiben |
+| `lib/tailorcv/store.js` | `scanlogic_tailorcv_session` localStorage |
+
+## Do not
+
+- Put Anthropic keys in `VITE_*`.
+- Auto-submit applications.
+- Skip fabrication validation after tailor.
+- Register TailorCV as a suite `TabBar` tab without product decision.

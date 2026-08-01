@@ -18,6 +18,7 @@ Cursor loads rules from `.cursor/rules/*.mdc`. Use the matching rule when editin
 | `11-security.mdc` | Security helpers and policies |
 | `12-seo.mdc` | Meta tags, sitemap, GitHub Pages deploy |
 | `13-ai-language.mdc` | Global DE/EN toggle for all AI surfaces |
+| `14-tailorcv.mdc` | TailorCV job-targeted CV / cover letter (BizStart) |
 
 Human-readable security policy: `SECURITY.md`.
 

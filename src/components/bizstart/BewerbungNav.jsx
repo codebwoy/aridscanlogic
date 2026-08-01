@@ -1,10 +1,11 @@
-import { FileText, FileUser, Mail } from 'lucide-react'
+import { FileText, FileUser, Mail, Sparkles } from 'lucide-react'
 
 export default function BewerbungNav({ current, onNavigate, lang = 'de' }) {
   const items = [
     { id: 'businessPlan', icon: FileText, label: lang === 'de' ? 'Businessplan' : 'Business plan' },
     { id: 'lebenslauf', icon: FileUser, label: lang === 'de' ? 'Lebenslauf' : 'CV' },
     { id: 'anschreiben', icon: Mail, label: lang === 'de' ? 'Anschreiben' : 'Cover letter' },
+    { id: 'tailorcv', icon: Sparkles, label: lang === 'de' ? 'TailorCV' : 'TailorCV' },
   ]
 
   return (
