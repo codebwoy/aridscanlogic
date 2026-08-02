@@ -1,7 +1,10 @@
 /* DIN 5008 Anschreiben — matches Lebenslauf template styling */
 
 .anschreiben-a4 {
+  position: relative;
+  z-index: 1;
   width: 210mm;
+  max-width: 100%;
   min-height: 297mm;
   background: #fff;
   color: #1a1a1a;
@@ -141,6 +144,11 @@
 
 .ansch-builder-root {
   min-height: 100%;
+  isolation: isolate;
+}
+
+.ansch-builder-header {
+  background: #020617;
 }
 
 .ansch-split {
@@ -151,22 +159,24 @@
 @media (min-width: 768px) {
   .ansch-split {
     flex-direction: row;
-    min-height: calc(100vh - 8rem);
+    align-items: stretch;
+    min-height: min(70dvh, calc(100dvh - 12rem));
   }
   .ansch-form-panel {
     width: 42%;
-    max-height: calc(100vh - 8rem);
+    max-height: min(70dvh, calc(100dvh - 12rem));
     overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 1rem;
     border-right: 1px solid rgb(51 65 85 / 0.5);
   }
   .ansch-preview-panel {
     width: 58%;
-    max-height: calc(100vh - 8rem);
+    max-height: min(70dvh, calc(100dvh - 12rem));
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    background: rgb(30 41 59 / 0.4);
+    background: #1e293b;
   }
 }
 
@@ -178,6 +188,9 @@
   .ansch-panel-hidden-mobile {
     display: none;
   }
+  .ansch-preview-panel {
+    background: #1e293b;
+  }
 }
 
 .ansch-export-toolbar {
@@ -186,6 +199,8 @@
   gap: 0.5rem;
   padding: 0.75rem 1rem;
   border-bottom: 1px solid rgb(51 65 85 / 0.5);
+  flex-shrink: 0;
+  background: #1e293b;
 }
 
 .ansch-export-btn {
@@ -203,10 +218,16 @@
 
 .ansch-preview-scroll {
   flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 1rem;
   display: flex;
   justify-content: center;
+  align-items: flex-start;
+  background: #1e293b;
 }
 
 @media print {

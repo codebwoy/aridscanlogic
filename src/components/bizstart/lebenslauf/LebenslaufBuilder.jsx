@@ -235,7 +235,7 @@ export default function LebenslaufBuilder({ formData, onUpdateForm, onBack, onNa
         <ScanLogicAiOverlay lang={LANG} fieldLabel="Profil" progress={null} />
       )}
 
-      <header className="cv-builder-header sticky top-0 z-20 border-b border-slate-200/80 bg-slate-950/95 backdrop-blur-md safe-top">
+      <header className="cv-builder-header sticky top-0 z-20 border-b border-slate-800 bg-slate-950 safe-top">
         <div className="px-3 py-3 sm:px-4">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0">

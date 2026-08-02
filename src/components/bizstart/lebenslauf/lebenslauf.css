@@ -2,6 +2,12 @@
 
 .cv-builder-root {
   min-height: 100%;
+  isolation: isolate;
+}
+
+.cv-builder-header {
+  /* Solid sticky bar — avoid backdrop-blur (causes dark frosted bands over preview) */
+  background: #020617;
 }
 
 .cv-split {
@@ -13,23 +19,24 @@
 @media (min-width: 768px) {
   .cv-split {
     flex-direction: row;
-    align-items: flex-start;
-    min-height: calc(100vh - 8rem);
+    align-items: stretch;
+    min-height: min(70dvh, calc(100dvh - 12rem));
   }
   .cv-form-panel {
     width: 42%;
-    max-height: calc(100vh - 8rem);
+    max-height: min(70dvh, calc(100dvh - 12rem));
     overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 1rem;
     border-right: 1px solid rgb(51 65 85 / 0.5);
   }
   .cv-preview-panel {
     width: 58%;
-    max-height: calc(100vh - 8rem);
+    max-height: min(70dvh, calc(100dvh - 12rem));
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    background: rgb(30 41 59 / 0.4);
+    background: #1e293b;
   }
 }
 
@@ -42,7 +49,7 @@
     display: none;
   }
   .cv-preview-panel {
-    background: rgb(30 41 59 / 0.4);
+    background: #1e293b;
   }
 }
 
@@ -52,6 +59,8 @@
   gap: 0.5rem;
   padding: 0.75rem 1rem;
   border-bottom: 1px solid rgb(51 65 85 / 0.5);
+  flex-shrink: 0;
+  background: #1e293b;
 }
 
 .cv-export-btn {
@@ -73,15 +82,24 @@
 
 .cv-preview-scroll {
   flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 1rem;
   display: flex;
   justify-content: center;
+  align-items: flex-start;
+  background: #1e293b;
 }
 
-/* A4 page — screen preview */
+/* A4 page — screen preview (always opaque white, above panel chrome) */
 .cv-a4-page {
+  position: relative;
+  z-index: 1;
   width: 210mm;
+  max-width: 100%;
   min-height: 297mm;
   background: #fff;
   color: #1a1a1a;
