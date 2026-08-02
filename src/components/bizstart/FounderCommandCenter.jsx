@@ -13,21 +13,21 @@ export default function FounderCommandCenter({ lang, formData, stepStatus, onNav
   const cc = buildFounderCommandCenter(formData, stepStatus, lang)
 
   return (
-    <div className="premium-card mb-4 overflow-hidden p-0">
+    <div className="premium-card mb-4 min-w-0 overflow-hidden p-0">
       <div className="border-b border-slate-700/80 bg-gradient-to-r from-brand-900/40 to-indigo-900/30 px-4 py-3">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <LayoutDashboard className="h-4 w-4 text-brand-300" aria-hidden />
-            <div>
-              <p className="text-sm font-bold text-slate-100">
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <LayoutDashboard className="h-4 w-4 shrink-0 text-brand-300" aria-hidden />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold text-slate-100">
                 {lang === 'de' ? 'Gründer-Übersicht' : 'Founder command center'}
               </p>
-              <p className="text-[11px] text-slate-400">
+              <p className="truncate text-[11px] text-slate-400">
                 {lang === 'de' ? 'Registrierung & Businessplan auf einen Blick' : 'Registration & business plan at a glance'}
               </p>
             </div>
           </div>
-          <div className="text-right">
+          <div className="shrink-0 text-right">
             <p className={`text-xl font-bold tabular-nums ${readinessColor(cc.overallScore)}`}>
               {cc.overallScore}%
             </p>
@@ -38,7 +38,7 @@ export default function FounderCommandCenter({ lang, formData, stepStatus, onNav
         </div>
       </div>
 
-      <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid min-w-0 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           icon={Target}
           label={lang === 'de' ? 'Registrierung' : 'Registration'}
@@ -92,28 +92,29 @@ export default function FounderCommandCenter({ lang, formData, stepStatus, onNav
       </div>
 
       {cc.planTitle && (
-        <p className="px-4 pb-2 text-xs text-slate-400">
-          {lang === 'de' ? 'Plan' : 'Plan'}: <span className="text-slate-300">{cc.planTitle}</span>
+        <p className="min-w-0 px-4 pb-2 text-xs text-slate-400">
+          {lang === 'de' ? 'Plan' : 'Plan'}:{' '}
+          <span className="break-words text-slate-300">{cc.planTitle}</span>
         </p>
       )}
 
       {cc.blockers.length > 0 && (
         <div className="border-t border-slate-800 px-4 py-3">
           <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-            <AlertTriangle className="h-3 w-3" aria-hidden />
+            <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden />
             {lang === 'de' ? 'Als Nächstes' : 'Up next'}
           </p>
           <ul className="space-y-2">
             {cc.blockers.map((b) => (
-              <li key={b.id}>
+              <li key={b.id} className="min-w-0">
                 <button
                   type="button"
                   onClick={() => onNavigate?.(b.screen)}
-                  className="flex w-full items-center justify-between gap-2 rounded-xl bg-slate-800/60 px-3 py-2 text-left text-xs hover:bg-slate-800"
+                  className="flex w-full min-w-0 items-center justify-between gap-2 rounded-xl bg-slate-800/60 px-3 py-2 text-left text-xs hover:bg-slate-800"
                 >
-                  <div>
-                    <p className="font-medium text-slate-200">{b.label}</p>
-                    <p className="text-slate-500">{b.detail}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-slate-200">{b.label}</p>
+                    <p className="truncate text-slate-500">{b.detail}</p>
                   </div>
                   <ChevronRight className="h-4 w-4 shrink-0 text-brand-400" aria-hidden />
                 </button>
@@ -130,15 +131,15 @@ export default function FounderCommandCenter({ lang, formData, stepStatus, onNav
           </p>
           <ul className="space-y-1.5">
             {cc.nextSteps.map((s) => (
-              <li key={s.id}>
+              <li key={s.id} className="min-w-0">
                 <button
                   type="button"
                   onClick={() => onNavigate?.(s.id === 'structure' ? 'structure' : s.id)}
-                  className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs hover:bg-slate-800/50"
+                  className="flex w-full min-w-0 items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs hover:bg-slate-800/50"
                 >
                   <span className={`h-2 w-2 shrink-0 rounded-full ${STATUS_DOT[s.status]}`} />
-                  <span className="flex-1 text-slate-300">{s.label}</span>
-                  <span className="text-slate-600">~{s.estMin}m</span>
+                  <span className="min-w-0 flex-1 truncate text-slate-300">{s.label}</span>
+                  <span className="shrink-0 tabular-nums text-slate-600">~{s.estMin}m</span>
                 </button>
               </li>
             ))}
@@ -146,7 +147,7 @@ export default function FounderCommandCenter({ lang, formData, stepStatus, onNav
         </div>
       )}
 
-      <div className="border-t border-slate-800 px-4 py-2 flex justify-center gap-4">
+      <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 border-t border-slate-800 px-4 py-2">
         <button
           type="button"
           onClick={() => onNavigate?.('businessPlan')}
@@ -175,12 +176,12 @@ export default function FounderCommandCenter({ lang, formData, stepStatus, onNav
 
 function MetricCard({ icon: Icon, label, value, sub }) {
   return (
-    <div className="rounded-xl bg-slate-800/50 px-3 py-2.5">
-      <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
-        <Icon className="h-3 w-3" aria-hidden />
-        {label}
+    <div className="min-w-0 rounded-xl bg-slate-800/50 px-3 py-2.5">
+      <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-slate-500">
+        <Icon className="h-3 w-3 shrink-0" aria-hidden />
+        <span className="truncate">{label}</span>
       </div>
-      <p className="mt-1 text-lg font-bold text-slate-100">{value}</p>
+      <p className="mt-1 text-lg font-bold tabular-nums text-slate-100">{value}</p>
       <p className="truncate text-[10px] text-slate-500">{sub}</p>
     </div>
   )

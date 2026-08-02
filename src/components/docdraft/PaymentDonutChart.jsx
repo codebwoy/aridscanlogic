@@ -1,4 +1,5 @@
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts'
+import { PieChart, Pie, Cell, Legend } from 'recharts'
+import SafeChart from '@/components/shared/SafeChart'
 
 const COLORS = ['#22c55e', '#6366f1', '#ef4444', '#64748b']
 
@@ -19,20 +20,18 @@ export default function PaymentDonutChart({ statusCounts }) {
   }
 
   return (
-    <div className="premium-card p-3">
+    <div className="premium-card min-w-0 p-3">
       <p className="mb-2 text-center text-xs font-medium text-slate-400">Zahlungsstatus</p>
-      <div className="h-36">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie data={data} innerRadius={35} outerRadius={55} dataKey="value" paddingAngle={2}>
-              {data.map((_, i) => (
-                <Cell key={i} fill={COLORS[i % COLORS.length]} />
-              ))}
-            </Pie>
-            <Legend iconSize={8} wrapperStyle={{ fontSize: 10 }} />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
+      <SafeChart height={144} className="h-36">
+        <PieChart>
+          <Pie data={data} innerRadius={35} outerRadius={55} dataKey="value" paddingAngle={2} isAnimationActive={false}>
+            {data.map((_, i) => (
+              <Cell key={i} fill={COLORS[i % COLORS.length]} />
+            ))}
+          </Pie>
+          <Legend iconSize={8} wrapperStyle={{ fontSize: 10 }} />
+        </PieChart>
+      </SafeChart>
     </div>
   )
 }

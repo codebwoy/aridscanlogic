@@ -16,7 +16,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  ResponsiveContainer,
   BarChart,
   Bar,
   XAxis,
@@ -41,6 +40,8 @@ import ManualExpenseEntry from './ManualExpenseEntry'
 import BizStartGermany from '../bizstart/BizStartGermany'
 import IncomeOverview from './IncomeOverview'
 import EstimatedTaxes from './EstimatedTaxes'
+import SafeChart from '@/components/shared/SafeChart'
+import ErrorBoundary from '@/components/shared/ErrorBoundary'
 import ReceiptManager from './ReceiptManager'
 import TaxOverheadHub from './TaxOverheadHub'
 import { loadTaxOverheadConfig } from '@/lib/taxvault/overheadConfig'
@@ -249,16 +250,17 @@ export default function TaxVaultHome() {
   }
 
   return (
-    <div className="w-full">
-      <header className="safe-top mb-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold sm:text-2xl">Tax Vault</h1>
-          <p className="text-sm text-slate-400">{profile.businessName}</p>
+    <ErrorBoundary compact allowReset title="Tax Vault — Fehler">
+    <div className="w-full min-w-0 max-w-full">
+      <header className="safe-top mb-4 flex min-w-0 items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-xl font-bold sm:text-2xl">Tax Vault</h1>
+          <p className="truncate text-sm text-slate-400">{profile.businessName}</p>
         </div>
         <button
           type="button"
           onClick={() => setView('settings')}
-          className="rounded-xl bg-slate-800 p-2"
+          className="shrink-0 rounded-xl bg-slate-800 p-2"
           aria-label="Settings"
         >
           <Settings className="h-5 w-5 text-slate-400" />
@@ -341,11 +343,11 @@ export default function TaxVaultHome() {
         onClick={() => setView('overhead')}
         className="premium-card mb-4 w-full p-4 text-left"
       >
-        <div className="flex items-start justify-between gap-2">
-          <div>
+        <div className="flex min-w-0 items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
             <p className="flex items-center gap-2 text-sm font-semibold">
-              <Landmark className="h-4 w-4 text-brand-400" />
-              Steuer-Overhead (Gewerbe)
+              <Landmark className="h-4 w-4 shrink-0 text-brand-400" />
+              <span className="min-w-0">Steuer-Overhead (Gewerbe)</span>
             </p>
             <p className="mt-1 text-xs text-slate-400">
               Krankenkasse, Gewerbesteuer & USt — Konfiguration & Schätzungen
@@ -370,32 +372,31 @@ export default function TaxVaultHome() {
       />
 
       {stats.donutData.length > 0 && (
-        <div className="mb-4 rounded-2xl bg-slate-800/60 p-4">
+        <div className="mb-4 min-w-0 rounded-2xl bg-slate-800/60 p-4">
           <h3 className="mb-2 text-sm font-semibold">Spending by category</h3>
-          <div className="h-44">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={stats.donutData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={45}
-                  outerRadius={70}
-                  paddingAngle={2}
-                >
-                  {stats.donutData.map((entry) => (
-                    <Cell key={entry.name} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(v) => `${sym}${Number(v).toFixed(2)}`}
-                  contentStyle={{ background: '#1e293b', border: 'none', borderRadius: 8 }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+          <SafeChart height={176} className="h-44 w-full">
+            <PieChart>
+              <Pie
+                data={stats.donutData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                innerRadius={45}
+                outerRadius={70}
+                paddingAngle={2}
+                isAnimationActive={false}
+              >
+                {stats.donutData.map((entry) => (
+                  <Cell key={entry.name} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip
+                formatter={(v) => `${sym}${Number(v).toFixed(2)}`}
+                contentStyle={{ background: '#1e293b', border: 'none', borderRadius: 8 }}
+              />
+            </PieChart>
+          </SafeChart>
         </div>
       )}
 
@@ -416,20 +417,18 @@ export default function TaxVaultHome() {
         Log expense without receipt
       </button>
 
-      <div className="mb-4 rounded-2xl bg-slate-800/60 p-4">
+      <div className="mb-4 min-w-0 rounded-2xl bg-slate-800/60 p-4">
         <h3 className="mb-2 text-sm font-semibold">Monthly spending</h3>
-        <div className="h-36">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={monthlyData}>
-              <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#94a3b8' }} />
-              <Tooltip
-                formatter={(v) => `${sym}${Number(v).toFixed(2)}`}
-                contentStyle={{ background: '#1e293b', border: 'none', borderRadius: 8 }}
-              />
-              <Bar dataKey="amount" fill="#6366f1" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <SafeChart height={144} className="h-36 w-full">
+          <BarChart data={monthlyData}>
+            <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#94a3b8' }} />
+            <Tooltip
+              formatter={(v) => `${sym}${Number(v).toFixed(2)}`}
+              contentStyle={{ background: '#1e293b', border: 'none', borderRadius: 8 }}
+            />
+            <Bar dataKey="amount" fill="#6366f1" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+          </BarChart>
+        </SafeChart>
       </div>
 
       <div className="mb-4 flex gap-2">
@@ -514,5 +513,6 @@ export default function TaxVaultHome() {
         ))}
       </div>
     </div>
+    </ErrorBoundary>
   )
 }

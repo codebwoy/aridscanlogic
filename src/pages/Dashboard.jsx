@@ -8,6 +8,7 @@ import { usePremium } from '@/context/PremiumContext'
 import { GuideProvider } from '@/context/GuideContext'
 import AppGuideDrawer from '@/components/guide/AppGuideDrawer'
 import GuideFab from '@/components/guide/GuideFab'
+import ErrorBoundary from '@/components/shared/ErrorBoundary'
 import { applySeo } from '@/lib/seo/applySeo'
 import { tabFromHash, setTabHash, subscribeTabHash } from '@/lib/navigation/tabs'
 import { trackActivity } from '@/lib/activity/trackActivity'
@@ -76,6 +77,7 @@ export default function Dashboard({ onOpenScanVault }) {
             className={isLawyer ? 'app-panel-full flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col overflow-x-hidden' : 'min-w-0 max-w-full overflow-x-hidden'}
           >
             <Suspense fallback={<TabFallback />}>
+              <ErrorBoundary compact allowReset title="Modul-Fehler">
               {activeTab === 'docs' ? (
                 <DocsPage
                   onOpenTaxVault={() => changeTab('tax')}
@@ -86,6 +88,7 @@ export default function Dashboard({ onOpenScanVault }) {
               ) : (
                 <ActivePage />
               )}
+              </ErrorBoundary>
             </Suspense>
           </motion.div>
         </AnimatePresence>

@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { t } from '@/lib/bizstart/i18n'
-import { STRUCTURES, getApplicableSteps, STEP_LABELS } from '@/lib/bizstart/steps'
+import { getApplicableSteps, STEP_LABELS } from '@/lib/bizstart/steps'
 import {
   loadFormData,
   saveFormData,
@@ -42,7 +42,6 @@ import StepComplete from './StepComplete'
 import ComplianceCalendar from './ComplianceCalendar'
 import RegistrationChat from './RegistrationChat'
 import FounderCommandCenter from '@/components/bizstart/FounderCommandCenter'
-import PremiumCard from '@/components/shared/PremiumCard'
 import { exportRegistrationChecklistPdf } from '@/lib/bizstart/exportChecklist'
 import { loadCv } from '@/lib/bizstart/lebenslauf/store'
 import { cvCompleteness, cvIsSubmissionReady } from '@/lib/bizstart/lebenslauf/schema'
@@ -124,7 +123,7 @@ export default function BizStartGermany({ onExit, onComplete }) {
 
   if (screen === 'structure') {
     return (
-      <div className="w-full">
+      <div className="w-full min-w-0 max-w-full">
         <NavBack onBack={() => setScreen('home')} />
         <StructureSelector
           lang={lang}
@@ -142,7 +141,7 @@ export default function BizStartGermany({ onExit, onComplete }) {
 
   if (screen === 'info') {
     return (
-      <div className="w-full">
+      <div className="w-full min-w-0 max-w-full">
         <NavBack onBack={() => setScreen('home')} />
         <InfoCollector
           lang={lang}
@@ -179,7 +178,7 @@ export default function BizStartGermany({ onExit, onComplete }) {
 
   if (screen === 'lebenslauf') {
     return (
-      <div className="w-full">
+      <div className="w-full min-w-0 max-w-full">
         <StepLebenslauf
           formData={formData}
           onUpdateForm={updateForm}
@@ -193,7 +192,7 @@ export default function BizStartGermany({ onExit, onComplete }) {
 
   if (screen === 'anschreiben') {
     return (
-      <div className="w-full">
+      <div className="w-full min-w-0 max-w-full">
         <StepAnschreiben
           formData={formData}
           onUpdateForm={updateForm}
@@ -207,7 +206,7 @@ export default function BizStartGermany({ onExit, onComplete }) {
 
   if (screen === 'tailorcv') {
     return (
-      <div className="w-full">
+      <div className="w-full min-w-0 max-w-full">
         <StepTailorCv
           formData={formData}
           onUpdateForm={updateForm}
@@ -222,7 +221,7 @@ export default function BizStartGermany({ onExit, onComplete }) {
   if (stepScreens[screen]) {
     const Step = stepScreens[screen]
     return (
-      <div className="w-full">
+      <div className="w-full min-w-0 max-w-full">
         <NavBack onBack={() => setScreen('home')} />
         <Step
           lang={lang}
@@ -241,7 +240,7 @@ export default function BizStartGermany({ onExit, onComplete }) {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full min-w-0 max-w-full">
       {onExit && (
         <button type="button" onClick={onExit} className="safe-top mb-2 flex items-center gap-2 text-sm text-slate-400">
           <ArrowLeft className="h-4 w-4" /> Tax Vault
@@ -249,24 +248,24 @@ export default function BizStartGermany({ onExit, onComplete }) {
       )}
 
       <header className="safe-top mb-4">
-        <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-2 rounded-full bg-brand-600/20 px-3 py-1 text-xs text-brand-300">
-            <Rocket className="h-3 w-3" /> BizStart Germany
+        <div className="mb-3 flex min-w-0 items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2 rounded-full bg-brand-600/20 px-3 py-1 text-xs text-brand-300">
+            <Rocket className="h-3 w-3 shrink-0" /> <span className="truncate">BizStart Germany</span>
           </div>
           <button
             type="button"
             onClick={() => setLang(lang === 'en' ? 'de' : 'en')}
-            className="flex items-center gap-1 rounded-lg bg-slate-800 px-2 py-1 text-xs"
+            className="flex shrink-0 items-center gap-1 rounded-lg bg-slate-800 px-2 py-1 text-xs"
           >
             <Languages className="h-3 w-3" /> {lang === 'en' ? 'DE' : 'EN'}
           </button>
         </div>
         <h1 className="text-xl font-bold leading-tight">{t(lang, 'title')}</h1>
         <p className="mt-1 text-sm text-slate-400">{t(lang, 'subtitle')}</p>
-        <div className="mt-3">
-          <div className="mb-1 flex justify-between text-xs text-slate-500">
-            <span>{lang === 'de' ? 'Fortschritt' : 'Progress'}</span>
-            <span>{progressPct}%</span>
+        <div className="mt-3 min-w-0">
+          <div className="mb-1 flex min-w-0 items-center justify-between gap-2 text-xs text-slate-500">
+            <span className="min-w-0 truncate">{lang === 'de' ? 'Fortschritt' : 'Progress'}</span>
+            <span className="shrink-0 tabular-nums">{progressPct}%</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-slate-800">
             <div className="h-full bg-brand-500 transition-all" style={{ width: `${progressPct}%` }} />
@@ -284,11 +283,11 @@ export default function BizStartGermany({ onExit, onComplete }) {
       <button
         type="button"
         onClick={() => setScreen('lebenslauf')}
-        className="premium-card mb-4 flex w-full items-center gap-3 p-4 text-left"
+        className="premium-card mb-4 flex w-full min-w-0 items-center gap-3 p-4 text-left"
       >
         <FileUser className="h-5 w-5 shrink-0 text-brand-400" />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">{lang === 'de' ? 'Lebenslauf-Builder' : 'CV builder'}</p>
+          <p className="truncate text-sm font-semibold">{lang === 'de' ? 'Lebenslauf-Builder' : 'CV builder'}</p>
           <p className="text-xs text-slate-500">
             {lang === 'de'
               ? 'Tabellarischer Lebenslauf für Businessplan-Anhang & Förderung'
@@ -317,11 +316,11 @@ export default function BizStartGermany({ onExit, onComplete }) {
       <button
         type="button"
         onClick={() => setScreen('anschreiben')}
-        className="premium-card mb-4 flex w-full items-center gap-3 p-4 text-left"
+        className="premium-card mb-4 flex w-full min-w-0 items-center gap-3 p-4 text-left"
       >
         <Mail className="h-5 w-5 shrink-0 text-brand-400" />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">{lang === 'de' ? 'Anschreiben-Builder' : 'Cover letter builder'}</p>
+          <p className="truncate text-sm font-semibold">{lang === 'de' ? 'Anschreiben-Builder' : 'Cover letter builder'}</p>
           <p className="text-xs text-slate-500">
             {lang === 'de'
               ? 'DIN 5008 Anschreiben — Job, Förderung & Wettbewerb'
@@ -350,11 +349,11 @@ export default function BizStartGermany({ onExit, onComplete }) {
       <button
         type="button"
         onClick={() => setScreen('tailorcv')}
-        className="premium-card mb-4 flex w-full items-center gap-3 p-4 text-left"
+        className="premium-card mb-4 flex w-full min-w-0 items-center gap-3 p-4 text-left"
       >
         <Sparkles className="h-5 w-5 shrink-0 text-brand-400" />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">
+          <p className="truncate text-sm font-semibold">
             {lang === 'de' ? 'TailorCV — Stellen-Zuschnitt' : 'TailorCV — Job tailoring'}
           </p>
           <p className="text-xs text-slate-500">
@@ -386,10 +385,10 @@ export default function BizStartGermany({ onExit, onComplete }) {
       <button
         type="button"
         onClick={() => setScreen('structure')}
-        className="premium-card mb-4 flex w-full items-center justify-between p-4 text-left"
+        className="premium-card mb-4 flex w-full min-w-0 items-center justify-between gap-3 p-4 text-left"
       >
-        <span className="text-sm font-medium">{t(lang, 'startRegistration')}</span>
-        <ChevronRight className="h-5 w-5 text-brand-400" />
+        <span className="min-w-0 truncate text-sm font-medium">{t(lang, 'startRegistration')}</span>
+        <ChevronRight className="h-5 w-5 shrink-0 text-brand-400" />
       </button>
 
       <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">

@@ -132,7 +132,10 @@ body {
 
 @media (min-width: 64rem) {
   .app-main {
+    /* Sidebar is fixed; don't use width:100% + margin (clips right edge). */
     margin-left: var(--sidebar-w);
+    width: calc(100% - var(--sidebar-w));
+    max-width: calc(100% - var(--sidebar-w));
     padding-bottom: 0;
     padding-top: env(safe-area-inset-top);
   }
@@ -208,6 +211,10 @@ body {
 }
 
 .premium-card {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   border-radius: 1rem;
   border: 1px solid rgba(148, 163, 184, 0.12);
   background: rgba(30, 41, 59, 0.65);
