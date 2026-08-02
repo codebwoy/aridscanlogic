@@ -33,7 +33,7 @@ export default function Onboarding({ onDone }) {
   }
 
   return (
-    <div className="scanvault-shell flex min-h-full flex-col bg-[#0f0f0f] px-6 pb-8 text-white">
+    <div className="scanvault-shell flex h-full max-h-dvh flex-col overflow-y-auto overscroll-contain bg-[#0f0f0f] px-6 pb-8 text-white">
       <button
         type="button"
         onClick={finish}

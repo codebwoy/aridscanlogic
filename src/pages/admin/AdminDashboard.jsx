@@ -212,8 +212,8 @@ export default function AdminDashboard({ onExit }) {
   }
 
   return (
-    <div className="safe-top flex min-h-dvh flex-col bg-[#0a0f1a] text-slate-100">
-      <header className="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-900/80 backdrop-blur">
+    <div className="safe-top flex h-dvh max-h-dvh flex-col overflow-hidden bg-[#0a0f1a] text-slate-100">
+      <header className="shrink-0 border-b border-slate-800/80 bg-slate-900/80 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
           <div className="flex items-center gap-3">
             <BrandLogo className="h-8 w-8" />
@@ -272,7 +272,7 @@ export default function AdminDashboard({ onExit }) {
         </nav>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl flex-1 p-4 md:p-6">
+      <main className="mx-auto w-full max-w-7xl min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 md:p-6">
         {tab === 'overview' && (
           <div className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

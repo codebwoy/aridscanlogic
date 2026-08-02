@@ -18,7 +18,7 @@ export default function Login({ onSuccess, onRegister }) {
   }
 
   return (
-    <div className="scanvault-shell flex min-h-full flex-col justify-center bg-[#0f0f0f] px-6 text-white">
+    <div className="scanvault-shell flex h-full max-h-dvh flex-col justify-center overflow-y-auto overscroll-contain bg-[#0f0f0f] px-6 text-white">
       <div className="mx-auto w-full max-w-md">
       <BrandMark title={BRAND_SCANVAULT_NAME} subtitle="Sign in to your account" size={56} className="mb-2" />
       <form onSubmit={submit} className="mt-8 space-y-4">
