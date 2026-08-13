@@ -17,6 +17,7 @@ import {
   Layers,
   Library,
   ListChecks,
+  Map,
   PieChart,
   Scale,
   Shield,
@@ -57,6 +58,7 @@ const ICONS = {
   Wallet,
   Briefcase,
   Scale,
+  Map,
 }
 
 function ChapterIcon({ name, className }) {

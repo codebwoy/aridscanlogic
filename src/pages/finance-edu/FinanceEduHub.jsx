@@ -9,6 +9,7 @@ import {
   ExternalLink,
   GraduationCap,
   Library,
+  Map,
 } from 'lucide-react'
 import AiLanguageTabs from '@/components/shared/AiLanguageTabs'
 import { useAiLanguage } from '@/context/AiLanguageContext'
@@ -43,6 +44,13 @@ import {
   SMART_MONEY_COURSE,
 } from '@/lib/finance-edu/smartMoneyCurriculum'
 import {
+  DE_PANTOFFEL_URL,
+  DE_VZ_URL,
+  DE_WEALTH_CHAPTERS,
+  DE_WEALTH_COURSE,
+  DE_WEALTH_HUB_URL,
+} from '@/lib/finance-edu/deWealthCurriculum'
+import {
   countCompleted,
   loadEduProgress,
   totalLessons,
@@ -50,6 +58,11 @@ import {
 import FinanceCourse from './FinanceCourse'
 
 const TRACKS = [
+  {
+    course: DE_WEALTH_COURSE,
+    chapters: DE_WEALTH_CHAPTERS,
+    Icon: Map,
+  },
   {
     course: ETF_COURSE,
     chapters: ETF_CHAPTERS,
@@ -120,8 +133,8 @@ export default function FinanceEduHub({ onExit }) {
         </h1>
         <p className="mt-1 text-sm text-slate-400">
           {de
-            ? 'Sechs Lernpfade: ETFs, Finanztip, Kindersparen, Sparplan, Smart Money und Trading-Risiken. Kurzlektionen in der App, Vertiefung extern.'
-            : 'Six learning paths: ETFs, Finanztip, kids savings, savings plans, smart money, and trading risks. Short lessons in-app, deep dives external.'}
+            ? 'Master-Pfad Vermögensaufbau DE plus Spezialkurse (ETFs, Finanztip, Kindersparen, Sparplan, Smart Money, Trading-Risiken).'
+            : 'Master path for building wealth in Germany plus specialty courses (ETFs, Finanztip, kids, savings plans, smart money, trading risks).'}
         </p>
       </div>
 
@@ -159,6 +172,33 @@ export default function FinanceEduHub({ onExit }) {
       </div>
 
       <div className="mb-3 space-y-2">
+        <a
+          href={DE_WEALTH_HUB_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex w-full items-center justify-between gap-2 rounded-xl border border-slate-600 px-3 py-2.5 text-sm text-slate-200"
+        >
+          <span>finanztip.de/geldanlage</span>
+          <ExternalLink className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+        </a>
+        <a
+          href={DE_VZ_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex w-full items-center justify-between gap-2 rounded-xl border border-slate-600 px-3 py-2.5 text-sm text-slate-200"
+        >
+          <span>Verbraucherzentrale — Geldanlage</span>
+          <ExternalLink className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+        </a>
+        <a
+          href={DE_PANTOFFEL_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex w-full items-center justify-between gap-2 rounded-xl border border-slate-600 px-3 py-2.5 text-sm text-slate-200"
+        >
+          <span>Stiftung Warentest — Pantoffel-Portfolio</span>
+          <ExternalLink className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+        </a>
         <a
           href="https://www.finanzfluss.de/etf-handbuch/"
           target="_blank"
