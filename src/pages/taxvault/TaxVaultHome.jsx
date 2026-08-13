@@ -11,6 +11,7 @@ import {
   Tags,
   PenLine,
   Landmark,
+  GraduationCap,
 } from 'lucide-react'
 import {
   PieChart,
@@ -38,6 +39,7 @@ import MileageLogger from './MileageLogger'
 import TaxVaultCategoryManager from './TaxVaultCategoryManager'
 import ManualExpenseEntry from './ManualExpenseEntry'
 import BizStartGermany from '../bizstart/BizStartGermany'
+import FinanceEduHub from '../finance-edu/FinanceEduHub'
 import IncomeOverview from './IncomeOverview'
 import EstimatedTaxes from './EstimatedTaxes'
 import SafeChart from '@/components/shared/SafeChart'
@@ -58,6 +60,7 @@ export default function TaxVaultHome() {
   const [selectedReceipt, setSelectedReceipt] = useState(null)
   const [listCategoryFilter, setListCategoryFilter] = useState('')
   const [showBizStart, setShowBizStart] = useState(false)
+  const [showFinanceEdu, setShowFinanceEdu] = useState(false)
   const [profileReady, setProfileReady] = useState(hasTaxVaultProfile())
   const [invoices, setInvoices] = useState([])
 
@@ -113,6 +116,10 @@ export default function TaxVaultHome() {
         }}
       />
     )
+  }
+
+  if (showFinanceEdu) {
+    return <FinanceEduHub onExit={() => setShowFinanceEdu(false)} />
   }
 
   if (view === 'scan') {
@@ -471,13 +478,20 @@ export default function TaxVaultHome() {
           <Tags className="h-4 w-4" /> Categories
         </button>
       </div>
-      <div className="mb-4">
+      <div className="mb-4 space-y-2">
         <button
           type="button"
           onClick={() => setShowBizStart(true)}
           className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-700 py-2 text-sm"
         >
           <Rocket className="h-4 w-4" /> BizStart Germany
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowFinanceEdu(true)}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-500/30 bg-brand-950/20 py-2 text-sm text-brand-100"
+        >
+          <GraduationCap className="h-4 w-4" /> Finanz-Bildung
         </button>
       </div>
 

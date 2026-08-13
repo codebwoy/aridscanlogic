@@ -1,6 +1,6 @@
 ---
 description: Tax Vault — receipts, mileage, tax estimates, BizStart entry
-globs: src/pages/taxvault/**,src/components/taxvault/**,src/lib/taxvault/**
+globs: src/pages/taxvault/**,src/components/taxvault/**,src/lib/taxvault/**,src/pages/finance-edu/**,src/lib/finance-edu/**
 alwaysApply: false
 ---
 
@@ -27,6 +27,7 @@ alwaysApply: false
 3. **Mileage**: `MileageLogger.jsx`, `mileageGps.js`.
 4. **Reports**: `TaxSummaryReport.jsx`, `EstimatedTaxes.jsx`, `exportReport.js`.
 5. **BizStart**: button on home opens `BizStartGermany` (see `09-bizstart.mdc`).
+6. **Finanz-Bildung**: button on home opens `FinanceEduHub` (`src/pages/finance-edu/`) — tracks: Finanzfluss ETF (`curriculum.js`), Finanztip books (`finanztipCurriculum.js`), Kindersparen/ETF4Kids (`kidsCurriculum.js`), ETF-Sparplan (`sparplanCurriculum.js`), Smart Money/LIQID themes (`smartMoneyCurriculum.js`), Trading risk literacy (`tradingCurriculum.js`); progress per track in localStorage; external deep links. Managed-wealth and trading tracks are literacy only (no product/strategy pitches).
 
 ## Business rules (UI copy)
 
