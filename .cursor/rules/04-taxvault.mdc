@@ -27,7 +27,7 @@ alwaysApply: false
 3. **Mileage**: `MileageLogger.jsx`, `mileageGps.js`.
 4. **Reports**: `TaxSummaryReport.jsx`, `EstimatedTaxes.jsx`, `exportReport.js`.
 5. **BizStart**: button on home opens `BizStartGermany` (see `09-bizstart.mdc`).
-6. **Finanz-Bildung**: button on home opens `FinanceEduHub` — lead track **Vermögensaufbau Deutschland** (`deWealthCurriculum.js`, Finanztip/VZ/Pantoffel consensus) plus specialty tracks (ETF, Finanztip books, kids, sparplan, smart money, trading risk). Progress per track in localStorage; external deep links. No product/strategy pitches.
+6. **Finanz-Bildung**: button on home opens `FinanceEduHub` — **Zielrechner** (`InvestmentGoalLab.jsx` + `lib/finance-edu/goalLab.js`, localStorage `scanlogic_investment_goal_lab`) plus lead track **Vermögensaufbau Deutschland** (`deWealthCurriculum.js`) and specialty tracks (ETF, Finanztip books, kids, sparplan, smart money, trading risk). Educational scenarios only — no ISINs, brokers, or product pitches.
 
 ## Business rules (UI copy)
 

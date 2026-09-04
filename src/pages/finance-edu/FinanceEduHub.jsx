@@ -3,6 +3,7 @@ import {
   Activity,
   Baby,
   Briefcase,
+  Calculator,
   CalendarClock,
   ChevronLeft,
   ChevronRight,
@@ -56,6 +57,7 @@ import {
   totalLessons,
 } from '@/lib/finance-edu/progress'
 import FinanceCourse from './FinanceCourse'
+import InvestmentGoalLab from './InvestmentGoalLab'
 
 const TRACKS = [
   {
@@ -99,8 +101,13 @@ export default function FinanceEduHub({ onExit }) {
   const { language, setLanguage } = useAiLanguage()
   const de = language !== 'en'
   const [activeId, setActiveId] = useState(null)
+  const [showGoalLab, setShowGoalLab] = useState(false)
 
   const active = TRACKS.find((t) => t.course.id === activeId)
+
+  if (showGoalLab) {
+    return <InvestmentGoalLab onBack={() => setShowGoalLab(false)} />
+  }
 
   if (active) {
     return (
@@ -133,10 +140,31 @@ export default function FinanceEduHub({ onExit }) {
         </h1>
         <p className="mt-1 text-sm text-slate-400">
           {de
-            ? 'Master-Pfad Vermögensaufbau DE plus Spezialkurse (ETFs, Finanztip, Kindersparen, Sparplan, Smart Money, Trading-Risiken).'
-            : 'Master path for building wealth in Germany plus specialty courses (ETFs, Finanztip, kids, savings plans, smart money, trading risks).'}
+            ? 'Master-Pfad Vermögensaufbau DE, Zielrechner & Spezialkurse (ETFs, Finanztip, Kindersparen, Sparplan, Smart Money, Trading-Risiken).'
+            : 'Master path for building wealth in Germany, goal lab & specialty courses (ETFs, Finanztip, kids, savings plans, smart money, trading risks).'}
         </p>
       </div>
+
+      <button
+        type="button"
+        onClick={() => setShowGoalLab(true)}
+        className="premium-card mb-4 flex w-full items-start gap-3 p-4 text-left ring-1 ring-brand-500/40"
+      >
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-600/20 text-brand-300">
+          <Calculator className="h-5 w-5" aria-hidden />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-semibold text-white">
+            {de ? 'Zielrechner & Allokations-Szenarien' : 'Goal lab & allocation scenarios'}
+          </span>
+          <span className="mt-1 block text-xs text-slate-400">
+            {de
+              ? 'Miete absichern, Bar-Immobilie oder Geschäft vs. Markt — Projektion, Ärmel & DE-Steuer-Illustration.'
+              : 'Cover rent, cash property, or business vs market — projection, sleeves & DE tax illustration.'}
+          </span>
+        </span>
+        <ChevronRight className="mt-1 h-5 w-5 shrink-0 text-brand-400" />
+      </button>
 
       <div className="mb-4 space-y-2">
         {TRACKS.map(({ course, chapters, Icon }) => {
