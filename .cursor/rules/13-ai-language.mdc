@@ -48,5 +48,7 @@ Never auto-detect language from user text when the UI language toggle is set.
 - Docs scan OCR/classification (`scanPipeline.js`)
 - Tax Vault receipt OCR (`ReceiptManager.jsx`, `ReceiptScanFlow.jsx`)
 - Settings (`SettingsPage.jsx`) — global default for all AI modules
+- TailorCV (`TailorCvBuilder.jsx`)
+- Listing Engine (`ListingEngineBuilder.jsx`)
 
 When adding a new AI feature, wire `useAiLanguage` + `AiLanguageBar` + `aiLanguageInstruction`.

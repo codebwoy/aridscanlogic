@@ -19,6 +19,8 @@ Cursor loads rules from `.cursor/rules/*.mdc`. Use the matching rule when editin
 | `12-seo.mdc` | Meta tags, sitemap, GitHub Pages deploy |
 | `13-ai-language.mdc` | Global DE/EN toggle for all AI surfaces |
 | `14-tailorcv.mdc` | TailorCV job-targeted CV / cover letter (BizStart) |
+| `15-listingengine.mdc` | German E-Commerce Listing Engine — eBay.de copy + compliance (BizStart) |
+| `15-listingengine.mdc` | German E-Commerce Listing Engine (eBay.de copy + compliance) |
 
 Human-readable security policy: `SECURITY.md`.
 

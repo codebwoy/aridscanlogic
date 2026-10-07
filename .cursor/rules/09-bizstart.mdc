@@ -18,6 +18,7 @@ Steps include (via step components):
 - `InfoCollector.jsx` — business data
 - `StepGewerbe.jsx`, `StepFinanzamt.jsx`, `StepVat.jsx`, `StepHandelsregister.jsx`, `StepIhk.jsx`, `StepBank.jsx`
 - `StepComplete.jsx`
+- `StepTailorCv.jsx` / `StepListingEngine.jsx` — optional tools (not registration steps)
 - `ComplianceCalendar.jsx` — deadlines
 - `RegistrationChat.jsx` — LLM assistant (BizStart-specific prompt, not licensed advisor)
 

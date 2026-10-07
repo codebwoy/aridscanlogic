@@ -1,0 +1,46 @@
+---
+description: German E-Commerce Listing Engine (eBay.de copy + compliance) inside BizStart
+globs: src/lib/listingengine/**,src/components/bizstart/listing/**,src/pages/bizstart/StepListingEngine.jsx
+alwaysApply: false
+---
+
+# Listing Engine
+
+## Entry
+
+- **Not a top-level tab.** BizStart Germany → `listingEngine` screen (`StepListingEngine` → `ListingEngineBuilder`).
+- Nested like TailorCV / Website-Rechtliches.
+
+## Principles
+
+- V1 scope: German Copywriter · SEO/item-specifics checklist · Compliance · Profit calculator · Publish Readiness Score.
+- Never invent specs, GPSR, shipping times, certifications, or legal text.
+- Legal modules (Impressum, Widerruf, AGB, Datenschutz) are locked templates — insert only.
+- Human approval required; no auto-publish to eBay.
+- Client-side `mergeComplianceGuards` after LLM compliance; RED claims stripped from marketing text.
+- Compliance failure caps quality score (`finalizeScore`); Publish Readiness can block approval.
+- Profit fees are **estimates** — not live eBay API. Do not claim official fee accuracy.
+- Do not build V2/V3 ops (stock sync, A/B, analytics, Terapeak clone) without an explicit product decision.
+
+## Layout
+
+| Path | Role |
+|------|------|
+| `lib/listingengine/schema.js` | Product / listing / compliance / economics schemas |
+| `lib/listingengine/prompts/*` | Extract, copywriter, compliance prompts |
+| `lib/listingengine/api.js` | InvokeLLM pipeline via `/api/llm` |
+| `lib/listingengine/validateClaims.js` | Risky-claim guards |
+| `lib/listingengine/profit.js` | Contribution margin calculator |
+| `lib/listingengine/seoCheck.js` | Title + Artikelmerkmale checklist |
+| `lib/listingengine/publishReadiness.js` | Publish Readiness Score gate |
+| `lib/listingengine/legalInsert.js` | Load locked legal from Website-Rechtliches |
+| `lib/listingengine/exportListing.js` | Customer listing + internal notes |
+| `lib/listingengine/store.js` | `scanlogic_listingengine_session` localStorage |
+
+## Do not
+
+- Put Anthropic keys in `VITE_*`.
+- Let AI rewrite locked legal modules.
+- Register Listing Engine as a suite `TabBar` tab without product decision.
+- Auto-publish listings to eBay.
+- Invent SEO title attributes not present in product data.
