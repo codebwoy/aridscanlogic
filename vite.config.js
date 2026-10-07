@@ -34,6 +34,13 @@ export default defineConfig(({ mode }) => {
   const getDatabaseUrl = () => (env.DATABASE_URL || env.SUPABASE_DB_URL || '').trim()
   const getApiSecret = () => (env.SCANLOGIC_API_SECRET || '').trim()
   const getJwtSecret = () => (env.SUPABASE_JWT_SECRET || env.JWT_SECRET || '').trim()
+  const getEbayConfig = () => ({
+    clientId: (env.EBAY_CLIENT_ID || '').trim(),
+    clientSecret: (env.EBAY_CLIENT_SECRET || '').trim(),
+    ruName: (env.EBAY_RU_NAME || '').trim(),
+    env: (env.EBAY_ENV || 'production').trim(),
+    scopes: (env.EBAY_SCOPES || '').trim(),
+  })
 
   return {
     base,
@@ -52,7 +59,14 @@ export default defineConfig(({ mode }) => {
       },
       react(),
       tailwindcss(),
-      llmProxyPlugin({ getApiKey, getModel, getDatabaseUrl, getApiSecret, getJwtSecret }),
+      llmProxyPlugin({
+        getApiKey,
+        getModel,
+        getDatabaseUrl,
+        getApiSecret,
+        getJwtSecret,
+        getEbayConfig,
+      }),
       VitePWA({
         registerType: 'prompt',
         includeAssets: ['favicon.png', 'favicon-32.png', 'favicon-16.png', 'brand-logo.png', 'apple-touch-icon.png'],

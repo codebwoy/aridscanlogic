@@ -389,13 +389,13 @@ export default function BizStartGermany({ onExit, onComplete }) {
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold">
             {lang === 'de'
-              ? 'Listing Engine — eBay.de Copy & Compliance'
-              : 'Listing Engine — eBay.de copy & compliance'}
+              ? 'Listing Engine — eBay.de verkaufsbereit'
+              : 'Listing Engine — eBay.de listing ready'}
           </p>
           <p className="text-xs text-slate-500">
             {lang === 'de'
-              ? 'Deutsche Produkttexte + Compliance-Checker (keine erfundenen Angaben)'
-              : 'German product copy + compliance checker (no invented specs)'}
+              ? 'Kann ich verkaufen? · Listing bereit machen · Profit & Publish Readiness'
+              : 'Can I sell this? · Make listing ready · Profit & Publish Readiness'}
           </p>
         </div>
         <ChevronRight className="h-5 w-5 shrink-0 text-brand-400" />

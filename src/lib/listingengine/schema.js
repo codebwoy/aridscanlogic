@@ -187,6 +187,23 @@ export function emptyEconomicsFields() {
   }
 }
 
+export function emptyEbayPublishSettings() {
+  return {
+    categoryId: '',
+    merchantLocationKey: '',
+    fulfillmentPolicyId: '',
+    paymentPolicyId: '',
+    returnPolicyId: '',
+    quantity: '1',
+    currency: 'EUR',
+    marketplaceId: 'EBAY_DE',
+    imageUrlsText: '',
+    lastListingId: '',
+    lastOfferId: '',
+    lastSku: '',
+  }
+}
+
 export function emptyListingSession() {
   return {
     version: 2,
@@ -201,6 +218,8 @@ export function emptyListingSession() {
     compliance: emptyComplianceReport(),
     score: emptyQualityScore(),
     economics: emptyEconomicsFields(),
+    ebay_settings: emptyEbayPublishSettings(),
+    image_checklist: {},
     privacy_acknowledged: false,
     human_approved: false,
     error: '',

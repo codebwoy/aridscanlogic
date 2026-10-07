@@ -13,14 +13,16 @@ alwaysApply: false
 
 ## Principles
 
-- V1 scope: German Copywriter · SEO/item-specifics checklist · Compliance · Profit calculator · Publish Readiness Score.
+- V1 scope: **Can I Sell This?** · Make Listing Ready · German Copywriter · SEO/item-specifics · Compliance · Profit · Image plan checklist · Publish Readiness.
 - Never invent specs, GPSR, shipping times, certifications, or legal text.
 - Legal modules (Impressum, Widerruf, AGB, Datenschutz) are locked templates — insert only.
 - Human approval required; no auto-publish to eBay.
 - Client-side `mergeComplianceGuards` after LLM compliance; RED claims stripped from marketing text.
 - Compliance failure caps quality score (`finalizeScore`); Publish Readiness can block approval.
 - Profit fees are **estimates** — not live eBay API. Do not claim official fee accuracy.
-- Do not build V2/V3 ops (stock sync, A/B, analytics, Terapeak clone) without an explicit product decision.
+- Can I Sell This? uses seller-entered data only (no live demand / competition scrape).
+- Image plan is a checklist only — no AI-generated product photos that misrepresent the item.
+- Do not build V2/V3 ops (stock sync, A/B, analytics, Terapeak clone, full eCom OS) without an explicit product decision.
 
 ## Layout
 
@@ -32,15 +34,25 @@ alwaysApply: false
 | `lib/listingengine/validateClaims.js` | Risky-claim guards |
 | `lib/listingengine/profit.js` | Contribution margin calculator |
 | `lib/listingengine/seoCheck.js` | Title + Artikelmerkmale checklist |
+| `lib/listingengine/canISellThis.js` | “Can I Sell This?” lite decision |
+| `lib/listingengine/imageCheck.js` | Rules-based image plan checklist |
 | `lib/listingengine/publishReadiness.js` | Publish Readiness Score gate |
 | `lib/listingengine/legalInsert.js` | Load locked legal from Website-Rechtliches |
 | `lib/listingengine/exportListing.js` | Customer listing + internal notes |
 | `lib/listingengine/store.js` | `scanlogic_listingengine_session` localStorage |
 
+## eBay OAuth publish
+
+- Server: `server/ebay-api.mjs` → `/api/ebay/*` (Vite middleware + `api/ebay/[...slug].js`).
+- Client: `lib/listingengine/ebay/*` + `EbayPublishPanel.jsx` on Review tab.
+- Env: `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET`, `EBAY_RU_NAME`, optional `EBAY_ENV=sandbox`.
+- Flow: OAuth popup → load business policies/locations → map listing → Inventory item + offer + publish.
+- Gates: human approval, no compliance block, category ID, merchant location, 3 policies, selling price.
+
 ## Do not
 
-- Put Anthropic keys in `VITE_*`.
+- Put Anthropic or eBay secrets in `VITE_*`.
 - Let AI rewrite locked legal modules.
 - Register Listing Engine as a suite `TabBar` tab without product decision.
-- Auto-publish listings to eBay.
+- Publish when compliance is blocked or the listing is not human-approved.
 - Invent SEO title attributes not present in product data.

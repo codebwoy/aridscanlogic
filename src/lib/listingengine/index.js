@@ -42,3 +42,18 @@ export {
 } from './profit'
 export { analyzeSeo, recommendTitleFromProduct, EBAY_TITLE_MAX } from './seoCheck'
 export { computePublishReadiness, READINESS_VERDICT } from './publishReadiness'
+export { evaluateCanISellThis, SELL_DECISION } from './canISellThis'
+export { analyzeImagePlan, emptyImageChecklist } from './imageCheck'
+export {
+  emptyEbayPublishSettings,
+  normalizeEbayPublishSettings,
+  buildEbayPublishPayload,
+} from './ebay/mapToInventory'
+export {
+  connectEbayAccount,
+  disconnectEbayAccount,
+  fetchEbayStatus,
+  fetchEbayPolicies,
+  publishListingToEbay,
+} from './ebay/client'
+export { isEbayConnected, loadEbayAuth, clearEbayAuth } from './ebay/authStore'

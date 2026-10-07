@@ -16,6 +16,8 @@ import {
   Package,
   Calculator,
   Search,
+  CircleHelp,
+  ImageIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAiLanguage } from '@/context/AiLanguageContext'
@@ -41,7 +43,10 @@ import {
   computePublishReadiness,
   READINESS_VERDICT,
   recommendTitleFromProduct,
+  evaluateCanISellThis,
+  SELL_DECISION,
 } from '@/lib/listingengine'
+import EbayPublishPanel from '@/components/bizstart/listing/EbayPublishPanel'
 
 const PHASE_LABELS = {
   de: {
@@ -121,6 +126,31 @@ function ReadinessBadge({ verdict, lang }) {
   )
 }
 
+function SellDecisionBadge({ decision, lang }) {
+  if (decision === SELL_DECISION.TEST) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-1 text-xs font-medium text-emerald-300">
+        <CheckCircle2 className="h-3.5 w-3.5" />
+        {lang === 'de' ? 'TESTEN' : 'TEST'}
+      </span>
+    )
+  }
+  if (decision === SELL_DECISION.DONT) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/20 px-2.5 py-1 text-xs font-medium text-rose-300">
+        <XCircle className="h-3.5 w-3.5" />
+        {lang === 'de' ? 'NICHT VERKAUFEN' : "DON'T SELL"}
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2.5 py-1 text-xs font-medium text-amber-300">
+      <AlertTriangle className="h-3.5 w-3.5" />
+      {lang === 'de' ? 'PRÜFEN' : 'REVIEW'}
+    </span>
+  )
+}
+
 function FieldInput({ label, value, onChange, hint, type = 'text' }) {
   return (
     <label className="block text-xs text-slate-400">
@@ -150,7 +180,7 @@ export default function ListingEngineBuilder({ onBack }) {
   const [busy, setBusy] = useState(false)
   const [phase, setPhase] = useState(null)
   const [dragOver, setDragOver] = useState(false)
-  const [tab, setTab] = useState('input') // input | product | listing | legal | review
+  const [tab, setTab] = useState('decide') // decide | input | product | economics | listing | legal | review
   const [previewMode, setPreviewMode] = useState('customer') // customer | internal
 
   const persist = useCallback((patch) => {
@@ -172,6 +202,16 @@ export default function ListingEngineBuilder({ onBack }) {
     [session.listing, session.product, session.legal]
   )
 
+  const sellDecision = useMemo(
+    () =>
+      evaluateCanISellThis({
+        product: session.product,
+        economics: session.economics,
+        compliance: session.compliance,
+      }),
+    [session.product, session.economics, session.compliance]
+  )
+
   const readiness = useMemo(
     () =>
       computePublishReadiness({
@@ -181,6 +221,7 @@ export default function ListingEngineBuilder({ onBack }) {
         score: session.score,
         legal: session.legal,
         economics: session.economics,
+        imageChecklist: session.image_checklist,
         humanApproved: session.human_approved,
       }),
     [
@@ -190,12 +231,14 @@ export default function ListingEngineBuilder({ onBack }) {
       session.score,
       session.legal,
       session.economics,
+      session.image_checklist,
       session.human_approved,
     ]
   )
 
   const profit = readiness.profit
   const seo = readiness.seo
+  const images = readiness.images
 
   const internalText = useMemo(
     () =>
@@ -361,11 +404,18 @@ export default function ListingEngineBuilder({ onBack }) {
       product: { ...session.product, shipping: { ...session.product.shipping, ...patch } },
     })
   const setLegal = (patch) => persist({ legal: { ...session.legal, ...patch, locked: true } })
+  const setEbaySettings = (patch) =>
+    persist({ ebay_settings: { ...(session.ebay_settings || {}), ...patch } })
   const setListingField = (key, value) => persist({ listing: { ...session.listing, [key]: value } })
   const setEconomics = (patch) =>
     persist({ economics: { ...session.economics, ...patch } })
+  const toggleImageShot = (id) => {
+    const cur = !!(session.image_checklist || {})[id]
+    persist({ image_checklist: { ...(session.image_checklist || {}), [id]: !cur } })
+  }
 
   const tabs = [
+    { id: 'decide', de: 'Verkaufen?', en: 'Can I sell?' },
     { id: 'input', de: 'Eingabe', en: 'Input' },
     { id: 'product', de: 'Produktdaten', en: 'Product' },
     { id: 'economics', de: 'Profit', en: 'Profit' },
@@ -403,8 +453,8 @@ export default function ListingEngineBuilder({ onBack }) {
         </h1>
         <p className="mt-1 text-sm text-slate-400">
           {lang === 'de'
-            ? 'Copy · SEO · Compliance · Profit · Publish Readiness — keine erfundenen Angaben, Freigabe vor Export.'
-            : 'Copy · SEO · Compliance · Profit · Publish Readiness — no invented specs, approval before export.'}
+            ? 'Kann ich verkaufen? · Listing bereit machen · Publish Readiness — keine erfundenen Angaben.'
+            : 'Can I sell this? · Make listing ready · Publish Readiness — no invented specs.'}
         </p>
       </header>
 
@@ -422,6 +472,99 @@ export default function ListingEngineBuilder({ onBack }) {
           </button>
         ))}
       </div>
+
+      {tab === 'decide' && (
+        <section className="space-y-4">
+          <div
+            className={`premium-card space-y-3 p-4 ${
+              sellDecision.decision === SELL_DECISION.TEST
+                ? 'border border-emerald-500/40'
+                : sellDecision.decision === SELL_DECISION.DONT
+                  ? 'border border-rose-500/40'
+                  : 'border border-amber-500/30'
+            }`}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-200">
+                <CircleHelp className="h-4 w-4 text-brand-300" />
+                {lang === 'de' ? 'Kann ich das verkaufen?' : 'Can I sell this?'}
+              </div>
+              <SellDecisionBadge decision={sellDecision.decision} lang={lang} />
+            </div>
+            <p className="text-[11px] text-slate-500">
+              {lang === 'de'
+                ? `Konfidenz: ${sellDecision.confidence === 'medium' ? 'mittel' : 'niedrig'} · nur deine Daten, keine Live-Nachfrage`
+                : `Confidence: ${sellDecision.confidence} · your data only, no live demand`}
+            </p>
+            <ul className="space-y-1.5">
+              {sellDecision.reasons.map((r) => (
+                <li
+                  key={r.de}
+                  className={`text-xs ${
+                    r.severity === 'block'
+                      ? 'text-rose-300'
+                      : r.severity === 'ok'
+                        ? 'text-emerald-300/90'
+                        : 'text-amber-200/90'
+                  }`}
+                >
+                  {r.severity === 'block' ? '❌' : r.severity === 'ok' ? '✅' : '⚠'}{' '}
+                  {lang === 'de' ? r.de : r.en}
+                </li>
+              ))}
+            </ul>
+            <p className="text-[10px] leading-relaxed text-slate-500">
+              {lang === 'de' ? sellDecision.disclaimer.de : sellDecision.disclaimer.en}
+            </p>
+          </div>
+
+          <div className="premium-card space-y-2 p-4">
+            <p className="text-xs font-semibold text-slate-300">
+              {lang === 'de' ? 'Nächste Schritte' : 'Next steps'}
+            </p>
+            <ol className="list-decimal space-y-1 pl-4 text-xs text-slate-400">
+              <li>
+                {lang === 'de'
+                  ? 'Produktdaten + GPSR + Preise ausfüllen'
+                  : 'Fill product data + GPSR + prices'}
+              </li>
+              <li>
+                {lang === 'de'
+                  ? '„Listing verkaufsbereit machen“ für Copy + Compliance'
+                  : '“Make this listing ready” for copy + compliance'}
+              </li>
+              <li>
+                {lang === 'de'
+                  ? 'Publish Readiness prüfen, dann freigeben & exportieren'
+                  : 'Check Publish Readiness, then approve & export'}
+              </li>
+            </ol>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setTab('product')}
+                className="rounded-lg bg-slate-800 px-3 py-2 text-xs font-medium text-slate-200"
+              >
+                {lang === 'de' ? 'Zu Produktdaten' : 'Go to product'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setTab('economics')}
+                className="rounded-lg bg-slate-800 px-3 py-2 text-xs font-medium text-slate-200"
+              >
+                {lang === 'de' ? 'Zu Profit' : 'Go to profit'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setTab('input')}
+                className="rounded-lg bg-brand-600 px-3 py-2 text-xs font-semibold text-white"
+              >
+                {lang === 'de' ? 'Listing bereit machen' : 'Make listing ready'}
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {tab === 'input' && (
         <section className="space-y-4">
@@ -524,14 +667,16 @@ export default function ListingEngineBuilder({ onBack }) {
               <>
                 <Sparkles className="h-4 w-4" />
                 {lang === 'de'
-                  ? 'Copywriter + Compliance starten'
-                  : 'Run copywriter + compliance'}
+                  ? 'Listing verkaufsbereit machen'
+                  : 'Make this listing ready'}
               </>
             )}
           </button>
           <p className="text-center text-[11px] text-slate-500">
             {remaining}/{DAILY_GENERATION_CAP}{' '}
-            {lang === 'de' ? 'Generierungen heute' : 'generations today'}
+            {lang === 'de'
+              ? 'Generierungen heute · Copy + SEO + Compliance'
+              : 'generations today · copy + SEO + compliance'}
           </p>
         </section>
       )}
@@ -662,6 +807,43 @@ export default function ListingEngineBuilder({ onBack }) {
               className="mt-1 w-full rounded-lg bg-slate-900/80 px-3 py-2 text-sm"
             />
           </label>
+
+          <div className="premium-card space-y-3 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-200">
+                <ImageIcon className="h-4 w-4 text-brand-300" />
+                {lang === 'de' ? 'Bilder-Plan' : 'Image plan'}
+              </div>
+              <span className="text-xs text-slate-400">{images?.score ?? 0}/100</span>
+            </div>
+            <p className="text-[11px] text-slate-500">
+              {lang === 'de'
+                ? 'Checkliste — keine KI-Bildgenerierung. Nur markieren, was du wirklich hast.'
+                : 'Checklist only — no AI image generation. Tick only shots you actually have.'}
+            </p>
+            <ul className="space-y-2">
+              {(images?.shots || []).map((shot) => (
+                <li key={shot.id}>
+                  <label className="flex items-start gap-2 text-xs text-slate-300">
+                    <input
+                      type="checkbox"
+                      className="mt-0.5"
+                      checked={!!(session.image_checklist || {})[shot.id]}
+                      onChange={() => toggleImageShot(shot.id)}
+                    />
+                    <span>
+                      {lang === 'de' ? shot.de : shot.en}
+                      {shot.required ? (
+                        <span className="ml-1 text-[10px] text-amber-400">
+                          {lang === 'de' ? '(nötig)' : '(required)'}
+                        </span>
+                      ) : null}
+                    </span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </div>
         </section>
       )}
 
@@ -957,6 +1139,14 @@ export default function ListingEngineBuilder({ onBack }) {
 
       {tab === 'review' && (
         <section className="space-y-4">
+          <div className="premium-card flex flex-wrap items-center justify-between gap-2 p-3">
+            <div className="flex items-center gap-2 text-xs text-slate-400">
+              <CircleHelp className="h-3.5 w-3.5" />
+              {lang === 'de' ? 'Kann ich verkaufen?' : 'Can I sell this?'}
+            </div>
+            <SellDecisionBadge decision={sellDecision.decision} lang={lang} />
+          </div>
+
           <div
             className={`premium-card space-y-3 p-4 ${
               readiness.verdict === READINESS_VERDICT.READY
@@ -1118,6 +1308,13 @@ export default function ListingEngineBuilder({ onBack }) {
             </button>
           </div>
 
+          <EbayPublishPanel
+            lang={lang}
+            session={session}
+            readiness={readiness}
+            onSettingsChange={setEbaySettings}
+          />
+
           <AiLanguageBar language={language} onChange={setLanguage} className="mb-2" />
           <button
             type="button"
@@ -1130,7 +1327,7 @@ export default function ListingEngineBuilder({ onBack }) {
             ) : (
               <Sparkles className="h-4 w-4" />
             )}
-            {lang === 'de' ? 'Erneut generieren' : 'Regenerate'}
+            {lang === 'de' ? 'Listing erneut bereit machen' : 'Make listing ready again'}
           </button>
         </section>
       )}

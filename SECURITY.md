@@ -64,6 +64,14 @@ Static hosts (GitHub Pages, S3-only) **cannot** run the LLM proxy. Options:
 - Activity ingestion (`POST /api/activity/events`) follows the same user auth rules as `/api/db`.
 - Do **not** expose `SUPABASE_SERVICE_ROLE_KEY` to the admin UI; admin uses the dedicated secret instead.
 
+## eBay OAuth (Listing Engine)
+
+- `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET`, and `EBAY_RU_NAME` are **server-only** (never `VITE_*`).
+- User access/refresh tokens live in **sessionStorage** after the OAuth popup; they are not written to `localStorage`.
+- `/api/ebay/oauth/callback` is exempt from `SCANLOGIC_API_SECRET` because eBay redirects the browser there.
+- Publish requires `human_approved` and rejects `compliance_blocked` on the server.
+- Prefer **sandbox** (`EBAY_ENV=sandbox`) until policies, locations, and category IDs are verified.
+
 ## Reporting
 
 Open a private security issue on the repository or contact the maintainer directly.

@@ -6,6 +6,7 @@ import {
   emptyComplianceReport,
   emptyQualityScore,
   emptyEconomicsFields,
+  emptyEbayPublishSettings,
   normalizeProductData,
   normalizeListingCopy,
   normalizeCompliance,
@@ -54,6 +55,14 @@ export function loadListingSession() {
         raw.product?.wholesale_cost ||
         emptyEconomicsFields().product_cost,
     }),
+    image_checklist:
+      raw.image_checklist && typeof raw.image_checklist === 'object'
+        ? { ...raw.image_checklist }
+        : {},
+    ebay_settings: {
+      ...emptyEbayPublishSettings(),
+      ...(raw.ebay_settings || {}),
+    },
   }
 }
 
@@ -76,6 +85,16 @@ export function saveListingSession(patch) {
     economics: patch.economics
       ? normalizeEconomics({ ...current.economics, ...patch.economics })
       : current.economics,
+    image_checklist: patch.image_checklist
+      ? { ...(current.image_checklist || {}), ...patch.image_checklist }
+      : current.image_checklist || {},
+    ebay_settings: patch.ebay_settings
+      ? {
+          ...emptyEbayPublishSettings(),
+          ...current.ebay_settings,
+          ...patch.ebay_settings,
+        }
+      : current.ebay_settings,
     updated_at: new Date().toISOString(),
   }
   writeJson(SESSION_KEY, next)

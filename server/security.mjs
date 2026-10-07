@@ -25,6 +25,10 @@ export function createApiAccessMiddleware(getSecret) {
     const pathname = req.url?.split('?')[0] || ''
     if (!pathname.startsWith('/api/')) return next()
     if (pathname.startsWith('/api/cron/')) return next()
+    // eBay redirects the browser here — cannot send SCANLOGIC_API_SECRET
+    if (pathname === '/api/ebay/oauth/callback' || pathname.startsWith('/api/ebay/oauth/callback?')) {
+      return next()
+    }
 
     if (isLocalRequest(req)) return next()
 

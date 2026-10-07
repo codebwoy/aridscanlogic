@@ -7,6 +7,7 @@ import { PUBLISH_STATUS } from './schema'
 import { legalModulesReady } from './legalInsert'
 import { analyzeSeo } from './seoCheck'
 import { calculateProfit, normalizeEconomics } from './profit'
+import { analyzeImagePlan } from './imageCheck'
 
 export const READINESS_VERDICT = {
   READY: 'READY_TO_PUBLISH',
@@ -32,10 +33,12 @@ export function computePublishReadiness({
   score,
   legal,
   economics,
+  imageChecklist = {},
   humanApproved = false,
 }) {
   const seo = analyzeSeo({ product, listing })
   const profit = calculateProfit(normalizeEconomics(economics))
+  const images = analyzeImagePlan({ product, checklist: imageChecklist })
   const publishStatus = compliance?.publish_status || PUBLISH_STATUS.NEEDS_REVIEW
   const qualityTotal = Number(score?.total) || 0
   const legalOk = legalModulesReady(legal)
@@ -60,11 +63,12 @@ export function computePublishReadiness({
   const copyScore = qualityTotal || (listing?.titel ? 50 : 0)
 
   const parts = [
-    { id: 'compliance', score: complianceScore, weight: 0.3, de: 'Compliance', en: 'Compliance' },
-    { id: 'seo', score: seo.score, weight: 0.2, de: 'SEO / Merkmale', en: 'SEO / specifics' },
-    { id: 'copy', score: copyScore, weight: 0.2, de: 'Deutsche Texte', en: 'German copy' },
-    { id: 'profit', score: profitScore, weight: 0.15, de: 'Deckungsbeitrag', en: 'Contribution' },
-    { id: 'legal', score: legalScore, weight: 0.15, de: 'Rechtstexte', en: 'Legal modules' },
+    { id: 'compliance', score: complianceScore, weight: 0.28, de: 'Compliance', en: 'Compliance' },
+    { id: 'seo', score: seo.score, weight: 0.18, de: 'SEO / Merkmale', en: 'SEO / specifics' },
+    { id: 'copy', score: copyScore, weight: 0.18, de: 'Deutsche Texte', en: 'German copy' },
+    { id: 'profit', score: profitScore, weight: 0.14, de: 'Deckungsbeitrag', en: 'Contribution' },
+    { id: 'legal', score: legalScore, weight: 0.12, de: 'Rechtstexte', en: 'Legal modules' },
+    { id: 'images', score: images.score, weight: 0.1, de: 'Bilder-Plan', en: 'Image plan' },
   ]
 
   let total = Math.round(parts.reduce((sum, p) => sum + p.score * p.weight, 0))
@@ -153,6 +157,14 @@ export function computePublishReadiness({
     problems.push({ severity: 'warn', de: m, en: m })
   })
 
+  images.missingRequired.forEach((shot) => {
+    problems.push({
+      severity: 'warn',
+      de: `Bild fehlt: ${shot.de}`,
+      en: `Image missing: ${shot.en}`,
+    })
+  })
+
   if (publishStatus === PUBLISH_STATUS.READY) {
     strengths.push({ de: 'Compliance freigabefähig', en: 'Compliance publish-ready' })
   }
@@ -170,6 +182,9 @@ export function computePublishReadiness({
   }
   if (legalOk) {
     strengths.push({ de: 'Rechtstexte vorhanden', en: 'Legal modules present' })
+  }
+  if (images.score >= 70) {
+    strengths.push({ de: 'Bilder-Plan weitgehend erfüllt', en: 'Image plan mostly complete' })
   }
   if (humanApproved) {
     strengths.push({ de: 'Menschliche Freigabe erteilt', en: 'Human approval granted' })
@@ -203,5 +218,6 @@ export function computePublishReadiness({
     strengths: strengths.slice(0, 8),
     seo,
     profit,
+    images,
   }
 }

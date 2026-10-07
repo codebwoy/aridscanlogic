@@ -18,13 +18,14 @@ alwaysApply: false
 - `api/admin/[...slug].js`, `api/activity/events.js` — Vercel serverless mirrors.
 - `server/db-pool.mjs` — Postgres pool singleton.
 - `server/security.mjs` — auth, rate limits, sanitization.
+- `server/ebay-api.mjs` — `/api/ebay/*` OAuth + Inventory publish; `api/ebay/[...slug].js` on Vercel.
 
 ## Middleware order (do not reorder casually)
 
 1. Security headers (`createSecurityHeadersMiddleware`)
-2. API access (`createApiAccessMiddleware`) — blocks non-local `/api` without Bearer secret
-3. Rate limits: `/api/admin` 60/min, `/api/activity` 120/min, `/api/db` 120/min, `/api/llm` 30/min
-4. Admin middleware, activity middleware, DB middleware, then LLM middleware
+2. API access (`createApiAccessMiddleware`) — blocks non-local `/api` without Bearer secret (`/api/ebay/oauth/callback` exempt)
+3. Rate limits: `/api/admin` 60/min, `/api/activity` 120/min, `/api/db` 120/min, `/api/llm` 30/min, `/api/ebay` 40/min
+4. Admin, activity, DB, eBay, then LLM middleware
 
 ## Env vars (server-only in `vite.config.js`)
 
@@ -32,6 +33,7 @@ alwaysApply: false
 - `DATABASE_URL` or `SUPABASE_DB_URL`
 - `SCANLOGIC_API_SECRET` — required for non-local clients when using `dev:lan`
 - `ADMIN_API_SECRET` — admin dashboard Bearer token (server-only)
+- `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET`, `EBAY_RU_NAME`, optional `EBAY_ENV` / `EBAY_APP_ORIGIN`
 
 **Never** read `VITE_ANTHROPIC_API_KEY` in vite config.
 

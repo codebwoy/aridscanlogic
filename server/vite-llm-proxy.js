@@ -6,6 +6,7 @@ async function loadServerMiddlewares() {
     { createActivityApiMiddleware },
     { createKeepAliveMiddleware },
     { createApiAccessMiddleware, createRateLimitMiddleware },
+    { createEbayApiMiddleware },
   ] = await Promise.all([
     import('./llm-proxy.mjs'),
     import('./db-api.mjs'),
@@ -13,6 +14,7 @@ async function loadServerMiddlewares() {
     import('./activity-api.mjs'),
     import('./cron-keep-alive.mjs'),
     import('./security.mjs'),
+    import('./ebay-api.mjs'),
   ])
 
   return {
@@ -24,10 +26,18 @@ async function loadServerMiddlewares() {
     createKeepAliveMiddleware,
     createApiAccessMiddleware,
     createRateLimitMiddleware,
+    createEbayApiMiddleware,
   }
 }
 
-export function llmProxyPlugin({ getApiKey, getModel, getDatabaseUrl, getApiSecret, getJwtSecret }) {
+export function llmProxyPlugin({
+  getApiKey,
+  getModel,
+  getDatabaseUrl,
+  getApiSecret,
+  getJwtSecret,
+  getEbayConfig,
+}) {
   const prodCsp =
     "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
 
@@ -38,6 +48,7 @@ export function llmProxyPlugin({ getApiKey, getModel, getDatabaseUrl, getApiSecr
     const db = m.createDbApiMiddleware(getDatabaseUrl, getJwtSecret)
     const admin = m.createAdminApiMiddleware(getDatabaseUrl)
     const activity = m.createActivityApiMiddleware(getDatabaseUrl, getJwtSecret)
+    const ebay = m.createEbayApiMiddleware(getEbayConfig)
     const apiAccess = m.createApiAccessMiddleware(getApiSecret)
     const rateLimitLlm = m.createRateLimitMiddleware({
       pathPrefix: '/api/llm',
@@ -59,6 +70,11 @@ export function llmProxyPlugin({ getApiKey, getModel, getDatabaseUrl, getApiSecr
       windowMs: 60_000,
       max: 120,
     })
+    const rateLimitEbay = m.createRateLimitMiddleware({
+      pathPrefix: '/api/ebay',
+      windowMs: 60_000,
+      max: 40,
+    })
     const keepAlive = m.createKeepAliveMiddleware()
 
     server.middlewares.use(security)
@@ -68,9 +84,11 @@ export function llmProxyPlugin({ getApiKey, getModel, getDatabaseUrl, getApiSecr
     server.middlewares.use(rateLimitActivity)
     server.middlewares.use(rateLimitDb)
     server.middlewares.use(rateLimitLlm)
+    server.middlewares.use(rateLimitEbay)
     server.middlewares.use(admin)
     server.middlewares.use(activity)
     server.middlewares.use(db)
+    server.middlewares.use(ebay)
     server.middlewares.use(llm)
   }
 
