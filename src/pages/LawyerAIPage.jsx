@@ -86,6 +86,8 @@ export default function LawyerAIPage() {
   const [casesOpen, setCasesOpen] = useState(false)
   /** On mobile, after the first user message, hide chrome so replies fill the screen. */
   const [toolsExpanded, setToolsExpanded] = useState(false)
+  /** Collapsed composer frees vertical space for the AI answer on mobile. */
+  const [composerOpen, setComposerOpen] = useState(true)
   const conversationId = useRef(`conv-${Date.now()}`)
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
@@ -157,6 +159,7 @@ export default function LawyerAIPage() {
     const lang = language
     setInput('')
     setToolsExpanded(false)
+    setComposerOpen(false)
     requestAnimationFrame(() => {
       if (inputRef.current) {
         inputRef.current.style.height = '52px'
@@ -279,6 +282,7 @@ export default function LawyerAIPage() {
     setDocumentContext(null)
     setCasesOpen(false)
     setToolsExpanded(false)
+    setComposerOpen(true)
     refreshCase()
     toast.success(language === 'en' ? 'New case started' : 'Neuer Fall gestartet')
   }
@@ -383,6 +387,20 @@ export default function LawyerAIPage() {
   const hasUserChat = messages.some((m) => m.role === 'user')
   /** Mobile: hide guide/tools/categories so the AI answer owns the screen */
   const chatFocus = hasUserChat && !toolsExpanded
+  /** Immersive: collapse composer + hide bottom nav so the answer fills the viewport */
+  const immersive = chatFocus && !composerOpen
+
+  useEffect(() => {
+    const root = document.documentElement
+    if (immersive) {
+      root.dataset.lawyerImmersive = '1'
+    } else {
+      delete root.dataset.lawyerImmersive
+    }
+    return () => {
+      delete root.dataset.lawyerImmersive
+    }
+  }, [immersive])
 
   return (
     <div className="flex h-full min-h-0 w-full min-w-0 max-w-full flex-col overflow-hidden">
@@ -636,65 +654,102 @@ export default function LawyerAIPage() {
       </div>
 
       <div className="min-w-0 shrink-0 border-t border-slate-800/80 bg-slate-950/95 pt-2 backdrop-blur-xl pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-        {!chatFocus && (
-          <AiLanguageBar
-            language={language}
-            onChange={changeLanguage}
-            disabled={busy}
-            compact
-            className="mb-2"
-          />
-        )}
-        {chatFocus && (
-          <div className="mb-2 flex items-center justify-between gap-2 sm:hidden">
-            <AiLanguageTabs
+        {/* Mobile chat-focus: hide bulky composer until user taps Ask */}
+        {immersive ? (
+          <div className="flex gap-2 lg:hidden">
+            <button
+              type="button"
+              onClick={() => {
+                setComposerOpen(true)
+                requestAnimationFrame(() => inputRef.current?.focus())
+              }}
+              className="btn-primary flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold"
+            >
+              <MessageSquare className="h-4 w-4" />
+              {language === 'en' ? 'Ask again' : 'Weiter fragen'}
+            </button>
+            <button
+              type="button"
+              onClick={startNewCase}
+              className="rounded-xl border border-slate-600 bg-slate-800 px-3 text-[11px] font-medium text-slate-200"
+            >
+              {language === 'en' ? 'New' : 'Neu'}
+            </button>
+          </div>
+        ) : null}
+
+        <div className={immersive ? 'hidden lg:block' : 'block'}>
+          {!chatFocus && (
+            <AiLanguageBar
               language={language}
               onChange={changeLanguage}
               disabled={busy}
               compact
-              className="w-[120px]"
+              className="mb-2"
+            />
+          )}
+          {chatFocus && (
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <AiLanguageTabs
+                language={language}
+                onChange={changeLanguage}
+                disabled={busy}
+                compact
+                className="w-[120px]"
+              />
+              <div className="flex gap-1.5">
+                {hasUserChat ? (
+                  <button
+                    type="button"
+                    onClick={() => setComposerOpen(false)}
+                    className="rounded-lg bg-slate-800 px-2.5 py-1.5 text-[10px] text-slate-300 lg:hidden"
+                  >
+                    {language === 'en' ? 'Hide input' : 'Eingabe zu'}
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={startNewCase}
+                  className="rounded-lg bg-slate-800 px-2.5 py-1.5 text-[10px] text-slate-300"
+                >
+                  {language === 'en' ? 'New case' : 'Neuer Fall'}
+                </button>
+              </div>
+            </div>
+          )}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              send()
+            }}
+            className={`flex min-w-0 items-end gap-2 ${immersive ? '' : 'pr-14'} lg:pr-0`}
+          >
+            <textarea
+              ref={inputRef}
+              rows={2}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  send()
+                }
+              }}
+              placeholder={language === 'en' ? 'Your question…' : 'Ihre Frage…'}
+              className="premium-card max-h-[18vh] min-h-[48px] min-w-0 flex-1 resize-none overflow-y-auto rounded-xl px-4 py-3 text-base leading-relaxed outline-none ring-brand-500/50 focus:ring-2 sm:max-h-[28vh] sm:text-sm"
+              disabled={busy}
+              aria-label={language === 'en' ? 'Your question' : 'Ihre Frage'}
             />
             <button
-              type="button"
-              onClick={startNewCase}
-              className="rounded-lg bg-slate-800 px-2.5 py-1.5 text-[10px] text-slate-300"
+              type="submit"
+              disabled={busy || !input.trim()}
+              className="btn-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-xl disabled:opacity-50"
+              aria-label={language === 'en' ? 'Send' : 'Senden'}
             >
-              {language === 'en' ? 'New case' : 'Neuer Fall'}
+              <Send className="h-5 w-5" />
             </button>
-          </div>
-        )}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            send()
-          }}
-          className="flex min-w-0 items-end gap-2 pr-14 lg:pr-0"
-        >
-          <textarea
-            ref={inputRef}
-            rows={2}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault()
-                send()
-              }
-            }}
-            placeholder={language === 'en' ? 'Your question…' : 'Ihre Frage…'}
-            className="premium-card max-h-[18vh] min-h-[48px] min-w-0 flex-1 resize-none overflow-y-auto rounded-xl px-4 py-3 text-base leading-relaxed outline-none ring-brand-500/50 focus:ring-2 sm:max-h-[28vh] sm:text-sm"
-            disabled={busy}
-            aria-label={language === 'en' ? 'Your question' : 'Ihre Frage'}
-          />
-          <button
-            type="submit"
-            disabled={busy || !input.trim()}
-            className="btn-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-xl disabled:opacity-50"
-            aria-label={language === 'en' ? 'Send' : 'Senden'}
-          >
-            <Send className="h-5 w-5" />
-          </button>
-        </form>
+          </form>
+        </div>
       </div>
 
       <DocumentPicker

@@ -303,9 +303,56 @@ body {
   word-break: break-word;
 }
 
-.lawyer-prose :where(p, li, td, th, h2, h3, blockquote, strong, a, em) {
+.lawyer-prose :where(p, li, h2, h3, blockquote, strong, a, em) {
   overflow-wrap: anywhere;
   word-break: break-word;
+}
+
+/* Tables must NOT use overflow-wrap:anywhere — that stacks letters vertically on mobile */
+.lawyer-prose :where(table) {
+  table-layout: auto;
+}
+
+.lawyer-prose :where(th, td),
+.lawyer-prose .lawyer-table-cell {
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
+}
+
+.lawyer-table-scroll {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Lawyer AI immersive: answer uses full height — hide bottom chrome on mobile */
+html[data-lawyer-immersive] {
+  --nav-mobile-h: 0px;
+}
+
+html[data-lawyer-immersive] .lawyer-mobile-nav {
+  transform: translateY(110%);
+  pointer-events: none;
+  visibility: hidden;
+}
+
+html[data-lawyer-immersive] .guide-fab {
+  display: none;
+}
+
+@media (min-width: 64rem) {
+  html[data-lawyer-immersive] {
+    --nav-mobile-h: 4.75rem;
+  }
+
+  html[data-lawyer-immersive] .lawyer-mobile-nav {
+    transform: none;
+    pointer-events: auto;
+    visibility: visible;
+  }
+
+  html[data-lawyer-immersive] .guide-fab {
+    display: flex;
+  }
 }
 
 .lawyer-prose :where(pre) {

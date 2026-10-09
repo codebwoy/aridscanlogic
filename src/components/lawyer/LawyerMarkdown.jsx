@@ -45,8 +45,8 @@ const components = {
     )
   },
   table: ({ children }) => (
-    <div className="my-4 max-w-full overflow-x-auto rounded-xl border border-brand-500/20 bg-slate-900/50">
-      <table className="w-full min-w-0 border-collapse text-left text-sm">{children}</table>
+    <div className="lawyer-table-scroll my-4 max-w-full overflow-x-auto rounded-xl border border-brand-500/20 bg-slate-900/50">
+      <table className="w-max min-w-full border-collapse text-left text-sm">{children}</table>
     </div>
   ),
   thead: ({ children }) => (
@@ -57,9 +57,13 @@ const components = {
   tbody: ({ children }) => <tbody className="divide-y divide-slate-700/60">{children}</tbody>,
   tr: ({ children }) => <tr className="transition-colors hover:bg-brand-950/30">{children}</tr>,
   th: ({ children }) => (
-    <th className="break-words px-3 py-2.5 font-semibold first:rounded-tl-xl last:rounded-tr-xl">{children}</th>
+    <th className="lawyer-table-cell whitespace-nowrap px-3 py-2.5 text-left font-semibold first:rounded-tl-xl last:rounded-tr-xl">
+      {children}
+    </th>
   ),
-  td: ({ children }) => <td className="break-words px-3 py-2.5 text-slate-300">{children}</td>,
+  td: ({ children }) => (
+    <td className="lawyer-table-cell whitespace-normal px-3 py-2.5 text-slate-300">{children}</td>
+  ),
   hr: () => <hr className="my-4 border-0 border-t border-brand-500/20" />,
   blockquote: ({ children }) => (
     <blockquote className="my-3 break-words border-l-2 border-brand-500/50 bg-brand-950/25 py-1 pl-3 text-slate-300">

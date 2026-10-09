@@ -73,7 +73,7 @@ export default function ResponsiveNav({
     <>
       {/* Mobile + tablet: bottom bar */}
       <nav
-        className={`fixed bottom-0 left-0 right-0 z-50 border-t backdrop-blur-xl safe-bottom lg:hidden ${navBg}`}
+        className={`lawyer-mobile-nav fixed bottom-0 left-0 right-0 z-50 border-t backdrop-blur-xl safe-bottom transition-transform duration-200 lg:hidden ${navBg}`}
         aria-label="Main navigation"
       >
         <div className="mx-auto flex w-full max-w-[var(--content-max)] items-stretch justify-around gap-0 px-0.5 pt-1 sm:px-2 md:max-w-3xl md:px-4">
