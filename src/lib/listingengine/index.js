@@ -57,6 +57,18 @@ export {
   fetchEbayPolicies,
   publishListingToEbay,
   reviseEbayOffer,
+  fetchEbayOrders,
+  shipEbayOrder,
+  fetchEbayInquiries,
+  replyEbayInquiry,
+  fetchEbayPrivileges,
+  fetchEbayStandards,
+  suggestEbayCategory,
+  fetchEbayReturns,
+  fetchEbayCancellations,
+  fetchEbayOffers,
+  endEbayOffer,
+  fetchEbayCoverage,
 } from './ebay/client'
 export { isEbayConnected, loadEbayAuth, clearEbayAuth } from './ebay/authStore'
 export * from './catalog'

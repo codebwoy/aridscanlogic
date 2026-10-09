@@ -12,10 +12,14 @@ import {
   remainingPublishSlots,
   recordDailyPublish,
   getDailyPublishUsage,
+  bumpCleanDayOrReset,
 } from './store'
+import { notifySeller } from '../ops/notifications'
 import { priceProduct } from './pricing'
 import { runPolicyCheck } from './policyCheck'
 import { buildTitle, buildDescription, buildAspects, uniquifyTitles } from './content'
+import { flagDuplicates } from './dedupe'
+import { validateImageUrls } from './imageValidate'
 import { publishListingToEbay } from '../ebay/client'
 import { loadLockedLegalModules } from '../legalInsert'
 
@@ -39,10 +43,11 @@ export function enrichAndPriceAll(productIds = null) {
     products = products.filter((p) => set.has(p.id))
   }
 
-  const enriched = uniquifyTitles(
+  let enriched = uniquifyTitles(
     products.map((p) => {
       const title = p.title?.trim() ? p.title.slice(0, 80) : buildTitle(p)
       const { plain } = buildDescription({ ...p, title })
+      const img = validateImageUrls(p.images)
       const priced = priceProduct({ ...p, title, description: plain || p.description }, settings)
       const policy = runPolicyCheck(
         {
@@ -54,9 +59,11 @@ export function enrichAndPriceAll(productIds = null) {
         },
         settings
       )
+      const flags = [...new Set([...(policy.flags || []), ...(img.flags || [])])]
+      const policyOk = policy.ok && img.ok
 
       let status = PRODUCT_STATUS.PENDING_REVIEW
-      if (!priced.ok || !policy.ok) status = PRODUCT_STATUS.NEEDS_ATTENTION
+      if (!priced.ok || !policyOk) status = PRODUCT_STATUS.NEEDS_ATTENTION
       else if (
         settings.auto_approve_enabled &&
         settings.approved_clean_count >= settings.auto_approve_after
@@ -72,8 +79,8 @@ export function enrichAndPriceAll(productIds = null) {
         expected_profit: priced.expected_profit,
         expected_margin_pct: priced.expected_margin_pct,
         fee_breakdown: priced.fee_breakdown,
-        policy_flags: policy.flags,
-        policy_ok: policy.ok,
+        policy_flags: flags,
+        policy_ok: policyOk,
         category_id: p.category_id || settings.default_category_id || '',
         aspects: buildAspects(p),
         status:
@@ -86,6 +93,17 @@ export function enrichAndPriceAll(productIds = null) {
       }
     })
   )
+
+  const deduped = flagDuplicates(enriched)
+  enriched = deduped.products.map((p) => {
+    if (!p.duplicate_flags?.length) return p
+    return {
+      ...p,
+      status: PRODUCT_STATUS.NEEDS_ATTENTION,
+      policy_ok: false,
+      human_approved: false,
+    }
+  })
 
   return upsertProducts(enriched)
 }
@@ -222,8 +240,15 @@ export async function publishApprovedBatch({ limit = 10 } = {}) {
 
   const published = []
   const errors = []
+  const stagger = Math.max(0, Number(settings.publish_stagger_ms) || 0)
+  const batch = queue.slice(0, max)
 
-  for (const product of queue.slice(0, max)) {
+  for (let i = 0; i < batch.length; i++) {
+    const product = batch[i]
+    if (i > 0 && stagger > 0) {
+      await new Promise((r) => setTimeout(r, stagger))
+    }
+
     const gate = canPublishProduct(product, settings)
     if (!gate.ok) {
       errors.push({ id: product.id, sku: product.supplier_sku, message: gate.reasons.join(', ') })
@@ -271,6 +296,15 @@ export async function publishApprovedBatch({ limit = 10 } = {}) {
         offer_id: result.offerId,
         ok: true,
       })
+
+      if (!dryRun) {
+        const cat = loadCatalog()
+        saveCatalog({
+          settings: {
+            approved_clean_count: (cat.settings.approved_clean_count || 0) + 1,
+          },
+        })
+      }
     } catch (err) {
       const message = err?.message || String(err)
       const sellingLimit =
@@ -298,6 +332,17 @@ export async function publishApprovedBatch({ limit = 10 } = {}) {
       })
       if (sellingLimit) break
     }
+  }
+
+  if (published.length || errors.length) {
+    bumpCleanDayOrReset(errors.length > 0)
+  }
+
+  if (published.length) {
+    notifySeller(
+      'publish',
+      `${published.length} listing(s) ${dryRun ? 'dry-run' : 'live'} · errors ${errors.length}`
+    ).catch(() => {})
   }
 
   return {

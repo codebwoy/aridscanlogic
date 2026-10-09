@@ -12,7 +12,20 @@ const DEFAULT_SCOPES = [
   'https://api.ebay.com/oauth/api_scope/sell.inventory',
   'https://api.ebay.com/oauth/api_scope/sell.account',
   'https://api.ebay.com/oauth/api_scope/sell.fulfillment',
+  'https://api.ebay.com/oauth/api_scope/sell.analytics.readonly',
 ].join(' ')
+
+/** Marketplace → Taxonomy category tree id */
+const CATEGORY_TREE_IDS = {
+  EBAY_DE: '77',
+  EBAY_AT: '16',
+  EBAY_CH: '193',
+  EBAY_US: '0',
+  EBAY_GB: '3',
+  EBAY_FR: '71',
+  EBAY_IT: '101',
+  EBAY_ES: '186',
+}
 
 function readBody(req) {
   return new Promise((resolve, reject) => {
@@ -378,6 +391,46 @@ export async function handleEbayRequest(req, res, { getConfig } = {}) {
         configured: cfg.configured,
         sandbox: cfg.sandbox,
         marketplace: 'EBAY_DE',
+      })
+      return true
+    }
+
+    // GET /api/ebay/coverage — available even before credentials (docs for UI)
+    if (pathname === '/api/ebay/coverage' && method === 'GET') {
+      json(res, 200, {
+        ok: true,
+        configured: cfg.configured,
+        automated: [
+          'oauth_connect',
+          'business_policies',
+          'inventory_publish',
+          'price_qty_revise',
+          'orders_sync',
+          'tracking_upload',
+          'inquiries_cs_draft',
+          'cs_reply_templates',
+          'category_suggestions',
+          'required_aspects',
+          'dedupe_image_policy',
+          'publish_stagger_caps',
+          'daily_ops_report',
+          'telegram_browser_notify',
+          'selling_limits',
+          'seller_standards',
+          'returns_list',
+          'cancellations_list',
+          'offers_list_end',
+        ],
+        not_automated: [
+          'supplier_auto_order',
+          'promoted_listings_campaigns',
+          'full_seller_hub_messages',
+          'payment_payout_banking',
+          'account_appeals',
+          'browser_ui_automation',
+        ],
+        note:
+          'Official Sell/Post-Order/Taxonomy/Analytics APIs only. Human approval required for publish and CS replies. Reconnect OAuth after scope changes.',
       })
       return true
     }
@@ -1058,6 +1111,313 @@ export async function handleEbayRequest(req, res, { getConfig } = {}) {
         return true
       }
       json(res, 200, { ok: true, inquiryId, sandbox: cfg.sandbox })
+      return true
+    }
+
+    // GET /api/ebay/privileges — selling limits
+    if (pathname === '/api/ebay/privileges' && method === 'GET') {
+      const userToken = await resolveUserToken(cfg, req, null)
+      if (!userToken) {
+        json(res, 401, { error: 'eBay user token required' })
+        return true
+      }
+      const result = await ebayApi(cfg, userToken, 'GET', '/sell/account/v1/privilege')
+      if (!result.ok) {
+        json(res, 502, {
+          error: 'getPrivileges failed',
+          details: result.data?.errors || result.data,
+        })
+        return true
+      }
+      const d = result.data || {}
+      json(res, 200, {
+        ok: true,
+        sellingLimit: d.sellingLimit || null,
+        sellerRegistrationCompleted: d.sellerRegistrationCompleted ?? null,
+        sandbox: cfg.sandbox,
+        raw: d,
+      })
+      return true
+    }
+
+    // GET /api/ebay/standards — seller standards profile
+    if (pathname === '/api/ebay/standards' && method === 'GET') {
+      const userToken = await resolveUserToken(cfg, req, null)
+      if (!userToken) {
+        json(res, 401, { error: 'eBay user token required' })
+        return true
+      }
+      const program = String(qs.get('program') || 'PROGRAM_DE').trim()
+      const path = `/sell/analytics/v1/seller_standards_profile?program=${encodeURIComponent(program)}`
+      const result = await ebayApi(cfg, userToken, 'GET', path)
+      if (!result.ok) {
+        // Fallback without program filter
+        const fallback = await ebayApi(cfg, userToken, 'GET', '/sell/analytics/v1/seller_standards_profile')
+        if (!fallback.ok) {
+          json(res, 502, {
+            error: 'seller_standards_profile failed',
+            details: result.data?.errors || fallback.data?.errors || fallback.data,
+            hint: 'Reconnect eBay to grant sell.analytics.readonly scope.',
+          })
+          return true
+        }
+        json(res, 200, {
+          ok: true,
+          standardsProfiles: fallback.data?.standardsProfiles || [fallback.data].filter(Boolean),
+          sandbox: cfg.sandbox,
+        })
+        return true
+      }
+      json(res, 200, {
+        ok: true,
+        standardsProfiles: result.data?.standardsProfiles || [result.data].filter(Boolean),
+        sandbox: cfg.sandbox,
+      })
+      return true
+    }
+
+    // GET /api/ebay/taxonomy/suggest?q=&marketplace_id=
+    if (pathname === '/api/ebay/taxonomy/suggest' && method === 'GET') {
+      const userToken = await resolveUserToken(cfg, req, null)
+      if (!userToken) {
+        json(res, 401, { error: 'eBay user token required' })
+        return true
+      }
+      const q = String(qs.get('q') || '').trim().slice(0, 200)
+      if (q.length < 2) {
+        json(res, 400, { error: 'q required (min 2 chars)' })
+        return true
+      }
+      const marketplace = String(qs.get('marketplace_id') || 'EBAY_DE').trim()
+      const treeId = CATEGORY_TREE_IDS[marketplace] || CATEGORY_TREE_IDS.EBAY_DE
+      const path = `/commerce/taxonomy/v1/category_tree/${encodeURIComponent(treeId)}/get_category_suggestions?q=${encodeURIComponent(q)}`
+      const result = await ebayApi(cfg, userToken, 'GET', path)
+      if (!result.ok) {
+        json(res, 502, {
+          error: 'get_category_suggestions failed',
+          details: result.data?.errors || result.data,
+        })
+        return true
+      }
+      const suggestions = Array.isArray(result.data?.categorySuggestions)
+        ? result.data.categorySuggestions.slice(0, 12).map((s) => ({
+            categoryId: String(s.category?.categoryId || ''),
+            categoryName: String(s.category?.categoryName || ''),
+            categoryTreeNodeLevel: s.categoryTreeNodeLevel ?? null,
+            percentItemFound: s.categoryTreeNodeAncestors ? null : null,
+            ancestors: Array.isArray(s.categoryTreeNodeAncestors)
+              ? s.categoryTreeNodeAncestors.map((a) => a.categoryName).filter(Boolean)
+              : [],
+          }))
+        : []
+      json(res, 200, {
+        ok: true,
+        marketplace,
+        treeId,
+        query: q,
+        suggestions,
+        sandbox: cfg.sandbox,
+      })
+      return true
+    }
+
+    // GET /api/ebay/taxonomy/aspects?category_id=&marketplace_id=
+    if (pathname === '/api/ebay/taxonomy/aspects' && method === 'GET') {
+      const userToken = await resolveUserToken(cfg, req, null)
+      if (!userToken) {
+        json(res, 401, { error: 'eBay user token required' })
+        return true
+      }
+      const categoryId = String(qs.get('category_id') || '').replace(/\D/g, '')
+      if (!categoryId) {
+        json(res, 400, { error: 'category_id required' })
+        return true
+      }
+      const marketplace = String(qs.get('marketplace_id') || 'EBAY_DE').trim()
+      const treeId = CATEGORY_TREE_IDS[marketplace] || CATEGORY_TREE_IDS.EBAY_DE
+      const path = `/commerce/taxonomy/v1/category_tree/${encodeURIComponent(treeId)}/get_item_aspects_for_category?category_id=${encodeURIComponent(categoryId)}`
+      const result = await ebayApi(cfg, userToken, 'GET', path)
+      if (!result.ok) {
+        json(res, 502, {
+          error: 'get_item_aspects_for_category failed',
+          details: result.data?.errors || result.data,
+        })
+        return true
+      }
+      const aspects = Array.isArray(result.data?.aspects) ? result.data.aspects : []
+      const required = []
+      const recommended = []
+      for (const a of aspects) {
+        const name = a.localizedAspectName || a.aspectName || ''
+        if (!name) continue
+        const constraint = a.aspectConstraint || {}
+        if (constraint.aspectRequired) required.push(name)
+        else if (constraint.aspectUsage === 'RECOMMENDED' || constraint.aspectMode === 'FREE_TEXT') {
+          recommended.push(name)
+        }
+      }
+      json(res, 200, {
+        ok: true,
+        categoryId,
+        treeId,
+        marketplace,
+        required,
+        recommended: recommended.slice(0, 40),
+        aspectCount: aspects.length,
+        sandbox: cfg.sandbox,
+      })
+      return true
+    }
+
+    // GET /api/ebay/returns
+    if (pathname === '/api/ebay/returns' && method === 'GET') {
+      const userToken = await resolveUserToken(cfg, req, null)
+      if (!userToken) {
+        json(res, 401, { error: 'eBay user token required' })
+        return true
+      }
+      const marketplace = String(qs.get('marketplace_id') || 'EBAY_DE')
+      const limit = Math.min(50, Math.max(1, Number.parseInt(qs.get('limit') || '25', 10) || 25))
+      const q = new URLSearchParams({ limit: String(limit) })
+      const state = String(qs.get('return_state') || '').trim()
+      if (state) q.set('return_state', state)
+      const result = await ebayApi(
+        cfg,
+        userToken,
+        'GET',
+        `/post-order/v2/return/search?${q}`,
+        null,
+        { 'X-EBAY-C-MARKETPLACE-ID': marketplace }
+      )
+      if (!result.ok) {
+        json(res, 502, {
+          error: 'return search failed',
+          details: result.data?.errors || result.data,
+        })
+        return true
+      }
+      const members = result.data?.members || result.data?.returns || []
+      const returns = (Array.isArray(members) ? members : []).map((r) => ({
+        returnId: String(r.returnId || r.return_id || ''),
+        orderId: String(r.orderId || r.order_id || ''),
+        itemId: String(r.itemId || ''),
+        buyerLoginName: r.buyerLoginName || r.buyer || '',
+        currentState: r.currentType || r.status || r.state || '',
+        creationDate: r.creationInfo?.creationDate?.value || r.creationDate || null,
+        reason: r.creationInfo?.reason || r.reason || '',
+        totalAmount: r.sellerTotalRefund?.estimatedRefundAmount || r.totalAmount || null,
+      }))
+      json(res, 200, { ok: true, returns, sandbox: cfg.sandbox })
+      return true
+    }
+
+    // GET /api/ebay/cancellations
+    if (pathname === '/api/ebay/cancellations' && method === 'GET') {
+      const userToken = await resolveUserToken(cfg, req, null)
+      if (!userToken) {
+        json(res, 401, { error: 'eBay user token required' })
+        return true
+      }
+      const marketplace = String(qs.get('marketplace_id') || 'EBAY_DE')
+      const limit = Math.min(50, Math.max(1, Number.parseInt(qs.get('limit') || '25', 10) || 25))
+      const result = await ebayApi(
+        cfg,
+        userToken,
+        'GET',
+        `/post-order/v2/cancellation/search?limit=${limit}`,
+        null,
+        { 'X-EBAY-C-MARKETPLACE-ID': marketplace }
+      )
+      if (!result.ok) {
+        json(res, 502, {
+          error: 'cancellation search failed',
+          details: result.data?.errors || result.data,
+        })
+        return true
+      }
+      const members = result.data?.cancellations || result.data?.members || []
+      const cancellations = (Array.isArray(members) ? members : []).map((c) => ({
+        cancelId: String(c.cancelId || c.cancellationId || ''),
+        legacyOrderId: String(c.legacyOrderId || c.orderId || ''),
+        marketplaceId: c.marketplaceId || marketplace,
+        cancelState: c.cancelState || c.cancelStatus || '',
+        cancelReason: c.cancelReason || '',
+        requestDate: c.requestDate?.value || c.requestDate || null,
+        buyerLoginName: c.buyerLoginName || '',
+      }))
+      json(res, 200, { ok: true, cancellations, sandbox: cfg.sandbox })
+      return true
+    }
+
+    // GET /api/ebay/offers — list inventory offers
+    if (pathname === '/api/ebay/offers' && method === 'GET') {
+      const userToken = await resolveUserToken(cfg, req, null)
+      if (!userToken) {
+        json(res, 401, { error: 'eBay user token required' })
+        return true
+      }
+      const marketplace = String(qs.get('marketplace_id') || 'EBAY_DE')
+      const limit = Math.min(100, Math.max(1, Number.parseInt(qs.get('limit') || '50', 10) || 50))
+      const path = `/sell/inventory/v1/offer?limit=${limit}&marketplace_id=${encodeURIComponent(marketplace)}`
+      const result = await ebayApi(cfg, userToken, 'GET', path)
+      if (!result.ok) {
+        json(res, 502, {
+          error: 'getOffers failed',
+          details: result.data?.errors || result.data,
+        })
+        return true
+      }
+      const offers = Array.isArray(result.data?.offers)
+        ? result.data.offers.map((o) => ({
+            offerId: o.offerId,
+            sku: o.sku,
+            status: o.status,
+            listingId: o.listing?.listingId || o.listingId || null,
+            categoryId: o.categoryId,
+            availableQuantity: o.availableQuantity,
+            price: o.pricingSummary?.price || null,
+            marketplaceId: o.marketplaceId,
+          }))
+        : []
+      json(res, 200, {
+        ok: true,
+        offers,
+        total: result.data?.total || offers.length,
+        sandbox: cfg.sandbox,
+      })
+      return true
+    }
+
+    // POST /api/ebay/offers/:offerId/end — withdraw/end offer
+    if (pathname.match(/^\/api\/ebay\/offers\/[^/]+\/end$/) && method === 'POST') {
+      const offerId = decodeURIComponent(
+        pathname.replace(/^\/api\/ebay\/offers\//, '').replace(/\/end$/, '')
+      )
+      const raw = await readRequestBody(req)
+      const body = JSON.parse(raw || '{}')
+      const userToken = await resolveUserToken(cfg, req, body)
+      if (!userToken) {
+        json(res, 401, { error: 'eBay user token required' })
+        return true
+      }
+      if (body.dry_run === true) {
+        json(res, 200, { ok: true, dry_run: true, offerId, ended: true })
+        return true
+      }
+      const result = await ebayApi(
+        cfg,
+        userToken,
+        'POST',
+        `/sell/inventory/v1/offer/${encodeURIComponent(offerId)}/withdraw`
+      )
+      if (!result.ok && result.status !== 200 && result.status !== 204) {
+        json(res, 502, {
+          error: 'withdraw offer failed',
+          details: result.data?.errors || result.data,
+        })
+        return true
+      }
+      json(res, 200, { ok: true, offerId, ended: true, sandbox: cfg.sandbox })
       return true
     }
 

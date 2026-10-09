@@ -57,6 +57,12 @@ export function emptyCatalogSettings() {
     auto_approve_after: 50,
     approved_clean_count: 0,
     prohibited_keywords: [...DEFAULT_PROHIBITED_KEYWORDS],
+    publish_stagger_ms: 2500,
+    telegram_webhook_url: '',
+    telegram_chat_id: '',
+    notify_on_publish: true,
+    notify_on_handling_alert: true,
+    notify_daily_summary: true,
   }
 }
 
@@ -80,6 +86,10 @@ export function emptyCatalogProduct(overrides = {}) {
     category_hint: '',
     category_id: '',
     aspects: {},
+    duplicate_flags: [],
+    duplicate_of: '',
+    missing_aspects: [],
+    required_aspects: [],
     list_price: '',
     expected_profit: null,
     expected_margin_pct: null,
@@ -135,6 +145,7 @@ export function normalizeCatalogSettings(raw = {}) {
     'price_rounding',
     'auto_approve_after',
     'approved_clean_count',
+    'publish_stagger_ms',
   ]) {
     if (raw[key] != null && raw[key] !== '') {
       const n = Number(raw[key])
@@ -142,6 +153,11 @@ export function normalizeCatalogSettings(raw = {}) {
     }
   }
   out.auto_approve_enabled = !!raw.auto_approve_enabled
+  out.telegram_webhook_url = String(raw.telegram_webhook_url || '')
+  out.telegram_chat_id = String(raw.telegram_chat_id || '')
+  out.notify_on_publish = raw.notify_on_publish !== false
+  out.notify_on_handling_alert = raw.notify_on_handling_alert !== false
+  out.notify_daily_summary = raw.notify_daily_summary !== false
   return out
 }
 
@@ -176,6 +192,10 @@ export function normalizeCatalogProduct(raw = {}) {
       raw.aspects && typeof raw.aspects === 'object' && !Array.isArray(raw.aspects)
         ? raw.aspects
         : {},
+    duplicate_flags: Array.isArray(raw.duplicate_flags) ? raw.duplicate_flags.map(String) : [],
+    duplicate_of: String(raw.duplicate_of || ''),
+    missing_aspects: Array.isArray(raw.missing_aspects) ? raw.missing_aspects.map(String) : [],
+    required_aspects: Array.isArray(raw.required_aspects) ? raw.required_aspects.map(String) : [],
     list_price: String(raw.list_price ?? ''),
     policy_flags: Array.isArray(raw.policy_flags) ? raw.policy_flags.map(String) : [],
     policy_ok: raw.policy_ok !== false,

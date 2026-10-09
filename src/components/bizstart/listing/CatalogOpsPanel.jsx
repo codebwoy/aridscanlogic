@@ -14,6 +14,7 @@ import {
   Unlink,
   Download,
   Sparkles,
+  Tags,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -38,6 +39,7 @@ import {
   setLiveMode,
   canPublishProduct,
   rewriteCatalogGermanCopy,
+  enrichAspectsForCatalog,
 } from '@/lib/listingengine/catalog'
 import {
   connectEbayAccount,
@@ -49,6 +51,7 @@ import {
 import { isEbayConnected, loadEbayAuth } from '@/lib/listingengine/ebay/authStore'
 import OrdersPanel from '@/components/bizstart/listing/OrdersPanel'
 import CsInboxPanel from '@/components/bizstart/listing/CsInboxPanel'
+import AccountOpsPanel from '@/components/bizstart/listing/AccountOpsPanel'
 import ResponsiveTabs from '@/components/layout/ResponsiveTabs'
 
 function StatusPill({ status, lang }) {
@@ -74,7 +77,7 @@ export default function CatalogOpsPanel({ lang = 'de' }) {
   const [busy, setBusy] = useState(false)
   const [selected, setSelected] = useState(() => new Set())
   const [filter, setFilter] = useState('all')
-  const [view, setView] = useState('catalog') // catalog | orders | cs
+  const [view, setView] = useState('catalog') // catalog | orders | cs | account
   const [configured, setConfigured] = useState(null)
   const [connected, setConnected] = useState(isEbayConnected)
   const [sandbox, setSandbox] = useState(false)
@@ -216,6 +219,34 @@ export default function CatalogOpsPanel({ lang = 'de' }) {
       }
     } catch (err) {
       toast.error(err?.message || (lang === 'de' ? 'Korrektur fehlgeschlagen' : 'Correction failed'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const onEnrichAspects = async () => {
+    if (!connected) {
+      toast.error(lang === 'de' ? 'Zuerst eBay verbinden' : 'Connect eBay first')
+      return
+    }
+    setBusy(true)
+    try {
+      const ids = selected.size ? [...selected] : null
+      const result = await enrichAspectsForCatalog({
+        productIds: ids,
+        marketplaceId: settings.marketplace_id || 'EBAY_DE',
+      })
+      setCatalog(result.catalog)
+      toast.success(
+        lang === 'de'
+          ? `Aspects: ${result.updated} geprüft`
+          : `Aspects: ${result.updated} checked`
+      )
+      if (result.errors?.length) {
+        toast.message(`${result.errors.length} Fehler`)
+      }
+    } catch (err) {
+      toast.error(err?.message || 'Aspects failed')
     } finally {
       setBusy(false)
     }
@@ -373,6 +404,7 @@ export default function CatalogOpsPanel({ lang = 'de' }) {
           { id: 'catalog', de: 'Katalog', en: 'Catalog' },
           { id: 'orders', de: 'Bestellungen', en: 'Orders' },
           { id: 'cs', de: 'Kundenservice', en: 'Support' },
+          { id: 'account', de: 'Konto', en: 'Account' },
         ]}
         value={view}
         onChange={setView}
@@ -381,6 +413,9 @@ export default function CatalogOpsPanel({ lang = 'de' }) {
 
       {view === 'orders' ? <OrdersPanel lang={lang} onOpenCs={() => setView('cs')} /> : null}
       {view === 'cs' ? <CsInboxPanel lang={lang} /> : null}
+      {view === 'account' ? (
+        <AccountOpsPanel lang={lang} onCatalogRefresh={refresh} />
+      ) : null}
 
       {view === 'catalog' ? (
       <>
@@ -550,6 +585,30 @@ export default function CatalogOpsPanel({ lang = 'de' }) {
             />
           </label>
           <label className="block text-xs text-slate-400">
+            {lang === 'de' ? 'Publish-Pause (ms)' : 'Publish stagger (ms)'}
+            <input
+              type="number"
+              min={0}
+              max={30000}
+              step={500}
+              value={settings.publish_stagger_ms ?? 2500}
+              onChange={(e) =>
+                patchSettings({ publish_stagger_ms: Math.max(0, Number(e.target.value) || 0) })
+              }
+              className="mt-1 w-full rounded-lg bg-slate-900/80 px-3 py-2 text-sm"
+            />
+          </label>
+          <label className="flex items-center gap-2 text-xs text-slate-400">
+            <input
+              type="checkbox"
+              checked={!!settings.auto_approve_enabled}
+              onChange={(e) => patchSettings({ auto_approve_enabled: e.target.checked })}
+            />
+            {lang === 'de'
+              ? `Auto-Approve nach ${settings.auto_approve_after || 50} clean`
+              : `Auto-approve after ${settings.auto_approve_after || 50} clean`}
+          </label>
+          <label className="block text-xs text-slate-400">
             {lang === 'de' ? 'eBay Kategorie-ID (Default)' : 'Default eBay category ID'}
             <input
               value={settings.default_category_id || ''}
@@ -632,6 +691,15 @@ export default function CatalogOpsPanel({ lang = 'de' }) {
         >
           {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
           {lang === 'de' ? 'Deutsche Kopie korrigieren' : 'Fix German copy'}
+        </button>
+        <button
+          type="button"
+          disabled={busy || !catalog.products.length || !connected}
+          onClick={onEnrichAspects}
+          className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-indigo-800 px-3 py-2 text-xs font-medium text-white disabled:opacity-40"
+        >
+          <Tags className="h-3.5 w-3.5" />
+          {lang === 'de' ? 'Pflicht-Aspects' : 'Required aspects'}
         </button>
         <button
           type="button"

@@ -63,8 +63,10 @@ alwaysApply: false
 
 - `GET /api/ebay/orders`, `POST /api/ebay/orders/:id/ship` (createShippingFulfillment)
 - `GET /api/ebay/inquiries`, `POST /api/ebay/inquiries/:id/reply` (Post-Order; human_approved required)
+- Account ops: privileges, seller standards, returns, cancellations, offers list/end, taxonomy category suggest, `/api/ebay/coverage`
 - CS without inquiry ID: draft + copy to clipboard for Seller Hub
 - Never invent tracking/refunds in drafts; dry-run respects catalog setting
+- Not automated (by design): supplier auto-order, promoted listings campaigns, payouts, Seller Hub UI scraping, account appeals
 
 ## Do not
 

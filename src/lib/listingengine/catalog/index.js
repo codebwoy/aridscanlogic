@@ -48,3 +48,11 @@ export {
   lightGermanCleanup,
   applyLightCleanupToProduct,
 } from './germanCopy'
+export { suggestCategoriesForCatalog } from './taxonomy'
+export { flagDuplicates } from './dedupe'
+export {
+  validateImageUrls,
+  probeImageReachability,
+  attachImageValidation,
+} from './imageValidate'
+export { fetchItemAspectsForCategory, enrichAspectsForCatalog } from './aspects'

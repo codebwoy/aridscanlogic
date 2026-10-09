@@ -4,6 +4,7 @@
 
 import { fetchEbayOrders, shipEbayOrder } from '../ebay/client'
 import { loadCatalog } from '../catalog/store'
+import { notifySeller } from './notifications'
 
 export const ORDER_STATUS = {
   NEW: 'NEW',
@@ -168,7 +169,18 @@ export async function syncOrdersFromEbay({ days = 14, limit = 50 } = {}) {
   const orders = enrichOrdersWithCatalog([...byId.values()]).sort((a, b) =>
     String(b.creationDate || '').localeCompare(String(a.creationDate || ''))
   )
-  return saveOrders(orders)
+  const saved = saveOrders(orders)
+  const alerts = saved.orders.filter((o) => o.handlingAlert)
+  if (alerts.length) {
+    notifySeller(
+      'handling',
+      `${alerts.length} Bestellung(en) nahe Handling-Frist: ${alerts
+        .slice(0, 3)
+        .map((o) => o.orderId)
+        .join(', ')}`
+    ).catch(() => {})
+  }
+  return saved
 }
 
 export function markOrderedFromSupplier(orderId, notes = '') {

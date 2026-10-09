@@ -253,3 +253,68 @@ export async function replyEbayInquiry(payload) {
   )
   return parseJson(res)
 }
+
+export async function fetchEbayPrivileges() {
+  const headers = await authHeaders()
+  const res = await apiFetch('/api/ebay/privileges', { headers })
+  return parseJson(res)
+}
+
+export async function fetchEbayStandards({ program = 'PROGRAM_DE' } = {}) {
+  const headers = await authHeaders()
+  const res = await apiFetch(`/api/ebay/standards?program=${encodeURIComponent(program)}`, {
+    headers,
+  })
+  return parseJson(res)
+}
+
+export async function suggestEbayCategory(query, marketplaceId = 'EBAY_DE') {
+  const headers = await authHeaders()
+  const q = new URLSearchParams({
+    q: String(query || '').slice(0, 200),
+    marketplace_id: marketplaceId,
+  })
+  const res = await apiFetch(`/api/ebay/taxonomy/suggest?${q}`, { headers })
+  return parseJson(res)
+}
+
+export async function fetchEbayReturns({ limit = 25, return_state = '' } = {}) {
+  const headers = await authHeaders()
+  const q = new URLSearchParams({ limit: String(limit), marketplace_id: 'EBAY_DE' })
+  if (return_state) q.set('return_state', return_state)
+  const res = await apiFetch(`/api/ebay/returns?${q}`, { headers })
+  return parseJson(res)
+}
+
+export async function fetchEbayCancellations({ limit = 25 } = {}) {
+  const headers = await authHeaders()
+  const q = new URLSearchParams({ limit: String(limit), marketplace_id: 'EBAY_DE' })
+  const res = await apiFetch(`/api/ebay/cancellations?${q}`, { headers })
+  return parseJson(res)
+}
+
+export async function fetchEbayOffers({ limit = 50, marketplace_id = 'EBAY_DE' } = {}) {
+  const headers = await authHeaders()
+  const q = new URLSearchParams({ limit: String(limit), marketplace_id })
+  const res = await apiFetch(`/api/ebay/offers?${q}`, { headers })
+  return parseJson(res)
+}
+
+export async function endEbayOffer({ offerId, dry_run = true } = {}) {
+  const auth = loadEbayAuth()
+  if (dry_run && !auth?.access_token && !auth?.refresh_token) {
+    return { ok: true, dry_run: true, offerId, ended: true }
+  }
+  const headers = await authHeaders()
+  const res = await apiFetch(`/api/ebay/offers/${encodeURIComponent(offerId)}/end`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ dry_run: !!dry_run, refresh_token: auth?.refresh_token }),
+  })
+  return parseJson(res)
+}
+
+export async function fetchEbayCoverage() {
+  const res = await apiFetch('/api/ebay/coverage')
+  return parseJson(res)
+}

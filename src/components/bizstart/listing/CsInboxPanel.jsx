@@ -18,6 +18,8 @@ import {
   createManualCsCase,
   draftCsReply,
   templateCsReply,
+  CS_REPLY_TEMPLATES,
+  applyCsTemplate,
   updateCsCase,
   removeCsCase,
   sendCsReply,
@@ -287,6 +289,26 @@ export default function CsInboxPanel({ lang = 'de' }) {
               ) : null}
 
               <div className="flex flex-wrap gap-1.5">
+                <select
+                  className="rounded-lg bg-slate-900/80 px-2 py-1.5 text-[10px] text-slate-300"
+                  defaultValue=""
+                  onChange={(e) => {
+                    const tid = e.target.value
+                    if (!tid) return
+                    setState(applyCsTemplate(cs.id, tid, lang))
+                    e.target.value = ''
+                    toast.success(lang === 'de' ? 'Template geladen' : 'Template applied')
+                  }}
+                >
+                  <option value="">
+                    {lang === 'de' ? 'Template…' : 'Template…'}
+                  </option>
+                  {CS_REPLY_TEMPLATES.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {lang === 'de' ? t.labelDe : t.labelEn}
+                    </option>
+                  ))}
+                </select>
                 <button
                   type="button"
                   disabled={busy}

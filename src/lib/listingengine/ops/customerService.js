@@ -266,21 +266,78 @@ JSON zurückgeben: { "reply": "...", "category": "where_is_order|shipping_delay|
   })
 }
 
+/** Named reply templates (no invented tracking / refund promises). */
+export const CS_REPLY_TEMPLATES = [
+  { id: 'where_is_order', labelDe: 'Wo ist meine Bestellung?', labelEn: 'Where is my order?' },
+  { id: 'shipping_delay', labelDe: 'Verspätung', labelEn: 'Shipping delay' },
+  { id: 'return', labelDe: 'Rückgabe', labelEn: 'Return' },
+  { id: 'cancel', labelDe: 'Storno', labelEn: 'Cancel' },
+  { id: 'wrong_item', labelDe: 'Falscher Artikel', labelEn: 'Wrong item' },
+  { id: 'general', labelDe: 'Allgemein', labelEn: 'General' },
+]
+
+function buildTemplateBody(templateId, cs, language = 'de') {
+  const order = findOrderContext(cs.orderId)
+  const tracking = order?.trackingNumber
+  const carrier = order?.shippingCarrierCode ? ` (${order.shippingCarrierCode})` : ''
+  const de = language !== 'en'
+  const id = templateId || cs.category || 'general'
+
+  if (id === 'where_is_order' && tracking) {
+    return de
+      ? `Guten Tag,\n\nvielen Dank für Ihre Nachricht. Ihre Sendung ist unterwegs.\nTracking: ${tracking}${carrier}.\n\nBei weiteren Fragen melden Sie sich gerne.\n\nFreundliche Grüße`
+      : `Hello,\n\nThank you for your message. Your parcel is on the way.\nTracking: ${tracking}${carrier}.\n\nBest regards`
+  }
+  if (id === 'where_is_order') {
+    return de
+      ? `Guten Tag,\n\nvielen Dank für Ihre Nachricht. Ich prüfe den aktuellen Versandstatus Ihrer Bestellung und melde mich in Kürze mit einem Update. Ich möchte keine unzutreffenden Angaben machen.\n\nFreundliche Grüße`
+      : `Hello,\n\nThank you for your message. I am checking the current shipping status and will update you shortly. I do not want to provide inaccurate information.\n\nBest regards`
+  }
+  if (id === 'shipping_delay') {
+    return de
+      ? `Guten Tag,\n\nvielen Dank für Ihre Geduld. Es gibt eine Verzögerung bei der Bearbeitung. Ich prüfe den Status beim Lieferanten und informiere Sie, sobald ich verlässliche Angaben habe.\n\nFreundliche Grüße`
+      : `Hello,\n\nThank you for your patience. There is a delay in processing. I am checking with the supplier and will update you as soon as I have reliable information.\n\nBest regards`
+  }
+  if (id === 'return') {
+    return de
+      ? `Guten Tag,\n\nvielen Dank für Ihre Nachricht. Für Rückgaben nutzen Sie bitte den Rückgabe-Prozess in Ihrem eBay-Konto. Sobald die Rückgabe eröffnet ist, kann ich den Fall weiter prüfen.\n\nFreundliche Grüße`
+      : `Hello,\n\nThank you for your message. Please start the return via your eBay account. Once the return is open, I can review the case further.\n\nBest regards`
+  }
+  if (id === 'cancel') {
+    return de
+      ? `Guten Tag,\n\nvielen Dank für Ihre Nachricht. Ich prüfe, ob die Bestellung noch stornierbar ist, und melde mich mit dem Ergebnis. Bitte haben Sie etwas Geduld.\n\nFreundliche Grüße`
+      : `Hello,\n\nThank you for your message. I am checking whether the order can still be cancelled and will get back to you with the result. Please bear with me.\n\nBest regards`
+  }
+  if (id === 'wrong_item') {
+    return de
+      ? `Guten Tag,\n\nes tut mir leid, dass der Artikel nicht Ihren Erwartungen entspricht. Bitte beschreiben Sie kurz, was geliefert wurde bzw. was erwartet wurde. Ich prüfe den Fall und melde mich mit den nächsten Schritten (ohne voreilige Erstattung).\n\nFreundliche Grüße`
+      : `Hello,\n\nI am sorry the item did not match your expectations. Please briefly describe what was delivered vs what you expected. I will review the case and come back with next steps (no premature refund promises).\n\nBest regards`
+  }
+  return de
+    ? `Guten Tag,\n\nvielen Dank für Ihre Nachricht. Ich prüfe den aktuellen Status und melde mich in Kürze mit einem Update. Ich möchte keine unzutreffenden Angaben machen.\n\nFreundliche Grüße`
+    : `Hello,\n\nThank you for your message. I am checking the current status and will update you shortly. I do not want to provide inaccurate information.\n\nBest regards`
+}
+
 /**
  * Template fallback when LLM unavailable.
  */
 export function templateCsReply(cs, language = 'de') {
-  const order = findOrderContext(cs.orderId)
-  const tracking = order?.trackingNumber
-  const de = language !== 'en'
-  if (tracking) {
-    return de
-      ? `Guten Tag,\n\nvielen Dank für Ihre Nachricht. Ihre Sendung ist unterwegs.\nTracking: ${tracking}${order.shippingCarrierCode ? ` (${order.shippingCarrierCode})` : ''}.\n\nBei weiteren Fragen melden Sie sich gerne.\n\nFreundliche Grüße`
-      : `Hello,\n\nThank you for your message. Your parcel is on the way.\nTracking: ${tracking}${order.shippingCarrierCode ? ` (${order.shippingCarrierCode})` : ''}.\n\nBest regards`
-  }
-  return de
-    ? `Guten Tag,\n\nvielen Dank für Ihre Nachricht. Ich prüfe den aktuellen Status Ihrer Bestellung beim Lieferanten und melde mich in Kürze mit einem Update. Ich möchte keine unzutreffenden Angaben machen.\n\nFreundliche Grüße`
-    : `Hello,\n\nThank you for your message. I am checking the current status with the supplier and will update you shortly. I do not want to provide inaccurate information.\n\nBest regards`
+  return buildTemplateBody(cs.category || 'general', cs, language)
+}
+
+/** Apply a named template into the case draft (not sent). */
+export function applyCsTemplate(caseId, templateId, language = 'de') {
+  const state = loadCsCases()
+  const cs = state.cases.find((c) => c.id === caseId)
+  if (!cs) throw new Error('CS case not found')
+  const reply = buildTemplateBody(templateId, cs, language)
+  return updateCsCase(caseId, {
+    draftReply: reply,
+    category: templateId || cs.category,
+    status: CS_STATUS.DRAFT_READY,
+    human_approved: false,
+    lastError: '',
+  })
 }
 
 export async function sendCsReply(caseId, { dryRun = true } = {}) {
