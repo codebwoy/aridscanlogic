@@ -1,0 +1,59 @@
+---
+description: Mobile AI chat — immersive answers + tables + room to reply
+alwaysApply: true
+---
+
+# Mobile AI response layout (all chat / LLM surfaces)
+
+Any UI where the AI returns a **multi-line answer** (chat, guide Q&A, registration coach, listing/CV builders with long output) must keep the answer readable on phone and leave a clear path for the user to reply.
+
+Reference implementation: `LawyerAIPage.jsx` + `LawyerMarkdown.jsx` + `html[data-lawyer-immersive]` in `index.css`.
+
+## Required mobile behavior
+
+1. **Answer owns the viewport** after the first user message / generation on small screens (`lg` breakpoint and below).
+2. **Collapse chrome** while reading: language bar, tall textarea, send row, optional tools, **GuideFab**, and **bottom tab bar** must not squeeze the transcript into a thin strip.
+3. **Composer stays reachable**: when collapsed, show a single compact CTA (e.g. “Weiter fragen” / “Ask again”) that reopens the input. Do not remove the ability to give feedback.
+4. **Desktop (`lg+`)**: keep full composer + sidebar; immersive collapse is mobile-only.
+
+## Immersive pattern (canonical)
+
+```javascript
+const chatFocus = hasUserMessage && !toolsExpanded
+const immersive = chatFocus && !composerOpen
+
+useEffect(() => {
+  const root = document.documentElement
+  if (immersive) root.dataset.lawyerImmersive = '1'
+  else delete root.dataset.lawyerImmersive
+  return () => { delete root.dataset.lawyerImmersive }
+}, [immersive])
+```
+
+- On **send**: set `composerOpen = false` so the answer expands.
+- On **Ask again** / new case: set `composerOpen = true` and focus the textarea.
+- CSS: `html[data-lawyer-immersive]` zeros `--nav-mobile-h`, hides `.lawyer-mobile-nav` and `.guide-fab` (mobile only). Reuse this dataset (or extend with a shared `data-ai-immersive`) for new surfaces — do not invent a second nav-hide mechanism.
+
+## Markdown / tables in AI output
+
+Never apply `overflow-wrap: anywhere` / aggressive `break-words` to `th`/`td` — that stacks letters vertically (e.g. “MIN. CAPITAL”).
+
+| Do | Don’t |
+|----|--------|
+| Table in `overflow-x-auto` wrapper; `table` `w-max min-w-full` | Force `w-full min-w-0` on narrow tables |
+| `th` `whitespace-nowrap`; `td` normal wrap | `break-words` / `anywhere` on table cells |
+| Shared prose class for AI bodies (`lawyer-prose` or equivalent with table overrides) | Raw `dangerouslySetInnerHTML` |
+
+Use **`SafeMarkdown`** / **`LawyerMarkdown`** for assistant text — never unsanitized HTML.
+
+## Layout shells
+
+- Long AI chats: prefer **full-height** panel (`Dashboard` `fullHeight` / `app-panel-full`) so the transcript flexes `flex-1 min-h-0 overflow-y-auto`.
+- Sticky bottom composer is OK **before** the first reply; after a reply on mobile, prefer collapsed CTA over a persistent multi-row composer.
+
+## When adding a new AI surface
+
+1. Wire `useAiLanguage` + `AiLanguageBar` (see `13-ai-language.mdc`).
+2. Apply immersive collapse after first substantial AI reply on mobile.
+3. Reuse table CSS / markdown components above.
+4. Verify on a ~390px-wide viewport: answer scrolls top→bottom; user can still open input and send feedback.

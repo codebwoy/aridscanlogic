@@ -60,3 +60,7 @@ import { detectLanguage, SAFETY_DISCLAIMER_DE } from '@/lib/lawyer/herrMuellerPr
 ## Full-height layout
 
 `Dashboard` sets `fullHeight` + `app-panel-full` when `activeTab === 'lawyer'` — preserve when changing layout.
+
+## Mobile immersive chat
+
+After the first user message, collapse composer + hide bottom nav/GuideFab (`data-lawyer-immersive`) so answers fill the screen; “Ask again” reopens input. Tables: no letter-stacking — see always-on rule `16-ai-mobile-chat.mdc`.

@@ -22,11 +22,12 @@ Provider wraps the app in `main.jsx` (`AiLanguageProvider`).
 
 ## UI placement (required)
 
-1. **`AiLanguageBar`** directly above the message/input form (always visible while chatting).
+1. **`AiLanguageBar`** directly above the message/input form while the composer is open.
 2. **Compact `AiLanguageTabs`** in the panel header when there is a chat header.
 3. For long structured AI output (e.g. Executive Summary), optional inline tabs in the response card.
+4. On mobile immersive read mode (`16-ai-mobile-chat.mdc`), language controls may hide with the collapsed composer — they must reappear when the user opens “Ask again” / expands input.
 
-Do **not** hide language behind a single tiny “EN/DE” chip.
+Do **not** hide language behind a single tiny “EN/DE” chip when the composer is visible.
 
 ## LLM calls
 
