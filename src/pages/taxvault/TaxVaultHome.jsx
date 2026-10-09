@@ -95,12 +95,21 @@ export default function TaxVaultHome() {
   )
 
   const monthlyData = stats.byMonth.map((v, i) => ({ month: MONTHS[i], amount: v }))
+  const hasMonthlySpend = monthlyData.some((d) => d.amount > 0)
   const recent = [...stats.receipts]
     .sort((a, b) => (b.purchase_date || '').localeCompare(a.purchase_date || ''))
     .slice(0, 5)
 
   const budgetWarnings = getAllCategories().filter((c) => isOverBudget(stats.receipts, c))
   const overheadConfig = loadTaxOverheadConfig()
+
+  const navTiles = [
+    { id: 'summary', label: 'Tax Summary', icon: FileBarChart, onClick: () => setView('summary') },
+    { id: 'list', label: 'All receipts', icon: Receipt, onClick: () => setView('list') },
+    { id: 'manager', label: 'Beleg-Upload', icon: Receipt, onClick: () => setView('manager') },
+    { id: 'mileage', label: 'Mileage log', icon: Car, onClick: () => setView('mileage') },
+    { id: 'categories', label: 'Categories', icon: Tags, onClick: () => setView('categories') },
+  ]
 
   if (!profileReady) {
     return <TaxVaultProfileSetup onComplete={() => setProfileReady(true)} />
@@ -348,23 +357,25 @@ export default function TaxVaultHome() {
       <button
         type="button"
         onClick={() => setView('overhead')}
-        className="premium-card mb-4 w-full p-4 text-left"
+        className="premium-card mb-4 w-full border border-slate-700/60 p-4 text-left transition hover:border-brand-500/40"
       >
-        <div className="flex min-w-0 items-start justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <p className="flex items-center gap-2 text-sm font-semibold">
-              <Landmark className="h-4 w-4 shrink-0 text-brand-400" />
-              <span className="min-w-0">Steuer-Overhead (Gewerbe)</span>
-            </p>
-            <p className="mt-1 text-xs text-slate-400">
-              Krankenkasse, Gewerbesteuer & USt — Konfiguration & Schätzungen
-            </p>
-            {overheadConfig.healthEstimate?.monthlyTotal > 0 && (
-              <p className="mt-2 text-xs text-rose-300">
-                KV ~{overheadConfig.healthEstimate.monthlyTotal.toLocaleString('de-DE')} €/Monat
-                {overheadConfig.healthInsurerName ? ` · ${overheadConfig.healthInsurerName}` : ''}
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-1 items-start gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-500/15 text-brand-300">
+              <Landmark className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-white">Steuer-Overhead (Gewerbe)</p>
+              <p className="mt-0.5 text-xs text-slate-400">
+                Krankenkasse, Gewerbesteuer & USt — Konfiguration & Schätzungen
               </p>
-            )}
+              {overheadConfig.healthEstimate?.monthlyTotal > 0 && (
+                <p className="mt-2 text-xs font-medium text-rose-300">
+                  KV ~{overheadConfig.healthEstimate.monthlyTotal.toLocaleString('de-DE')} €/Monat
+                  {overheadConfig.healthInsurerName ? ` · ${overheadConfig.healthInsurerName}` : ''}
+                </p>
+              )}
+            </div>
           </div>
           <ChevronRight className="h-5 w-5 shrink-0 text-brand-400" />
         </div>
@@ -378,9 +389,37 @@ export default function TaxVaultHome() {
         hebesatz={overheadConfig.hebesatz}
       />
 
+      {/* Primary capture actions */}
+      <div className="premium-card mb-4 space-y-3 border border-brand-500/25 p-4 sm:p-5">
+        <div>
+          <p className="text-sm font-semibold text-white">Ausgabe erfassen</p>
+          <p className="mt-0.5 text-[11px] text-slate-500">
+            Beleg scannen oder Betrag manuell eintragen
+          </p>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => setView('scan')}
+            className="flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3.5 text-base font-semibold text-white shadow-lg shadow-brand-600/25 transition hover:bg-brand-500"
+          >
+            <ScanLine className="h-5 w-5 shrink-0" />
+            Scan Receipt
+          </button>
+          <button
+            type="button"
+            onClick={() => setView('manual')}
+            className="flex min-h-[52px] items-center justify-center gap-2 rounded-xl border border-slate-600 bg-slate-900/40 px-4 py-3.5 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:bg-slate-800/60"
+          >
+            <PenLine className="h-4 w-4 shrink-0" />
+            Without receipt
+          </button>
+        </div>
+      </div>
+
       {stats.donutData.length > 0 && (
-        <div className="mb-4 min-w-0 rounded-2xl bg-slate-800/60 p-4">
-          <h3 className="mb-2 text-sm font-semibold">Spending by category</h3>
+        <div className="premium-card mb-4 min-w-0 p-4 sm:p-5">
+          <h3 className="mb-3 text-sm font-semibold text-white">Spending by category</h3>
           <SafeChart height={176} className="h-44 w-full">
             <PieChart>
               <Pie
@@ -407,99 +446,127 @@ export default function TaxVaultHome() {
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={() => setView('scan')}
-        className="mb-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 py-4 text-lg font-semibold shadow-lg shadow-brand-600/30"
-      >
-        <ScanLine className="h-6 w-6" />
-        Scan Receipt
-      </button>
-      <button
-        type="button"
-        onClick={() => setView('manual')}
-        className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-600 py-3 text-sm font-medium"
-      >
-        <PenLine className="h-4 w-4" />
-        Log expense without receipt
-      </button>
-
-      <div className="mb-4 min-w-0 rounded-2xl bg-slate-800/60 p-4">
-        <h3 className="mb-2 text-sm font-semibold">Monthly spending</h3>
-        <SafeChart height={144} className="h-36 w-full">
-          <BarChart data={monthlyData}>
-            <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#94a3b8' }} />
-            <Tooltip
-              formatter={(v) => `${sym}${Number(v).toFixed(2)}`}
-              contentStyle={{ background: '#1e293b', border: 'none', borderRadius: 8 }}
-            />
-            <Bar dataKey="amount" fill="#6366f1" radius={[4, 4, 0, 0]} isAnimationActive={false} />
-          </BarChart>
-        </SafeChart>
+      {/* Monthly spending */}
+      <div className="premium-card mb-4 min-w-0 p-4 sm:p-5">
+        <div className="mb-3 flex items-end justify-between gap-2">
+          <h3 className="text-sm font-semibold text-white">Monthly spending</h3>
+          {hasMonthlySpend ? (
+            <p className="text-[11px] tabular-nums text-slate-500">
+              {sym}
+              {stats.totalExpenses.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}{' '}
+              YTD
+            </p>
+          ) : null}
+        </div>
+        {hasMonthlySpend ? (
+          <SafeChart height={144} className="h-36 w-full">
+            <BarChart data={monthlyData}>
+              <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#94a3b8' }} />
+              <Tooltip
+                formatter={(v) => `${sym}${Number(v).toFixed(2)}`}
+                contentStyle={{ background: '#1e293b', border: 'none', borderRadius: 8 }}
+              />
+              <Bar dataKey="amount" fill="#6366f1" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+            </BarChart>
+          </SafeChart>
+        ) : (
+          <div className="flex h-28 flex-col items-center justify-center rounded-xl border border-dashed border-slate-700/80 bg-slate-900/40 px-4 text-center">
+            <p className="text-sm font-medium text-slate-400">Noch keine Ausgaben in {taxYear}</p>
+            <p className="mt-1 text-[11px] text-slate-600">
+              Nach dem ersten Beleg erscheint hier die Monatsübersicht.
+            </p>
+          </div>
+        )}
       </div>
 
-      <div className="mb-4 flex gap-2">
-        <button
-          type="button"
-          onClick={() => setView('summary')}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-slate-800 py-3 text-sm font-medium"
-        >
-          <FileBarChart className="h-4 w-4" /> Tax Summary
-        </button>
-        <button
-          type="button"
-          onClick={() => setView('list')}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-slate-800 py-3 text-sm font-medium"
-        >
-          <Receipt className="h-4 w-4" /> All receipts
-        </button>
-        <button
-          type="button"
-          onClick={() => setView('manager')}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-slate-800 py-3 text-sm font-medium"
-        >
-          <Receipt className="h-4 w-4" aria-hidden /> Beleg-Upload
-        </button>
+      {/* Navigation tools */}
+      <div className="mb-4">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Tools & Berichte
+        </p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {navTiles.map((tile) => {
+            const Icon = tile.icon
+            return (
+              <button
+                key={tile.id}
+                type="button"
+                onClick={tile.onClick}
+                className="flex min-h-[72px] flex-col items-start justify-center gap-2 rounded-xl border border-slate-700/70 bg-slate-800/50 px-3 py-3 text-left transition hover:border-slate-500 hover:bg-slate-800"
+              >
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900/80 text-brand-300">
+                  <Icon className="h-4 w-4" aria-hidden />
+                </span>
+                <span className="text-xs font-medium leading-snug text-slate-200">{tile.label}</span>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
-      <div className="mb-2 flex gap-2">
-        <button
-          type="button"
-          onClick={() => setView('mileage')}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-700 py-2 text-sm"
-        >
-          <Car className="h-4 w-4" /> Mileage log
-        </button>
-        <button
-          type="button"
-          onClick={() => setView('categories')}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-700 py-2 text-sm"
-        >
-          <Tags className="h-4 w-4" /> Categories
-        </button>
-      </div>
-      <div className="mb-4 space-y-2">
+      {/* Growth modules */}
+      <div className="mb-5 grid gap-2 sm:grid-cols-2">
         <button
           type="button"
           onClick={() => setShowBizStart(true)}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-700 py-2 text-sm"
+          className="flex min-h-[56px] items-center gap-3 rounded-xl border border-slate-700/70 bg-slate-800/40 px-4 py-3 text-left transition hover:border-slate-500 hover:bg-slate-800/70"
         >
-          <Rocket className="h-4 w-4" /> BizStart Germany
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-500/15 text-violet-300">
+            <Rocket className="h-4 w-4" />
+          </span>
+          <span>
+            <span className="block text-sm font-semibold text-slate-100">BizStart Germany</span>
+            <span className="block text-[11px] text-slate-500">Gewerbe · Listing · CV</span>
+          </span>
         </button>
         <button
           type="button"
           onClick={() => setShowFinanceEdu(true)}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-500/30 bg-brand-950/20 py-2 text-sm text-brand-100"
+          className="flex min-h-[56px] items-center gap-3 rounded-xl border border-brand-500/30 bg-brand-950/25 px-4 py-3 text-left transition hover:border-brand-500/50 hover:bg-brand-950/40"
         >
-          <GraduationCap className="h-4 w-4" /> Finanz-Bildung
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-500/15 text-brand-200">
+            <GraduationCap className="h-4 w-4" />
+          </span>
+          <span>
+            <span className="block text-sm font-semibold text-brand-100">Finanz-Bildung</span>
+            <span className="block text-[11px] text-slate-500">Vermögen · Zielrechner</span>
+          </span>
         </button>
       </div>
 
-      <h3 className="mb-2 font-semibold">Recent receipts</h3>
+      {/* Recent receipts */}
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h3 className="font-semibold text-white">Recent receipts</h3>
+        {recent.length > 0 ? (
+          <button
+            type="button"
+            onClick={() => setView('list')}
+            className="text-xs font-medium text-brand-300 hover:text-brand-200"
+          >
+            Alle anzeigen
+          </button>
+        ) : null}
+      </div>
       <div className="space-y-2">
-        {recent.length === 0 && (
-          <p className="text-sm text-slate-500">No receipts yet — tap Scan Receipt to start.</p>
-        )}
+        {recent.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-700/80 bg-slate-900/40 px-4 py-8 text-center">
+            <Receipt className="mb-2 h-8 w-8 text-slate-600" aria-hidden />
+            <p className="text-sm font-medium text-slate-400">Noch keine Belege</p>
+            <p className="mt-1 max-w-xs text-[11px] text-slate-600">
+              Tippe auf Scan Receipt, um den ersten Beleg zu erfassen.
+            </p>
+            <button
+              type="button"
+              onClick={() => setView('scan')}
+              className="mt-4 rounded-lg bg-brand-600/90 px-3 py-2 text-xs font-semibold text-white"
+            >
+              Beleg scannen
+            </button>
+          </div>
+        ) : null}
         {recent.map((r) => (
           <button
             key={r.id}
@@ -508,18 +575,20 @@ export default function TaxVaultHome() {
               setSelectedReceipt(r)
               setView('detail')
             }}
-            className="flex w-full gap-3 rounded-xl bg-slate-800/80 p-3 text-left"
+            className="flex w-full gap-3 rounded-xl border border-slate-700/50 bg-slate-800/70 p-3 text-left transition hover:border-slate-600 hover:bg-slate-800"
           >
             {r.image_url ? (
               <img src={r.image_url} alt="" className="h-12 w-10 rounded object-cover" />
             ) : (
-              <Receipt className="h-10 w-10 text-slate-600" />
+              <span className="flex h-12 w-10 items-center justify-center rounded bg-slate-900/80">
+                <Receipt className="h-5 w-5 text-slate-500" />
+              </span>
             )}
             <div className="min-w-0 flex-1">
-              <p className="truncate font-medium">{r.vendor_name}</p>
+              <p className="truncate font-medium text-slate-100">{r.vendor_name}</p>
               <p className="text-xs text-slate-500">{r.purchase_date}</p>
             </div>
-            <p className="font-semibold">
+            <p className="font-semibold tabular-nums text-slate-100">
               {sym}
               {r.total_amount?.toFixed(2)}
             </p>
