@@ -2,7 +2,8 @@ import { motion } from 'framer-motion'
 import { BrandMark } from '@/components/shared/BrandLogo'
 
 /**
- * Mobile-first nav: bottom tab bar on phone/tablet portrait, left sidebar on lg+.
+ * Mobile + tablet: bottom tab bar · Desktop (lg+): left sidebar.
+ * Touch targets ≥44px; labels truncate on narrow phones.
  */
 export default function ResponsiveNav({
   tabs,
@@ -32,8 +33,8 @@ export default function ResponsiveNav({
         onClick={() => onTabChange(id)}
         className={
           horizontal
-            ? 'relative flex min-h-[48px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-2 text-[10px] font-medium sm:text-xs'
-            : `relative flex w-full min-h-[44px] items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors ${
+            ? 'relative flex min-h-[48px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-2 text-[10px] font-medium sm:text-xs md:text-[13px]'
+            : `relative flex w-full min-h-[48px] items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors ${
                 active ? (isScanVault ? 'bg-[#007AFF]/15' : 'bg-brand-600/20') : 'hover:bg-white/5'
               }`
         }
@@ -52,8 +53,18 @@ export default function ResponsiveNav({
             className={`absolute left-0 top-2 bottom-2 w-1 rounded-r-full ${indicator}`}
           />
         )}
-        <Icon className={`h-5 w-5 shrink-0 sm:h-[1.35rem] sm:w-[1.35rem] ${active ? activeIcon : inactive}`} />
-        <span className={`${horizontal ? 'max-w-full truncate px-0.5' : 'flex-1'} ${active ? activeText : inactive}`}>{label}</span>
+        <Icon
+          className={`h-5 w-5 shrink-0 sm:h-[1.35rem] sm:w-[1.35rem] md:h-6 md:w-6 ${
+            active ? activeIcon : inactive
+          }`}
+        />
+        <span
+          className={`${horizontal ? 'max-w-full truncate px-0.5 leading-tight' : 'flex-1 truncate'} ${
+            active ? activeText : inactive
+          }`}
+        >
+          {label}
+        </span>
       </button>
     )
   }
@@ -65,7 +76,7 @@ export default function ResponsiveNav({
         className={`fixed bottom-0 left-0 right-0 z-50 border-t backdrop-blur-xl safe-bottom lg:hidden ${navBg}`}
         aria-label="Main navigation"
       >
-        <div className="mx-auto flex w-full max-w-[var(--content-max)] items-stretch justify-around px-1 pt-1">
+        <div className="mx-auto flex w-full max-w-[var(--content-max)] items-stretch justify-around gap-0 px-0.5 pt-1 sm:px-2 md:max-w-3xl md:px-4">
           {tabs.map((tab) => (
             <TabButton key={tab.id} {...tab} horizontal />
           ))}
@@ -84,23 +95,25 @@ export default function ResponsiveNav({
             size={44}
           />
         </div>
-        <div className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
+        <div className="flex flex-1 flex-col gap-1 overflow-y-auto overscroll-contain p-3">
           {tabs.map((tab) => (
             <TabButton key={tab.id} {...tab} horizontal={false} />
           ))}
         </div>
         {footerAction && (
-          <div className="border-t border-inherit p-3">
+          <div className="border-t border-inherit p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             <button
               type="button"
               onClick={footerAction.onClick}
-              className={`flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left text-sm font-medium transition-colors ${
+              className={`flex min-h-[48px] w-full items-center gap-3 rounded-xl border px-3 py-3 text-left text-sm font-medium transition-colors ${
                 isScanVault
                   ? 'border-[#007AFF]/30 bg-[#007AFF]/10 text-slate-100 hover:bg-[#007AFF]/20'
                   : 'border-brand-500/30 bg-brand-600/10 text-brand-200 hover:bg-brand-600/20'
               }`}
             >
-              <footerAction.icon className={`h-5 w-5 shrink-0 ${isScanVault ? 'text-[#007AFF]' : 'text-brand-400'}`} />
+              <footerAction.icon
+                className={`h-5 w-5 shrink-0 ${isScanVault ? 'text-[#007AFF]' : 'text-brand-400'}`}
+              />
               <span className="min-w-0 truncate">{footerAction.label}</span>
             </button>
           </div>

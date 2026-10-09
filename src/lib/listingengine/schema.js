@@ -4,6 +4,7 @@
 
 export const LISTING_MODES = [
   { id: 'complete', labelDe: 'Komplettes eBay-Listing', labelEn: 'Complete eBay listing' },
+  { id: 'correct', labelDe: 'Deutsche Korrektur (Rechtschreibung/Wörter)', labelEn: 'German correction (spelling/words)' },
   { id: 'seo', labelDe: 'SEO-Optimierung', labelEn: 'SEO optimization' },
   { id: 'rewrite', labelDe: 'Native DE-Überarbeitung', labelEn: 'Native German rewrite' },
   { id: 'translate', labelDe: 'Lieferanten-Übersetzung', labelEn: 'Supplier translation' },

@@ -21,6 +21,7 @@ export {
   remainingGenerations,
   DAILY_GENERATION_CAP,
   canRunGeneration,
+  recordGenerationUse,
 } from './store'
 export { extractTextFromSupplierFile, SupplierParseError } from './parseSupplierFile'
 export { runListingPipeline, extractProductData, generateListingCopy, runComplianceCheck } from './api'
@@ -55,5 +56,8 @@ export {
   fetchEbayStatus,
   fetchEbayPolicies,
   publishListingToEbay,
+  reviseEbayOffer,
 } from './ebay/client'
 export { isEbayConnected, loadEbayAuth, clearEbayAuth } from './ebay/authStore'
+export * from './catalog'
+export * from './ops'

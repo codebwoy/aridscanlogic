@@ -205,18 +205,81 @@ async function refreshAccessToken(cfg, refreshToken) {
   })
 }
 
-async function ebayApi(cfg, userToken, method, path, jsonBody) {
+async function ebayApi(cfg, userToken, method, path, jsonBody, extraHeaders = {}) {
   const headers = {
     Authorization: `Bearer ${userToken}`,
     'Content-Type': 'application/json',
     'Content-Language': 'de-DE',
     Accept: 'application/json',
+    ...extraHeaders,
   }
   return ebayFetch(`${cfg.apiBase}${path}`, {
     method,
     headers,
     body: jsonBody != null ? JSON.stringify(jsonBody) : undefined,
   })
+}
+
+async function resolveUserToken(cfg, req, body) {
+  let userToken = getUserToken(req, body)
+  if (!userToken && body?.refresh_token) {
+    const refreshed = await refreshAccessToken(cfg, String(body.refresh_token).trim())
+    if (refreshed.ok && refreshed.data?.access_token) {
+      userToken = refreshed.data.access_token
+    }
+  }
+  return userToken || ''
+}
+
+function mapFulfillmentOrder(raw) {
+  if (!raw || typeof raw !== 'object') return null
+  const shipTo = raw.fulfillmentStartInstructions?.[0]?.shippingStep?.shipTo || {}
+  const addr = shipTo.contactAddress || {}
+  const lineItems = Array.isArray(raw.lineItems)
+    ? raw.lineItems.map((li) => ({
+        lineItemId: String(li.lineItemId || ''),
+        sku: String(li.sku || ''),
+        title: String(li.title || '').slice(0, 200),
+        quantity: Number(li.quantity) || 1,
+        lineItemCost: li.lineItemCost || null,
+        total: li.total || null,
+      }))
+    : []
+  return {
+    orderId: String(raw.orderId || ''),
+    creationDate: raw.creationDate || null,
+    lastModifiedDate: raw.lastModifiedDate || null,
+    orderFulfillmentStatus: String(raw.orderFulfillmentStatus || ''),
+    orderPaymentStatus: String(raw.orderPaymentStatus || ''),
+    cancelStatus: raw.cancelStatus?.cancelState || null,
+    buyerUsername: raw.buyer?.username || '',
+    total: raw.pricingSummary?.total || raw.totalFeeBasisAmount || null,
+    currency: raw.pricingSummary?.total?.currency || 'EUR',
+    lineItems,
+    shipTo: {
+      fullName: shipTo.fullName || '',
+      addressLine1: addr.addressLine1 || '',
+      addressLine2: addr.addressLine2 || '',
+      city: addr.city || '',
+      stateOrProvince: addr.stateOrProvince || '',
+      postalCode: addr.postalCode || '',
+      countryCode: addr.countryCode || '',
+      phone: shipTo.primaryPhone?.phoneNumber || '',
+      email: shipTo.email || '',
+    },
+    maxEstimatedDeliveryDate:
+      raw.fulfillmentStartInstructions?.[0]?.maxEstimatedDeliveryDate || null,
+    minEstimatedDeliveryDate:
+      raw.fulfillmentStartInstructions?.[0]?.minEstimatedDeliveryDate || null,
+    shippingFulfillments: Array.isArray(raw.shippingFulfillments)
+      ? raw.shippingFulfillments.map((f) => ({
+          fulfillmentId: f.fulfillmentId,
+          shipmentTrackingNumber: f.shipmentTrackingNumber,
+          shippingCarrierCode: f.shippingCarrierCode,
+          shippedDate: f.shippedDate,
+        }))
+      : [],
+  }
 }
 
 function sanitizeSku(raw) {
@@ -508,6 +571,20 @@ export async function handleEbayRequest(req, res, { getConfig } = {}) {
 
       const pub = sanitizePublishBody(body)
 
+      // Dry-run: validate payload only — no upstream Inventory calls
+      if (body.dry_run === true) {
+        json(res, 200, {
+          ok: true,
+          dry_run: true,
+          sku: pub.sku,
+          offerId: body.offerId ? String(body.offerId).trim() : `dry-offer-${pub.sku}`,
+          listingId: `dry-${Date.now()}`,
+          marketplaceId: pub.marketplaceId,
+          sandbox: cfg.sandbox,
+        })
+        return true
+      }
+
       const inventoryItem = {
         availability: {
           shipToLocationAvailability: { quantity: pub.quantity },
@@ -637,6 +714,350 @@ export async function handleEbayRequest(req, res, { getConfig } = {}) {
         marketplaceId: pub.marketplaceId,
         sandbox: cfg.sandbox,
       })
+      return true
+    }
+
+    // POST /api/ebay/revise — update quantity and/or price on an existing offer
+    if (pathname === '/api/ebay/revise' && method === 'POST') {
+      const raw = await readRequestBody(req)
+      const body = JSON.parse(raw || '{}')
+      let userToken = getUserToken(req, body)
+      if (!userToken && body.refresh_token) {
+        const refreshed = await refreshAccessToken(cfg, String(body.refresh_token).trim())
+        if (refreshed.ok && refreshed.data?.access_token) {
+          userToken = refreshed.data.access_token
+        }
+      }
+      if (!userToken) {
+        json(res, 401, { error: 'eBay user token required' })
+        return true
+      }
+
+      const sku = sanitizeSku(body.sku)
+      const offerId = String(body.offerId || '').trim()
+      if (!offerId) {
+        json(res, 400, { error: 'offerId required' })
+        return true
+      }
+
+      const quantity = Math.min(
+        99999,
+        Math.max(0, Number.parseInt(String(body.quantity ?? '0'), 10) || 0)
+      )
+      const price =
+        body.price != null && body.price !== ''
+          ? Number(body.price).toFixed(2)
+          : null
+      const currency = String(body.currency || 'EUR').trim().slice(0, 3).toUpperCase() || 'EUR'
+
+      if (body.dry_run === true) {
+        json(res, 200, {
+          ok: true,
+          dry_run: true,
+          sku,
+          offerId,
+          quantity,
+          price,
+        })
+        return true
+      }
+
+      const offerUpdate = {
+        offerId,
+        availableQuantity: quantity,
+      }
+      if (price != null && Number(price) > 0) {
+        offerUpdate.price = { currency, value: price }
+      }
+
+      const bulk = await ebayApi(
+        cfg,
+        userToken,
+        'POST',
+        '/sell/inventory/v1/bulk_update_price_quantity',
+        {
+          requests: [
+            {
+              sku,
+              shipToLocationAvailability: { quantity },
+              offers: [offerUpdate],
+            },
+          ],
+        }
+      )
+      if (!bulk.ok) {
+        json(res, 502, {
+          error: 'bulk_update_price_quantity failed',
+          details: bulk.data?.errors || bulk.data?.responses || bulk.data,
+        })
+        return true
+      }
+
+      let withdrawn = false
+      if (quantity === 0 && body.end_when_zero !== false) {
+        const wd = await ebayApi(
+          cfg,
+          userToken,
+          'POST',
+          `/sell/inventory/v1/offer/${encodeURIComponent(offerId)}/withdraw`
+        )
+        withdrawn = !!wd.ok
+      }
+
+      json(res, 200, {
+        ok: true,
+        sku,
+        offerId,
+        quantity,
+        price,
+        withdrawn,
+        sandbox: cfg.sandbox,
+        details: bulk.data?.responses || null,
+      })
+      return true
+    }
+
+    // GET /api/ebay/orders — Fulfillment API getOrders
+    if (pathname === '/api/ebay/orders' && method === 'GET') {
+      const userToken = await resolveUserToken(cfg, req, null)
+      if (!userToken) {
+        json(res, 401, { error: 'eBay user token required' })
+        return true
+      }
+      const limit = Math.min(50, Math.max(1, Number.parseInt(qs.get('limit') || '25', 10) || 25))
+      const days = Math.min(90, Math.max(1, Number.parseInt(qs.get('days') || '14', 10) || 14))
+      const start = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+      const filter = `creationdate:[${start}..]`
+      const path = `/sell/fulfillment/v1/order?limit=${limit}&filter=${encodeURIComponent(filter)}`
+      const result = await ebayApi(cfg, userToken, 'GET', path)
+      if (!result.ok) {
+        json(res, 502, {
+          error: 'getOrders failed',
+          details: result.data?.errors || result.data,
+        })
+        return true
+      }
+      const orders = Array.isArray(result.data?.orders)
+        ? result.data.orders.map(mapFulfillmentOrder).filter(Boolean)
+        : []
+      json(res, 200, {
+        ok: true,
+        orders,
+        total: result.data?.total || orders.length,
+        sandbox: cfg.sandbox,
+      })
+      return true
+    }
+
+    // GET /api/ebay/orders/:orderId
+    if (pathname.startsWith('/api/ebay/orders/') && method === 'GET') {
+      const orderId = decodeURIComponent(pathname.slice('/api/ebay/orders/'.length)).split('/')[0]
+      if (!orderId || orderId.includes('/')) {
+        json(res, 400, { error: 'orderId required' })
+        return true
+      }
+      const userToken = await resolveUserToken(cfg, req, null)
+      if (!userToken) {
+        json(res, 401, { error: 'eBay user token required' })
+        return true
+      }
+      const result = await ebayApi(
+        cfg,
+        userToken,
+        'GET',
+        `/sell/fulfillment/v1/order/${encodeURIComponent(orderId)}`
+      )
+      if (!result.ok) {
+        json(res, 502, {
+          error: 'getOrder failed',
+          details: result.data?.errors || result.data,
+        })
+        return true
+      }
+      json(res, 200, {
+        ok: true,
+        order: mapFulfillmentOrder(result.data),
+        sandbox: cfg.sandbox,
+      })
+      return true
+    }
+
+    // POST /api/ebay/orders/:orderId/ship — createShippingFulfillment
+    if (
+      pathname.match(/^\/api\/ebay\/orders\/[^/]+\/ship$/) &&
+      method === 'POST'
+    ) {
+      const orderId = decodeURIComponent(
+        pathname.replace(/^\/api\/ebay\/orders\//, '').replace(/\/ship$/, '')
+      )
+      const raw = await readRequestBody(req)
+      const body = JSON.parse(raw || '{}')
+      const userToken = await resolveUserToken(cfg, req, body)
+      if (!userToken) {
+        json(res, 401, { error: 'eBay user token required' })
+        return true
+      }
+
+      const trackingNumber = String(body.trackingNumber || '')
+        .trim()
+        .slice(0, 50)
+      const shippingCarrierCode = String(body.shippingCarrierCode || body.carrierCode || '')
+        .trim()
+        .slice(0, 50)
+      const lineItems = Array.isArray(body.lineItems)
+        ? body.lineItems
+            .map((li) => ({
+              lineItemId: String(li.lineItemId || '').trim(),
+              quantity: Math.max(1, Number.parseInt(String(li.quantity || '1'), 10) || 1),
+            }))
+            .filter((li) => li.lineItemId)
+            .slice(0, 20)
+        : []
+
+      if (!trackingNumber || !shippingCarrierCode) {
+        json(res, 400, { error: 'trackingNumber and shippingCarrierCode required' })
+        return true
+      }
+      if (!lineItems.length) {
+        json(res, 400, { error: 'lineItems required' })
+        return true
+      }
+
+      if (body.dry_run === true) {
+        json(res, 200, {
+          ok: true,
+          dry_run: true,
+          orderId,
+          trackingNumber,
+          shippingCarrierCode,
+          fulfillmentId: `dry-ful-${Date.now()}`,
+        })
+        return true
+      }
+
+      const shipBody = {
+        lineItems,
+        shippedDate: body.shippedDate || new Date().toISOString(),
+        shippingCarrierCode,
+        trackingNumber,
+      }
+
+      const result = await ebayApi(
+        cfg,
+        userToken,
+        'POST',
+        `/sell/fulfillment/v1/order/${encodeURIComponent(orderId)}/shipping_fulfillment`,
+        shipBody
+      )
+      if (!result.ok && result.status !== 201) {
+        json(res, 502, {
+          error: 'createShippingFulfillment failed',
+          details: result.data?.errors || result.data,
+        })
+        return true
+      }
+
+      json(res, 200, {
+        ok: true,
+        orderId,
+        fulfillmentId: result.data?.fulfillmentId || null,
+        trackingNumber,
+        shippingCarrierCode,
+        sandbox: cfg.sandbox,
+      })
+      return true
+    }
+
+    // GET /api/ebay/inquiries — Post-Order inquiry search (buyer CS)
+    if (pathname === '/api/ebay/inquiries' && method === 'GET') {
+      const userToken = await resolveUserToken(cfg, req, null)
+      if (!userToken) {
+        json(res, 401, { error: 'eBay user token required' })
+        return true
+      }
+      const marketplace = String(qs.get('marketplace_id') || 'EBAY_DE')
+      const limit = Math.min(50, Math.max(1, Number.parseInt(qs.get('limit') || '25', 10) || 25))
+      const status = String(qs.get('inquiry_status') || 'OPEN').trim()
+      const q = new URLSearchParams()
+      q.set('limit', String(limit))
+      if (status) q.set('inquiry_status', status)
+      const result = await ebayApi(
+        cfg,
+        userToken,
+        'GET',
+        `/post-order/v2/inquiry/search?${q.toString()}`,
+        null,
+        { 'X-EBAY-C-MARKETPLACE-ID': marketplace }
+      )
+      if (!result.ok) {
+        json(res, 502, {
+          error: 'inquiry search failed',
+          details: result.data?.errors || result.data,
+          hint: 'Post-Order may need re-consent; you can still add CS cases manually.',
+        })
+        return true
+      }
+      const members = result.data?.members || result.data?.inquiries || []
+      const inquiries = (Array.isArray(members) ? members : []).map((inq) => ({
+        inquiryId: String(inq.inquiryId || inq.inquiryid || ''),
+        itemId: String(inq.itemId || inq.item_id || ''),
+        transactionId: String(inq.transactionId || ''),
+        buyer: inq.buyer || inq.buyer_login_name || '',
+        seller: inq.seller || '',
+        inquiryStatus: inq.inquiryStatusEnum || inq.status || '',
+        creationDate: inq.creationDate?.value || inq.creationDate || null,
+        lastModifiedDate: inq.lastModifiedDate?.value || inq.lastModifiedDate || null,
+        claimAmount: inq.claimAmount || null,
+        inquiryDetails: inq.inquiryDetails || null,
+      }))
+      json(res, 200, { ok: true, inquiries, sandbox: cfg.sandbox })
+      return true
+    }
+
+    // POST /api/ebay/inquiries/:id/reply — send inquiry message (human-approved)
+    if (pathname.match(/^\/api\/ebay\/inquiries\/[^/]+\/reply$/) && method === 'POST') {
+      const inquiryId = decodeURIComponent(
+        pathname.replace(/^\/api\/ebay\/inquiries\//, '').replace(/\/reply$/, '')
+      )
+      const raw = await readRequestBody(req)
+      const body = JSON.parse(raw || '{}')
+      const userToken = await resolveUserToken(cfg, req, body)
+      if (!userToken) {
+        json(res, 401, { error: 'eBay user token required' })
+        return true
+      }
+      if (body.human_approved !== true) {
+        json(res, 403, { error: 'human_approved required before sending CS reply' })
+        return true
+      }
+      const message = String(body.message || body.body || '')
+        .trim()
+        .slice(0, 2000)
+      if (!message) {
+        json(res, 400, { error: 'message required' })
+        return true
+      }
+      if (body.dry_run === true) {
+        json(res, 200, { ok: true, dry_run: true, inquiryId, message })
+        return true
+      }
+      const marketplace = String(body.marketplace_id || 'EBAY_DE')
+      const result = await ebayApi(
+        cfg,
+        userToken,
+        'POST',
+        `/post-order/v2/inquiry/${encodeURIComponent(inquiryId)}/send_message`,
+        { message: { content: message } },
+        { 'X-EBAY-C-MARKETPLACE-ID': marketplace }
+      )
+      if (!result.ok && result.status !== 204) {
+        json(res, 502, {
+          error: 'send inquiry message failed',
+          details: result.data?.errors || result.data,
+        })
+        return true
+      }
+      json(res, 200, { ok: true, inquiryId, sandbox: cfg.sandbox })
       return true
     }
 

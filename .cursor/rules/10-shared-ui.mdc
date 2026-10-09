@@ -47,8 +47,11 @@ alwaysApply: false
 ## Styling
 
 - Tailwind 4 via `@tailwindcss/vite`; global `index.css`.
-- Mobile: `safe-top`, `min-h-[48px]` touch targets, `rounded-2xl` cards.
+- Mobile: `safe-top`, `min-h-[48px]` / `.touch-target`, `rounded-2xl` cards.
+- Responsive helpers: `.responsive-tabs`, `.stack-actions`, `.form-grid`, `.page-title`, `.grid-cards`.
+- Shell: bottom nav &lt; lg, sidebar ≥ lg; content max via `--content-max`.
 - Framer Motion for tab transitions in Dashboard.
+- Prefer `ResponsiveTabs` for in-module segment controls.
 
 ## Patterns
 

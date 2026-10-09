@@ -28,14 +28,14 @@ export default function PremiumModal() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="premium-modal-title"
-          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 p-4 safe-bottom"
+          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 p-3 safe-bottom sm:items-center sm:p-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={() => setModalOpen(false)}
         >
           <motion.div
-            className="mx-4 w-full max-w-md rounded-2xl bg-slate-800 p-6 shadow-2xl sm:mx-auto sm:max-w-lg"
+            className="mx-0 w-full max-w-md rounded-t-2xl bg-slate-800 p-5 shadow-2xl sm:mx-auto sm:max-w-lg sm:rounded-2xl sm:p-6 md:max-w-xl"
             initial={{ y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}

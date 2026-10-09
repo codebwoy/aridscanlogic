@@ -34,6 +34,7 @@ import {
   extractTextFromSupplierFile,
   SupplierParseError,
   runListingPipeline,
+  generateListingCopy,
   formatCustomerListing,
   formatInternalNotes,
   copyTextToClipboard,
@@ -45,8 +46,12 @@ import {
   recommendTitleFromProduct,
   evaluateCanISellThis,
   SELL_DECISION,
+  canRunGeneration,
+  recordGenerationUse,
 } from '@/lib/listingengine'
 import EbayPublishPanel from '@/components/bizstart/listing/EbayPublishPanel'
+import CatalogOpsPanel from '@/components/bizstart/listing/CatalogOpsPanel'
+import ResponsiveTabs from '@/components/layout/ResponsiveTabs'
 
 const PHASE_LABELS = {
   de: {
@@ -180,7 +185,7 @@ export default function ListingEngineBuilder({ onBack }) {
   const [busy, setBusy] = useState(false)
   const [phase, setPhase] = useState(null)
   const [dragOver, setDragOver] = useState(false)
-  const [tab, setTab] = useState('decide') // decide | input | product | economics | listing | legal | review
+  const [tab, setTab] = useState('decide') // decide | catalog | input | product | economics | listing | legal | review
   const [previewMode, setPreviewMode] = useState('customer') // customer | internal
 
   const persist = useCallback((patch) => {
@@ -288,6 +293,65 @@ export default function ListingEngineBuilder({ onBack }) {
     const empty = deleteListingData()
     setSession({ ...empty, legal: loadLockedLegalModules({}) })
     toast.success(lang === 'de' ? 'Listing-Daten gelöscht' : 'Listing data deleted')
+  }
+
+  const correctGermanListing = async () => {
+    const hasProduct =
+      session.product.produkttyp ||
+      session.product.marke ||
+      session.product.modell ||
+      session.listing?.titel ||
+      session.raw_supplier_text
+    if (!hasProduct) {
+      toast.error(
+        lang === 'de'
+          ? 'Bitte zuerst Produktdaten oder Listing-Text vorhanden haben.'
+          : 'Add product data or listing text first.'
+      )
+      return
+    }
+    if (!canRunGeneration()) {
+      toast.error(
+        lang === 'de'
+          ? 'Tageslimit für Generierungen erreicht.'
+          : 'Daily generation limit reached.'
+      )
+      return
+    }
+    setBusy(true)
+    setPhase('copywriting')
+    try {
+      const listing = await generateListingCopy({
+        product: session.product,
+        mode: 'correct',
+        existingListing: session.listing?.titel || session.listing?.produktbeschreibung
+          ? session.listing
+          : {
+              titel: session.product.produkttyp || '',
+              kurzbeschreibung: session.raw_supplier_text || '',
+              produktbeschreibung: session.raw_supplier_text || '',
+            },
+        language: 'de',
+      })
+      recordGenerationUse(1)
+      persist({
+        listing,
+        mode: 'correct',
+        human_approved: false,
+        phase: 'review',
+        error: '',
+      })
+      toast.success(
+        lang === 'de'
+          ? 'Deutsche Texte korrigiert — bitte prüfen'
+          : 'German copy corrected — please review'
+      )
+    } catch (err) {
+      toast.error(err?.message || (lang === 'de' ? 'Korrektur fehlgeschlagen' : 'Correction failed'))
+    } finally {
+      setBusy(false)
+      setPhase(null)
+    }
   }
 
   const run = async () => {
@@ -416,6 +480,7 @@ export default function ListingEngineBuilder({ onBack }) {
 
   const tabs = [
     { id: 'decide', de: 'Verkaufen?', en: 'Can I sell?' },
+    { id: 'catalog', de: 'Katalog', en: 'Catalog' },
     { id: 'input', de: 'Eingabe', en: 'Input' },
     { id: 'product', de: 'Produktdaten', en: 'Product' },
     { id: 'economics', de: 'Profit', en: 'Profit' },
@@ -425,13 +490,13 @@ export default function ListingEngineBuilder({ onBack }) {
   ]
 
   return (
-    <div className="w-full min-w-0 max-w-full pb-24">
+    <div className="w-full min-w-0 max-w-full pb-8 sm:pb-12">
       <button
         type="button"
         onClick={onBack}
-        className="safe-top mb-3 flex items-center gap-2 text-sm text-slate-400"
+        className="safe-top mb-3 flex min-h-[44px] items-center gap-2 text-sm text-slate-400"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft className="h-4 w-4 shrink-0" />
         BizStart
       </button>
 
@@ -446,32 +511,27 @@ export default function ListingEngineBuilder({ onBack }) {
             Readiness {readiness.total}/100
           </span>
         </div>
-        <h1 className="text-xl font-bold leading-tight">
+        <h1 className="page-title">
           {lang === 'de'
             ? 'Deutsche E-Commerce Listing Engine'
             : 'German E-Commerce Listing Engine'}
         </h1>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="mt-1 text-sm text-slate-400 sm:max-w-2xl">
           {lang === 'de'
-            ? 'Kann ich verkaufen? · Listing bereit machen · Publish Readiness — keine erfundenen Angaben.'
-            : 'Can I sell this? · Make listing ready · Publish Readiness — no invented specs.'}
+            ? 'Kann ich verkaufen? · Katalog→eBay · Listing bereit machen · Publish Readiness — keine erfundenen Angaben.'
+            : 'Can I sell this? · Catalog→eBay · Make listing ready · Publish Readiness — no invented specs.'}
         </p>
       </header>
 
-      <div className="mb-4 flex gap-1 overflow-x-auto rounded-xl bg-slate-900/80 p-1">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTab(t.id)}
-            className={`shrink-0 rounded-lg px-3 py-2 text-xs font-medium transition ${
-              tab === t.id ? 'bg-brand-600 text-white' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            {lang === 'de' ? t.de : t.en}
-          </button>
-        ))}
+      <div className="sticky-subhead mb-4">
+        <ResponsiveTabs tabs={tabs} value={tab} onChange={setTab} lang={lang} />
       </div>
+
+      {tab === 'catalog' && (
+        <section className="space-y-4">
+          <CatalogOpsPanel lang={lang} />
+        </section>
+      )}
 
       {tab === 'decide' && (
         <section className="space-y-4">
@@ -560,6 +620,13 @@ export default function ListingEngineBuilder({ onBack }) {
                 className="rounded-lg bg-brand-600 px-3 py-2 text-xs font-semibold text-white"
               >
                 {lang === 'de' ? 'Listing bereit machen' : 'Make listing ready'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setTab('catalog')}
+                className="rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white"
+              >
+                {lang === 'de' ? 'Katalog → eBay' : 'Catalog → eBay'}
               </button>
             </div>
           </div>
@@ -980,6 +1047,39 @@ export default function ListingEngineBuilder({ onBack }) {
 
       {tab === 'listing' && (
         <section className="space-y-3">
+          <div className="premium-card space-y-3 border border-violet-500/30 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-sm font-semibold text-slate-100">
+                  {lang === 'de' ? 'German Copywriter — Korrektur' : 'German Copywriter — correction'}
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  {lang === 'de'
+                    ? 'Korrigiert Rechtschreibung, falsche Wörter, Denglisch und schreibt natürliche DE-Händlertexte — ohne erfundene Specs.'
+                    : 'Fixes spelling, wrong words, Denglisch; rewrites natural DE retail copy — no invented specs.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={correctGermanListing}
+                className="flex min-h-[40px] items-center gap-2 rounded-xl bg-violet-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+              >
+                {busy ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3.5 w-3.5" />
+                )}
+                {lang === 'de' ? 'Texte korrigieren' : 'Correct copy'}
+              </button>
+            </div>
+            <p className="text-[10px] text-slate-500">
+              {lang === 'de'
+                ? `Verbleibende Generierungen heute: ${remaining}`
+                : `Remaining generations today: ${remaining}`}
+            </p>
+          </div>
+
           <div className="premium-card space-y-3 p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2 text-sm font-semibold text-slate-200">

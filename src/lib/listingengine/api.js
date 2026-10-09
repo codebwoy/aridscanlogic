@@ -145,7 +145,7 @@ export async function runListingPipeline({
   onPhase?.('copywriting')
   let listing = await generateListingCopy({
     product,
-    mode: mode === 'compliance' ? 'complete' : mode,
+    mode: mode === 'compliance' ? 'complete' : mode === 'correct' ? 'correct' : mode,
     existingListing,
     language,
   })

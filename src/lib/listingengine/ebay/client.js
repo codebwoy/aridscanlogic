@@ -133,6 +133,17 @@ export async function fetchEbayPolicies() {
 
 export async function publishListingToEbay(payload) {
   const auth = loadEbayAuth()
+  // Dry-run can skip token if not connected — server also short-circuits
+  if (payload?.dry_run === true && !auth?.access_token && !auth?.refresh_token) {
+    return {
+      ok: true,
+      dry_run: true,
+      sku: payload.sku,
+      offerId: payload.offerId || `dry-offer-${payload.sku}`,
+      listingId: `dry-${Date.now()}`,
+      marketplaceId: payload.marketplaceId || 'EBAY_DE',
+    }
+  }
   const token = await ensureAccessToken()
   const res = await apiFetch('/api/ebay/publish', {
     method: 'POST',
@@ -145,5 +156,100 @@ export async function publishListingToEbay(payload) {
       refresh_token: auth?.refresh_token,
     }),
   })
+  return parseJson(res)
+}
+
+/** Update price/qty on an existing offer (stock sync). */
+export async function reviseEbayOffer(payload) {
+  const auth = loadEbayAuth()
+  if (payload?.dry_run === true && !auth?.access_token && !auth?.refresh_token) {
+    return { ok: true, dry_run: true, ...payload }
+  }
+  const token = await ensureAccessToken()
+  const res = await apiFetch('/api/ebay/revise', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Ebay-User-Token': token,
+    },
+    body: JSON.stringify({
+      ...payload,
+      refresh_token: auth?.refresh_token,
+    }),
+  })
+  return parseJson(res)
+}
+
+async function authHeaders(extra = {}) {
+  const auth = loadEbayAuth()
+  const token = await ensureAccessToken()
+  return {
+    'Content-Type': 'application/json',
+    'X-Ebay-User-Token': token,
+    ...extra,
+  }
+}
+
+export async function fetchEbayOrders({ days = 14, limit = 50 } = {}) {
+  const headers = await authHeaders()
+  const res = await apiFetch(`/api/ebay/orders?days=${days}&limit=${limit}`, { headers })
+  return parseJson(res)
+}
+
+export async function shipEbayOrder(payload) {
+  const auth = loadEbayAuth()
+  if (payload?.dry_run === true && !auth?.access_token && !auth?.refresh_token) {
+    return {
+      ok: true,
+      dry_run: true,
+      orderId: payload.orderId,
+      fulfillmentId: `dry-ful-${Date.now()}`,
+      trackingNumber: payload.trackingNumber,
+      shippingCarrierCode: payload.shippingCarrierCode,
+    }
+  }
+  const headers = await authHeaders()
+  const res = await apiFetch(`/api/ebay/orders/${encodeURIComponent(payload.orderId)}/ship`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      ...payload,
+      refresh_token: auth?.refresh_token,
+    }),
+  })
+  return parseJson(res)
+}
+
+export async function fetchEbayInquiries({ limit = 25, inquiry_status = 'OPEN' } = {}) {
+  const headers = await authHeaders()
+  const q = new URLSearchParams({
+    limit: String(limit),
+    inquiry_status,
+    marketplace_id: 'EBAY_DE',
+  })
+  const res = await apiFetch(`/api/ebay/inquiries?${q}`, { headers })
+  return parseJson(res)
+}
+
+export async function replyEbayInquiry(payload) {
+  const auth = loadEbayAuth()
+  if (payload?.dry_run === true && !auth?.access_token && !auth?.refresh_token) {
+    return { ok: true, dry_run: true, inquiryId: payload.inquiryId }
+  }
+  const headers = await authHeaders()
+  const res = await apiFetch(
+    `/api/ebay/inquiries/${encodeURIComponent(payload.inquiryId)}/reply`,
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        message: payload.message,
+        human_approved: payload.human_approved === true,
+        dry_run: !!payload.dry_run,
+        marketplace_id: 'EBAY_DE',
+        refresh_token: auth?.refresh_token,
+      }),
+    }
+  )
   return parseJson(res)
 }

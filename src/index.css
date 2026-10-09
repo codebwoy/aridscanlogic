@@ -25,14 +25,25 @@
   --nav-mobile-h: 4.75rem;
   --sidebar-w: 0px;
   --content-max: 100%;
+  --touch-min: 44px;
 }
 
-@media (min-width: 48rem) {
+/* Phones in landscape / large phones */
+@media (min-width: 40rem) {
   :root {
-    --content-max: 42rem;
+    --content-max: 100%;
+    --nav-mobile-h: 4.5rem;
   }
 }
 
+/* Tablets portrait */
+@media (min-width: 48rem) {
+  :root {
+    --content-max: 46rem;
+  }
+}
+
+/* Desktop — sidebar + readable content column */
 @media (min-width: 64rem) {
   :root {
     --sidebar-w: 15.5rem;
@@ -54,6 +65,32 @@
 
 * {
   -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Prevent iOS zoom on focus (needs ≥16px); keep desktop density via media */
+input,
+select,
+textarea,
+button {
+  font: inherit;
+  max-width: 100%;
+}
+
+@media (max-width: 63.99rem) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }
 
 /* Single document lock — only .app-main-scroll (suite) / page roots scroll. */
@@ -327,6 +364,102 @@ body {
   display: none;
 }
 
+/* Min touch target (WCAG / Apple HIG) */
+.touch-target {
+  min-height: var(--touch-min);
+  min-width: var(--touch-min);
+}
+
+/* Horizontal tab strips — snap on mobile, comfortable on tablet+ */
+.responsive-tabs {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+}
+
+@media (min-width: 48rem) {
+  .responsive-tabs {
+    scroll-snap-type: none;
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+}
+
+/* Action toolbars: stack on phone, row on tablet+ */
+.stack-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.stack-actions > * {
+  flex: 1 1 auto;
+  min-width: min(100%, 9rem);
+}
+
+@media (min-width: 40rem) {
+  .stack-actions > * {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+}
+
+/* Form / settings field grids */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 40rem) {
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 40rem) {
+  .form-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 64rem) {
+  .form-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Page section title scale */
+.page-title {
+  font-size: 1.25rem;
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+@media (min-width: 40rem) {
+  .page-title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .page-title {
+    font-size: 1.625rem;
+  }
+}
+
+/* Sticky subheaders inside scrollport */
+.sticky-subhead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96) 70%, transparent);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
 /* Responsive grids — mobile-first */
 .grid-cards {
   display: grid;
@@ -357,6 +490,27 @@ body {
   .grid-stats {
     grid-template-columns: repeat(4, 1fr);
     gap: 0.75rem;
+  }
+}
+
+/* Coarse pointer (phones/tablets): larger hit areas */
+@media (pointer: coarse) {
+  .premium-card button,
+  .premium-card a,
+  .stack-actions button {
+    min-height: var(--touch-min);
+  }
+}
+
+/* Landscape phones: slightly tighter bottom nav clearance */
+@media (max-height: 480px) and (orientation: landscape) {
+  :root {
+    --nav-mobile-h: 3.75rem;
+  }
+
+  .app-main-inner {
+    padding-top: 0.25rem;
+    padding-bottom: 0.75rem;
   }
 }
 
