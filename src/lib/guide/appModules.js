@@ -119,13 +119,13 @@ export const APP_GUIDE_MODULES = [
       'ETF4Kids, Freedom24 LP, LIQID guide, WH SelfInvest (external)',
     ],
     tipsDe: [
-      'BizStart Germany: Tab „Tax Vault“ öffnen → oben die große Kachel „BizStart Germany“ tippen (nicht in der unteren Leiste).',
+      'BizStart Germany: Tab „Tax Vault“ → oben violette Kachel „BizStart Germany“ (auch auf dem Setup-Screen vor dem Profil — nicht in der unteren Leiste).',
       'Kleinunternehmer-Status beeinflusst MwSt-Anzeige.',
       'Regelmäßig Backup mit Passphrase erstellen.',
       'Finanz-Lektionen und Zielrechner sind Bildung — keine Kauf-, Broker-, VV- oder Handelsempfehlungen.',
     ],
     tipsEn: [
-      'BizStart Germany: open the Tax Vault tab → tap the large “BizStart Germany” card near the top (not in the bottom bar).',
+      'BizStart Germany: Tax Vault tab → violet “BizStart Germany” card at the top (also on the setup screen before a profile — not in the bottom bar).',
       'Small-business status affects VAT display.',
       'Create encrypted backups regularly.',
       'Finance lessons and the goal lab are educational — not buy, broker, wealth-manager, or trade recommendations.',
@@ -158,12 +158,12 @@ export const APP_GUIDE_MODULES = [
     ],
     workflowDe: [
       'Unten auf „Tax Vault“ tippen (nicht Docs / Settings).',
-      'Oben die violette Kachel „BizStart Germany“ öffnen.',
+      'Oben die violette Kachel „BizStart Germany“ tippen — auch wenn noch „Tax Vault Setup“ angezeigt wird.',
       'Gewerbe-, Listing- oder Bewerbungs-Schritte im BizStart-Menü wählen.',
     ],
     workflowEn: [
       'Tap “Tax Vault” in the bottom bar (not Docs / Settings).',
-      'Open the violet “BizStart Germany” card near the top.',
+      'Tap the violet “BizStart Germany” card at the top — even if you still see “Tax Vault Setup”.',
       'Pick Gewerbe, listing, or application steps in the BizStart menu.',
     ],
     connectsDe: ['Tax Vault', 'Listing Engine', 'Finanz-Bildung (ebenfalls in Tax Vault)'],

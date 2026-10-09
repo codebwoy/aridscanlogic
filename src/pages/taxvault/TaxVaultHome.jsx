@@ -111,17 +111,14 @@ export default function TaxVaultHome() {
     { id: 'categories', label: 'Categories', icon: Tags, onClick: () => setView('categories') },
   ]
 
-  if (!profileReady) {
-    return <TaxVaultProfileSetup onComplete={() => setProfileReady(true)} />
-  }
-
+  // BizStart / Finanz-Bildung must work even before Tax Vault profile is saved
   if (showBizStart) {
     return (
       <BizStartGermany
         onExit={() => setShowBizStart(false)}
         onComplete={() => {
           setShowBizStart(false)
-          load()
+          if (profileReady) load()
         }}
       />
     )
@@ -129,6 +126,16 @@ export default function TaxVaultHome() {
 
   if (showFinanceEdu) {
     return <FinanceEduHub onExit={() => setShowFinanceEdu(false)} />
+  }
+
+  if (!profileReady) {
+    return (
+      <TaxVaultProfileSetup
+        onComplete={() => setProfileReady(true)}
+        onOpenBizStart={() => setShowBizStart(true)}
+        onOpenFinanceEdu={() => setShowFinanceEdu(true)}
+      />
+    )
   }
 
   if (view === 'scan') {

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ChevronRight, Rocket, GraduationCap } from 'lucide-react'
 import { toast } from 'sonner'
 import { saveTaxVaultProfile } from '@/lib/taxvault/profile'
 
@@ -16,7 +17,7 @@ const MONTHS = [
   { v: 7, l: 'July' },
 ]
 
-export default function TaxVaultProfileSetup({ onComplete }) {
+export default function TaxVaultProfileSetup({ onComplete, onOpenBizStart, onOpenFinanceEdu }) {
   const [form, setForm] = useState({
     businessName: '',
     ownerName: '',
@@ -55,12 +56,58 @@ export default function TaxVaultProfileSetup({ onComplete }) {
   )
 
   return (
-    <div className="w-full">
-      <header className="safe-top mb-4">
+    <div className="w-full space-y-4">
+      <header className="safe-top">
         <h1 className="text-2xl font-bold">Tax Vault Setup</h1>
         <p className="text-sm text-slate-400">Business profile for reports & exports</p>
       </header>
+
+      {/* Visible before profile is complete — users were stuck without this */}
+      <div className="space-y-2">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-violet-300/90">
+          Gründung &amp; Wachstum · ohne Profil nutzbar
+        </p>
+        <button
+          type="button"
+          onClick={() => onOpenBizStart?.()}
+          className="flex w-full min-h-[64px] items-center gap-3 rounded-2xl border-2 border-violet-400/50 bg-gradient-to-r from-violet-950/80 via-violet-900/40 to-slate-900/60 px-4 py-3.5 text-left shadow-lg shadow-violet-950/40 transition active:scale-[0.99]"
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-500/25 text-violet-200 ring-1 ring-violet-400/40">
+            <Rocket className="h-6 w-6" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-base font-bold tracking-tight text-white">
+              BizStart Germany
+            </span>
+            <span className="mt-0.5 block text-[11px] leading-snug text-violet-200/80">
+              Gewerbe · Listing · CV — jetzt öffnen (Setup unten optional)
+            </span>
+          </span>
+          <ChevronRight className="h-5 w-5 shrink-0 text-violet-300" aria-hidden />
+        </button>
+        {onOpenFinanceEdu ? (
+          <button
+            type="button"
+            onClick={() => onOpenFinanceEdu()}
+            className="flex w-full min-h-[48px] items-center gap-3 rounded-xl border border-brand-500/35 bg-brand-950/30 px-3.5 py-2.5 text-left transition hover:border-brand-500/55"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-500/15 text-brand-200">
+              <GraduationCap className="h-4 w-4" aria-hidden />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-brand-100">Finanz-Bildung</span>
+              <span className="block text-[11px] text-slate-500">Vermögen · Zielrechner</span>
+            </span>
+            <ChevronRight className="h-4 w-4 shrink-0 text-brand-400/80" aria-hidden />
+          </button>
+        ) : null}
+      </div>
+
       <form onSubmit={submit} className="space-y-3 rounded-2xl bg-slate-800/60 p-5">
+        <p className="text-xs font-semibold text-slate-300">Tax Vault Profil (für Belege & Reports)</p>
+        <p className="text-[11px] text-slate-500">
+          Pflicht nur für Belege, Steuer-Schätzungen und Export. BizStart braucht dieses Formular nicht.
+        </p>
         {field('businessName', 'Business name *')}
         {field('ownerName', 'Owner full name *')}
         {field('taxId', 'Tax ID')}
