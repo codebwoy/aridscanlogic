@@ -111,16 +111,16 @@ const STRINGS = {
       'Ich verstehe, dass dies ein Entwurf zur Vorbereitung ist und vor Einreichung geprüft werden muss.',
     howToTitle: 'So melden Sie ein Gewerbe an',
     howToIntro:
-      'Mit ScanLogic BizStart bereiten Sie Ihre Gewerbeanmeldung (GewA 1) online vor — ohne Papierkram. So funktioniert es:',
+      'Mit ScanLogic BizStart bereiten Sie Ihre Gewerbeanmeldung (GewA 1) vor. Unten: Ablauf, Kosten, Checkliste und wichtige Hinweise (u. a. nach gewerbeanmeldung.de) — keine Rechtsberatung.',
     howTo1Title: 'Online-Formular ausfüllen',
     howTo1:
-      'Sie werden Schritt für Schritt durch den Antrag geführt. Dauer ca. 5–10 Minuten. Persönliche Daten, geplante Tätigkeit und Betriebsadresse bereithalten. Fortschritt wird automatisch gespeichert.',
-    howTo2Title: 'PDF erstellen und einreichen',
+      'Schritt für Schritt in ca. 5–10 Minuten: persönliche Daten, Rechtsform, präzise Tätigkeitsbeschreibung und Betriebsadresse. Fortschritt wird gespeichert. Online und Papier verlangen dieselben Angaben.',
+    howTo2Title: 'PDF erstellen und offiziell einreichen',
     howTo2:
-      'Aus Ihren Angaben erstellen wir ein ausgefülltes GewA-1-Entwurfs-PDF. Drucken Sie es aus oder nutzen Sie das Online-Portal Ihres Gewerbeamts zur Einreichung.',
-    howTo3Title: 'Gewerbeschein erhalten',
+      'Wir erzeugen ein GewA-1-Entwurfs-PDF. Einreichen nur über das Gewerbeamt bzw. das offizielle Online-Portal Ihrer Kommune (z. B. eMeldung, Landesportale) — nicht über private „Sofort-Anmelde“-Seiten.',
+    howTo3Title: 'Gewerbeschein & Folgepflichten',
     howTo3:
-      'Das Gewerbeamt bearbeitet Ihre Anmeldung in der Regel innerhalb von 3–10 Werktagen. Anschließend erhalten Sie Ihren Gewerbeschein.',
+      'Bearbeitung oft in wenigen Werktagen. Danach: Finanzamt (steuerliche Erfassung/ELSTER), ggf. IHK/HWK, Krankenkasse informieren. Amtsgebühr typisch ca. 10–65 €.',
     selectPlaceholder: 'Bitte wählen',
     requiredHint: 'Pflichtfeld',
     importFromProfile: 'Aus BizStart-Profil übernehmen',
@@ -143,7 +143,9 @@ const STRINGS = {
     pdfDownloaded: 'PDF heruntergeladen',
     certSaved: 'Gewerbeschein gespeichert',
     markedSubmitted: 'Als eingereicht markiert',
-    costNote: 'Gebühr beim Gewerbeamt: ca. 10–65 € je nach Kommune.',
+    costNote:
+      'Gebühr beim Gewerbeamt: typisch ca. 10–65 € (Kommune). Online meist gleich teuer — spart Zeit. GmbH/UG: zusätzlich Notar & Handelsregister.',
+    stepTipLabel: 'Hinweis',
   },
   en: {
     wizardTitle: 'Gewerbeanmeldung (GewA 1)',
@@ -232,16 +234,16 @@ const STRINGS = {
       'I understand this is a preparation draft and must be reviewed before official submission.',
     howToTitle: 'How do I register a business?',
     howToIntro:
-      'With ScanLogic BizStart you prepare your GewA 1 application online — no paperwork. Here is how:',
-    howTo1Title: 'Fill out the online form',
+      'ScanLogic BizStart helps you prepare GewA 1. Below: process, costs, checklist and key notes (informed by gewerbeanmeldung.de) — not legal advice.',
+    howTo1Title: 'Fill out the guided form',
     howTo1:
-      'You are guided step by step. Takes about 5–10 minutes. Have personal details, planned business and address ready. Progress is saved automatically.',
-    howTo2Title: 'Create PDF and submit',
+      'Step by step in about 5–10 minutes: personal data, legal form, precise activity description and premises. Progress is saved. Online and paper need the same information.',
+    howTo2Title: 'Create PDF and file officially',
     howTo2:
-      'We generate a pre-filled GewA 1 draft PDF from your data. Print it or use your local trade office online portal.',
-    howTo3Title: 'Receive your Gewerbeschein',
+      'We generate a GewA 1 draft PDF. Submit only via your trade office or official municipal portal (e.g. eMeldung, state portals) — not private “instant registration” sites.',
+    howTo3Title: 'Gewerbeschein & follow-up duties',
     howTo3:
-      'The trade office usually processes within 3–10 working days. You then receive your Gewerbeschein.',
+      'Processing often takes a few working days. Then: tax office questionnaire (often ELSTER), maybe IHK/HWK, notify health insurance. Fee typically about €10–65.',
     selectPlaceholder: 'Please select',
     requiredHint: 'Required',
     importFromProfile: 'Import from BizStart profile',
@@ -264,6 +266,8 @@ const STRINGS = {
     pdfDownloaded: 'PDF downloaded',
     certSaved: 'Gewerbeschein saved',
     markedSubmitted: 'Marked as submitted',
-    costNote: 'Trade office fee: approx. €10–65 depending on municipality.',
+    costNote:
+      'Trade office fee: typically about €10–65 (municipality). Online usually costs the same — saves time. GmbH/UG: add notary & commercial register.',
+    stepTipLabel: 'Tip',
   },
 }

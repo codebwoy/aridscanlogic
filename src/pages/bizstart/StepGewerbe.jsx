@@ -7,6 +7,7 @@ import { getNextStepId } from '@/lib/bizstart/steps'
 import { gewerbeT } from '@/lib/bizstart/gewerbeI18n'
 import { mergeGewerbeForExport, emptyGewerbeDraftPatch } from '@/lib/bizstart/gewerbeDraft'
 import GewerbeFormWizard from '@/components/bizstart/GewerbeFormWizard'
+import GewerbeInfoGuide from '@/components/bizstart/GewerbeInfoGuide'
 
 const CITY_LINKS = {
   '10': 'https://service.berlin.de',
@@ -14,33 +15,6 @@ const CITY_LINKS = {
   '20': 'https://www.hamburg.de/gewerbeanmeldung',
   '60': 'https://frankfurt.de',
   '50': 'https://www.stadt-koeln.de',
-}
-
-function HowToSection({ lang }) {
-  const steps = [
-    { n: '01', title: gewerbeT(lang, 'howTo1Title'), text: gewerbeT(lang, 'howTo1') },
-    { n: '02', title: gewerbeT(lang, 'howTo2Title'), text: gewerbeT(lang, 'howTo2') },
-    { n: '03', title: gewerbeT(lang, 'howTo3Title'), text: gewerbeT(lang, 'howTo3') },
-  ]
-  return (
-    <div className="premium-card mt-6 p-5">
-      <h3 className="text-base font-bold text-brand-200">{gewerbeT(lang, 'howToTitle')}</h3>
-      <p className="mt-2 text-sm text-slate-400">{gewerbeT(lang, 'howToIntro')}</p>
-      <div className="mt-4 space-y-4">
-        {steps.map((s) => (
-          <div key={s.n} className="flex gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-600/30 text-xs font-bold text-brand-200">
-              {s.n}
-            </span>
-            <div>
-              <p className="text-sm font-semibold text-slate-200">{s.title}</p>
-              <p className="mt-1 text-xs leading-relaxed text-slate-400">{s.text}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
 }
 
 export default function StepGewerbe({ lang, formData, onUpdateForm, onUpdateStep, onNext }) {
@@ -90,7 +64,7 @@ export default function StepGewerbe({ lang, formData, onUpdateForm, onUpdateStep
           onChange={onUpdateForm}
           onComplete={handleFormComplete}
         />
-        <HowToSection lang={lang} />
+        <GewerbeInfoGuide lang={lang} />
       </div>
     )
   }
@@ -125,7 +99,7 @@ export default function StepGewerbe({ lang, formData, onUpdateForm, onUpdateStep
         {gewerbeT(lang, 'markSubmitted')} →
       </button>
 
-      <HowToSection lang={lang} />
+      <GewerbeInfoGuide lang={lang} />
     </div>
   )
 }

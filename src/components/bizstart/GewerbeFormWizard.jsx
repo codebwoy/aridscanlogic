@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
-import { CheckCircle2, Camera, Upload, Eraser } from 'lucide-react'
+import { CheckCircle2, Camera, Upload, Eraser, Lightbulb } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   GEWERBE_WIZARD_STEPS,
@@ -11,6 +11,7 @@ import {
   labelForOption,
 } from '@/lib/bizstart/gewerbeConfig'
 import { gewerbeT, gewerbeStepLabel, gewerbeProgressPct } from '@/lib/bizstart/gewerbeI18n'
+import { getStepTip } from '@/lib/bizstart/gewerbeGuide'
 import {
   getGewerbeDraft,
   patchGewerbeDraft,
@@ -741,7 +742,19 @@ export default function GewerbeFormWizard({ lang, formData, onChange, onComplete
           </div>
 
           <h3 className="text-lg font-bold text-brand-950">{gewerbeT(lang, stepTitleKey)}</h3>
-          <p className="mb-4 text-sm text-slate-600">{gewerbeT(lang, stepDescKey)}</p>
+          <p className="mb-3 text-sm text-slate-600">{gewerbeT(lang, stepDescKey)}</p>
+
+          {getStepTip(stepId, lang) ? (
+            <div className="mb-4 flex gap-2.5 rounded-xl border border-violet-200 bg-violet-50/90 px-3 py-2.5 text-violet-950">
+              <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-violet-600" aria-hidden />
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-violet-700">
+                  {gewerbeT(lang, 'stepTipLabel')}
+                </p>
+                <p className="mt-0.5 text-xs leading-relaxed text-violet-900/90">{getStepTip(stepId, lang)}</p>
+              </div>
+            </div>
+          ) : null}
 
           {renderStep()}
 
