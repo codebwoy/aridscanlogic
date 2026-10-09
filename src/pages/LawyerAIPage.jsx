@@ -1,6 +1,18 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, Archive, Scale, FileText, ListChecks, Paperclip, Download, Plus } from 'lucide-react'
+import {
+  Send,
+  Archive,
+  Scale,
+  FileText,
+  ListChecks,
+  Paperclip,
+  Download,
+  Plus,
+  ChevronDown,
+  ChevronUp,
+  MessageSquare,
+} from 'lucide-react'
 import MuellerResponse from '@/components/lawyer/MuellerResponse'
 import { isExecutiveSummary } from '@/components/lawyer/LawyerMarkdown'
 import { toast } from 'sonner'
@@ -72,6 +84,8 @@ export default function LawyerAIPage() {
   const [caseData, setCaseData] = useState(null)
   const [pickerOpen, setPickerOpen] = useState(false)
   const [casesOpen, setCasesOpen] = useState(false)
+  /** On mobile, after the first user message, hide chrome so replies fill the screen. */
+  const [toolsExpanded, setToolsExpanded] = useState(false)
   const conversationId = useRef(`conv-${Date.now()}`)
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
@@ -142,6 +156,7 @@ export default function LawyerAIPage() {
     if (!userText || loading) return
     const lang = language
     setInput('')
+    setToolsExpanded(false)
     requestAnimationFrame(() => {
       if (inputRef.current) {
         inputRef.current.style.height = '52px'
@@ -263,6 +278,7 @@ export default function LawyerAIPage() {
     setActiveCategory(null)
     setDocumentContext(null)
     setCasesOpen(false)
+    setToolsExpanded(false)
     refreshCase()
     toast.success(language === 'en' ? 'New case started' : 'Neuer Fall gestartet')
   }
@@ -364,142 +380,184 @@ export default function LawyerAIPage() {
 
   const showStarters = messages.length <= 1
   const busy = loading || translating
+  const hasUserChat = messages.some((m) => m.role === 'user')
+  /** Mobile: hide guide/tools/categories so the AI answer owns the screen */
+  const chatFocus = hasUserChat && !toolsExpanded
 
   return (
     <div className="flex h-full min-h-0 w-full min-w-0 max-w-full flex-col overflow-hidden">
-      <div className="shrink-0 space-y-2">
-        <header className="safe-top flex flex-wrap items-center justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500/40 to-indigo-700/30 shadow-lg shadow-brand-600/20">
-              <Scale className="h-5 w-5 text-brand-300" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-base font-bold sm:text-lg">Herr Müller</h1>
-              <p className="text-xs text-slate-500">
-                Rechtsanwalt · Steuerberater · Investor
-              </p>
-            </div>
+      {/* Slim always-visible header */}
+      <header className="safe-top shrink-0 flex items-center justify-between gap-2 pb-2">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500/40 to-indigo-700/30">
+            <Scale className="h-5 w-5 text-brand-300" />
           </div>
+          <div className="min-w-0">
+            <h1 className="truncate text-base font-bold">Herr Müller</h1>
+            {chatFocus ? (
+              <p className="truncate text-[10px] text-brand-300/90">
+                {language === 'en' ? 'Chat focus — answers fill the screen' : 'Chat-Fokus — Antworten füllen den Screen'}
+              </p>
+            ) : (
+              <p className="truncate text-xs text-slate-500">Rechtsanwalt · Steuerberater · Investor</p>
+            )}
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
+          {hasUserChat ? (
+            <button
+              type="button"
+              onClick={() => setToolsExpanded((v) => !v)}
+              className="flex items-center gap-1 rounded-xl border border-slate-700 bg-slate-800/80 px-2.5 py-2 text-[10px] font-semibold text-slate-200 lg:hidden"
+              aria-expanded={toolsExpanded}
+            >
+              {toolsExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+              {toolsExpanded
+                ? language === 'en'
+                  ? 'Hide menu'
+                  : 'Menü zu'
+                : language === 'en'
+                  ? 'Menu'
+                  : 'Menü'}
+            </button>
+          ) : null}
           <AiLanguageTabs
             language={language}
             onChange={changeLanguage}
             disabled={busy}
             compact
-            className="order-3 w-full sm:order-none sm:w-auto"
+            className="hidden w-[108px] sm:flex"
           />
-          <div className="flex gap-1">
-            <button
-              type="button"
-              onClick={() => setPickerOpen(true)}
-              className="premium-card rounded-xl p-2.5"
-              title="Attach scanned document"
-            >
-              <Paperclip className="h-5 w-5 text-slate-400" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setArchiveOpen(true)}
-              className="premium-card rounded-xl p-2.5"
-              title="Archive"
-            >
-              <Archive className="h-5 w-5 text-brand-300" />
-            </button>
-          </div>
-        </header>
-
-        <ModuleGuideBanner moduleId="lawyer" title="Lawyer AI" />
-
-        {!llmReady && (
-          <div className="break-words rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
-            {language === 'en'
-              ? 'Demo mode: Herr Müller still answers with sample coaching. Add ANTHROPIC_API_KEY for live AI.'
-              : 'Demo-Modus: Herr Müller antwortet mit Beispiel-Coaching. ANTHROPIC_API_KEY setzen für Live-KI.'}
-          </div>
-        )}
-
-        <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={runExecutiveSummary}
-            disabled={busy}
-            className="flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-brand-300"
+            onClick={() => setPickerOpen(true)}
+            className="premium-card rounded-xl p-2"
+            title="Attach scanned document"
           >
-            <ListChecks className="h-3 w-3" />{' '}
-            {language === 'en' ? 'Executive Summary' : 'Zusammenfassung'}
+            <Paperclip className="h-4 w-4 text-slate-400" />
           </button>
           <button
             type="button"
-            onClick={() => setShowTimeline(!showTimeline)}
-            className="flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-slate-400"
+            onClick={() => setArchiveOpen(true)}
+            className="premium-card rounded-xl p-2"
+            title="Archive"
           >
-            <FileText className="h-3 w-3" /> Timeline
-          </button>
-          <button
-            type="button"
-            onClick={() => exportConversationTranscript(messages, 'Herr_Mueller')}
-            className="flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-slate-400"
-          >
-            <Download className="h-3 w-3" /> Export
-          </button>
-          <button
-            type="button"
-            onClick={startNewCase}
-            className="flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-slate-400"
-          >
-            <Plus className="h-3 w-3" /> {language === 'en' ? 'New case' : 'Neu'}
-          </button>
-          <button
-            type="button"
-            onClick={() => setCasesOpen(!casesOpen)}
-            className="rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-slate-400"
-          >
-            {language === 'en' ? 'Cases' : 'Fälle'}
+            <Archive className="h-4 w-4 text-brand-300" />
           </button>
         </div>
+      </header>
 
-        {casesOpen && (
-          <div className="max-h-28 overflow-y-auto rounded-xl bg-slate-800/80 p-2 text-xs">
-            {listCases().slice(0, 8).map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => {
-                  conversationId.current = c.conversationId
-                  refreshCase()
-                  setCasesOpen(false)
-                  toast.info(c.title)
-                }}
-                className="block w-full truncate rounded-lg px-2 py-1.5 text-left hover:bg-slate-700"
-              >
-                {c.title} · {new Date(c.updatedAt).toLocaleDateString()}
-              </button>
-            ))}
+      {/* Tools / guide / categories — hidden on mobile once chat starts (unless Menu opened) */}
+      <div
+        className={`shrink-0 space-y-2 overflow-hidden transition-[max-height,opacity] duration-300 ${
+          chatFocus
+            ? 'pointer-events-none max-h-0 opacity-0 lg:pointer-events-auto lg:max-h-[none] lg:opacity-100'
+            : 'max-h-[70vh] opacity-100'
+        }`}
+      >
+        <div className="space-y-2 lg:block">
+          <ModuleGuideBanner moduleId="lawyer" title="Lawyer AI" />
+
+          {!llmReady && (
+            <div className="break-words rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
+              {language === 'en'
+                ? 'Demo mode: Herr Müller still answers with sample coaching. Add ANTHROPIC_API_KEY for live AI.'
+                : 'Demo-Modus: Herr Müller antwortet mit Beispiel-Coaching. ANTHROPIC_API_KEY setzen für Live-KI.'}
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={runExecutiveSummary}
+              disabled={busy}
+              className="flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-brand-300"
+            >
+              <ListChecks className="h-3 w-3" />{' '}
+              {language === 'en' ? 'Executive Summary' : 'Zusammenfassung'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowTimeline(!showTimeline)}
+              className="flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-slate-400"
+            >
+              <FileText className="h-3 w-3" /> Timeline
+            </button>
+            <button
+              type="button"
+              onClick={() => exportConversationTranscript(messages, 'Herr_Mueller')}
+              className="flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-slate-400"
+            >
+              <Download className="h-3 w-3" /> Export
+            </button>
+            <button
+              type="button"
+              onClick={startNewCase}
+              className="flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-slate-400"
+            >
+              <Plus className="h-3 w-3" /> {language === 'en' ? 'New case' : 'Neu'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setCasesOpen(!casesOpen)}
+              className="rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-slate-400"
+            >
+              {language === 'en' ? 'Cases' : 'Fälle'}
+            </button>
           </div>
-        )}
 
-        {showTimeline && (
-          <CaseTimeline
-            conversationId={conversationId.current}
-            timeline={caseData?.timeline || []}
-            onUpdate={refreshCase}
+          {casesOpen && (
+            <div className="max-h-28 overflow-y-auto rounded-xl bg-slate-800/80 p-2 text-xs">
+              {listCases().slice(0, 8).map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => {
+                    conversationId.current = c.conversationId
+                    refreshCase()
+                    setCasesOpen(false)
+                    toast.info(c.title)
+                  }}
+                  className="block w-full truncate rounded-lg px-2 py-1.5 text-left hover:bg-slate-700"
+                >
+                  {c.title} · {new Date(c.updatedAt).toLocaleDateString()}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {showTimeline && (
+            <CaseTimeline
+              conversationId={conversationId.current}
+              timeline={caseData?.timeline || []}
+              onUpdate={refreshCase}
+            />
+          )}
+
+          {documentContext && (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[10px] text-amber-200">
+              Document attached for review ({documentContext.length} chars)
+            </div>
+          )}
+
+          <CategoryPicker
+            activeCategory={activeCategory}
+            onSelect={handleCategorySelect}
+            language={language}
           />
-        )}
-
-        {documentContext && (
-          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[10px] text-amber-200">
-            Document attached for review ({documentContext.length} chars)
-          </div>
-        )}
-
-        <CategoryPicker
-          activeCategory={activeCategory}
-          onSelect={handleCategorySelect}
-          language={language}
-        />
+        </div>
       </div>
 
-      {/* Chat transcript — must keep flex space on mobile */}
-      <div className="mt-2 flex min-h-0 min-w-0 flex-1 flex-col space-y-4 overflow-x-hidden overflow-y-auto pb-3 scrollbar-hide">
+      {/* Full-height chat transcript */}
+      <div className="mt-1 flex min-h-0 min-w-0 flex-1 flex-col space-y-3 overflow-x-hidden overflow-y-auto pb-2 scrollbar-hide">
+        {chatFocus && (
+          <div className="flex items-center gap-2 rounded-xl border border-brand-500/25 bg-brand-950/30 px-3 py-2 text-[11px] text-brand-100 lg:hidden">
+            <MessageSquare className="h-3.5 w-3.5 shrink-0 text-brand-300" />
+            {language === 'en'
+              ? 'Reading mode: tap Menu above for areas & tools.'
+              : 'Lesemodus: Menü oben für Bereiche & Tools.'}
+          </div>
+        )}
         {showStarters && (
           <>
             <QuickPrompts
@@ -528,10 +586,12 @@ export default function LawyerAIPage() {
             <div
               className={`chat-bubble overflow-hidden rounded-2xl px-4 py-3 text-sm ${
                 msg.role === 'user'
-                  ? 'max-w-[min(92%,100%)] bg-gradient-to-br from-brand-600 to-brand-700 text-white shadow-lg shadow-brand-900/30 sm:max-w-[85%] lg:max-w-2xl'
+                  ? 'max-w-[min(96%,100%)] bg-gradient-to-br from-brand-600 to-brand-700 text-white shadow-lg shadow-brand-900/30 sm:max-w-[85%] lg:max-w-2xl'
                   : isExecutiveSummary(msg.content)
                     ? 'premium-card-gradient w-full min-w-0 max-w-full border border-brand-500/20'
-                    : 'premium-card max-w-[min(92%,100%)] sm:max-w-[85%] lg:max-w-2xl'
+                    : chatFocus
+                      ? 'premium-card w-full min-w-0 max-w-full sm:max-w-[92%] lg:max-w-2xl'
+                      : 'premium-card max-w-[min(92%,100%)] sm:max-w-[85%] lg:max-w-2xl'
               }`}
             >
               {msg.role === 'user' ? (
@@ -576,13 +636,33 @@ export default function LawyerAIPage() {
       </div>
 
       <div className="min-w-0 shrink-0 border-t border-slate-800/80 bg-slate-950/95 pt-2 backdrop-blur-xl pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-        <AiLanguageBar
-          language={language}
-          onChange={changeLanguage}
-          disabled={busy}
-          compact
-          className="mb-2"
-        />
+        {!chatFocus && (
+          <AiLanguageBar
+            language={language}
+            onChange={changeLanguage}
+            disabled={busy}
+            compact
+            className="mb-2"
+          />
+        )}
+        {chatFocus && (
+          <div className="mb-2 flex items-center justify-between gap-2 sm:hidden">
+            <AiLanguageTabs
+              language={language}
+              onChange={changeLanguage}
+              disabled={busy}
+              compact
+              className="w-[120px]"
+            />
+            <button
+              type="button"
+              onClick={startNewCase}
+              className="rounded-lg bg-slate-800 px-2.5 py-1.5 text-[10px] text-slate-300"
+            >
+              {language === 'en' ? 'New case' : 'Neuer Fall'}
+            </button>
+          </div>
+        )}
         <form
           onSubmit={(e) => {
             e.preventDefault()
@@ -602,7 +682,7 @@ export default function LawyerAIPage() {
               }
             }}
             placeholder={language === 'en' ? 'Your question…' : 'Ihre Frage…'}
-            className="premium-card max-h-[22vh] min-h-[52px] min-w-0 flex-1 resize-none overflow-y-auto rounded-xl px-4 py-3 text-base leading-relaxed outline-none ring-brand-500/50 focus:ring-2 sm:max-h-[30vh] sm:text-sm"
+            className="premium-card max-h-[18vh] min-h-[48px] min-w-0 flex-1 resize-none overflow-y-auto rounded-xl px-4 py-3 text-base leading-relaxed outline-none ring-brand-500/50 focus:ring-2 sm:max-h-[28vh] sm:text-sm"
             disabled={busy}
             aria-label={language === 'en' ? 'Your question' : 'Ihre Frage'}
           />
