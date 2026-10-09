@@ -33,7 +33,9 @@ alwaysApply: false
 | `LawyerAIArchive.jsx` | History — use **SafeMarkdown** |
 | `CaseTimeline.jsx` | Per-case summaries |
 | `ContractQuickDraft.jsx` | Short contract snippets |
-| `MessageActions.jsx` | Copy/save actions |
+| `MessageActions.jsx` | One-click **Speichern** → `SavedLawyerMessage`; delete; cache badge |
+| `savedResponses.js` | `findSavedResponse` (exact prompt → skip API), `saveLawyerResponse`, `deleteSavedResponse` |
+| Archive UI | Header Archive icon → browse / load / delete saved answers |
 
 ## Markdown
 

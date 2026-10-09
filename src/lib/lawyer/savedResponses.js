@@ -68,3 +68,8 @@ export async function isResponseSaved(userPrompt) {
   const match = await findSavedResponse(userPrompt)
   return !!match
 }
+
+export async function deleteSavedResponse(id) {
+  if (!id) return
+  return appApi.entities.SavedLawyerMessage.delete(id)
+}

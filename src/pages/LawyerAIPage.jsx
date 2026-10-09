@@ -458,7 +458,8 @@ export default function LawyerAIPage() {
             type="button"
             onClick={() => setArchiveOpen(true)}
             className="premium-card rounded-xl p-2"
-            title="Archive"
+            title={language === 'en' ? 'Saved answers (reuse free)' : 'Gespeicherte Antworten'}
+            aria-label={language === 'en' ? 'Open saved answers' : 'Gespeicherte Antworten öffnen'}
           >
             <Archive className="h-4 w-4 text-brand-300" />
           </button>
@@ -630,6 +631,24 @@ export default function LawyerAIPage() {
                     conversationTitle="Herr Müller Beratung"
                     categoryId={activeCategory}
                     fromArchive={!!msg.fromArchive}
+                    savedId={msg.savedId || null}
+                    language={language}
+                    onSaved={(id) => {
+                      setMessages((m) =>
+                        m.map((row, idx) =>
+                          idx === i ? { ...row, fromArchive: true, savedId: id } : row
+                        )
+                      )
+                    }}
+                    onDeleted={() => {
+                      setMessages((m) =>
+                        m.map((row, idx) =>
+                          idx === i
+                            ? { ...row, fromArchive: false, savedId: undefined }
+                            : row
+                        )
+                      )
+                    }}
                     onTimelineUpdate={refreshCase}
                   />
                 </>
