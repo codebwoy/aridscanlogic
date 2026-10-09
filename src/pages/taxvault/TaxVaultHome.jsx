@@ -305,6 +305,45 @@ export default function TaxVaultHome() {
         </button>
       </div>
 
+      {/* BizStart — high on page so mobile users find it without scrolling past taxes/tools */}
+      <div className="mb-4 space-y-2">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-violet-300/90">
+          Gründung &amp; Wachstum
+        </p>
+        <button
+          type="button"
+          onClick={() => setShowBizStart(true)}
+          className="flex w-full min-h-[64px] items-center gap-3 rounded-2xl border-2 border-violet-400/50 bg-gradient-to-r from-violet-950/80 via-violet-900/40 to-slate-900/60 px-4 py-3.5 text-left shadow-lg shadow-violet-950/40 transition active:scale-[0.99]"
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-500/25 text-violet-200 ring-1 ring-violet-400/40">
+            <Rocket className="h-6 w-6" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-base font-bold tracking-tight text-white">
+              BizStart Germany
+            </span>
+            <span className="mt-0.5 block text-[11px] leading-snug text-violet-200/80">
+              Gewerbe · Listing Engine · CV — hier öffnen (nicht in der unteren Leiste)
+            </span>
+          </span>
+          <ChevronRight className="h-5 w-5 shrink-0 text-violet-300" aria-hidden />
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowFinanceEdu(true)}
+          className="flex w-full min-h-[48px] items-center gap-3 rounded-xl border border-brand-500/35 bg-brand-950/30 px-3.5 py-2.5 text-left transition hover:border-brand-500/55"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-500/15 text-brand-200">
+            <GraduationCap className="h-4 w-4" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-brand-100">Finanz-Bildung</span>
+            <span className="block text-[11px] text-slate-500">Vermögen · Zielrechner</span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-brand-400/80" aria-hidden />
+        </button>
+      </div>
+
       <PremiumCard className="mb-4 p-5">
         <p className="text-xs uppercase tracking-wide text-slate-400">Total expenses</p>
         <p className="mt-1 text-3xl font-bold text-white">
@@ -505,36 +544,6 @@ export default function TaxVaultHome() {
             )
           })}
         </div>
-      </div>
-
-      {/* Growth modules */}
-      <div className="mb-5 grid gap-2 sm:grid-cols-2">
-        <button
-          type="button"
-          onClick={() => setShowBizStart(true)}
-          className="flex min-h-[56px] items-center gap-3 rounded-xl border border-slate-700/70 bg-slate-800/40 px-4 py-3 text-left transition hover:border-slate-500 hover:bg-slate-800/70"
-        >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-500/15 text-violet-300">
-            <Rocket className="h-4 w-4" />
-          </span>
-          <span>
-            <span className="block text-sm font-semibold text-slate-100">BizStart Germany</span>
-            <span className="block text-[11px] text-slate-500">Gewerbe · Listing · CV</span>
-          </span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowFinanceEdu(true)}
-          className="flex min-h-[56px] items-center gap-3 rounded-xl border border-brand-500/30 bg-brand-950/25 px-4 py-3 text-left transition hover:border-brand-500/50 hover:bg-brand-950/40"
-        >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-500/15 text-brand-200">
-            <GraduationCap className="h-4 w-4" />
-          </span>
-          <span>
-            <span className="block text-sm font-semibold text-brand-100">Finanz-Bildung</span>
-            <span className="block text-[11px] text-slate-500">Vermögen · Zielrechner</span>
-          </span>
-        </button>
       </div>
 
       {/* Recent receipts */}

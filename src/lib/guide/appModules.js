@@ -6,6 +6,7 @@ import {
   Settings,
   Scale,
   ScanLine,
+  Rocket,
 } from 'lucide-react'
 
 /** Canonical guide for every main suite area (matches sidebar / bottom nav). */
@@ -118,14 +119,62 @@ export const APP_GUIDE_MODULES = [
       'ETF4Kids, Freedom24 LP, LIQID guide, WH SelfInvest (external)',
     ],
     tipsDe: [
+      'BizStart Germany: Tab „Tax Vault“ öffnen → oben die große Kachel „BizStart Germany“ tippen (nicht in der unteren Leiste).',
       'Kleinunternehmer-Status beeinflusst MwSt-Anzeige.',
       'Regelmäßig Backup mit Passphrase erstellen.',
       'Finanz-Lektionen und Zielrechner sind Bildung — keine Kauf-, Broker-, VV- oder Handelsempfehlungen.',
     ],
     tipsEn: [
+      'BizStart Germany: open the Tax Vault tab → tap the large “BizStart Germany” card near the top (not in the bottom bar).',
       'Small-business status affects VAT display.',
       'Create encrypted backups regularly.',
       'Finance lessons and the goal lab are educational — not buy, broker, wealth-manager, or trade recommendations.',
+    ],
+  },
+  {
+    id: 'bizstart',
+    icon: Rocket,
+    titleDe: 'BizStart Germany',
+    titleEn: 'BizStart Germany',
+    taglineDe: 'Gewerbe · Listing · Bewerbung — unter Tax Vault',
+    taglineEn: 'Trade · listing · applications — inside Tax Vault',
+    summaryDe:
+      'BizStart Germany ist kein eigener Tab in der unteren Leiste. Öffnen Sie Tax Vault und tippen Sie oben auf „BizStart Germany“. Dort finden Sie GewA-1, Businessplan, Lebenslauf/Anschreiben, TailorCV, Listing Engine (eBay.de), Krankenkasse und Website-Rechtliches.',
+    summaryEn:
+      'BizStart Germany is not a bottom-nav tab. Open Tax Vault and tap “BizStart Germany” near the top. There you get GewA 1, business plan, CV/cover letter, TailorCV, Listing Engine (eBay.de), Krankenkasse, and website legal pages.',
+    featuresDe: [
+      'Gewerbeanmeldung (GewA 1) mit Assistent + Infoguide',
+      'Businessplan, Lebenslauf & DIN-5008-Anschreiben',
+      'TailorCV für Stellenanzeigen',
+      'Listing Engine: Katalog → eBay, Orders, CS, Konto-Ops',
+      'Krankenkasse- & Website-Rechtsschritte',
+    ],
+    featuresEn: [
+      'Trade registration (GewA 1) wizard + info guide',
+      'Business plan, CV & DIN 5008 cover letter',
+      'TailorCV for job ads',
+      'Listing Engine: catalog → eBay, orders, CS, account ops',
+      'Krankenkasse & website legal steps',
+    ],
+    workflowDe: [
+      'Unten auf „Tax Vault“ tippen (nicht Docs / Settings).',
+      'Oben die violette Kachel „BizStart Germany“ öffnen.',
+      'Gewerbe-, Listing- oder Bewerbungs-Schritte im BizStart-Menü wählen.',
+    ],
+    workflowEn: [
+      'Tap “Tax Vault” in the bottom bar (not Docs / Settings).',
+      'Open the violet “BizStart Germany” card near the top.',
+      'Pick Gewerbe, listing, or application steps in the BizStart menu.',
+    ],
+    connectsDe: ['Tax Vault', 'Listing Engine', 'Finanz-Bildung (ebenfalls in Tax Vault)'],
+    connectsEn: ['Tax Vault', 'Listing Engine', 'Finance education (also in Tax Vault)'],
+    tipsDe: [
+      'Auf dem Handy: Tax Vault → nach dem Jahreswähler sofort BizStart sehen — nicht nach unten scrollen müssen.',
+      'Im App-Guide gibt es jetzt einen eigenen Eintrag „BizStart Germany“.',
+    ],
+    tipsEn: [
+      'On mobile: Tax Vault → BizStart appears right after the tax-year control — no long scroll.',
+      'The App Guide now has its own “BizStart Germany” entry.',
     ],
   },
   {

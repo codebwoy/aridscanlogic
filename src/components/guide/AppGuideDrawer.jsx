@@ -10,7 +10,7 @@ import { APP_GUIDE_MODULES, formatModule } from '@/lib/guide/appModules'
 import { askAppGuide } from '@/lib/guide/invokeAppGuide'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
 
-const NAV_IDS = ['docs', 'tax', 'docdraft', 'contracts', 'lawyer', 'settings']
+const NAV_IDS = ['docs', 'tax', 'bizstart', 'docdraft', 'contracts', 'lawyer', 'settings']
 
 export default function AppGuideDrawer() {
   const { open, closeGuide, focusModule } = useGuide()

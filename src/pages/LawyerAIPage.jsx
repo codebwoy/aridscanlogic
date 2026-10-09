@@ -74,6 +74,7 @@ export default function LawyerAIPage() {
   const [casesOpen, setCasesOpen] = useState(false)
   const conversationId = useRef(`conv-${Date.now()}`)
   const bottomRef = useRef(null)
+  const inputRef = useRef(null)
   const [llmReady, setLlmReady] = useState(isAnthropicConfigured())
 
   const aiConfigError =
@@ -122,11 +123,28 @@ export default function LawyerAIPage() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  const resizeComposer = useCallback(() => {
+    const el = inputRef.current
+    if (!el) return
+    el.style.height = '0px'
+    const next = Math.min(el.scrollHeight, Math.round(window.innerHeight * 0.4))
+    el.style.height = `${Math.max(next, 52)}px`
+  }, [])
+
+  useEffect(() => {
+    resizeComposer()
+  }, [input, resizeComposer])
+
   const send = async (text, categoryId = activeCategory, { skipCache = false } = {}) => {
     const userText = (text || input).trim()
     if (!userText || loading) return
     const lang = language
     setInput('')
+    requestAnimationFrame(() => {
+      if (inputRef.current) {
+        inputRef.current.style.height = '52px'
+      }
+    })
     setMessages((m) => [...m, { role: 'user', content: userText }])
     if (categoryId) setCaseCategory(conversationId.current, categoryId)
 
@@ -544,7 +562,7 @@ export default function LawyerAIPage() {
         <div ref={bottomRef} />
       </div>
 
-      <div className="safe-bottom min-w-0 shrink-0 border-t border-slate-800/80 bg-slate-950/95 pt-2 backdrop-blur-xl">
+      <div className="min-w-0 shrink-0 border-t border-slate-800/80 bg-slate-950/95 pt-2 backdrop-blur-xl pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <AiLanguageBar
           language={language}
           onChange={changeLanguage}
@@ -556,23 +574,38 @@ export default function LawyerAIPage() {
             e.preventDefault()
             send()
           }}
-          className="flex min-w-0 gap-2 pb-1"
+          className="flex min-w-0 items-end gap-2 pr-14 lg:pr-0"
         >
-          <input
+          <textarea
+            ref={inputRef}
+            rows={2}
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                send()
+              }
+            }}
             placeholder={language === 'en' ? 'Your question…' : 'Ihre Frage…'}
-            className="premium-card min-w-0 flex-1 rounded-xl px-4 py-3 text-sm outline-none ring-brand-500/50 focus:ring-2"
+            className="premium-card max-h-[40vh] min-h-[52px] min-w-0 flex-1 resize-none overflow-y-auto rounded-xl px-4 py-3 text-base leading-relaxed outline-none ring-brand-500/50 focus:ring-2 sm:text-sm"
             disabled={busy}
+            aria-label={language === 'en' ? 'Your question' : 'Ihre Frage'}
           />
           <button
             type="submit"
             disabled={busy || !input.trim()}
-            className="btn-primary flex h-12 w-12 items-center justify-center rounded-xl disabled:opacity-50"
+            className="btn-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-xl disabled:opacity-50"
+            aria-label={language === 'en' ? 'Send' : 'Senden'}
           >
             <Send className="h-5 w-5" />
           </button>
         </form>
+        <p className="mt-1.5 text-[10px] text-slate-600 lg:hidden">
+          {language === 'en'
+            ? 'Enter to send · Shift+Enter for a new line'
+            : 'Enter senden · Shift+Enter neue Zeile'}
+        </p>
       </div>
 
       <DocumentPicker
