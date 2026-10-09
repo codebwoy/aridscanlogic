@@ -127,7 +127,9 @@ export default function LawyerAIPage() {
     const el = inputRef.current
     if (!el) return
     el.style.height = '0px'
-    const next = Math.min(el.scrollHeight, Math.round(window.innerHeight * 0.4))
+    // Cap height so the chat transcript stays visible on mobile
+    const cap = Math.round(window.innerHeight * 0.22)
+    const next = Math.min(el.scrollHeight, Math.max(cap, 72))
     el.style.height = `${Math.max(next, 52)}px`
   }, [])
 
@@ -177,7 +179,7 @@ export default function LawyerAIPage() {
 
     setLoading(true)
     try {
-      const { text: reply } = await invokeHerrMueller({
+      const { text: reply, demo } = await invokeHerrMueller({
         userMessage: userText,
         messages: [...messages, { role: 'user', content: userText }],
         categoryId,
@@ -185,6 +187,13 @@ export default function LawyerAIPage() {
         language: lang,
       })
       setMessages((m) => [...m, { role: 'assistant', content: reply, language: lang }])
+      if (demo) {
+        toast.message(
+          lang === 'en'
+            ? 'Demo reply — set ANTHROPIC_API_KEY for live Herr Müller'
+            : 'Demo-Antwort — ANTHROPIC_API_KEY setzen für Live-Herr Müller'
+        )
+      }
       if (documentContext) setDocumentContext(null)
       refreshCase()
     } catch (err) {
@@ -357,154 +366,158 @@ export default function LawyerAIPage() {
   const busy = loading || translating
 
   return (
-    <div className="flex h-full min-h-0 w-full min-w-0 max-w-full flex-col overflow-x-hidden">
-      <header className="safe-top mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500/40 to-indigo-700/30 shadow-lg shadow-brand-600/20">
-            <Scale className="h-5 w-5 text-brand-300" />
+    <div className="flex h-full min-h-0 w-full min-w-0 max-w-full flex-col overflow-hidden">
+      <div className="shrink-0 space-y-2">
+        <header className="safe-top flex flex-wrap items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500/40 to-indigo-700/30 shadow-lg shadow-brand-600/20">
+              <Scale className="h-5 w-5 text-brand-300" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-base font-bold sm:text-lg">Herr Müller</h1>
+              <p className="text-xs text-slate-500">
+                Rechtsanwalt · Steuerberater · Investor
+              </p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <h1 className="text-base font-bold sm:text-lg">Herr Müller</h1>
-            <p className="text-xs text-slate-500">
-              Rechtsanwalt · Steuerberater · Investor
-            </p>
+          <AiLanguageTabs
+            language={language}
+            onChange={changeLanguage}
+            disabled={busy}
+            compact
+            className="order-3 w-full sm:order-none sm:w-auto"
+          />
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={() => setPickerOpen(true)}
+              className="premium-card rounded-xl p-2.5"
+              title="Attach scanned document"
+            >
+              <Paperclip className="h-5 w-5 text-slate-400" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setArchiveOpen(true)}
+              className="premium-card rounded-xl p-2.5"
+              title="Archive"
+            >
+              <Archive className="h-5 w-5 text-brand-300" />
+            </button>
           </div>
+        </header>
+
+        <ModuleGuideBanner moduleId="lawyer" title="Lawyer AI" />
+
+        {!llmReady && (
+          <div className="break-words rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
+            {language === 'en'
+              ? 'Demo mode: Herr Müller still answers with sample coaching. Add ANTHROPIC_API_KEY for live AI.'
+              : 'Demo-Modus: Herr Müller antwortet mit Beispiel-Coaching. ANTHROPIC_API_KEY setzen für Live-KI.'}
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={runExecutiveSummary}
+            disabled={busy}
+            className="flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-brand-300"
+          >
+            <ListChecks className="h-3 w-3" />{' '}
+            {language === 'en' ? 'Executive Summary' : 'Zusammenfassung'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowTimeline(!showTimeline)}
+            className="flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-slate-400"
+          >
+            <FileText className="h-3 w-3" /> Timeline
+          </button>
+          <button
+            type="button"
+            onClick={() => exportConversationTranscript(messages, 'Herr_Mueller')}
+            className="flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-slate-400"
+          >
+            <Download className="h-3 w-3" /> Export
+          </button>
+          <button
+            type="button"
+            onClick={startNewCase}
+            className="flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-slate-400"
+          >
+            <Plus className="h-3 w-3" /> {language === 'en' ? 'New case' : 'Neu'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setCasesOpen(!casesOpen)}
+            className="rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-slate-400"
+          >
+            {language === 'en' ? 'Cases' : 'Fälle'}
+          </button>
         </div>
-        <AiLanguageTabs
+
+        {casesOpen && (
+          <div className="max-h-28 overflow-y-auto rounded-xl bg-slate-800/80 p-2 text-xs">
+            {listCases().slice(0, 8).map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => {
+                  conversationId.current = c.conversationId
+                  refreshCase()
+                  setCasesOpen(false)
+                  toast.info(c.title)
+                }}
+                className="block w-full truncate rounded-lg px-2 py-1.5 text-left hover:bg-slate-700"
+              >
+                {c.title} · {new Date(c.updatedAt).toLocaleDateString()}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {showTimeline && (
+          <CaseTimeline
+            conversationId={conversationId.current}
+            timeline={caseData?.timeline || []}
+            onUpdate={refreshCase}
+          />
+        )}
+
+        {documentContext && (
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[10px] text-amber-200">
+            Document attached for review ({documentContext.length} chars)
+          </div>
+        )}
+
+        <CategoryPicker
+          activeCategory={activeCategory}
+          onSelect={handleCategorySelect}
           language={language}
-          onChange={changeLanguage}
-          disabled={busy}
-          compact
-          className="order-3 w-full sm:order-none sm:w-auto"
         />
-        <div className="flex gap-1">
-          <button
-            type="button"
-            onClick={() => setPickerOpen(true)}
-            className="premium-card rounded-xl p-2.5"
-            title="Attach scanned document"
-          >
-            <Paperclip className="h-5 w-5 text-slate-400" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setArchiveOpen(true)}
-            className="premium-card rounded-xl p-2.5"
-            title="Archive"
-          >
-            <Archive className="h-5 w-5 text-brand-300" />
-          </button>
-        </div>
-      </header>
-
-      <ModuleGuideBanner moduleId="lawyer" title="Lawyer AI" />
-
-      {!llmReady && (
-        <div className="mb-3 break-words rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
-          {aiConfigError}
-        </div>
-      )}
-
-      <div className="mb-2 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={runExecutiveSummary}
-          disabled={busy}
-          className="flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-brand-300"
-        >
-          <ListChecks className="h-3 w-3" />{' '}
-          {language === 'en' ? 'Executive Summary' : 'Zusammenfassung'}
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowTimeline(!showTimeline)}
-          className="flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-slate-400"
-        >
-          <FileText className="h-3 w-3" /> Timeline
-        </button>
-        <button
-          type="button"
-          onClick={() => exportConversationTranscript(messages, 'Herr_Mueller')}
-          className="flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-slate-400"
-        >
-          <Download className="h-3 w-3" /> Export
-        </button>
-        <button
-          type="button"
-          onClick={startNewCase}
-          className="flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-slate-400"
-        >
-          <Plus className="h-3 w-3" /> {language === 'en' ? 'New case' : 'Neu'}
-        </button>
-        <button
-          type="button"
-          onClick={() => setCasesOpen(!casesOpen)}
-          className="rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] text-slate-400"
-        >
-          {language === 'en' ? 'Cases' : 'Fälle'}
-        </button>
       </div>
 
-      {casesOpen && (
-        <div className="mb-2 max-h-32 overflow-y-auto rounded-xl bg-slate-800/80 p-2 text-xs">
-          {listCases().slice(0, 8).map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => {
-                conversationId.current = c.conversationId
-                refreshCase()
-                setCasesOpen(false)
-                toast.info(c.title)
+      {/* Chat transcript — must keep flex space on mobile */}
+      <div className="mt-2 flex min-h-0 min-w-0 flex-1 flex-col space-y-4 overflow-x-hidden overflow-y-auto pb-3 scrollbar-hide">
+        {showStarters && (
+          <>
+            <QuickPrompts
+              language={language}
+              onSelect={(prompt, catId) => {
+                if (catId) setActiveCategory(catId)
+                send(prompt, catId)
               }}
-              className="block w-full truncate rounded-lg px-2 py-1.5 text-left hover:bg-slate-700"
-            >
-              {c.title} · {new Date(c.updatedAt).toLocaleDateString()}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {showTimeline && (
-        <CaseTimeline
-          conversationId={conversationId.current}
-          timeline={caseData?.timeline || []}
-          onUpdate={refreshCase}
-        />
-      )}
-
-      {documentContext && (
-        <div className="mb-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[10px] text-amber-200">
-          Document attached for review ({documentContext.length} chars)
-        </div>
-      )}
-
-      <CategoryPicker
-        activeCategory={activeCategory}
-        onSelect={handleCategorySelect}
-        language={language}
-      />
-
-      {showStarters && (
-        <>
-          <QuickPrompts
-            language={language}
-            onSelect={(prompt, catId) => {
-              if (catId) setActiveCategory(catId)
-              send(prompt, catId)
-            }}
-          />
-          <ContractQuickDraft
-            language={language}
-            onSelect={(prompt) => {
-              setActiveCategory('contracts')
-              send(prompt, 'contracts')
-            }}
-          />
-        </>
-      )}
-
-      <div className="flex min-w-0 flex-1 flex-col space-y-4 overflow-x-hidden overflow-y-auto pb-4 scrollbar-hide">
+            />
+            <ContractQuickDraft
+              language={language}
+              onSelect={(prompt) => {
+                setActiveCategory('contracts')
+                send(prompt, 'contracts')
+              }}
+            />
+          </>
+        )}
         {messages.map((msg, i) => (
           <motion.div
             key={i}
@@ -562,11 +575,12 @@ export default function LawyerAIPage() {
         <div ref={bottomRef} />
       </div>
 
-      <div className="min-w-0 shrink-0 border-t border-slate-800/80 bg-slate-950/95 pt-2 backdrop-blur-xl pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="min-w-0 shrink-0 border-t border-slate-800/80 bg-slate-950/95 pt-2 backdrop-blur-xl pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         <AiLanguageBar
           language={language}
           onChange={changeLanguage}
           disabled={busy}
+          compact
           className="mb-2"
         />
         <form
@@ -588,7 +602,7 @@ export default function LawyerAIPage() {
               }
             }}
             placeholder={language === 'en' ? 'Your question…' : 'Ihre Frage…'}
-            className="premium-card max-h-[40vh] min-h-[52px] min-w-0 flex-1 resize-none overflow-y-auto rounded-xl px-4 py-3 text-base leading-relaxed outline-none ring-brand-500/50 focus:ring-2 sm:text-sm"
+            className="premium-card max-h-[22vh] min-h-[52px] min-w-0 flex-1 resize-none overflow-y-auto rounded-xl px-4 py-3 text-base leading-relaxed outline-none ring-brand-500/50 focus:ring-2 sm:max-h-[30vh] sm:text-sm"
             disabled={busy}
             aria-label={language === 'en' ? 'Your question' : 'Ihre Frage'}
           />
@@ -601,11 +615,6 @@ export default function LawyerAIPage() {
             <Send className="h-5 w-5" />
           </button>
         </form>
-        <p className="mt-1.5 text-[10px] text-slate-600 lg:hidden">
-          {language === 'en'
-            ? 'Enter to send · Shift+Enter for a new line'
-            : 'Enter senden · Shift+Enter neue Zeile'}
-        </p>
       </div>
 
       <DocumentPicker

@@ -82,16 +82,24 @@ export default function Dashboard({ onOpenScanVault }) {
           >
             <Suspense fallback={<TabFallback />}>
               <ErrorBoundary compact allowReset title="Modul-Fehler">
-              {activeTab === 'docs' ? (
-                <DocsPage
-                  onOpenTaxVault={() => changeTab('tax')}
-                  onOpenDocDraft={() => changeTab('docdraft')}
-                />
-              ) : activeTab === 'settings' ? (
-                <SettingsPage onOpenScanVault={onOpenScanVault} />
-              ) : (
-                <ActivePage />
-              )}
+                <div
+                  className={
+                    isLawyer
+                      ? 'flex min-h-0 min-w-0 w-full flex-1 flex-col'
+                      : 'min-w-0 w-full'
+                  }
+                >
+                  {activeTab === 'docs' ? (
+                    <DocsPage
+                      onOpenTaxVault={() => changeTab('tax')}
+                      onOpenDocDraft={() => changeTab('docdraft')}
+                    />
+                  ) : activeTab === 'settings' ? (
+                    <SettingsPage onOpenScanVault={onOpenScanVault} />
+                  ) : (
+                    <ActivePage />
+                  )}
+                </div>
               </ErrorBoundary>
             </Suspense>
           </motion.div>

@@ -5,6 +5,7 @@ import {
 } from '@/lib/anthropic'
 import { buildHerrMuellerSystemPrompt, detectLanguage } from './herrMuellerPrompt'
 import { buildExecutiveSummaryPrompt } from './executiveSummaryPrompt'
+import { buildMuellerDemoResponse, executiveSummaryDemo } from './demoResponses'
 
 export async function invokeHerrMueller({
   userMessage,
@@ -29,7 +30,13 @@ export async function invokeHerrMueller({
 
   await refreshLlmStatus()
   if (!isAnthropicConfigured()) {
-    throw new Error('ANTHROPIC_NOT_CONFIGURED')
+    // Keep Herr Müller usable without a key (demo coaching, not live Claude)
+    const text = buildMuellerDemoResponse(
+      [userMessage, documentContext || '', categoryId || ''].join('\n'),
+      userMessage,
+      lang
+    )
+    return { text, language: lang, demo: true }
   }
 
   const text = await anthropicChat({
@@ -58,7 +65,8 @@ export async function generateExecutiveSummary(messages, language = 'de') {
 
   await refreshLlmStatus()
   if (!isAnthropicConfigured()) {
-    throw new Error('ANTHROPIC_NOT_CONFIGURED')
+    const lastUser = [...messages].reverse().find((m) => m.role === 'user')
+    return executiveSummaryDemo(lang, lastUser?.content || '')
   }
 
   const text = await anthropicChat({

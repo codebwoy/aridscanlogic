@@ -20,6 +20,7 @@ export default function AiLanguageBar({
         onChange={onChange}
         disabled={disabled}
         compact={compact}
+        className={compact ? 'w-full' : undefined}
       />
     </div>
   )
