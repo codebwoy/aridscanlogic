@@ -6,22 +6,25 @@
 
 import { KDP_JUMPSTART_CONFIG } from '@/lib/bizstart/amazon/kdpJumpstartConfig'
 import { REEDSY_LEARNING_CONFIG } from '@/lib/bizstart/amazon/reedsyLearningConfig'
+import { KDP_LISTING_OPTIMIZE_CONFIG } from '@/lib/bizstart/amazon/kdpListingOptimizeConfig'
 
 export const KDP_RESOURCES_CONFIG = {
   lastVerified: '2026-04-11',
   sourceLabel:
-    'Owner-curated path — Amazon KDP Jumpstart + Reedsy Self-Publishing 101 curricula first, then free/paid third parties (ratings & sales claims are source notes)',
+    'Owner-curated path — Amazon KDP Jumpstart + Reedsy Self-Publishing 101 + post-launch listing optimisation, then free/paid third parties (ratings & sales claims are source notes)',
   /** Official Jumpstart curriculum (rich learning centre core) */
   jumpstart: KDP_JUMPSTART_CONFIG,
   /** Reedsy Learning — Self-Publishing 101 + related free courses */
   reedsy: REEDSY_LEARNING_CONFIG,
+  /** Post-launch: keywords, A+, reviews, ads, social */
+  listingOptimize: KDP_LISTING_OPTIMIZE_CONFIG,
   independenceDisclaimer: {
     en: 'Not affiliated with Amazon or any course vendor. Ratings, “verified” counts, and publisher sales claims are owner/source notes — re-check on the platform before buying. Treat upsells critically. Official Amazon pages always win when wording differs.',
     de: 'Nicht mit Amazon oder Kursanbietern verbunden. Ratings, „verified“-Zahlen und Verlags-Verkaufsansprüche sind Quellen-Notizen — vor Kauf auf der Plattform prüfen. Upsells kritisch sehen. Offizielle Amazon-Seiten gelten bei abweichendem Wortlaut.',
   },
   recommendation: {
-    en: 'Start free: (1) KDP Jumpstart curriculum in this panel (2) enroll in Reedsy’s Self-Publishing 101 (10 email days) and use the study modules here (3) Picture Book course next. Then Kindlepreneur. Paid Udemy only after a draft concept and demand check.',
-    de: 'Zuerst kostenlos: (1) KDP-Jumpstart-Curriculum in diesem Panel (2) Reedsy Self-Publishing 101 (10 E-Mail-Tage) + Studienmodule hier (3) danach Bilderbuch-Kurs. Dann Kindlepreneur. Bezahlte Udemy erst nach Konzept und Nachfrage-Check.',
+    en: 'Start free: (1) KDP Jumpstart (2) Reedsy Self-Publishing 101 study modules (3) Picture Book course. After Live: use the listing optimisation playbook (keywords → A+ → reviews → short ads). Paid Udemy only after a draft concept and demand check.',
+    de: 'Zuerst kostenlos: (1) KDP Jumpstart (2) Reedsy Self-Publishing-101-Studienmodule (3) Bilderbuch-Kurs. Nach Live: Listing-Optimierungs-Playbook (Keywords → A+ → Reviews → kurze Ads). Bezahlte Udemy erst nach Konzept und Nachfrage-Check.',
   },
   /** Part 1 — paid courses (ratings are as-of source notes) */
   paidCourses: [
@@ -376,6 +379,13 @@ export const KDP_RESOURCES_CONFIG = {
       detail: {
         en: 'Launch checklist, author platform, email list — Amazon Ads only after a proven product',
         de: 'Launch-Checkliste, Autorenplattform, E-Mail-Liste — Amazon Ads erst nach bewährtem Produkt',
+      },
+    },
+    {
+      label: { en: 'Post-launch listing fix', de: 'Listing nach dem Launch' },
+      detail: {
+        en: 'Keywords, categories, subtitle, cover tweaks, A+ modules, review diagnosis, short ads + social',
+        de: 'Keywords, Kategorien, Untertitel, Cover-Feinschliff, A+-Module, Review-Diagnose, kurze Ads + Social',
       },
     },
   ],

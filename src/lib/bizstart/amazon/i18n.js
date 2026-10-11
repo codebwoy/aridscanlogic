@@ -94,7 +94,7 @@ export const AMAZON_STRINGS = {
       'Open the KDP requirements playbook for the full Germany checklist (account, tax ⚠, files, picture-book tech).',
     kdpResourcesTitle: 'KDP learning centre',
     kdpResourcesHint:
-      'Official KDP Jumpstart + Reedsy Self-Publishing 101 curricula, Help library, free path, children’s courses, optional paid picks, 30-day plan — with ⚠ on upsells.',
+      'Official KDP Jumpstart + Reedsy Self-Publishing 101 + post-launch listing optimisation (keywords, A+, reviews, ads), Help library, free path, children’s courses — with ⚠ on upsells.',
     kdpResourcesMeta: 'KDP resources last verified',
     kdpResourcesRec: 'Recommendation',
     kdpJumpstartTitle: 'Official KDP Jumpstart curriculum',
@@ -116,6 +116,11 @@ export const AMAZON_STRINGS = {
     kdpReedsyPairs: 'How it pairs with KDP / Merch',
     kdpReedsyRelated: 'Related free Reedsy courses',
     kdpReedsyOpenCourse: 'Open course on Reedsy',
+    kdpListingTitle: 'After you’re Live — listing optimisation',
+    kdpListingMeta: 'Listing optimisation last verified',
+    kdpListingTitleRules: 'Title & subtitle rules',
+    kdpListingCoverTest: 'Cover testing',
+    kdpListingFormats: 'Format stack',
     kdpResourcesFree: 'Best free starting path',
     kdpResourcesKids: 'Best children’s-book resources',
     kdpResourcesKidsHint:
@@ -288,7 +293,7 @@ export const AMAZON_STRINGS = {
       'Im Playbook „KDP-Anforderungen“: komplette DE-Checkliste (Konto, Steuern ⚠, Dateien, Bilderbuch-Technik).',
     kdpResourcesTitle: 'KDP Lernzentrum',
     kdpResourcesHint:
-      'Offizielles KDP-Jumpstart + Reedsy Self-Publishing-101-Curriculum, Help-Bibliothek, Free-Pfad, Kinderbuch-Kurse, optionale bezahlte Kurse, 30-Tage-Plan — mit ⚠ zu Upsells.',
+      'Offizielles KDP-Jumpstart + Reedsy Self-Publishing 101 + Listing-Optimierung nach Live (Keywords, A+, Reviews, Ads), Help-Bibliothek, Free-Pfad, Kinderbuch-Kurse — mit ⚠ zu Upsells.',
     kdpResourcesMeta: 'KDP-Ressourcen zuletzt geprüft',
     kdpResourcesRec: 'Empfehlung',
     kdpJumpstartTitle: 'Offizielles KDP-Jumpstart-Curriculum',
@@ -310,6 +315,11 @@ export const AMAZON_STRINGS = {
     kdpReedsyPairs: 'Zusammenspiel mit KDP / Merch',
     kdpReedsyRelated: 'Verwandte kostenlose Reedsy-Kurse',
     kdpReedsyOpenCourse: 'Kurs auf Reedsy öffnen',
+    kdpListingTitle: 'Nach dem Live-Gang — Listing-Optimierung',
+    kdpListingMeta: 'Listing-Optimierung zuletzt geprüft',
+    kdpListingTitleRules: 'Titel- & Untertitel-Regeln',
+    kdpListingCoverTest: 'Cover-Tests',
+    kdpListingFormats: 'Format-Stack',
     kdpResourcesFree: 'Bester kostenloser Einstieg',
     kdpResourcesKids: 'Beste Kinderbuch-Ressourcen',
     kdpResourcesKidsHint:

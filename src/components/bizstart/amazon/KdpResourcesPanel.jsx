@@ -40,6 +40,10 @@ export default function KdpResourcesPanel({ lang = 'en', onOpenStoryforge }) {
 
       {cfg.reedsy ? <ReedsyCurriculum lang={lang} reedsy={cfg.reedsy} /> : null}
 
+      {cfg.listingOptimize ? (
+        <ListingOptimizePanel lang={lang} cfg={cfg.listingOptimize} />
+      ) : null}
+
       <ConfigBlock title={amazonT(lang, 'kdpResourcesFree')}>
         <div className="overflow-x-auto rounded-lg border border-slate-800/80">
           <table className="w-max min-w-full text-left text-xs">
@@ -282,6 +286,294 @@ function ConfigBlock({ title, children }) {
       <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{title}</p>
       {children}
     </div>
+  )
+}
+
+function BulletBlock({ heading, bullets, note }) {
+  return (
+    <div className="space-y-2 rounded-lg border border-slate-800/80 bg-slate-900/40 px-3 py-2">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{heading}</p>
+      <ul className="list-disc space-y-1 pl-4 text-xs leading-relaxed text-slate-300">
+        {bullets.map((line) => (
+          <li key={line}>{line}</li>
+        ))}
+      </ul>
+      {note ? <p className="text-[11px] text-amber-100/80">{note}</p> : null}
+    </div>
+  )
+}
+
+function ListingOptimizePanel({ lang, cfg }) {
+  const L = (obj) => obj?.[lang] || obj?.en || ''
+
+  return (
+    <ConfigBlock title={amazonT(lang, 'kdpListingTitle')}>
+      <p className="text-[11px] leading-relaxed text-slate-500">
+        {amazonT(lang, 'kdpListingMeta')} · {cfg.lastVerified}
+        <span className="block text-slate-600">{cfg.sourceLabel}</span>
+      </p>
+      <p className="flex items-start gap-2 rounded-lg border border-amber-500/25 bg-amber-500/10 px-2.5 py-2 text-[11px] leading-relaxed text-amber-100/90">
+        <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+        <span>{L(cfg.independenceDisclaimer)}</span>
+      </p>
+      <p className="text-xs leading-relaxed text-slate-300">{L(cfg.intro)}</p>
+
+      {cfg.liveListingChanges ? (
+        <BulletBlock
+          heading={L(cfg.liveListingChanges.heading)}
+          bullets={
+            cfg.liveListingChanges.bullets[lang] || cfg.liveListingChanges.bullets.en
+          }
+        />
+      ) : null}
+
+      {cfg.bsrBasics ? (
+        <BulletBlock
+          heading={L(cfg.bsrBasics.heading)}
+          bullets={cfg.bsrBasics.bullets[lang] || cfg.bsrBasics.bullets.en}
+          note={cfg.bsrBasics.note ? L(cfg.bsrBasics.note) : null}
+        />
+      ) : null}
+
+      <div className="overflow-x-auto rounded-lg border border-slate-800/80">
+        <table className="w-max min-w-full text-left text-xs">
+          <thead>
+            <tr className="border-b border-slate-800 bg-slate-900/60 text-slate-400">
+              <th className="whitespace-nowrap px-2.5 py-2 font-semibold">#</th>
+              <th className="whitespace-nowrap px-2.5 py-2 font-semibold">
+                {amazonT(lang, 'tableNeed')}
+              </th>
+              <th className="whitespace-nowrap px-2.5 py-2 font-semibold">
+                {amazonT(lang, 'tableDetail')}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {cfg.priorityFixes.map((row) => (
+              <tr key={row.id} className="border-b border-slate-800/80 last:border-0">
+                <td className="px-2.5 py-2 font-medium text-slate-200">{row.order}</td>
+                <td className="whitespace-nowrap px-2.5 py-2 font-medium text-slate-200">
+                  {L(row.title)}
+                </td>
+                <td className="max-w-[18rem] px-2.5 py-2 text-slate-400">{L(row.detail)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {cfg.nicheStrategy ? (
+        <BulletBlock
+          heading={L(cfg.nicheStrategy.heading)}
+          bullets={cfg.nicheStrategy.bullets[lang] || cfg.nicheStrategy.bullets.en}
+          note={cfg.nicheStrategy.note ? L(cfg.nicheStrategy.note) : null}
+        />
+      ) : null}
+
+      {cfg.titleSubtitleRules ? (
+        <BulletBlock
+          heading={L(cfg.titleSubtitleRules.heading)}
+          bullets={cfg.titleSubtitleRules.bullets[lang] || cfg.titleSubtitleRules.bullets.en}
+          note={cfg.titleSubtitleRules.note ? L(cfg.titleSubtitleRules.note) : null}
+        />
+      ) : null}
+
+      {cfg.titleCoverCongruence ? (
+        <BulletBlock
+          heading={L(cfg.titleCoverCongruence.heading)}
+          bullets={
+            cfg.titleCoverCongruence.bullets[lang] || cfg.titleCoverCongruence.bullets.en
+          }
+        />
+      ) : null}
+
+      {cfg.keywordNiching ? (
+        <BulletBlock
+          heading={L(cfg.keywordNiching.heading)}
+          bullets={cfg.keywordNiching.bullets[lang] || cfg.keywordNiching.bullets.en}
+          note={cfg.keywordNiching.note ? L(cfg.keywordNiching.note) : null}
+        />
+      ) : null}
+
+      {cfg.authorBrandRules ? (
+        <BulletBlock
+          heading={L(cfg.authorBrandRules.heading)}
+          bullets={cfg.authorBrandRules.bullets[lang] || cfg.authorBrandRules.bullets.en}
+        />
+      ) : null}
+
+      {cfg.competitorSpecs ? (
+        <BulletBlock
+          heading={L(cfg.competitorSpecs.heading)}
+          bullets={cfg.competitorSpecs.bullets[lang] || cfg.competitorSpecs.bullets.en}
+        />
+      ) : null}
+
+      {cfg.localizationLowText ? (
+        <BulletBlock
+          heading={L(cfg.localizationLowText.heading)}
+          bullets={
+            cfg.localizationLowText.bullets[lang] || cfg.localizationLowText.bullets.en
+          }
+        />
+      ) : null}
+
+      {cfg.descriptionRules ? (
+        <BulletBlock
+          heading={L(cfg.descriptionRules.heading)}
+          bullets={cfg.descriptionRules.bullets[lang] || cfg.descriptionRules.bullets.en}
+        />
+      ) : null}
+
+      {cfg.coverTesting ? (
+        <BulletBlock
+          heading={L(cfg.coverTesting.heading)}
+          bullets={cfg.coverTesting.bullets[lang] || cfg.coverTesting.bullets.en}
+          note={cfg.coverTesting.note ? L(cfg.coverTesting.note) : null}
+        />
+      ) : null}
+
+      {cfg.puzzleActivityCover ? (
+        <BulletBlock
+          heading={L(cfg.puzzleActivityCover.heading)}
+          bullets={
+            cfg.puzzleActivityCover.bullets[lang] || cfg.puzzleActivityCover.bullets.en
+          }
+        />
+      ) : null}
+
+      {cfg.lowMediumContentCovers ? (
+        <BulletBlock
+          heading={L(cfg.lowMediumContentCovers.heading)}
+          bullets={
+            cfg.lowMediumContentCovers.bullets[lang] || cfg.lowMediumContentCovers.bullets.en
+          }
+        />
+      ) : null}
+
+      <div className="space-y-2 rounded-lg border border-slate-800/80 bg-slate-900/40 px-3 py-2">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          {L(cfg.aPlusChecklist.heading)}
+        </p>
+        <ul className="list-disc space-y-1 pl-4 text-xs leading-relaxed text-slate-300">
+          {(cfg.aPlusChecklist.bullets[lang] || cfg.aPlusChecklist.bullets.en).map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+        <p className="text-[11px] text-amber-100/80">{L(cfg.aPlusChecklist.note)}</p>
+        <div className="flex flex-wrap gap-2">
+          {cfg.aPlusChecklist.links.map((link) => (
+            <a
+              key={link.url}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-slate-600 bg-slate-900/50 px-3 py-2 text-xs font-medium text-brand-200"
+            >
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+              {link.label}
+            </a>
+          ))}
+        </div>
+      </div>
+
+      {cfg.formatsStack ? (
+        <BulletBlock
+          heading={L(cfg.formatsStack.heading)}
+          bullets={cfg.formatsStack.bullets[lang] || cfg.formatsStack.bullets.en}
+          note={cfg.formatsStack.note ? L(cfg.formatsStack.note) : null}
+        />
+      ) : null}
+
+      {cfg.categoryDeepDive ? (
+        <BulletBlock
+          heading={L(cfg.categoryDeepDive.heading)}
+          bullets={cfg.categoryDeepDive.bullets[lang] || cfg.categoryDeepDive.bullets.en}
+        />
+      ) : null}
+
+      {cfg.aPlusQuality ? (
+        <BulletBlock
+          heading={L(cfg.aPlusQuality.heading)}
+          bullets={cfg.aPlusQuality.bullets[lang] || cfg.aPlusQuality.bullets.en}
+        />
+      ) : null}
+
+      {cfg.aPlusGenreExpand ? (
+        <BulletBlock
+          heading={L(cfg.aPlusGenreExpand.heading)}
+          bullets={cfg.aPlusGenreExpand.bullets[lang] || cfg.aPlusGenreExpand.bullets.en}
+        />
+      ) : null}
+
+      <BulletBlock
+        heading={L(cfg.reviewsPlaybook.heading)}
+        bullets={cfg.reviewsPlaybook.bullets[lang] || cfg.reviewsPlaybook.bullets.en}
+        note={L(cfg.reviewsPlaybook.note)}
+      />
+
+      <BulletBlock
+        heading={L(cfg.adsAndSocial.heading)}
+        bullets={cfg.adsAndSocial.bullets[lang] || cfg.adsAndSocial.bullets.en}
+      />
+
+      <p className="text-xs leading-relaxed text-slate-400">{L(cfg.childrenNote)}</p>
+
+      <div className="space-y-2">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          {amazonT(lang, 'kdpJumpstartChecklist')}
+        </p>
+        <ul className="list-disc space-y-1 pl-4 text-xs leading-relaxed text-slate-300">
+          {(cfg.studyChecklist[lang] || cfg.studyChecklist.en).map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          {L(cfg.optionalTools.heading)}
+        </p>
+        <ul className="space-y-3">
+          {cfg.optionalTools.items.map((item) => (
+            <li
+              key={item.name.en}
+              className="rounded-lg border border-slate-800/80 bg-slate-900/40 px-3 py-2"
+            >
+              <p className="text-xs font-semibold text-slate-100">{L(item.name)}</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-400">{L(item.why)}</p>
+              {item.note ? (
+                <p className="mt-1 text-[11px] text-amber-100/80">{L(item.note)}</p>
+              ) : null}
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex min-h-[44px] items-center gap-1.5 text-xs font-medium text-brand-200"
+              >
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                {item.urlLabel}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {cfg.links.map((link) => (
+          <a
+            key={link.url}
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-slate-600 bg-slate-900/50 px-3 py-2 text-xs font-medium text-brand-200"
+          >
+            <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+            {link.label}
+          </a>
+        ))}
+      </div>
+    </ConfigBlock>
   )
 }
 

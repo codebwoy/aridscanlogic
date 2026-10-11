@@ -1194,6 +1194,36 @@ export const AMAZON_GUIDES = [
         },
       },
       {
+        heading: {
+          en: 'After first book is Live — listing optimisation',
+          de: 'Nach dem ersten Live-Buch — Listing-Optimierung',
+        },
+        bullets: {
+          en: [
+            'Priority order: 7 backend keywords → categories → title/subtitle → cover mobile tests → A+ → format stack → short ads → social',
+            'Live books: zero sales → full hygiene; already selling → one change at a time (categories last)',
+            'Exact-match longtails in buyer order; low-content titles 1–2 lines; title ↔ cover must match',
+            'Coloring: trim vs comps (~8.5×8.5 often beats 7×7); full-bleed; professional title treatment',
+            'Cover: no faux spine; tough vs comps; real puzzle samples; inviting > “no mistakes”',
+            'A+: large page strips (~4–6); description five concrete bullets + CTA',
+            'Bad reviews on story: polish interior first; update/relaunch only per KDP Help ⚠',
+            'Formats: ebook + paperback + hardcover; series → audiobook paths — each format ranks alone',
+            'Full checklist: Amazon Hub → KDP learning centre → “After you’re Live — listing optimisation”',
+          ],
+          de: [
+            'Reihenfolge: 7 Backend-Keywords → Cover/Rücken → Beschreibung → A+ → Format-Stack → kurze Ads → Social',
+            'Live-Bücher: Null Sales → volle Hygiene; schon Sales → eine Änderung nach der anderen (Kategorien zuletzt)',
+            'Exact-Match-Longtails in Käufer-Reihenfolge; Low Content 1–2 Zeilen; Titel ↔ Cover müssen matchen',
+            'Malen: Trim vs. Comps (~8,5×8,5 oft besser als 7×7); Full-Bleed; professionelle Titel-Behandlung',
+            'Cover: kein Fake-Rücken; hart vs. Comps; echte Puzzle-Samples; einladend > „fehlerfrei“',
+            'A+: große Seitenstreifen (~4–6); Beschreibung fünf konkrete Bullets + CTA',
+            'Schlechte Story-Reviews: zuerst Innenteil polieren; Update/Relaunch nur laut KDP-Hilfe ⚠',
+            'Formate: E-Book + Paperback + Hardcover; Serie → Hörbuch-Pfade — jedes Format rankt allein',
+            'Vollständige Checkliste: Amazon Hub → KDP-Lernzentrum → „Nach dem Live-Gang — Listing-Optimierung“',
+          ],
+        },
+      },
+      {
         heading: { en: 'Do this week', de: 'Diese Woche' },
         bullets: {
           en: [

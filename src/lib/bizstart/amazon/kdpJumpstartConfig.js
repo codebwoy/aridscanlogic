@@ -326,6 +326,7 @@ export const KDP_JUMPSTART_CONFIG = {
           'Use Reports (Dashboard, Orders, KENP, Payments, etc.) from the top nav when signed in',
           'Author Central, A+ Content (when eligible), KDP Select promos, and Advertising for KDP are separate Help tracks',
           'For children’s brands: also plan Merch + Author Central links (see Amazon Hub Merch playbooks)',
+          'After Live with low sales: open the Listing optimisation playbook in this learning centre (keywords → A+ → reviews → short ads)',
         ],
         de: [
           'Start mit „Ways to Promote Your Book“ (offizielles Marketing-Menü)',
@@ -334,6 +335,7 @@ export const KDP_JUMPSTART_CONFIG = {
           'Reports (Dashboard, Orders, KENP, Payments…) oben in KDP nutzen',
           'Author Central, A+ Content (wenn berechtigt), KDP-Select-Promos und KDP-Advertising sind eigene Help-Tracks',
           'Kinderbuch-Marke: Merch + Author-Central-Links mitplanen (Amazon-Hub Merch-Playbooks)',
+          'Nach Live bei wenigen Sales: Listing-Optimierungs-Playbook in diesem Lernzentrum (Keywords → A+ → Reviews → kurze Ads)',
         ],
       },
       links: [
