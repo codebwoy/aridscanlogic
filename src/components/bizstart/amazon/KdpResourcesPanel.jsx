@@ -327,12 +327,55 @@ function ListingOptimizePanel({ lang, cfg }) {
         />
       ) : null}
 
+      {cfg.honeymoonRelaunch ? (
+        <BulletBlock
+          heading={L(cfg.honeymoonRelaunch.heading)}
+          bullets={
+            cfg.honeymoonRelaunch.bullets[lang] || cfg.honeymoonRelaunch.bullets.en
+          }
+          note={cfg.honeymoonRelaunch.note ? L(cfg.honeymoonRelaunch.note) : null}
+        />
+      ) : null}
+
+      {cfg.salesDeclineDiagnosis ? (
+        <BulletBlock
+          heading={L(cfg.salesDeclineDiagnosis.heading)}
+          bullets={
+            cfg.salesDeclineDiagnosis.bullets[lang] ||
+            cfg.salesDeclineDiagnosis.bullets.en
+          }
+          note={
+            cfg.salesDeclineDiagnosis.note ? L(cfg.salesDeclineDiagnosis.note) : null
+          }
+        />
+      ) : null}
+
       {cfg.bsrBasics ? (
         <BulletBlock
           heading={L(cfg.bsrBasics.heading)}
           bullets={cfg.bsrBasics.bullets[lang] || cfg.bsrBasics.bullets.en}
           note={cfg.bsrBasics.note ? L(cfg.bsrBasics.note) : null}
         />
+      ) : null}
+
+      {cfg.zeroSalesAudit ? (
+        <div className="space-y-2 rounded-lg border border-brand-500/30 bg-brand-500/5 px-3 py-2">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-200">
+            {L(cfg.zeroSalesAudit.heading)}
+          </p>
+          {cfg.zeroSalesAudit.intro ? (
+            <p className="text-xs leading-relaxed text-slate-300">
+              {L(cfg.zeroSalesAudit.intro)}
+            </p>
+          ) : null}
+          <ul className="list-disc space-y-1 pl-4 text-xs leading-relaxed text-slate-300">
+            {(cfg.zeroSalesAudit.bullets[lang] || cfg.zeroSalesAudit.bullets.en).map(
+              (line) => (
+                <li key={line}>{line}</li>
+              ),
+            )}
+          </ul>
+        </div>
       ) : null}
 
       <div className="overflow-x-auto rounded-lg border border-slate-800/80">
@@ -370,6 +413,16 @@ function ListingOptimizePanel({ lang, cfg }) {
         />
       ) : null}
 
+      {cfg.audienceAndTopicFit ? (
+        <BulletBlock
+          heading={L(cfg.audienceAndTopicFit.heading)}
+          bullets={
+            cfg.audienceAndTopicFit.bullets[lang] || cfg.audienceAndTopicFit.bullets.en
+          }
+          note={cfg.audienceAndTopicFit.note ? L(cfg.audienceAndTopicFit.note) : null}
+        />
+      ) : null}
+
       {cfg.titleSubtitleRules ? (
         <BulletBlock
           heading={L(cfg.titleSubtitleRules.heading)}
@@ -395,6 +448,16 @@ function ListingOptimizePanel({ lang, cfg }) {
         />
       ) : null}
 
+      {cfg.contentRightsRules ? (
+        <BulletBlock
+          heading={L(cfg.contentRightsRules.heading)}
+          bullets={
+            cfg.contentRightsRules.bullets[lang] || cfg.contentRightsRules.bullets.en
+          }
+          note={cfg.contentRightsRules.note ? L(cfg.contentRightsRules.note) : null}
+        />
+      ) : null}
+
       {cfg.authorBrandRules ? (
         <BulletBlock
           heading={L(cfg.authorBrandRules.heading)}
@@ -406,6 +469,29 @@ function ListingOptimizePanel({ lang, cfg }) {
         <BulletBlock
           heading={L(cfg.competitorSpecs.heading)}
           bullets={cfg.competitorSpecs.bullets[lang] || cfg.competitorSpecs.bullets.en}
+        />
+      ) : null}
+
+      {cfg.pricingStrategy ? (
+        <BulletBlock
+          heading={L(cfg.pricingStrategy.heading)}
+          bullets={cfg.pricingStrategy.bullets[lang] || cfg.pricingStrategy.bullets.en}
+        />
+      ) : null}
+
+      {cfg.productClarity ? (
+        <BulletBlock
+          heading={L(cfg.productClarity.heading)}
+          bullets={cfg.productClarity.bullets[lang] || cfg.productClarity.bullets.en}
+        />
+      ) : null}
+
+      {cfg.incompleteListing ? (
+        <BulletBlock
+          heading={L(cfg.incompleteListing.heading)}
+          bullets={
+            cfg.incompleteListing.bullets[lang] || cfg.incompleteListing.bullets.en
+          }
         />
       ) : null}
 

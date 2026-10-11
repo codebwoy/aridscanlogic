@@ -102,12 +102,14 @@ export const GERMAN_FIRST_CONFIG = {
         en: [
           'Audience: expats in Germany, DE families wanting early English exposure, international schools',
           'Differentiation with often lower competition density on Amazon.de',
-          '⚠ No large public KDP dataset on bilingual kids performance — structural logic only; validate listings yourself',
+          'EN/FR/ES/TR/AR↔DE show live catalogue proof; African-language↔DE pairs are often empty — first-mover or unproven (see bilingual kids module)',
+          '⚠ Always validate on Amazon.de + community groups before printing; no ROI guarantees',
         ],
         de: [
           'Zielgruppe: Expats in DE, DE-Familien mit frühem EN-Input, internationale Schulen',
           'Differenzierung mit oft geringerer Konkurrenzdichte auf Amazon.de',
-          '⚠ Kein großes öffentliches KDP-Dataset zu bilingualen Kinderbüchern — nur Strukturlogik; Listings selbst validieren',
+          'EN/FR/ES/TR/AR↔DE zeigen Live-Katalog-Belege; afrikanische Sprachen↔DE oft leer — First-Mover oder unbewiesen (siehe Bilingual-Kids-Modul)',
+          '⚠ Immer auf Amazon.de + in Community-Gruppen validieren vor dem Druck; keine ROI-Garantien',
         ],
       },
     },
@@ -242,9 +244,10 @@ export const GERMAN_FIRST_CONFIG = {
     },
   },
   bilingual: {
+    /** Expanded research lives in bilingualKidsConfig — panel renders that module. */
     noHardData: {
-      en: 'No large public dataset on bilingual DE/EN kids KDP performance — do not invent precise ROI numbers.',
-      de: 'Kein großes öffentliches Dataset zu bilingualem DE/EN-Kinder-KDP — keine präzisen ROI-Zahlen erfinden.',
+      en: 'EN/FR/ES/TR/AR↔DE show Amazon.de catalogue proof; African-language↔DE pairs are often empty (first-mover or unproven). Do not invent precise ROI — see the bilingual kids module below.',
+      de: 'EN/FR/ES/TR/AR↔DE zeigen Amazon.de-Katalog-Belege; afrikanische Sprachen↔DE sind oft leer (First-Mover oder unbewiesen). Keine präzisen ROI-Zahlen erfinden — siehe Bilingual-Kids-Modul unten.',
     },
     structuralLogic: {
       en: [
@@ -252,12 +255,14 @@ export const GERMAN_FIRST_CONFIG = {
         'Early English education is a priority for many middle-class DE families',
         'Bilingual can support premium pricing with lower listing density — validate yourself',
         'Industry signal: some major illustrators publish bilingual series (e.g. Monsieur Roscoe-type formats) — anecdote, not proof',
+        'Diaspora pairs (TR/AR and potentially Igbo/Twi/Swahili↔DE) add heritage-language demand beyond classic EN–DE',
       ],
       de: [
         'Destatis-Skala-Notizen nennen oft Größenordnung ca. 170k englischsprachige Residents/Expats in DE — aktuelle Destatis prüfen',
         'Frühes Englisch ist für viele bildungsnahe DE-Familien Priorität',
         'Bilingual kann Premium-Preise bei geringerer Listing-Dichte tragen — selbst validieren',
         'Branchen-Signal: manche Illustrator:innen machen bilinguale Serien (z. B. Monsieur-Roscoe-Formate) — Anekdote, kein Beweis',
+        'Diaspora-Paare (TR/AR und potenziell Igbo/Twi/Swahili↔DE) ergänzen Heritage-Language-Demand jenseits klassischem EN–DE',
       ],
     },
   },
@@ -278,10 +283,10 @@ export const GERMAN_FIRST_CONFIG = {
     {
       strategy: { en: 'Bilingual edition', de: 'Bilinguale Ausgabe' },
       support: {
-        en: 'Structural logic sound; hard KDP data limited',
-        de: 'Strukturlogik stimmig; harte KDP-Daten begrenzt',
+        en: 'EN/FR/ES/TR/AR↔DE catalogue-proven; African↔DE underserved — validate community demand',
+        de: 'EN/FR/ES/TR/AR↔DE katalog-bewiesen; afrikanisch↔DE unterversorgt — Community-Demand validieren',
       },
-      risk: { en: 'Medium', de: 'Mittel' },
+      risk: { en: 'Medium (pair-dependent)', de: 'Mittel (paar-abhängig)' },
     },
     {
       strategy: { en: 'Audiobook (German)', de: 'Hörbuch (Deutsch)' },
@@ -309,8 +314,8 @@ export const GERMAN_FIRST_CONFIG = {
     },
   ],
   conclusion: {
-    en: 'Data-supported sequence: publish in German first → preschool/picture segment → add German audiobook when ready → only then English or bilingual as secondary markets.',
-    de: 'Datenbasierte Sequenz: zuerst auf Deutsch veröffentlichen → Vorschul-/Bilderbuch-Segment → DE-Hörbuch wenn bereit → erst dann Englisch oder bilingual als Zweitmärkte.',
+    en: 'Data-supported sequence: publish in German first → preschool/picture segment → add German audiobook when ready → then English or bilingual. For bilingual: study proven EN/TR/AR pairs; treat Igbo/Twi/Swahili↔DE as community-validated first-mover bets, not guaranteed gold.',
+    de: 'Datenbasierte Sequenz: zuerst auf Deutsch → Vorschul-/Bilderbuch → DE-Hörbuch wenn bereit → dann Englisch oder bilingual. Bilingual: bewiesene EN/TR/AR-Paare studieren; Igbo/Twi/Swahili↔DE als community-validierte First-Mover-Wetten — keine Garantie.',
   },
   links: [
     { label: 'Börsenverein', url: 'https://www.boersenverein.de/' },

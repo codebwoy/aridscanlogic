@@ -1,10 +1,12 @@
 import { ExternalLink, ShieldAlert } from 'lucide-react'
 import { GERMAN_FIRST_CONFIG } from '@/lib/bizstart/amazon/germanFirstConfig'
+import { BILINGUAL_KIDS_CONFIG } from '@/lib/bizstart/amazon/bilingualKidsConfig'
 import { amazonT } from '@/lib/bizstart/amazon/i18n'
 
 /** German-first KDP language strategy + Börsenverein / PublishDrive source notes. */
 export default function GermanFirstPanel({ lang = 'en' }) {
   const cfg = GERMAN_FIRST_CONFIG
+  const bi = BILINGUAL_KIDS_CONFIG
   const L = (obj) => obj?.[lang] || obj?.en || ''
 
   return (
@@ -176,6 +178,160 @@ export default function GermanFirstPanel({ lang = 'en' }) {
             <li key={line}>{line}</li>
           ))}
         </ul>
+      </ConfigBlock>
+
+      <ConfigBlock title={amazonT(lang, 'bilingualKidsTitle')}>
+        <p className="mb-2 text-[11px] leading-relaxed text-slate-500">
+          {amazonT(lang, 'bilingualKidsMeta')} · {bi.lastVerified}
+          <span className="block text-slate-600">{bi.sourceLabel}</span>
+        </p>
+        <p className="mb-2 flex items-start gap-2 rounded-lg border border-amber-500/25 bg-amber-500/10 px-2.5 py-2 text-[11px] leading-relaxed text-amber-100/90">
+          <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+          <span>{L(bi.independenceDisclaimer)}</span>
+        </p>
+        <p className="mb-3 text-xs font-medium leading-relaxed text-slate-200">{L(bi.verdict)}</p>
+
+        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+          {L(bi.provenPairs.heading)}
+        </p>
+        <p className="mb-2 text-[11px] leading-relaxed text-amber-100/80">{L(bi.provenPairs.note)}</p>
+        <div className="mb-3 overflow-x-auto rounded-lg border border-slate-800/80">
+          <table className="w-max min-w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-slate-800 bg-slate-900/60 text-slate-400">
+                <th className="whitespace-nowrap px-2.5 py-2 font-semibold">
+                  {amazonT(lang, 'bilingualKidsColPair')}
+                </th>
+                <th className="whitespace-nowrap px-2.5 py-2 font-semibold">
+                  {amazonT(lang, 'bilingualKidsColEvidence')}
+                </th>
+                <th className="whitespace-nowrap px-2.5 py-2 font-semibold">
+                  {amazonT(lang, 'bilingualKidsColStatus')}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {bi.provenPairs.rows.map((row) => (
+                <tr key={row.id} className="border-b border-slate-800/80 last:border-0">
+                  <td className="whitespace-nowrap px-2.5 py-2 font-medium text-slate-200">
+                    {L(row.pair)}
+                  </td>
+                  <td className="max-w-[18rem] px-2.5 py-2 text-slate-400">{L(row.evidence)}</td>
+                  <td className="whitespace-nowrap px-2.5 py-2 text-slate-300">{L(row.status)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+          {L(bi.africanPairs.heading)}
+        </p>
+        <ul className="mb-3 list-disc space-y-1 pl-4 text-xs leading-relaxed text-slate-300">
+          {bi.africanPairs.bullets[lang]?.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+
+        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+          {L(bi.opportunityLogic.heading)}
+        </p>
+        <ul className="mb-3 list-disc space-y-1 pl-4 text-xs leading-relaxed text-slate-300">
+          {bi.opportunityLogic.bullets[lang]?.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+
+        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+          {L(bi.pairAssessments.heading)}
+        </p>
+        <ul className="mb-3 space-y-2">
+          {bi.pairAssessments.items.map((item) => (
+            <li
+              key={item.id}
+              className="rounded-lg border border-slate-800/80 bg-slate-900/40 px-3 py-2"
+            >
+              <p className="text-xs font-semibold text-slate-100">{L(item.title)}</p>
+              <ul className="mt-1.5 list-disc space-y-1 pl-4 text-xs leading-relaxed text-slate-300">
+                {item.bullets[lang]?.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ul>
+
+        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+          {L(bi.strategy.heading)}
+        </p>
+        <ul className="mb-3 list-disc space-y-1 pl-4 text-xs leading-relaxed text-slate-300">
+          {bi.strategy.bullets[lang]?.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+
+        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+          {L(bi.proofExamples.heading)}
+        </p>
+        <p className="mb-1.5 text-[11px] leading-relaxed text-amber-100/80">{L(bi.proofExamples.note)}</p>
+        <ul className="mb-3 list-disc space-y-1 pl-4 text-xs leading-relaxed text-slate-300">
+          {bi.proofExamples.bullets[lang]?.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+
+        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+          {amazonT(lang, 'bilingualKidsSummary')}
+        </p>
+        <div className="mb-2 overflow-x-auto rounded-lg border border-slate-800/80">
+          <table className="w-max min-w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-slate-800 bg-slate-900/60 text-slate-400">
+                <th className="whitespace-nowrap px-2.5 py-2 font-semibold">
+                  {amazonT(lang, 'bilingualKidsColPair')}
+                </th>
+                <th className="whitespace-nowrap px-2.5 py-2 font-semibold">
+                  {amazonT(lang, 'bilingualKidsColPotential')}
+                </th>
+                <th className="whitespace-nowrap px-2.5 py-2 font-semibold">
+                  {amazonT(lang, 'bilingualKidsColComp')}
+                </th>
+                <th className="whitespace-nowrap px-2.5 py-2 font-semibold">
+                  {amazonT(lang, 'bilingualKidsColRec')}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {bi.summaryTable.map((row) => (
+                <tr key={row.pair.en} className="border-b border-slate-800/80 last:border-0">
+                  <td className="whitespace-nowrap px-2.5 py-2 font-medium text-slate-200">
+                    {L(row.pair)}
+                  </td>
+                  <td className="max-w-[12rem] px-2.5 py-2 text-slate-300">{L(row.potential)}</td>
+                  <td className="whitespace-nowrap px-2.5 py-2 text-slate-400">
+                    {L(row.competition)}
+                  </td>
+                  <td className="max-w-[14rem] px-2.5 py-2 text-slate-400">{L(row.recommended)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mb-2 text-xs font-medium leading-relaxed text-slate-200">{L(bi.conclusion)}</p>
+        <div className="flex flex-wrap gap-2">
+          {bi.links.map((link) => (
+            <a
+              key={link.url}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900/60 px-3 text-xs font-medium text-slate-200"
+            >
+              <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              {link.label}
+            </a>
+          ))}
+        </div>
       </ConfigBlock>
 
       <ConfigBlock title={amazonT(lang, 'germanFirstStrategy')}>
