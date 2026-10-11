@@ -7,11 +7,12 @@ import { getPromptEntry, parseAgentJson, renderPrompt } from './registry.js'
  */
 export async function runAgent(llm, promptKey, { input, modelClass = 'draft', metadata = {} } = {}) {
   const entry = getPromptEntry(promptKey)
-  const system = [
-    UNIVERSAL_COAUTHOR_RULES,
-    entry.template,
-    'Respond with valid JSON only matching the schema.',
-  ].join('\n\n')
+  // Co-writer rules confuse non-writing agents (title/positioning) into returning prose JSON.
+  const systemParts = []
+  if (entry.coauthorRules) systemParts.push(UNIVERSAL_COAUTHOR_RULES)
+  systemParts.push(entry.template)
+  systemParts.push('Respond with valid JSON only matching the schema. No markdown prose outside JSON.')
+  const system = systemParts.join('\n\n')
 
   const userContent =
     typeof input === 'string' ? input : JSON.stringify(input ?? {}, null, 2)
@@ -27,6 +28,7 @@ export async function runAgent(llm, promptKey, { input, modelClass = 'draft', me
     maxTokens: metadata.maxTokens || 4096,
     metadata: {
       ...metadata,
+      promptKey,
       promptName: entry.name,
       promptVersion: entry.version,
       inputHash,

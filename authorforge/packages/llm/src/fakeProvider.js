@@ -12,21 +12,19 @@ export class FakeLLMProvider extends LLMProvider {
   async complete(req) {
     const user = req.messages?.map((m) => m.content).join('\n') || ''
     const system = String(req.system || '').toLowerCase()
+    const promptName = String(req.metadata?.promptName || req.metadata?.promptKey || '').toLowerCase()
     const promptHint = `${system}\n${user}`.toLowerCase()
     let text
 
-    // Match on system prompt agent identity first — avoid false hits from JSON field names (e.g. "persona":null).
-    if (system.includes('writeragent') || (system.includes('content_md') && system.includes('story_slots'))) {
-      text = JSON.stringify(fakeSection(req))
-    } else if (system.includes('outlineagent') || (system.includes('3-level outline') && system.includes('focus tag'))) {
-      text = JSON.stringify(fakeOutline())
-    } else if (system.includes('titleagent') || (system.includes('title') && system.includes('variation'))) {
+    // Prefer explicit agent metadata — UNIVERSAL_COAUTHOR_RULES contains "co-writer" and
+    // would otherwise steal title/positioning calls into fakeSection.
+    if (promptName.includes('title') || system.includes('titleagent')) {
       text = JSON.stringify(fakeTitles())
-    } else if (system.includes('positioningagent') || system.includes('differentiated angles')) {
+    } else if (promptName.includes('positioning') || system.includes('positioningagent') || system.includes('differentiated angles')) {
       text = JSON.stringify(fakeAngles())
-    } else if (system.includes('personaagent') || system.includes('voice descriptor')) {
+    } else if (promptName.includes('persona') || system.includes('personaagent') || system.includes('voice descriptor')) {
       text = JSON.stringify(fakePersona())
-    } else if (system.includes('continuityagent') || system.includes('summarize section')) {
+    } else if (promptName.includes('continuity') || system.includes('continuityagent') || system.includes('summarize section')) {
       text = JSON.stringify({
         summary: 'Section covers the planned writing direction without inventing personal stories.',
         key_claims: [],
@@ -34,12 +32,20 @@ export class FakeLLMProvider extends LLMProvider {
         examples_used: [],
         open_loops: [],
       })
-    } else if (system.includes('descriptionagent')) {
-      text = JSON.stringify({
-        description_html: '<p>A practical first-draft guide. Edit before publishing.</p>',
-        keywords: ['nonfiction', 'self help', 'guide', 'workbook', 'habits', 'clarity', 'action'],
-        categories: ['Business', 'Self-Help', 'Education'],
-      })
+    } else if (promptName.includes('description') || system.includes('descriptionagent')) {
+      text = JSON.stringify(fakeDescription(user))
+    } else if (
+      promptName.includes('outline') ||
+      system.includes('outlineagent') ||
+      (system.includes('3-level outline') && system.includes('focus tag'))
+    ) {
+      text = JSON.stringify(fakeOutline())
+    } else if (
+      promptName.includes('writer') ||
+      system.includes('writeragent') ||
+      (system.includes('content_md') && system.includes('story_slots'))
+    ) {
+      text = JSON.stringify(fakeSection(req))
     } else if (promptHint.includes('focus tag') && system.includes('clickable')) {
       text = JSON.stringify(fakeFocusTags())
     } else if (promptHint.includes('back cover')) {
@@ -47,6 +53,8 @@ export class FakeLLMProvider extends LLMProvider {
         back_cover_copy:
           'A clear, honest first draft you can revise with your own stories and verified facts.',
       })
+    } else if (system.includes('title') && system.includes('variation')) {
+      text = JSON.stringify(fakeTitles())
     } else if (system.includes('writer') || system.includes('co-writer')) {
       text = JSON.stringify(fakeSection(req))
     } else {
@@ -120,6 +128,50 @@ function fakeTitles() {
       { title: 'Ship the Framework', subtitle: 'Turn Experience Into a Teachable Book', risk: 'low' },
     ],
     warnings: ['Do not claim “bestseller” or trademarked names in titles.'],
+  }
+}
+
+function fakeDescription(userContent) {
+  let input = {}
+  try {
+    input = JSON.parse(userContent || '{}')
+  } catch {
+    input = {}
+  }
+  const title = String(input.working_title || 'Untitled').trim() || 'Untitled'
+  const topic = String(input.topic || '').trim()
+  const usp = String(input.usp || '').trim()
+  const audience = String(input.audience || '').trim()
+  const blob = `${title} ${topic} ${usp}`.toLowerCase()
+  const childlike = /child|kid|picture|storybook|brave|young reader|ages?\s*\d/.test(blob)
+  const stop = new Set(['the', 'and', 'for', 'with', 'from', 'that', 'this', 'about', 'into', 'your', 'a', 'an'])
+  const seedWords = `${title} ${topic} ${usp}`
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .split(/\s+/)
+    .filter((w) => w.length >= 4 && !stop.has(w))
+  const filler = childlike
+    ? ['story', 'feelings', 'courage', 'family', 'kindness', 'growth', 'hope']
+    : ['guide', 'practice', 'clarity', 'habits', 'workbook', 'systems', 'action']
+  const keywords = [...new Set([...seedWords, ...filler])].slice(0, 7)
+  const categories = childlike
+    ? ["Children's Books", 'Literature & Fiction', 'Education & Teaching']
+    : ['Self-Help', 'Education & Teaching', 'Business & Money']
+  const paras = [
+    `<p><b>${title}</b></p>`,
+    usp
+      ? `<p>${usp}</p>`
+      : topic
+        ? `<p>A reader-focused book about ${topic}. Edit this draft before publishing.</p>`
+        : '<p>A practical first-draft description. Edit before publishing.</p>',
+  ]
+  if (audience) paras.push(`<p>For: ${audience}</p>`)
+  paras.push('<p>No invented reviews or rankings — verify every claim before KDP upload.</p>')
+  return {
+    description_html: paras.join(''),
+    keywords,
+    categories,
+    back_cover_copy: usp || `${title}${topic ? ` — ${topic}` : ''}`,
   }
 }
 

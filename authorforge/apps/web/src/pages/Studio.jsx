@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { BookOpen, Coins, RefreshCw, Sparkles } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { BookOpen, Coins, Download, Save, Sparkles, Upload } from 'lucide-react'
 import { WIZARD_STEPS, t, costFor } from '@authorforge/shared'
 import {
   createBook,
@@ -11,6 +11,7 @@ import {
   getMe,
   getSpecs,
   grantDevCredits,
+  importBook,
   listBooks,
   lockBible,
   patchBook,
@@ -24,6 +25,39 @@ import {
   getAdminStats,
 } from '../lib/api'
 import BookEditor from '../components/BookEditor'
+import StepAssistant from '../components/StepAssistant'
+
+const LAST_BOOK_KEY = 'authorforge_last_book_id'
+
+function rememberBookId(id) {
+  try {
+    if (id) localStorage.setItem(LAST_BOOK_KEY, id)
+  } catch {
+    /* ignore */
+  }
+}
+
+function recalledBookId() {
+  try {
+    return localStorage.getItem(LAST_BOOK_KEY) || ''
+  } catch {
+    return ''
+  }
+}
+
+function formatUpdated(iso) {
+  if (!iso) return ''
+  try {
+    return new Date(iso).toLocaleString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return ''
+  }
+}
 
 export default function Studio({ lang = 'en' }) {
   const [ready, setReady] = useState(false)
@@ -33,12 +67,15 @@ export default function Studio({ lang = 'en' }) {
   const [book, setBook] = useState(null)
   const [busy, setBusy] = useState('')
   const [message, setMessage] = useState('')
-  const [assist, setAssist] = useState('Ask for title ideas, positioning, or outline tweaks. I write into fields — you stay editor-in-chief.')
+  const [assist, setAssist] = useState(null)
   const [sectionKey, setSectionKey] = useState('')
   const [editorText, setEditorText] = useState('')
   const [coverage, setCoverage] = useState(null)
   const [gate, setGate] = useState(null)
   const [admin, setAdmin] = useState(null)
+  const [persistOn, setPersistOn] = useState(true)
+  const [savedFlash, setSavedFlash] = useState(false)
+  const importRef = useRef(null)
 
   const step = book?.wizard_step || 'basics'
   const stepMeta = WIZARD_STEPS.find((s) => s.id === step) || WIZARD_STEPS[2]
@@ -48,13 +85,23 @@ export default function Studio({ lang = 'en' }) {
     setCredits(me.credits)
   }, [])
 
+  const refreshLibrary = useCallback(async () => {
+    const list = await listBooks()
+    setBooks(list.books || [])
+    return list.books || []
+  }, [])
+
   const loadBook = useCallback(async (id) => {
     const { book: b } = await getBook(id)
     setBook(b)
+    rememberBookId(b.id)
     const keys = Object.keys(b.sections || {})
     if (keys.length) {
-      setSectionKey((prev) => prev || keys[0])
+      setSectionKey(keys[0])
       setEditorText(b.sections[keys[0]]?.content_md || '')
+    } else {
+      setSectionKey('')
+      setEditorText('')
     }
     try {
       setCoverage((await getCoverage(id)).coverage)
@@ -78,9 +125,16 @@ export default function Studio({ lang = 'en' }) {
         if (cancelled) return
         setCredits(me.credits)
         setSpecs(sp)
+        setPersistOn(me.persist?.enabled !== false)
         setBooks(list.books || [])
-        if (list.books?.[0]) await loadBook(list.books[0].id)
+        const remembered = recalledBookId()
+        const pick =
+          (remembered && list.books?.find((b) => b.id === remembered)) || list.books?.[0] || null
+        if (pick) await loadBook(pick.id)
         setReady(true)
+        if (me.persist?.enabled === false) {
+          setMessage('Library persistence is off — books will be lost when the API restarts.')
+        }
       } catch (e) {
         setMessage(e.message || 'Failed to start session')
       }
@@ -95,6 +149,86 @@ export default function Studio({ lang = 'en' }) {
     setEditorText(book.sections?.[sectionKey]?.content_md || '')
   }, [book, sectionKey])
 
+  async function downloadExportUrl(url, filename) {
+    if (!url) return false
+    try {
+      const res = await fetch(url, { cache: 'no-store' })
+      if (!res.ok) throw new Error(`Download failed (${res.status})`)
+      const blob = await res.blob()
+      const objectUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = objectUrl
+      a.download = filename || 'authorforge-export'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(objectUrl)
+      return true
+    } catch {
+      // Same-origin attachment URL — open as fallback if blob fetch fails
+      window.open(url, '_blank', 'noopener,noreferrer')
+      return true
+    }
+  }
+
+  function exportFilename(type, outputs) {
+    const format = outputs?.meta?.format || outputs?.format || outputs?.cover?.export?.meta?.format
+    const t = String(type || '')
+    const ext =
+      t.includes('epub') || format === 'epub'
+        ? 'epub'
+        : t.includes('docx') || format === 'docx'
+          ? 'docx'
+          : t.includes('kdp') || t.includes('zip') || format === 'kdp_zip'
+            ? 'zip'
+            : t.includes('cover_generate') ||
+                t.includes('cover_revise') ||
+                t.includes('aplus') ||
+                format === 'cover_svg' ||
+                String(format || '').includes('svg') ||
+                String(format || '').startsWith('aplus_')
+              ? 'svg'
+              : 'pdf'
+    const slug = String(book?.working_title || 'book')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 40) || 'book'
+    return `authorforge-${slug}-${t.replace(/_/g, '-') || 'export'}.${ext}`
+  }
+
+  /** Trigger downloads / open storefront for job outputs that previously only showed JSON. */
+  async function consumeJobOutputs(type, outputs) {
+    if (!outputs) return { downloaded: 0, storefrontHref: '' }
+    let downloaded = 0
+    const seen = new Set()
+    const urls = []
+    const pushUrl = (url, name) => {
+      if (!url || seen.has(url)) return
+      seen.add(url)
+      urls.push({ url, name })
+    }
+    // Cover / export artifacts
+    pushUrl(outputs.url, exportFilename(type, outputs))
+    pushUrl(outputs.download, exportFilename(type, outputs))
+    pushUrl(outputs.cover?.export?.url, exportFilename(type === 'cover_revise' ? 'cover_revise' : 'cover_generate', outputs.cover?.export))
+    // A+ module SVGs only when that job was requested (ad_script also returns modules — skip auto-dl)
+    if (type === 'aplus_module' && Array.isArray(outputs.modules)) {
+      for (const mod of outputs.modules) {
+        pushUrl(mod?.export?.url, exportFilename(`aplus-${mod.type || 'module'}`, mod?.export))
+      }
+    }
+    for (const item of urls) {
+      if (await downloadExportUrl(item.url, item.name)) downloaded += 1
+    }
+    let storefrontHref = ''
+    if (type === 'storefront_publish' && outputs.storefront?.slug) {
+      storefrontHref = `/?view=store&slug=${encodeURIComponent(outputs.storefront.slug)}`
+      window.open(storefrontHref, '_blank', 'noopener,noreferrer')
+    }
+    return { downloaded, storefrontHref }
+  }
+
   async function runJob(type, inputs = {}) {
     if (!book && !['niche_search'].includes(type)) {
       setMessage('Create a book first')
@@ -108,8 +242,22 @@ export default function Studio({ lang = 'en' }) {
       if (done.status === 'failed') throw new Error(done.error || 'Job failed')
       await refreshMe()
       if (book?.id) await loadBook(book.id)
-      setMessage(`${type} completed`)
-      setAssist(JSON.stringify(done.outputs, null, 2).slice(0, 1800))
+      await refreshLibrary()
+      const { downloaded, storefrontHref } = await consumeJobOutputs(type, done.outputs)
+      if (storefrontHref) {
+        setMessage(`${type} completed — storefront opened`)
+      } else if (downloaded > 0) {
+        setMessage(`${type} completed — download started (${downloaded} file${downloaded > 1 ? 's' : ''})`)
+      } else if (type === 'ad_script' && done.outputs?.ad_script) {
+        setMessage('ad_script completed — script ready below')
+      } else if (type === 'metadata_generate') {
+        setMessage('metadata_generate completed — edit fields below, then Save')
+      } else if (type === 'cover_generate' || type === 'cover_revise') {
+        setMessage(`${type} completed — preview below`)
+      } else {
+        setMessage(`${type} completed`)
+      }
+      setAssist({ type, outputs: done.outputs, downloaded })
       return done.outputs
     } catch (e) {
       setMessage(e.message)
@@ -127,9 +275,12 @@ export default function Studio({ lang = 'en' }) {
         language: lang === 'de' ? 'de' : 'en',
         wizard_step: 'basics',
       })
-      setBooks((prev) => [{ id: b.id, working_title: b.working_title, wizard_step: b.wizard_step }, ...prev])
+      rememberBookId(b.id)
       setBook(b)
-      setMessage('Book created')
+      setSectionKey('')
+      setEditorText('')
+      await refreshLibrary()
+      setMessage('Book created and saved to your library')
     } catch (e) {
       setMessage(e.message)
     } finally {
@@ -146,6 +297,12 @@ export default function Studio({ lang = 'en' }) {
         wizard_step: b.wizard_step,
         status: b.status,
         updated_at: b.updated_at,
+        section_count: Object.keys(b.sections || {}).length,
+        word_count: Object.values(b.sections || {}).reduce(
+          (s, sec) => s + (Number(sec?.word_count) || String(sec?.content_md || '').split(/\s+/).filter(Boolean).length),
+          0,
+        ),
+        chapter_count: (b.outline?.chapters || []).length,
       }
       const idx = prev.findIndex((x) => x.id === b.id)
       if (idx < 0) return [row, ...prev]
@@ -153,6 +310,84 @@ export default function Studio({ lang = 'en' }) {
       next[idx] = { ...next[idx], ...row }
       return next
     })
+  }
+
+  async function saveNow() {
+    if (!book) return
+    setBusy('save')
+    try {
+      const patch = collectWizardPatch(book)
+      let latest = book
+      if (patch) {
+        const saved = await saveBasics(patch)
+        if (saved) latest = saved
+      }
+      if (sectionKey) {
+        const r = await saveSection(latest.id, sectionKey, editorText)
+        latest = r.book
+        setBook(latest)
+        syncBookListEntry(latest)
+      }
+      rememberBookId(latest.id)
+      await refreshLibrary()
+      setSavedFlash(true)
+      setTimeout(() => setSavedFlash(false), 2000)
+      setMessage('Book saved to your library — reopen anytime from the left rail.')
+    } catch (e) {
+      setMessage(e.message || 'Save failed')
+    } finally {
+      setBusy('')
+    }
+  }
+
+  async function downloadBookBackup() {
+    if (!book?.id) return
+    try {
+      const { book: full } = await getBook(book.id)
+      const payload = {
+        format: 'authorforge-book-backup',
+        version: 1,
+        exported_at: new Date().toISOString(),
+        book: full,
+      }
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      const slug =
+        String(full.working_title || 'book')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '')
+          .slice(0, 40) || 'book'
+      a.href = url
+      a.download = `authorforge-${slug}-backup.json`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+      setMessage('Backup downloaded — import it later to restore this book.')
+    } catch (e) {
+      setMessage(e.message || 'Backup failed')
+    }
+  }
+
+  async function onImportBackupFile(file) {
+    if (!file) return
+    setBusy('import')
+    try {
+      const text = await file.text()
+      const parsed = JSON.parse(text)
+      const { book: imported } = await importBook(parsed)
+      rememberBookId(imported.id)
+      await refreshLibrary()
+      await loadBook(imported.id)
+      setMessage(`Imported “${imported.working_title}” into your library`)
+    } catch (e) {
+      setMessage(e.message || 'Import failed — use an AuthorForge backup JSON file')
+    } finally {
+      setBusy('')
+      if (importRef.current) importRef.current.value = ''
+    }
   }
 
   /** Flush visible wizard inputs before Next/Back — blur-only save was dropping titles. */
@@ -248,16 +483,26 @@ export default function Studio({ lang = 'en' }) {
 
   async function onDeleteBook(id) {
     if (!id) return
-    if (!window.confirm('Delete this book permanently?')) return
+    if (!window.confirm('Delete this book permanently from your library?')) return
     try {
       await deleteBook(id)
-      setBooks((prev) => prev.filter((b) => b.id !== id))
-      if (book?.id === id) {
-        const rest = books.filter((b) => b.id !== id)
-        if (rest[0]) await loadBook(rest[0].id)
-        else setBook(null)
+      if (recalledBookId() === id) {
+        try {
+          localStorage.removeItem(LAST_BOOK_KEY)
+        } catch {
+          /* ignore */
+        }
       }
-      setMessage('Book deleted')
+      const rest = (await refreshLibrary()).filter((b) => b.id !== id)
+      if (book?.id === id) {
+        if (rest[0]) await loadBook(rest[0].id)
+        else {
+          setBook(null)
+          setSectionKey('')
+          setEditorText('')
+        }
+      }
+      setMessage('Book removed from library')
     } catch (e) {
       setMessage(e.message || 'Delete failed')
     }
@@ -283,32 +528,72 @@ export default function Studio({ lang = 'en' }) {
         <button type="button" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }} onClick={onNewBook} disabled={!!busy}>
           {t(lang, 'newBook')}
         </button>
-        <div style={{ marginTop: '1rem' }}>
-          {(books || []).map((b) => (
-            <div key={b.id} className="row" style={{ marginBottom: '0.4rem', gap: '0.35rem' }}>
-              <button
-                type="button"
-                className={`btn ${book?.id === b.id ? 'btn-primary' : ''}`}
-                style={{ flex: 1, textAlign: 'left', minWidth: 0 }}
-                onClick={() => loadBook(b.id)}
-                title={b.working_title}
-              >
-                <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {b.working_title || 'Untitled'}
-                </span>
-              </button>
-              <button
-                type="button"
-                className="btn"
-                style={{ padding: '0.35rem 0.55rem' }}
-                title="Delete book"
-                aria-label={`Delete ${b.working_title || 'book'}`}
-                onClick={() => onDeleteBook(b.id)}
-              >
-                ×
-              </button>
-            </div>
-          ))}
+        <div className="row" style={{ marginTop: '0.65rem', gap: '0.35rem' }}>
+          <button
+            type="button"
+            className="btn"
+            style={{ flex: 1 }}
+            disabled={!!busy}
+            onClick={() => importRef.current?.click()}
+            title="Import a saved book backup"
+          >
+            <Upload size={14} /> Import
+          </button>
+          <input
+            ref={importRef}
+            type="file"
+            accept="application/json,.json"
+            hidden
+            onChange={(e) => onImportBackupFile(e.target.files?.[0])}
+          />
+        </div>
+        <h3 style={{ marginTop: '1.25rem', fontSize: '0.85rem', color: 'var(--af-muted)' }}>
+          Library {books?.length ? `(${books.length})` : ''}
+        </h3>
+        <p className="muted" style={{ margin: '0.25rem 0 0.65rem', fontSize: '0.72rem' }}>
+          {persistOn
+            ? 'Books stay saved on this studio. Open one anytime to edit or continue.'
+            : 'Persistence is off — export a backup before restarting.'}
+        </p>
+        <div className="library-list">
+          {(books || []).length === 0 ? (
+            <p className="muted" style={{ fontSize: '0.78rem' }}>
+              No saved books yet. Create one or import a backup.
+            </p>
+          ) : (
+            (books || []).map((b) => {
+              const stepTitle = WIZARD_STEPS.find((s) => s.id === b.wizard_step)?.title || b.wizard_step
+              return (
+                <div key={b.id} className={`library-item ${book?.id === b.id ? 'active' : ''}`}>
+                  <button
+                    type="button"
+                    className="library-open"
+                    onClick={() => loadBook(b.id)}
+                    title={b.working_title}
+                  >
+                    <span className="library-title">{b.working_title || 'Untitled'}</span>
+                    <span className="library-meta">
+                      {stepTitle}
+                      {b.word_count ? ` · ${b.word_count.toLocaleString()}w` : ''}
+                      {b.section_count ? ` · ${b.section_count} sec` : ''}
+                    </span>
+                    {b.updated_at ? (
+                      <span className="library-meta">{formatUpdated(b.updated_at)}</span>
+                    ) : null}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn library-delete"
+                    title="Delete book"
+                    aria-label={`Delete ${b.working_title || 'book'}`}
+                    onClick={() => onDeleteBook(b.id)}
+                  >
+                    ×
+                  </button>
+                </div>
+              )
+            })
+          )}
         </div>
         <h3 style={{ marginTop: '1.25rem', fontSize: '0.85rem', color: 'var(--af-muted)' }}>Wizard</h3>
         <ul className="step-list">
@@ -332,8 +617,27 @@ export default function Studio({ lang = 'en' }) {
             <BookOpen size={18} aria-hidden />
             <strong>{book?.working_title || 'No book selected'}</strong>
             <span className="badge">{stepMeta.title}</span>
+            {savedFlash ? <span className="badge">Saved</span> : null}
           </div>
           <div className="row">
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={!book || !!busy}
+              onClick={saveNow}
+              title="Save this book to your library"
+            >
+              <Save size={14} /> Save book
+            </button>
+            <button
+              type="button"
+              className="btn"
+              disabled={!book || !!busy}
+              onClick={downloadBookBackup}
+              title="Download a JSON backup you can import later"
+            >
+              <Download size={14} /> Backup
+            </button>
             <span className="muted">
               <Coins size={14} style={{ verticalAlign: 'middle' }} /> {credits} {t(lang, 'credits')}
             </span>
@@ -375,6 +679,7 @@ export default function Studio({ lang = 'en' }) {
               step={step}
               book={book}
               busy={busy}
+              assist={assist}
               leafNodes={leafNodes}
               sectionKey={sectionKey}
               setSectionKey={setSectionKey}
@@ -385,6 +690,9 @@ export default function Studio({ lang = 'en' }) {
               onSaveBasics={saveBasics}
               onLockBible={() => lockBible(book.id).then((r) => setBook(r.book))}
               onRunJob={runJob}
+              onDownloadExport={(url, typeHint) =>
+                downloadExportUrl(url, exportFilename(typeHint || assist?.type || 'export', assist?.outputs || {}))
+              }
               onSaveSection={async () => {
                 const r = await saveSection(book.id, sectionKey, editorText)
                 setBook(r.book)
@@ -392,7 +700,19 @@ export default function Studio({ lang = 'en' }) {
               }}
               onFillSlot={(i, text) => fillStorySlot(book.id, i, text).then((r) => setBook(r.book))}
               onConfirmClaim={(i) => updateClaim(book.id, i, 'user_confirmed').then((r) => setBook(r.book))}
-              onCompliance={(body) => saveCompliance(book.id, body).then((r) => setBook(r.book))}
+              onCompliance={async (body) => {
+                try {
+                  const r = await saveCompliance(book.id, body)
+                  setBook(r.book)
+                  setMessage(
+                    body.export_override
+                      ? 'Compliance saved (export override noted)'
+                      : 'Compliance marked reviewed',
+                  )
+                } catch (e) {
+                  setMessage(e.message || 'Compliance save failed')
+                }
+              }}
               onInlineAction={async ({ instruction, selection }) => {
                 const out = await runJob('inline_edit', { instruction, selection })
                 return out
@@ -413,27 +733,24 @@ export default function Studio({ lang = 'en' }) {
         <p className="muted" style={{ marginTop: '0.5rem' }}>
           Scoped to this step. Suggestions never invent credentials or stats.
         </p>
-        <pre
-          className="card"
-          style={{
-            marginTop: '0.75rem',
-            whiteSpace: 'pre-wrap',
-            fontSize: '0.75rem',
-            maxHeight: '60vh',
-            overflow: 'auto',
+        <StepAssistant
+          assist={assist}
+          busy={busy}
+          canSuggest={!!book}
+          onSuggestTitles={() => runJob('title_variations', { seed: book?.working_title })}
+          onApplyTitle={async (opt) => {
+            if (!opt?.title) return
+            await saveBasics({
+              working_title: String(opt.title).slice(0, 200),
+              subtitle: String(opt.subtitle || '').slice(0, 300),
+            })
+            setMessage(`Applied title: ${opt.title}`)
           }}
-        >
-          {assist}
-        </pre>
-        <button
-          type="button"
-          className="btn"
-          style={{ width: '100%', marginTop: '0.75rem' }}
-          disabled={!book || !!busy}
-          onClick={() => runJob('title_variations', { seed: book?.working_title })}
-        >
-          <RefreshCw size={14} /> Suggest titles
-        </button>
+          onDownload={(url) => {
+            if (!url) return
+            downloadExportUrl(url, exportFilename(assist?.type || 'export', assist?.outputs || {}))
+          }}
+        />
       </aside>
     </div>
   )
@@ -456,14 +773,334 @@ function flattenLeaves(chapters, prefix = 'c') {
   return out
 }
 
+function MetadataPanel({ book, busy, assist, onRunJob, onSaveBasics }) {
+  const meta = book?.metadata || {}
+  const disclosure = book?.compliance?.ai_disclosure || {}
+  const [description, setDescription] = useState(meta.description_html || '')
+  const [keywords, setKeywords] = useState((meta.keywords || []).join(', '))
+  const [categories, setCategories] = useState((meta.categories || []).join(', '))
+  const [backCopy, setBackCopy] = useState(meta.back_cover_copy || '')
+  const [usedAiText, setUsedAiText] = useState(disclosure.used_ai_text !== false)
+  const [usedAiImages, setUsedAiImages] = useState(!!disclosure.used_ai_images)
+  const [disclosureNote, setDisclosureNote] = useState(
+    disclosure.note || 'Disclose AI-assisted text (and images if used) at KDP upload when required.',
+  )
+
+  useEffect(() => {
+    const m = book?.metadata || {}
+    const d = book?.compliance?.ai_disclosure || {}
+    setDescription(m.description_html || '')
+    setKeywords((m.keywords || []).join(', '))
+    setCategories((m.categories || []).join(', '))
+    setBackCopy(m.back_cover_copy || '')
+    setUsedAiText(d.used_ai_text !== false)
+    setUsedAiImages(!!d.used_ai_images)
+    setDisclosureNote(
+      d.note || 'Disclose AI-assisted text (and images if used) at KDP upload when required.',
+    )
+  }, [book?.id, book?.metadata, book?.compliance?.ai_disclosure])
+
+  const warnings =
+    assist?.type === 'metadata_generate' && Array.isArray(assist?.outputs?.warnings)
+      ? assist.outputs.warnings
+      : []
+
+  async function saveManual() {
+    const kw = keywords
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 7)
+    const cats = categories
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 3)
+    await onSaveBasics({
+      metadata: {
+        ...(book.metadata || {}),
+        description_html: description.slice(0, 8000),
+        keywords: kw,
+        categories: cats,
+        back_cover_copy: backCopy.slice(0, 2000),
+      },
+      compliance: {
+        ...(book.compliance || {}),
+        ai_disclosure: {
+          ...(book.compliance?.ai_disclosure || {}),
+          used_ai_text: usedAiText,
+          used_ai_images: usedAiImages,
+          note: disclosureNote.slice(0, 500),
+        },
+      },
+    })
+  }
+
+  return (
+    <div className="card">
+      <h2>Metadata & description</h2>
+      <p className="muted" style={{ marginBottom: '0.75rem' }}>
+        Draft the KDP product description, 7 keywords, and categories from this book — then edit and save.
+        Never invent reviews, rankings, or credentials.
+      </p>
+      <div className="row" style={{ marginBottom: '0.75rem' }}>
+        <button
+          type="button"
+          className="btn btn-primary"
+          disabled={!!busy}
+          onClick={() => onRunJob('metadata_generate')}
+        >
+          Generate metadata + AI disclosure helper
+        </button>
+        <button type="button" className="btn" disabled={!!busy} onClick={saveManual}>
+          Save metadata
+        </button>
+      </div>
+      {warnings.map((w) => (
+        <p key={w} className="warn" style={{ marginTop: 0 }}>
+          {w}
+        </p>
+      ))}
+      <div className="field">
+        <label htmlFor="af-desc">Description (HTML subset)</label>
+        <textarea
+          id="af-desc"
+          rows={8}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="<p>Your Amazon description…</p>"
+        />
+      </div>
+      <div className="field">
+        <label htmlFor="af-keywords">Keywords (7, comma-separated)</label>
+        <input
+          id="af-keywords"
+          value={keywords}
+          onChange={(e) => setKeywords(e.target.value)}
+          placeholder="courage, children, emotions, …"
+        />
+      </div>
+      <div className="field">
+        <label htmlFor="af-categories">Categories (3, comma-separated)</label>
+        <input
+          id="af-categories"
+          value={categories}
+          onChange={(e) => setCategories(e.target.value)}
+          placeholder="Children's Books, Education & Teaching, …"
+        />
+      </div>
+      <div className="field">
+        <label htmlFor="af-back">Back cover copy</label>
+        <textarea
+          id="af-back"
+          rows={4}
+          value={backCopy}
+          onChange={(e) => setBackCopy(e.target.value)}
+          placeholder="Short back-cover blurb…"
+        />
+      </div>
+      <h3 style={{ marginTop: '1rem', fontSize: '1rem' }}>AI disclosure helper</h3>
+      <p className="muted" style={{ marginBottom: '0.5rem' }}>
+        Reminder for KDP upload — you confirm what applies.
+      </p>
+      <label className="row" style={{ gap: '0.5rem', marginBottom: '0.35rem' }}>
+        <input type="checkbox" checked={usedAiText} onChange={(e) => setUsedAiText(e.target.checked)} />
+        Used AI for text
+      </label>
+      <label className="row" style={{ gap: '0.5rem', marginBottom: '0.35rem' }}>
+        <input type="checkbox" checked={usedAiImages} onChange={(e) => setUsedAiImages(e.target.checked)} />
+        Used AI for images
+      </label>
+      <div className="field">
+        <label htmlFor="af-disclosure-note">Disclosure note</label>
+        <input
+          id="af-disclosure-note"
+          value={disclosureNote}
+          onChange={(e) => setDisclosureNote(e.target.value)}
+        />
+      </div>
+      {description ? (
+        <div style={{ marginTop: '1rem' }}>
+          <h3 style={{ margin: '0 0 0.5rem', fontSize: '1rem' }}>Preview</h3>
+          <div className="meta-preview">
+            <p className="muted" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
+              {description
+                .replace(/<br\s*\/?>/gi, '\n')
+                .replace(/<\/p>/gi, '\n\n')
+                .replace(/<[^>]+>/g, '')
+                .trim()}
+            </p>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function CoverStudioPanel({ book, busy, assist, onRunJob, onDownloadExport }) {
+  const covers = book?.covers || []
+  const latestCover = covers.length ? covers[covers.length - 1] : null
+  const coverUrl =
+    (assist?.type === 'cover_generate' || assist?.type === 'cover_revise'
+      ? assist?.outputs?.download || assist?.outputs?.cover?.export?.url
+      : null) || latestCover?.export?.url
+  const coverMeta = assist?.outputs?.cover || latestCover
+  const wrapUrl =
+    assist?.type === 'cover_wrap' && assist?.outputs?.url ? assist.outputs.url : null
+  const wrapMeta = assist?.type === 'cover_wrap' ? assist.outputs?.meta : null
+  const modules =
+    assist?.type === 'aplus_module' && Array.isArray(assist?.outputs?.modules)
+      ? assist.outputs.modules
+      : []
+  const adScript =
+    assist?.type === 'ad_script' && assist?.outputs?.ad_script ? assist.outputs.ad_script : ''
+
+  return (
+    <div className="card">
+      <h2>Cover studio</h2>
+      <p className="muted" style={{ marginBottom: '0.75rem' }}>
+        Generate a front cover SVG, then export the KDP wrap PDF. A+ modules and ad script download or
+        appear below when ready.
+      </p>
+      <div className="row">
+        <button
+          type="button"
+          className="btn btn-primary"
+          disabled={!!busy}
+          onClick={() => onRunJob('cover_generate')}
+        >
+          Generate cover (SVG + typography QA)
+        </button>
+        <button type="button" className="btn" disabled={!!busy} onClick={() => onRunJob('cover_wrap')}>
+          Export cover wrap PDF
+        </button>
+        <button type="button" className="btn" disabled={!!busy} onClick={() => onRunJob('aplus_module')}>
+          A+ modules
+        </button>
+        <button type="button" className="btn" disabled={!!busy} onClick={() => onRunJob('ad_script')}>
+          Ad script
+        </button>
+      </div>
+
+      {coverUrl ? (
+        <div className="cover-result" style={{ marginTop: '1rem' }}>
+          <h3 style={{ margin: '0 0 0.5rem', fontSize: '1rem' }}>Front cover</h3>
+          {coverMeta?.warning ? <p className="warn">{coverMeta.warning}</p> : null}
+          {coverMeta?.legibility != null ? (
+            <p className="muted" style={{ margin: '0 0 0.5rem' }}>
+              Thumbnail legibility: {Number(coverMeta.legibility).toFixed(2)}
+              {coverMeta.typography_ok === false ? ' · typography needs review' : ' · typography OK'}
+            </p>
+          ) : null}
+          <div className="cover-preview">
+            <img src={coverUrl} alt={coverMeta?.title || book?.working_title || 'Cover preview'} />
+          </div>
+          <button
+            type="button"
+            className="btn btn-primary"
+            style={{ marginTop: '0.75rem' }}
+            onClick={() => onDownloadExport?.(coverUrl, 'cover_generate')}
+          >
+            Download cover SVG
+          </button>
+        </div>
+      ) : (
+        <p className="muted" style={{ marginTop: '1rem' }}>
+          No cover yet — click Generate cover to create one.
+        </p>
+      )}
+
+      {wrapUrl ? (
+        <div style={{ marginTop: '1.25rem' }}>
+          <h3 style={{ margin: '0 0 0.5rem', fontSize: '1rem' }}>Cover wrap PDF</h3>
+          {wrapMeta?.pageCount != null ? (
+            <p className="muted" style={{ margin: '0 0 0.5rem' }}>
+              Based on {wrapMeta.pageCount} interior pages
+              {wrapMeta.layout?.spinePt != null
+                ? ` · spine ~${(Number(wrapMeta.layout.spinePt) / 72).toFixed(3)} in`
+                : ''}
+            </p>
+          ) : null}
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => onDownloadExport?.(wrapUrl, 'cover_wrap')}
+          >
+            Download wrap PDF
+          </button>
+        </div>
+      ) : null}
+
+      {modules.length ? (
+        <div style={{ marginTop: '1.25rem' }}>
+          <h3 style={{ margin: '0 0 0.5rem', fontSize: '1rem' }}>A+ modules</h3>
+          <ul className="assist-simple">
+            {modules.map((m) => (
+              <li key={m.type}>
+                <span style={{ textTransform: 'capitalize' }}>{String(m.type).replace(/_/g, ' ')}</span>
+                {m.export?.url ? (
+                  <>
+                    {' · '}
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={() => onDownloadExport?.(m.export.url, `aplus-${m.type}`)}
+                    >
+                      Download
+                    </button>
+                  </>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {adScript ? (
+        <div style={{ marginTop: '1.25rem' }}>
+          <h3 style={{ margin: '0 0 0.5rem', fontSize: '1rem' }}>Ad script</h3>
+          <pre
+            className="muted"
+            style={{
+              whiteSpace: 'pre-wrap',
+              margin: 0,
+              padding: '0.75rem',
+              border: '1px solid var(--af-border)',
+              borderRadius: 8,
+            }}
+          >
+            {adScript}
+          </pre>
+          <button
+            type="button"
+            className="btn"
+            style={{ marginTop: '0.5rem' }}
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(adScript)
+              } catch {
+                /* ignore */
+              }
+            }}
+          >
+            Copy ad script
+          </button>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 function WizardStep(props) {
   const {
     step,
     book,
     busy,
+    assist,
     onSaveBasics,
     onNav,
     onRunJob,
+    onDownloadExport,
     onLockBible,
     leafNodes,
     sectionKey,
@@ -867,54 +1504,17 @@ function WizardStep(props) {
       )}
 
       {step === 'metadata' && (
-        <div className="card">
-          <h2>Metadata & description</h2>
-          <button
-            type="button"
-            className="btn btn-primary"
-            disabled={!!busy}
-            onClick={async () => {
-              // reuse description via title agent path — call description by competitive? use inline patch
-              await onSaveBasics({
-                metadata: {
-                  ...book.metadata,
-                  description_html: `<p>${book.bible?.usp || book.working_title}</p>`,
-                  keywords: ['nonfiction', 'guide', 'practical', 'workbook', 'habits', 'clarity', 'systems'],
-                  categories: ['Business', 'Self-Help', 'Education'],
-                },
-                compliance: {
-                  ...book.compliance,
-                  ai_disclosure: {
-                    used_ai_text: true,
-                    used_ai_images: false,
-                    note: 'Disclose AI-generated text at KDP upload if applicable.',
-                  },
-                },
-              })
-            }}
-          >
-            Prefill metadata + AI disclosure helper
-          </button>
-          <pre className="muted">{JSON.stringify(book.metadata, null, 2)}</pre>
-        </div>
+        <MetadataPanel book={book} busy={busy} assist={assist} onRunJob={onRunJob} onSaveBasics={onSaveBasics} />
       )}
 
       {step === 'cover' && (
-        <div className="card">
-          <h2>Cover studio</h2>
-          <button type="button" className="btn btn-primary" disabled={!!busy} onClick={() => onRunJob('cover_generate')}>
-            Generate cover (SVG + typography QA)
-          </button>
-          <button type="button" className="btn" disabled={!!busy} onClick={() => onRunJob('cover_wrap')}>
-            Export cover wrap PDF
-          </button>
-          <button type="button" className="btn" disabled={!!busy} onClick={() => onRunJob('aplus_module')}>
-            A+ modules
-          </button>
-          <button type="button" className="btn" disabled={!!busy} onClick={() => onRunJob('ad_script')}>
-            Ad script
-          </button>
-        </div>
+        <CoverStudioPanel
+          book={book}
+          busy={busy}
+          assist={assist}
+          onRunJob={onRunJob}
+          onDownloadExport={onDownloadExport}
+        />
       )}
 
       {step === 'publish' && (
@@ -928,6 +1528,10 @@ function WizardStep(props) {
           ) : (
             <p className="muted">Export gate clear (or no pending items).</p>
           )}
+          <p className="muted" style={{ marginBottom: '0.75rem' }}>
+            Each export runs the job, then downloads the file to your computer. Storefront opens the public
+            sales page in a new tab.
+          </p>
           <div className="row">
             <button type="button" className="btn" disabled={!!busy} onClick={() => onRunJob('export_interior_pdf')}>
               Interior PDF
@@ -950,18 +1554,24 @@ function WizardStep(props) {
               Publish storefront
             </button>
           </div>
-          {book.storefront ? (
+          {book.storefront?.slug ? (
             <p style={{ marginTop: '0.75rem' }}>
               Storefront:{' '}
-              <a href={`/?view=store&slug=${book.storefront.slug}`} rel="noopener noreferrer">
-                /?view=store&slug={book.storefront.slug}
+              <a
+                href={`/?view=store&slug=${encodeURIComponent(book.storefront.slug)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Open /?view=store&slug={book.storefront.slug}
               </a>
+              {book.storefront.status ? ` · ${book.storefront.status}` : ''}
             </p>
           ) : null}
           <button
             type="button"
             className="btn"
             style={{ marginTop: '0.75rem' }}
+            disabled={!!busy}
             onClick={() =>
               onCompliance({
                 passed: true,
@@ -973,6 +1583,12 @@ function WizardStep(props) {
           >
             Mark compliance reviewed
           </button>
+          {book.compliance?.passed ? (
+            <p className="muted" style={{ marginTop: '0.5rem' }}>
+              Compliance reviewed
+              {book.compliance.export_override ? ' (soft-gate override)' : ''}.
+            </p>
+          ) : null}
         </div>
       )}
       </form>

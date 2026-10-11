@@ -30,12 +30,14 @@ const REGISTRY = {
     name: 'writer',
     version: 'v1',
     file: 'writer.v1.md',
+    coauthorRules: true,
     outputSchema: writerOutput,
   },
   'outline.v1': {
     name: 'outline',
     version: 'v1',
     file: 'outline.v1.md',
+    coauthorRules: true,
     outputSchema: z.object({
       chapters: z.array(outlineNode),
       note: z.string().optional(),
@@ -45,12 +47,17 @@ const REGISTRY = {
     name: 'title',
     version: 'v1',
     file: null,
-    inlineSystem: 'TitleAgent: title variations. Never invent bestseller claims. Return JSON options.',
+    coauthorRules: false,
+    inlineSystem: `TitleAgent: propose non-fiction title + subtitle variations.
+Never invent bestseller claims, ranks, or trademarked brand names.
+Return ONLY JSON shaped exactly as:
+{"options":[{"title":"...","subtitle":"...","risk":"low|medium|high"}],"warnings":["..."]}
+Provide 4-6 options. subtitle may be an empty string.`,
     outputSchema: z.object({
       options: z.array(
         z.object({
-          title: z.string(),
-          subtitle: z.string(),
+          title: z.string().min(1),
+          subtitle: z.string().default(''),
           risk: z.string().optional(),
         })
       ),
@@ -61,6 +68,7 @@ const REGISTRY = {
     name: 'positioning',
     version: 'v1',
     file: null,
+    coauthorRules: false,
     inlineSystem: `PositioningAgent: differentiated angles from public metadata only.
 Return ONLY JSON shaped exactly as:
 {"angles":[{"name":"...","rationale":"...","confidence":"low|medium|high"}],"disclaimer":"..."}
@@ -80,6 +88,7 @@ Never invent sales ranks, review counts, or Amazon scrape claims. Use estimates/
     name: 'persona',
     version: 'v1',
     file: null,
+    coauthorRules: false,
     inlineSystem: 'PersonaAgent: voice descriptor from samples; honest bio only from user facts.',
     outputSchema: z.object({
       voice_descriptor: z.record(z.any()),
@@ -91,6 +100,7 @@ Never invent sales ranks, review counts, or Amazon scrape claims. Use estimates/
     name: 'continuity',
     version: 'v1',
     file: null,
+    coauthorRules: false,
     inlineSystem: `ContinuityAgent: summarize the section in 40-80 words.
 Return ONLY JSON:
 {"summary":"...","key_claims":[],"terms_introduced":[],"examples_used":[],"open_loops":[]}
@@ -107,11 +117,18 @@ Do not invent credentials or statistics.`,
     name: 'description',
     version: 'v1',
     file: null,
-    inlineSystem: 'DescriptionAgent: Amazon-ready description (HTML subset), 7 keywords, 3 categories.',
+    coauthorRules: false,
+    inlineSystem: `DescriptionAgent: draft Amazon KDP product metadata from the provided book fields only.
+Return JSON with:
+- description_html: short HTML (<p>, <b>, <br> only) matching THIS book's title/topic/USP/audience — not a generic template
+- keywords: exactly 7 short keyword phrases derived from the book (no trademarked brands, no invented stats)
+- categories: exactly 3 browse-style category labels that fit the book
+Never invent credentials, reviews, #1 claims, or sales figures. Mark anything uncertain as editable draft.`,
     outputSchema: z.object({
       description_html: z.string(),
       keywords: z.array(z.string()),
       categories: z.array(z.string()),
+      back_cover_copy: z.string().optional(),
     }),
   },
 }
@@ -140,9 +157,9 @@ export function renderPrompt(template, vars = {}) {
 function normalizeAgentPayload(data, schema) {
   if (data == null) return data
   const shape = schema?.shape || null
-  const preferredArrayKey =
-    (shape && Object.keys(shape).find((k) => k === 'angles' || k === 'options' || k === 'items')) ||
-    'angles'
+  const wantsOptions = !!(shape && 'options' in shape)
+  const wantsAngles = !!(shape && 'angles' in shape)
+  const preferredArrayKey = wantsOptions ? 'options' : wantsAngles ? 'angles' : 'items'
 
   // Root array → wrap
   if (Array.isArray(data)) {
@@ -150,30 +167,49 @@ function normalizeAgentPayload(data, schema) {
   }
   if (typeof data !== 'object') return data
 
-  let next = data
-  // Alias keys models often use instead of `angles`
-  if (next.angles == null) {
+  let next = { ...data }
+
+  // TitleAgent aliases: titles / variations / suggestions → options
+  if (wantsOptions && next.options == null) {
+    const alt =
+      next.titles || next.variations || next.suggestions || next.title_options || next.items || next.results
+    if (Array.isArray(alt)) next.options = alt
+  }
+  if (Array.isArray(next.options)) {
+    next.options = next.options
+      .map((o) => {
+        if (typeof o === 'string') return { title: o.trim(), subtitle: '', risk: undefined }
+        if (!o || typeof o !== 'object') return null
+        const title = String(o.title || o.name || o.working_title || '').trim()
+        if (!title) return null
+        return {
+          title,
+          subtitle: String(o.subtitle || o.tagline || o.sub_title || '').trim(),
+          risk: o.risk != null ? String(o.risk) : undefined,
+        }
+      })
+      .filter(Boolean)
+  }
+
+  // Positioning aliases — do not steal `options` when the schema is title-shaped
+  if (wantsAngles && next.angles == null) {
     const alt =
       next.positioning ||
       next.competitive_angles ||
       next.differentiators ||
-      next.options ||
-      next.items
-    if (Array.isArray(alt)) next = { ...next, angles: alt }
+      next.items ||
+      (!wantsOptions ? next.options : null)
+    if (Array.isArray(alt)) next.angles = alt
   }
-  // Map { title, reason } style objects into name/rationale
   if (Array.isArray(next.angles)) {
-    next = {
-      ...next,
-      angles: next.angles.map((a) => {
-        if (!a || typeof a !== 'object') return a
-        return {
-          name: a.name || a.title || a.angle || 'Angle',
-          rationale: a.rationale || a.reason || a.description || a.summary || '',
-          confidence: a.confidence,
-        }
-      }),
-    }
+    next.angles = next.angles.map((a) => {
+      if (!a || typeof a !== 'object') return a
+      return {
+        name: a.name || a.title || a.angle || 'Angle',
+        rationale: a.rationale || a.reason || a.description || a.summary || '',
+        confidence: a.confidence,
+      }
+    })
   }
   return next
 }

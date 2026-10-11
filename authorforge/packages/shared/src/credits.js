@@ -22,6 +22,7 @@ export const CREDIT_COSTS = {
   cover_wrap: 3,
   aplus_module: 3,
   ad_script: 2,
+  metadata_generate: 2,
   export_interior_pdf: 3,
   export_epub: 2,
   export_docx: 2,

@@ -18,17 +18,43 @@ export function loadPersistedState(path) {
   }
 }
 
+export function writePersistedState(path, data) {
+  mkdirSync(dirname(path), { recursive: true })
+  writeFileSync(path, JSON.stringify(data, null, 2), 'utf8')
+}
+
+/**
+ * Debounced + flushable saver so books survive API restarts.
+ * Call flush() on SIGINT/SIGTERM and after book create/update/delete.
+ */
 export function createDebouncedSaver(path, snapshotFn, delayMs = 400) {
   let timer = null
-  return () => {
+
+  function write() {
+    try {
+      writePersistedState(path, snapshotFn())
+      return true
+    } catch (e) {
+      console.warn('[authorforge] persist failed', e.message)
+      return false
+    }
+  }
+
+  function schedule() {
     if (timer) clearTimeout(timer)
     timer = setTimeout(() => {
-      try {
-        mkdirSync(dirname(path), { recursive: true })
-        writeFileSync(path, JSON.stringify(snapshotFn(), null, 2), 'utf8')
-      } catch (e) {
-        console.warn('[authorforge] persist failed', e.message)
-      }
+      timer = null
+      write()
     }, delayMs)
   }
+
+  function flush() {
+    if (timer) {
+      clearTimeout(timer)
+      timer = null
+    }
+    return write()
+  }
+
+  return { schedule, flush }
 }

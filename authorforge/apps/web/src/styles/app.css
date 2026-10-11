@@ -159,6 +159,136 @@ a {
   max-width: 42rem;
 }
 
+.library-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-height: 38vh;
+  overflow: auto;
+  padding-right: 0.15rem;
+}
+
+.library-item {
+  display: flex;
+  align-items: stretch;
+  gap: 0.3rem;
+  border: 1px solid var(--af-border);
+  border-radius: 10px;
+  background: var(--af-bg-elevated);
+  overflow: hidden;
+}
+
+.library-item.active {
+  border-color: var(--af-accent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--af-accent) 45%, transparent);
+}
+
+.library-open {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0.55rem 0.65rem;
+  min-height: var(--af-touch);
+}
+
+.library-title {
+  display: block;
+  font-weight: 600;
+  font-size: 0.84rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.library-meta {
+  display: block;
+  color: var(--af-muted);
+  font-size: 0.68rem;
+  margin-top: 0.15rem;
+}
+
+.library-delete {
+  border: 0;
+  border-left: 1px solid var(--af-border);
+  border-radius: 0;
+  padding: 0.35rem 0.55rem;
+  min-width: var(--af-touch);
+}
+
+.assist-dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.assist-dl dt {
+  color: var(--af-muted);
+  margin: 0;
+}
+
+.assist-dl dd {
+  margin: 0;
+}
+
+.assist-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.assist-list li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--af-border);
+}
+
+.assist-list li:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.assist-simple {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.meta-preview {
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--af-border);
+  background: var(--af-bg-elevated);
+}
+
+.cover-preview {
+  max-width: 280px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--af-border);
+  background: var(--af-bg-elevated);
+}
+
+.cover-preview img {
+  width: 100%;
+  display: block;
+  aspect-ratio: 2 / 3;
+  object-fit: contain;
+  background: var(--af-bg);
+}
+
 .muted {
   color: var(--af-muted);
   font-size: 0.85rem;

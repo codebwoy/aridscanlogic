@@ -27,3 +27,17 @@ test('FakeLLMProvider section includes story slot markers', async () => {
   assert.ok(data.content_md.includes('STORY_SLOT'))
   assert.ok(Array.isArray(data.story_slots))
 })
+
+test('FakeLLMProvider title wins even when co-writer rules are in system', async () => {
+  const p = new FakeLLMProvider()
+  const r = await p.complete({
+    modelClass: 'cheap',
+    system: 'You are a professional non-fiction book author\'s co-writer.\n\nTitleAgent: title variations.',
+    messages: [{ role: 'user', content: '{"seed":"Test"}' }],
+    metadata: { promptName: 'title', promptKey: 'title.v1' },
+  })
+  const data = JSON.parse(r.text)
+  assert.ok(Array.isArray(data.options))
+  assert.ok(data.options.length >= 3)
+  assert.ok(data.options[0].title)
+})

@@ -176,17 +176,19 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
           input: {
             topic: book?.topic,
             bible: book?.bible,
-            seed: inputs.seed,
+            seed: inputs.seed || book?.working_title,
           },
           metadata: { bookId, jobId },
         })
         if (book) await store.addLlmCost(userId, bookId, agent.completion.costUsd)
-        return agent.parsed
+        if (Array.isArray(agent.parsed?.options) && agent.parsed.options.length) return agent.parsed
+        return starterTitleOptions(inputs.seed || book?.working_title, book?.topic, [
+          'Model returned no options — starter titles below. Edit freely.',
+        ])
       } catch (e) {
-        return {
-          options: [],
-          warnings: [`Title suggestions unavailable (${e.message || 'parse error'}). Enter a title manually.`],
-        }
+        return starterTitleOptions(inputs.seed || book?.working_title, book?.topic, [
+          `Live title model failed (${e.message || 'parse error'}). Showing starter titles — edit freely.`,
+        ])
       }
     }
     case 'persona_derive': {
@@ -744,6 +746,71 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
       })
       return { storefront, path: `/store/${slug}` }
     }
+    case 'metadata_generate': {
+      if (!book) throw new Error('book required')
+      let parsed
+      let warnings = []
+      try {
+        const agent = await runAgent(llm, 'description.v1', {
+          modelClass: 'cheap',
+          input: {
+            working_title: book.working_title,
+            subtitle: book.subtitle,
+            author_name: book.author_name,
+            topic: book.topic,
+            language: book.language,
+            usp: book.bible?.usp,
+            tone: book.bible?.tone,
+            audience: book.bible?.audience || book.bible?.ideal_reader,
+            structure_type: book.structure_type,
+            existing_metadata: book.metadata || {},
+          },
+          metadata: { bookId, jobId },
+        })
+        await store.addLlmCost(userId, bookId, agent.completion.costUsd)
+        parsed = agent.parsed
+      } catch (e) {
+        parsed = starterMetadata(book)
+        warnings = [
+          `Live description model failed (${e.message || 'parse error'}). Showing starter metadata from your book fields — edit freely.`,
+        ]
+      }
+      if (!parsed?.description_html) {
+        parsed = { ...starterMetadata(book), ...parsed }
+        warnings.push('Incomplete model output — filled missing fields from book.')
+      }
+      const keywords = normalizeKeywordList(parsed.keywords, book)
+      const categories = normalizeCategoryList(parsed.categories, book)
+      const metadata = {
+        ...(book.metadata || {}),
+        description_html: String(parsed.description_html || '').slice(0, 8000),
+        keywords,
+        categories,
+        back_cover_copy: String(
+          parsed.back_cover_copy || book.bible?.usp || stripSimpleHtml(parsed.description_html || '')
+        ).slice(0, 2000),
+        generated_at: new Date().toISOString(),
+      }
+      const prevDisclosure = book.compliance?.ai_disclosure || {}
+      const compliance = {
+        ...(book.compliance || {}),
+        ai_disclosure: {
+          ...prevDisclosure,
+          used_ai_text: true,
+          used_ai_images: Boolean(prevDisclosure.used_ai_images || (book.covers || []).length),
+          note:
+            prevDisclosure.note ||
+            'Disclose AI-assisted text (and images if used) at KDP upload when required.',
+          helper_prefilled: true,
+        },
+      }
+      await store.updateBook(userId, bookId, {
+        metadata,
+        compliance,
+        wizard_step: 'metadata',
+      })
+      return { metadata, compliance: compliance.ai_disclosure, warnings }
+    }
     case 'translation_chapter': {
       if (!book) throw new Error('book required')
       const key = inputs.sectionKey || Object.keys(book.sections || {})[0]
@@ -799,6 +866,99 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
     }
     default:
       throw new Error(`Unhandled job type: ${type}`)
+  }
+}
+
+/** Deterministic starter titles when the LLM fails — never invent ranks/credentials. */
+function starterTitleOptions(seed, topic, warnings = []) {
+  const base = String(seed || topic || 'Untitled non-fiction').trim().slice(0, 80) || 'Untitled non-fiction'
+  const short = base.replace(/^the\s+/i, '').slice(0, 48)
+  return {
+    options: [
+      { title: base, subtitle: 'A Practical Guide', risk: 'low' },
+      { title: `The ${short} Playbook`, subtitle: 'Clear Steps Without Hype', risk: 'low' },
+      { title: `${short}: Field Notes`, subtitle: 'What Works in Practice', risk: 'low' },
+      { title: `Fewer Shortcuts, Better ${short}`, subtitle: 'Build Skills You Can Defend', risk: 'medium' },
+      { title: `Ship the Framework`, subtitle: `Turn Experience Into ${short}`, risk: 'low' },
+    ],
+    warnings: [
+      ...warnings,
+      'Do not claim “bestseller” or trademarked names in titles.',
+    ],
+  }
+}
+
+function escapeHtml(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function stripSimpleHtml(html) {
+  return String(html || '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function keywordSeedsFromBook(book) {
+  const raw = [book?.working_title, book?.subtitle, book?.topic, book?.bible?.usp]
+    .filter(Boolean)
+    .join(' ')
+  const words = raw
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .split(/\s+/)
+    .filter((w) => w.length >= 3 && !['the', 'and', 'for', 'with', 'from', 'that', 'this'].includes(w))
+  const unique = [...new Set(words)]
+  return unique.slice(0, 7)
+}
+
+function normalizeKeywordList(list, book) {
+  const fromModel = (Array.isArray(list) ? list : [])
+    .map((k) => String(k || '').trim())
+    .filter(Boolean)
+    .slice(0, 7)
+  if (fromModel.length >= 5) return fromModel
+  const seeds = keywordSeedsFromBook(book)
+  return [...fromModel, ...seeds].filter(Boolean).slice(0, 7)
+}
+
+function normalizeCategoryList(list, book) {
+  const fromModel = (Array.isArray(list) ? list : [])
+    .map((c) => String(c || '').trim())
+    .filter(Boolean)
+    .slice(0, 3)
+  if (fromModel.length >= 2) return fromModel
+  const blob = `${book?.topic || ''} ${book?.working_title || ''} ${book?.structure_type || ''}`.toLowerCase()
+  const defaults = /child|kid|picture book|storybook|ages?\s*\d|young reader/.test(blob)
+    ? ["Children's Books", 'Literature & Fiction', 'Education & Teaching']
+    : ['Self-Help', 'Education & Teaching', 'Business & Money']
+  return [...fromModel, ...defaults].filter(Boolean).slice(0, 3)
+}
+
+function starterMetadata(book) {
+  const title = String(book?.working_title || 'Untitled').trim() || 'Untitled'
+  const usp = String(book?.bible?.usp || '').trim()
+  const topic = String(book?.topic || '').trim()
+  const audience = String(book?.bible?.audience || book?.bible?.ideal_reader || '').trim()
+  const paras = [
+    `<p><b>${escapeHtml(title)}</b></p>`,
+    usp
+      ? `<p>${escapeHtml(usp)}</p>`
+      : topic
+        ? `<p>A reader-focused book about ${escapeHtml(topic)}. Edit this draft before publishing.</p>`
+        : `<p>Edit this product description before publishing. Keep claims you can stand behind.</p>`,
+  ]
+  if (audience) paras.push(`<p>For: ${escapeHtml(audience)}</p>`)
+  paras.push('<p>No invented reviews or rankings — verify every claim before KDP upload.</p>')
+  return {
+    description_html: paras.join(''),
+    keywords: normalizeKeywordList([], book),
+    categories: normalizeCategoryList([], book),
+    back_cover_copy: usp || stripSimpleHtml(paras.slice(0, 2).join(' ')),
   }
 }
 

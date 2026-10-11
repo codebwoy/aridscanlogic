@@ -111,6 +111,10 @@ const server = createServer(async (req, res) => {
         market: { id: getMarket().id },
         budget_eur_default: config.bookBudgetEur,
         hybrid: Boolean(webDist),
+        persist: {
+          enabled: Boolean(store.persistEnabled),
+          path: store.persistPath || null,
+        },
       })
       return
     }
@@ -310,12 +314,18 @@ const server = createServer(async (req, res) => {
     if (path === '/v1/me' && req.method === 'GET') {
       const credits = await store.getBalance(userId)
       const spentToday = await store.getSpentToday(userId)
+      const library = await store.listBooks(userId)
       sendJson(res, 200, {
         userId,
         credits,
         spentToday,
         dailyCap: config.dailyCreditCap,
         llm: llmProviderStatus(getLlm()),
+        library: { count: library.length },
+        persist: {
+          enabled: Boolean(store.persistEnabled),
+          path: store.persistPath || null,
+        },
       })
       return
     }
@@ -344,6 +354,13 @@ const server = createServer(async (req, res) => {
           ...(body.bible || {}),
         },
       })
+      sendJson(res, 201, { book })
+      return
+    }
+
+    if (path === '/v1/books/import' && req.method === 'POST') {
+      const body = await readJson(req)
+      const book = await store.importBook(userId, body)
       sendJson(res, 201, { book })
       return
     }
@@ -575,9 +592,26 @@ const server = createServer(async (req, res) => {
   }
 })
 
+function flushLibraryOnExit(signal) {
+  try {
+    const ok = store.flushPersist?.()
+    console.info(`[authorforge-api] flushed library on ${signal} (ok=${ok})`)
+  } catch (e) {
+    console.warn(`[authorforge-api] flush on ${signal} failed`, e.message)
+  }
+}
+
+for (const signal of ['SIGINT', 'SIGTERM']) {
+  process.on(signal, () => {
+    flushLibraryOnExit(signal)
+    server.close(() => process.exit(0))
+    setTimeout(() => process.exit(0), 1500).unref?.()
+  })
+}
+
 server.listen(config.port, config.host, () => {
   console.info(
-    `[authorforge-api] http://${config.host}:${config.port} (static=${Boolean(webDist)} llm=${config.llmProvider})`
+    `[authorforge-api] http://${config.host}:${config.port} (static=${Boolean(webDist)} llm=${config.llmProvider} persist=${store.persistEnabled ? 'on' : 'off'})`
   )
 })
 

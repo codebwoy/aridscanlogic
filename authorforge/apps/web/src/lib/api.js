@@ -58,6 +58,10 @@ export async function createBook(body) {
   return api('/v1/books', { method: 'POST', body })
 }
 
+export async function importBook(body) {
+  return api('/v1/books/import', { method: 'POST', body })
+}
+
 export async function getBook(id) {
   return api(`/v1/books/${id}`)
 }

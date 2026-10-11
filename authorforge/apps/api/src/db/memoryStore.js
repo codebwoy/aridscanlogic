@@ -4,18 +4,19 @@ import { resolveDataPath, loadPersistedState, createDebouncedSaver } from './per
 
 export function createMemoryStore(options = {}) {
   const envPersist = process.env.AUTHORFORGE_PERSIST
+  // Caller options win over env (tests pass persist:true even when AUTHORFORGE_PERSIST=0).
   const explicitlyOff =
-    options.persist === false || envPersist === '0' || envPersist === 'false'
+    options.persist === false ||
+    (options.persist !== true && (envPersist === '0' || envPersist === 'false'))
   const explicitlyOn =
     options.persist === true ||
-    envPersist === '1' ||
-    envPersist === 'true' ||
-    Boolean(process.env.AUTHORFORGE_DATA_PATH)
+    (!explicitlyOff &&
+      (envPersist === '1' || envPersist === 'true' || Boolean(process.env.AUTHORFORGE_DATA_PATH)))
   // Dev: persist by default. Prod: only when AUTHORFORGE_PERSIST=1 or DATA_PATH (Fly volume).
+  // Explicit persist:true always wins. NODE_TEST_CONTEXT otherwise keeps tests ephemeral.
   const persistEnabled =
     !explicitlyOff &&
-    !process.env.NODE_TEST_CONTEXT &&
-    (explicitlyOn || !config.isProd)
+    (explicitlyOn || (!process.env.NODE_TEST_CONTEXT && !config.isProd))
   const persistPath = resolveDataPath(options.persistPath || process.env.AUTHORFORGE_DATA_PATH)
 
   const users = new Map()
@@ -42,7 +43,11 @@ export function createMemoryStore(options = {}) {
     }
   }
 
-  const scheduleSave = persistEnabled ? createDebouncedSaver(persistPath, snapshot) : () => {}
+  const saver = persistEnabled
+    ? createDebouncedSaver(persistPath, snapshot)
+    : { schedule: () => {}, flush: () => true }
+  const scheduleSave = () => saver.schedule()
+  const flushSave = () => saver.flush()
 
   if (persistEnabled) {
     const loaded = loadPersistedState(persistPath)
@@ -58,6 +63,34 @@ export function createMemoryStore(options = {}) {
       console.info(
         `[authorforge] restored (${users.size} users, ${books.size} books) from ${persistPath}`
       )
+    } else {
+      console.info(`[authorforge] persistence on — empty library at ${persistPath}`)
+    }
+  } else {
+    console.warn('[authorforge] persistence OFF — books will be lost on restart')
+  }
+
+  function bookListMeta(b) {
+    const sections = b.sections || {}
+    const sectionKeys = Object.keys(sections)
+    let wordCount = 0
+    for (const sec of Object.values(sections)) {
+      if (Number.isFinite(sec?.word_count)) wordCount += sec.word_count
+      else wordCount += String(sec?.content_md || '').split(/\s+/).filter(Boolean).length
+    }
+    return {
+      id: b.id,
+      working_title: b.working_title,
+      status: b.status,
+      wizard_step: b.wizard_step,
+      language: b.language,
+      target_words: b.target_words,
+      llm_cost_usd: b.llm_cost_usd,
+      updated_at: b.updated_at,
+      created_at: b.created_at,
+      section_count: sectionKeys.length,
+      word_count: wordCount,
+      chapter_count: (b.outline?.chapters || []).length,
     }
   }
 
@@ -95,6 +128,8 @@ export function createMemoryStore(options = {}) {
 
   const api = {
     persistPath: persistEnabled ? persistPath : null,
+    persistEnabled,
+    flushPersist: flushSave,
 
     async ensureUser(externalRef = 'local-dev') {
       for (const u of users.values()) {
@@ -202,7 +237,7 @@ export function createMemoryStore(options = {}) {
         updated_at: new Date().toISOString(),
       }
       books.set(book.id, book)
-      scheduleSave()
+      flushSave()
       return book
     },
 
@@ -215,16 +250,7 @@ export function createMemoryStore(options = {}) {
     async listBooks(userId) {
       return [...books.values()]
         .filter((b) => b.user_id === userId)
-        .map((b) => ({
-          id: b.id,
-          working_title: b.working_title,
-          status: b.status,
-          wizard_step: b.wizard_step,
-          language: b.language,
-          target_words: b.target_words,
-          llm_cost_usd: b.llm_cost_usd,
-          updated_at: b.updated_at,
-        }))
+        .map(bookListMeta)
         .sort((a, b) => (a.updated_at < b.updated_at ? 1 : -1))
     },
 
@@ -252,7 +278,7 @@ export function createMemoryStore(options = {}) {
       if (patch.covers) next.covers = patch.covers
       if (patch.storefront !== undefined) next.storefront = patch.storefront
       books.set(bookId, next)
-      scheduleSave()
+      flushSave()
       return next
     },
 
@@ -263,8 +289,50 @@ export function createMemoryStore(options = {}) {
       for (const [jid, job] of jobs) {
         if (job.book_id === bookId) jobs.delete(jid)
       }
-      scheduleSave()
+      flushSave()
       return true
+    },
+
+    /** Re-import a previously exported book backup into this user's library. */
+    async importBook(userId, payload = {}) {
+      const src = payload.book && typeof payload.book === 'object' ? payload.book : payload
+      if (!src || typeof src !== 'object') {
+        const err = new Error('Invalid book backup')
+        err.status = 400
+        throw err
+      }
+      const title = String(src.working_title || 'Imported book').slice(0, 200)
+      const created = await api.createBook(userId, {
+        working_title: title,
+        subtitle: src.subtitle || '',
+        author_name: src.author_name || '',
+        genre: src.genre,
+        topic: src.topic || '',
+        target_words: src.target_words,
+        chapter_count: src.chapter_count,
+        structure_type: src.structure_type,
+        language: src.language,
+        trim_size: src.trim_size,
+        wizard_step: src.wizard_step || 'writing',
+        bible: src.bible || {},
+        persona: src.persona || null,
+        competitors: src.competitors || [],
+        resources: src.resources || [],
+        outline: src.outline || { chapters: [] },
+        sections: src.sections || {},
+        metadata: src.metadata || {},
+        formatting: src.formatting || { preset: 'modern' },
+      })
+      return api.updateBook(userId, created.id, {
+        continuity: src.continuity || created.continuity,
+        claims: Array.isArray(src.claims) ? src.claims : [],
+        story_slots: Array.isArray(src.story_slots) ? src.story_slots : [],
+        quality_reports: Array.isArray(src.quality_reports) ? src.quality_reports : [],
+        covers: Array.isArray(src.covers) ? src.covers : [],
+        compliance: src.compliance || created.compliance,
+        status: src.status || 'draft',
+        storefront: null,
+      })
     },
 
     async addLlmCost(userId, bookId, costUsd) {
