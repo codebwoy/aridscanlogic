@@ -26,8 +26,49 @@
 /** @type {AmazonGuide[]} */
 export const AMAZON_GUIDES = [
   {
-    id: 'kdp-start',
+    id: 'publisher-truths',
     defaultOpen: true,
+    title: {
+      en: 'First-time publisher truths — ecosystem before upload',
+      de: 'Wahrheiten für Erstautor:innen — Ökosystem vor dem Upload',
+    },
+    summary: {
+      en: 'Critical advice most first-time author-publishers never hear: build a business ecosystem (series + workbook + Merch + list), distribute beyond KDP, plan ISBN/rights, reach schools/libraries, price correctly, grow audience before launch, plan real reviews, handle DE tax, test with kids, and play the 3-year game. Opens above the niche ladder studios. ⚠ Not official Amazon Help.',
+      de: 'Kritische Tipps, die Erstautor:innen selten hören: Ökosystem bauen (Serie + Workbook + Merch + Liste), über KDP hinaus distribuieren, ISBN/Rechte planen, Schulen/Bibliotheken, richtige Preise, Publikum vor Launch, echte Reviews, DE-Steuern, mit Kindern testen, 3-Jahres-Spiel. Steht über den Studio-Karten. ⚠ Kein offizielles Amazon-Help.',
+    },
+    sections: [
+      {
+        heading: {
+          en: 'How to use this playbook',
+          de: 'So nutzen Sie dieses Playbook',
+        },
+        bullets: {
+          en: [
+            'Read the 10 truths in the panel below — then open StoryForge for Book 1 and AuthorForge for the parent/coaching companion',
+            'Use Merch playbooks only after your character is pinned and brand-safe',
+            'Pair with KDP requirements + Hard Topics for upload mechanics; this playbook is strategy, not the print calculator',
+            'Every price, ISBN, tax, and school claim has a ⚠ — verify before you spend money or register',
+          ],
+          de: [
+            'Lesen Sie die 10 Wahrheiten im Panel unten — dann StoryForge für Buch 1 und AuthorForge für Eltern-/Coaching-Begleiter',
+            'Merch-Playbooks erst nach gepinnter, markensicherer Figur',
+            'Danach KDP-Anforderungen + Schwierigsthemen für Upload-Technik; dieses Playbook ist Strategie, kein Druckkosten-Rechner',
+            'Jeder Preis-, ISBN-, Steuer- und Schul-Hinweis hat ⚠ — vor Ausgaben oder Anmeldung prüfen',
+          ],
+        },
+        links: [
+          { label: 'KDP home', url: 'https://kdp.amazon.com/' },
+          {
+            label: 'KDP Jumpstart',
+            url: 'https://kdp.amazon.com/en_US/help/topic/G202187740',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'kdp-start',
+    defaultOpen: false,
     title: {
       en: 'KDP requirements — start in Germany',
       de: 'KDP-Anforderungen — Start in Deutschland',

@@ -19,8 +19,8 @@ Steps include (via step components):
 - `StepGewerbe.jsx`, `StepFinanzamt.jsx`, `StepVat.jsx`, `StepHandelsregister.jsx`, `StepIhk.jsx`, `StepBank.jsx`
 - `StepComplete.jsx`
 - `StepTailorCv.jsx` / `StepListingEngine.jsx` / `StepAmazonHub.jsx` — optional tools (not registration steps)
-- Amazon hub: `lib/bizstart/amazon/*` + `components/bizstart/amazon/AmazonHub.jsx` — KDP/Merch programmes + DE playbooks (`guides.js` + `kdpConfig`/`kdpResourcesConfig`/`inspirationConfig`/`publishWhatConfig`/`germanFirstConfig`/`merchConfig` panels: requirements, learning path, what-to-publish, German-first language/market, Merch ops/scale with ⚠; not eBay Listing Engine; no Amazon scrape/API publish)
-- StoryForge desktop launch: `lib/storyforge/launch.js` from Amazon Hub (desktop ≥1024px only; studio code in `storyforge/`)
+- Amazon hub: `lib/bizstart/amazon/*` + `components/bizstart/amazon/AmazonHub.jsx` — KDP/Merch programmes + DE playbooks. **First playbook (default open):** `publisher-truths` (`publisherTruthsConfig.js` + `PublisherTruthsPanel.jsx`) — ecosystem, distribution beyond KDP, ISBN/rights, schools/libraries, pricing, audience-before-launch, reviews, DE tax, child testing, 3-year timeline (⚠ not official Amazon advice). Then `guides.js` + panels (`kdpConfig`, `kdpResourcesConfig`, `inspirationConfig`, `publishWhatConfig`, `germanFirstConfig`, `merchConfig`, …). Not eBay Listing Engine; no Amazon scrape/API publish.
+- StoryForge / AuthorForge desktop launch from Amazon Hub (`lib/storyforge/launch.js`, `lib/authorforge/launch.js`; desktop ≥1024px only; studio code in `storyforge/` / `authorforge/`)
 - `ComplianceCalendar.jsx` — deadlines
 - `RegistrationChat.jsx` — LLM assistant (BizStart-specific prompt, not licensed advisor)
 

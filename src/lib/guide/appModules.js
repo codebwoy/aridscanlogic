@@ -147,7 +147,7 @@ export const APP_GUIDE_MODULES = [
       'Businessplan, Lebenslauf & DIN-5008-Anschreiben',
       'TailorCV für Stellenanzeigen',
       'Listing Engine: Katalog → eBay, Orders, CS, Konto-Ops',
-      'Amazon Business Hub: KDP-Lernzentrum (Jumpstart-Curriculum + Ressourcen), Merch-/Markt-Playbooks, Programme, StoryForge (Kinderbücher, Desktop), AuthorForge (Sachbuch/Erziehung, Desktop)',
+      'Amazon Business Hub: Wahrheiten für Erstautor:innen (Ökosystem/Distribution/ISBN/Schulen), KDP-Lernzentrum, Merch-/Markt-Playbooks, StoryForge (Kinderbücher), AuthorForge (Sachbuch/Erziehung)',
       'Krankenkasse- & Website-Rechtsschritte',
     ],
     featuresEn: [
@@ -155,7 +155,7 @@ export const APP_GUIDE_MODULES = [
       'Business plan, CV & DIN 5008 cover letter',
       'TailorCV for job ads',
       'Listing Engine: catalog → eBay, orders, CS, account ops',
-      'Amazon Business Hub: KDP learning centre (Jumpstart curriculum + resources), Merch/market playbooks, programmes, StoryForge (kids’ books, desktop), AuthorForge (non-fiction/parenting, desktop)',
+      'Amazon Business Hub: first-time publisher truths (ecosystem/distribution/ISBN/schools), KDP learning centre, Merch/market playbooks, StoryForge (kids’ books), AuthorForge (non-fiction/parenting)',
       'Krankenkasse & website legal steps',
     ],
     workflowDe: [

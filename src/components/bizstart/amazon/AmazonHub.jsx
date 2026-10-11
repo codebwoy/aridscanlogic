@@ -25,6 +25,7 @@ import {
   Lightbulb,
   Target,
   Languages,
+  Compass,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { programmesByPriority } from '@/lib/bizstart/amazon/programmes'
@@ -52,6 +53,7 @@ import GermanFirstPanel from '@/components/bizstart/amazon/GermanFirstPanel'
 import NicheResearchPanel from '@/components/bizstart/amazon/NicheResearchPanel'
 import BilingualStoryPanel from '@/components/bizstart/amazon/BilingualStoryPanel'
 import HeritageTranslatorPanel from '@/components/bizstart/amazon/HeritageTranslatorPanel'
+import PublisherTruthsPanel from '@/components/bizstart/amazon/PublisherTruthsPanel'
 
 const ICONS = {
   kdp: BookOpen,
@@ -66,6 +68,7 @@ const ICONS = {
 }
 
 const GUIDE_ICONS = {
+  'publisher-truths': Compass,
   'kdp-start': BookOpen,
   'tax-de': Receipt,
   'kdp-resources': GraduationCap,
@@ -301,85 +304,7 @@ export default function AmazonHub({ lang = 'en', onBack }) {
         <p className="mt-3 text-[11px] leading-relaxed text-amber-100/80">{NICHE_MARKET_DISCLAIMER}</p>
       </div>
 
-      <div className="premium-card mb-4 border border-brand-500/20 p-4">
-        <div className="flex items-start gap-3">
-          <Monitor className="mt-0.5 h-5 w-5 shrink-0 text-brand-300" aria-hidden />
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-slate-100">{amazonT(lang, 'storyforgeTitle')}</p>
-            <p className="mt-1.5 text-xs leading-relaxed text-slate-300">
-              {amazonT(lang, 'storyforgeBody')}
-            </p>
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-              <button
-                type="button"
-                onClick={() => onOpenStoryforge('studio')}
-                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white sm:w-auto"
-              >
-                {amazonT(lang, 'storyforgeCta')}
-              </button>
-              <button
-                type="button"
-                onClick={() => onOpenStoryforge('launchpad')}
-                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-brand-500/40 bg-brand-950/40 px-4 text-sm font-semibold text-brand-100 sm:w-auto"
-              >
-                {amazonT(lang, 'storyforgeLaunchpadCta')}
-              </button>
-            </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
-              {amazonT(lang, 'storyforgeLaunchpadHint')}
-            </p>
-            {storyforgeReady === false ? (
-              <p className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-2 text-[11px] leading-relaxed text-amber-100/90">
-                {amazonT(lang, 'storyforgeOffline')}
-              </p>
-            ) : storyforgeReady === true ? (
-              <p className="mt-2 text-[11px] font-medium text-emerald-300/90">
-                {amazonT(lang, 'storyforgeOnline')}
-              </p>
-            ) : null}
-          </div>
-        </div>
-      </div>
-
-      <div className="premium-card mb-4 border border-brand-500/20 p-4">
-        <div className="flex items-start gap-3">
-          <BookOpen className="mt-0.5 h-5 w-5 shrink-0 text-brand-300" aria-hidden />
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-slate-100">{amazonT(lang, 'authorforgeTitle')}</p>
-            <p className="mt-1.5 text-xs leading-relaxed text-slate-300">
-              {amazonT(lang, 'authorforgeBody')}
-            </p>
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-              <button
-                type="button"
-                onClick={() => onOpenAuthorforge()}
-                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white sm:w-auto"
-              >
-                {amazonT(lang, 'authorforgeCta')}
-              </button>
-            </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
-              {amazonT(lang, 'authorforgeHint')}
-            </p>
-            {authorforgeReady === false ? (
-              <p className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-2 text-[11px] leading-relaxed text-amber-100/90">
-                {amazonT(lang, 'authorforgeOffline')}
-              </p>
-            ) : authorforgeReady === true ? (
-              <p className="mt-2 text-[11px] font-medium text-emerald-300/90">
-                {amazonT(lang, 'authorforgeOnline')}
-              </p>
-            ) : null}
-          </div>
-        </div>
-      </div>
-
-      <p className="mb-3 flex items-start gap-2 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-[11px] leading-relaxed text-amber-100/90">
-        <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-        <span>{amazonT(lang, 'disclaimer')}</span>
-      </p>
-
-      {/* Deep-dive playbooks */}
+      {/* Strategy playbooks first — truths before studio launch */}
       <section className="mb-6 space-y-3">
         <div className="flex items-start gap-2">
           <Library className="mt-0.5 h-4 w-4 shrink-0 text-brand-300" aria-hidden />
@@ -411,6 +336,22 @@ export default function AmazonHub({ lang = 'en', onBack }) {
                 {guide.sections.map((section) => (
                   <GuideSectionBlock key={section.heading.en} lang={lang} section={section} />
                 ))}
+                {guide.id === 'publisher-truths' ? (
+                  <>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      {amazonT(lang, 'publisherTruthsTitle')}
+                    </p>
+                    <p className="text-[11px] leading-relaxed text-slate-400">
+                      {amazonT(lang, 'publisherTruthsHint')}
+                    </p>
+                    <PublisherTruthsPanel
+                      lang={lang}
+                      onOpenStoryforge={onOpenStoryforge}
+                      onOpenAuthorforge={onOpenAuthorforge}
+                      onOpenPlaybook={openPlaybook}
+                    />
+                  </>
+                ) : null}
                 {guide.id === 'kdp-start' ? (
                   <>
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
@@ -515,6 +456,84 @@ export default function AmazonHub({ lang = 'en', onBack }) {
           )
         })}
       </section>
+
+      <div className="premium-card mb-4 border border-brand-500/20 p-4">
+        <div className="flex items-start gap-3">
+          <Monitor className="mt-0.5 h-5 w-5 shrink-0 text-brand-300" aria-hidden />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-slate-100">{amazonT(lang, 'storyforgeTitle')}</p>
+            <p className="mt-1.5 text-xs leading-relaxed text-slate-300">
+              {amazonT(lang, 'storyforgeBody')}
+            </p>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <button
+                type="button"
+                onClick={() => onOpenStoryforge('studio')}
+                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white sm:w-auto"
+              >
+                {amazonT(lang, 'storyforgeCta')}
+              </button>
+              <button
+                type="button"
+                onClick={() => onOpenStoryforge('launchpad')}
+                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-brand-500/40 bg-brand-950/40 px-4 text-sm font-semibold text-brand-100 sm:w-auto"
+              >
+                {amazonT(lang, 'storyforgeLaunchpadCta')}
+              </button>
+            </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+              {amazonT(lang, 'storyforgeLaunchpadHint')}
+            </p>
+            {storyforgeReady === false ? (
+              <p className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-2 text-[11px] leading-relaxed text-amber-100/90">
+                {amazonT(lang, 'storyforgeOffline')}
+              </p>
+            ) : storyforgeReady === true ? (
+              <p className="mt-2 text-[11px] font-medium text-emerald-300/90">
+                {amazonT(lang, 'storyforgeOnline')}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="premium-card mb-4 border border-brand-500/20 p-4">
+        <div className="flex items-start gap-3">
+          <BookOpen className="mt-0.5 h-5 w-5 shrink-0 text-brand-300" aria-hidden />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-slate-100">{amazonT(lang, 'authorforgeTitle')}</p>
+            <p className="mt-1.5 text-xs leading-relaxed text-slate-300">
+              {amazonT(lang, 'authorforgeBody')}
+            </p>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <button
+                type="button"
+                onClick={() => onOpenAuthorforge()}
+                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white sm:w-auto"
+              >
+                {amazonT(lang, 'authorforgeCta')}
+              </button>
+            </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+              {amazonT(lang, 'authorforgeHint')}
+            </p>
+            {authorforgeReady === false ? (
+              <p className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-2 text-[11px] leading-relaxed text-amber-100/90">
+                {amazonT(lang, 'authorforgeOffline')}
+              </p>
+            ) : authorforgeReady === true ? (
+              <p className="mt-2 text-[11px] font-medium text-emerald-300/90">
+                {amazonT(lang, 'authorforgeOnline')}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      <p className="mb-3 flex items-start gap-2 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-[11px] leading-relaxed text-amber-100/90">
+        <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+        <span>{amazonT(lang, 'disclaimer')}</span>
+      </p>
 
       {/* Priority table */}
       <section className="mb-6">
