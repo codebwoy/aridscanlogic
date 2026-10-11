@@ -35,6 +35,19 @@ Red **github-pages** entries from June 2026 (*"Add SEO, structured data…"*) ar
 
 [Actions → Deploy GitHub Pages → Run workflow](https://github.com/codebwoy/aridscanlogic/actions/workflows/deploy-github-pages.yml)
 
+## Hybrid studios (AuthorForge + StoryForge) — not Vercel serverless
+
+Long book/image jobs cannot run reliably inside Vercel’s 60s functions. Deploy each studio as its **own Fly/Railway container** (API + SPA), then point ScanLogic at them:
+
+| Client env (Vercel Production) | Points to |
+|---|---|
+| `VITE_AUTHORFORGE_URL` | `https://scanlogic-authorforge.fly.dev` (or your host) |
+| `VITE_STORYFORGE_URL` | `https://scanlogic-storyforge.fly.dev` (or your host) |
+
+Full steps, secrets, and `fly deploy`: **[authorforge/docs/HYBRID_DEPLOY.md](./authorforge/docs/HYBRID_DEPLOY.md)**.
+
+Amazon Hub on production ScanLogic opens those URLs (desktop ≥1024px) after `/health` probe succeeds.
+
 ## Vercel (Production on `main` only)
 
 **Project:** [codebwoys-projects/aridscanlogic](https://vercel.com/codebwoys-projects/aridscanlogic)  

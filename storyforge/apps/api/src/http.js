@@ -71,17 +71,41 @@ export function isLocalSocket(req) {
   )
 }
 
-/** Non-local requests need STORYFORGE_API_SECRET when configured. */
+/** Browser studio from allowlisted Origin, or same-host SPA (hybrid prod). */
+export function isAllowlistedBrowser(req) {
+  const origin = (req.headers.origin || '').trim()
+  if (origin && config.webOrigins.includes(origin)) return true
+  const host = String(req.headers.host || '')
+    .split(':')[0]
+    .toLowerCase()
+  if (config.publicHost && host === config.publicHost) return true
+  if (origin) {
+    try {
+      const o = new URL(origin)
+      if (config.publicHost && o.hostname.toLowerCase() === config.publicHost) return true
+    } catch {
+      /* ignore */
+    }
+  }
+  return false
+}
+
+/** Non-local: allowlisted browser Origin / public host, desktop session, or API secret. */
 export function assertApiAccess(req, res) {
   if (isLocalSocket(req)) return true
+  if (isAllowlistedBrowser(req)) return true
+  const bearer = extractBearer(req)
+  if (bearer.includes('.') && verifyDesktopSession(bearer)) return true
   if (!config.apiSecret) {
-    sendError(res, 403, 'API blocked from non-local hosts. Set STORYFORGE_API_SECRET.', 'api_blocked')
+    sendError(
+      res,
+      403,
+      'API blocked from non-local hosts. Allowlist STORYFORGE_WEB_ORIGIN / STORYFORGE_PUBLIC_HOST or set STORYFORGE_API_SECRET.',
+      'api_blocked'
+    )
     return false
   }
-  const bearer = extractBearer(req)
   const header = (req.headers['x-storyforge-api-secret'] || '').trim()
-  // Desktop session tokens are JWTs-like (payload.sig) — allow through to desktop auth
-  if (bearer.includes('.') && verifyDesktopSession(bearer)) return true
   if (!safeEqual(bearer, config.apiSecret) && !safeEqual(header, config.apiSecret)) {
     sendError(res, 401, 'Unauthorized', 'unauthorized')
     return false

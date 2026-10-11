@@ -49,6 +49,18 @@ export const AMAZON_STRINGS = {
     storyforgeOffline:
       'StoryForge is not running. In a terminal: npm run storyforge:dev — then open http://127.0.0.1:5180 and try again.',
     storyforgeOnline: 'StoryForge is running on this machine — Open StoryForge will work.',
+    authorforgeTitle: 'AuthorForge — non-fiction co-author',
+    authorforgeBody:
+      'Desktop-only guided wizard: book bible, outline, section drafting, fact-check, KDP package, and your own storefront. Co-author drafts — you edit and verify.',
+    authorforgeCta: 'Open AuthorForge (desktop)',
+    authorforgeHint:
+      'Run npm run authorforge:dev — studio on :5181. Credits for generation; export + checklist only (no Amazon upload automation).',
+    authorforgeMobile:
+      'AuthorForge needs a desktop screen (≥1024px). Open ScanLogic on a computer to use the studio.',
+    authorforgePopupBlocked: 'Pop-up blocked — allow pop-ups or open AuthorForge manually.',
+    authorforgeOffline:
+      'AuthorForge is not running. In a terminal: npm run authorforge:dev — then open http://127.0.0.1:5181 and try again.',
+    authorforgeOnline: 'AuthorForge is running on this machine — Open AuthorForge will work.',
     playbooksTitle: 'KDP + Merch playbooks',
     playbooksIntro:
       'Practical deep-dives for Germany: account & assets, tax basics, Merch ops, market research, brand loop, and milestones. Creation tools stay in StoryForge (desktop).',
@@ -317,6 +329,18 @@ export const AMAZON_STRINGS = {
     storyforgeOffline:
       'StoryForge läuft nicht. Im Terminal: npm run storyforge:dev — dann http://127.0.0.1:5180 öffnen und erneut versuchen.',
     storyforgeOnline: 'StoryForge läuft auf diesem Rechner — „StoryForge öffnen“ funktioniert.',
+    authorforgeTitle: 'AuthorForge — Sachbuch-Co-Autor',
+    authorforgeBody:
+      'Nur Desktop: geführter Assistent für Buch-Bibel, Gliederung, Kapitelentwurf, Fact-Check, KDP-Paket und eigenen Shop. Entwürfe zum Überarbeiten — Sie bleiben Herausgeber:in.',
+    authorforgeCta: 'AuthorForge öffnen (Desktop)',
+    authorforgeHint:
+      'npm run authorforge:dev — Studio auf :5181. Credits für Generierung; nur Export + Checkliste (kein Amazon-Upload).',
+    authorforgeMobile:
+      'AuthorForge braucht einen Desktop-Bildschirm (≥1024px). Öffnen Sie ScanLogic am Computer.',
+    authorforgePopupBlocked: 'Pop-up blockiert — erlauben oder AuthorForge manuell öffnen.',
+    authorforgeOffline:
+      'AuthorForge läuft nicht. Im Terminal: npm run authorforge:dev — dann http://127.0.0.1:5181 öffnen.',
+    authorforgeOnline: 'AuthorForge läuft auf diesem Rechner — „AuthorForge öffnen“ funktioniert.',
     playbooksTitle: 'KDP + Merch Playbooks',
     playbooksIntro:
       'Praxis-Deep-Dives für Deutschland: Konto & Assets, Steuer, Merch-Ops (was verkauft), Recherche, Marken-Loop, Merch-Skalierung (Ads/IP/Kanäle) und Meilensteine. Erstellung bleibt in StoryForge (Desktop).',

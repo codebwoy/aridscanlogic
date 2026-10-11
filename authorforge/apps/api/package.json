@@ -1,0 +1,23 @@
+{
+  "name": "@authorforge/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "build": "node -e \"console.log('@authorforge/api: ok')\"",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@authorforge/agents": "0.1.0",
+    "@authorforge/export": "0.1.0",
+    "@authorforge/llm": "0.1.0",
+    "@authorforge/market": "0.1.0",
+    "@authorforge/shared": "0.1.0",
+    "bullmq": "^5.41.0",
+    "dotenv": "^16.4.7",
+    "ioredis": "^5.5.0",
+    "zod": "^3.24.2"
+  }
+}

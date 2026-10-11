@@ -31,6 +31,7 @@ import { programmesByPriority } from '@/lib/bizstart/amazon/programmes'
 import { AMAZON_GUIDES } from '@/lib/bizstart/amazon/guides'
 import { amazonT } from '@/lib/bizstart/amazon/i18n'
 import { launchStoryforgeDesktop, probeStoryforgeReady } from '@/lib/storyforge/launch'
+import { launchAuthorforgeDesktop, probeAuthorforgeReady } from '@/lib/authorforge/launch'
 import MerchConfigPanel from '@/components/bizstart/amazon/MerchConfigPanel'
 import KdpConfigPanel from '@/components/bizstart/amazon/KdpConfigPanel'
 import KdpResourcesPanel from '@/components/bizstart/amazon/KdpResourcesPanel'
@@ -118,15 +119,22 @@ export default function AmazonHub({ lang = 'en', onBack }) {
   const programmes = programmesByPriority()
   const [focusGuideId, setFocusGuideId] = useState(null)
   const [storyforgeReady, setStoryforgeReady] = useState(null)
+  const [authorforgeReady, setAuthorforgeReady] = useState(null)
 
   useEffect(() => {
     let cancelled = false
     probeStoryforgeReady().then((ok) => {
       if (!cancelled) setStoryforgeReady(ok)
     })
+    probeAuthorforgeReady().then((ok) => {
+      if (!cancelled) setAuthorforgeReady(ok)
+    })
     const id = setInterval(() => {
       probeStoryforgeReady().then((ok) => {
         if (!cancelled) setStoryforgeReady(ok)
+      })
+      probeAuthorforgeReady().then((ok) => {
+        if (!cancelled) setAuthorforgeReady(ok)
       })
     }, 8000)
     return () => {
@@ -149,6 +157,22 @@ export default function AmazonHub({ lang = 'en', onBack }) {
       return
     }
     toast.error(amazonT(lang, 'storyforgePopupBlocked'))
+  }
+
+  async function onOpenAuthorforge() {
+    const result = await launchAuthorforgeDesktop({ view: 'studio' })
+    setAuthorforgeReady(result.opened || result.reason !== 'offline')
+    if (result.opened) return
+    if (result.reason === 'mobile') {
+      toast.message(amazonT(lang, 'authorforgeMobile'))
+      return
+    }
+    if (result.reason === 'offline') {
+      setAuthorforgeReady(false)
+      toast.error(amazonT(lang, 'authorforgeOffline'))
+      return
+    }
+    toast.error(amazonT(lang, 'authorforgePopupBlocked'))
   }
 
   function openPlaybook(guideId) {
@@ -257,6 +281,39 @@ export default function AmazonHub({ lang = 'en', onBack }) {
             ) : storyforgeReady === true ? (
               <p className="mt-2 text-[11px] font-medium text-emerald-300/90">
                 {amazonT(lang, 'storyforgeOnline')}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="premium-card mb-4 border border-brand-500/20 p-4">
+        <div className="flex items-start gap-3">
+          <BookOpen className="mt-0.5 h-5 w-5 shrink-0 text-brand-300" aria-hidden />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-slate-100">{amazonT(lang, 'authorforgeTitle')}</p>
+            <p className="mt-1.5 text-xs leading-relaxed text-slate-300">
+              {amazonT(lang, 'authorforgeBody')}
+            </p>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <button
+                type="button"
+                onClick={() => onOpenAuthorforge()}
+                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white sm:w-auto"
+              >
+                {amazonT(lang, 'authorforgeCta')}
+              </button>
+            </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+              {amazonT(lang, 'authorforgeHint')}
+            </p>
+            {authorforgeReady === false ? (
+              <p className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-2 text-[11px] leading-relaxed text-amber-100/90">
+                {amazonT(lang, 'authorforgeOffline')}
+              </p>
+            ) : authorforgeReady === true ? (
+              <p className="mt-2 text-[11px] font-medium text-emerald-300/90">
+                {amazonT(lang, 'authorforgeOnline')}
               </p>
             ) : null}
           </div>

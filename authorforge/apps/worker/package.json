@@ -1,0 +1,17 @@
+{
+  "name": "@authorforge/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "build": "node -e \"console.log('@authorforge/worker: ok')\""
+  },
+  "dependencies": {
+    "@authorforge/shared": "0.1.0",
+    "bullmq": "^5.41.0",
+    "dotenv": "^16.4.7",
+    "ioredis": "^5.5.0"
+  }
+}

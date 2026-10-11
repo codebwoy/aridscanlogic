@@ -19,7 +19,14 @@
     "storyforge:test": "npm run test --prefix storyforge",
     "storyforge:dev": "npm run dev:studio --prefix storyforge",
     "storyforge:dev:api": "npm run dev:api --prefix storyforge",
-    "storyforge:dev:web": "npm run dev:web --prefix storyforge"
+    "storyforge:dev:web": "npm run dev:web --prefix storyforge",
+    "authorforge:install": "npm install --prefix authorforge",
+    "authorforge:test": "npm run test --prefix authorforge",
+    "authorforge:dev": "npm run dev:studio --prefix authorforge",
+    "authorforge:dev:api": "npm run dev:api --prefix authorforge",
+    "authorforge:dev:web": "npm run dev:web --prefix authorforge",
+    "authorforge:build": "npm run build --prefix authorforge",
+    "storyforge:build": "npm run build --prefix storyforge"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.107.0",

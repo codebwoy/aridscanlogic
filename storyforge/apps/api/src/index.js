@@ -46,11 +46,16 @@ import {
 import { submitJob, wireLocalJobHandlers } from './services/jobs.js'
 import { providerStatus } from './providers/createProvider.js'
 import { resolveExportArtifact, verifyExportToken } from './services/exportStore.js'
+import { resolveWebDist, tryServeStatic } from './static.js'
 
 assertRuntimeSecrets()
 const store = createMemoryStore()
 wireLocalJobHandlers(store)
 await initQueue()
+const webDist = config.serveStatic ? resolveWebDist() : null
+if (webDist) {
+  console.info(`[storyforge-api] static web dist: ${webDist}`)
+}
 
 const limitSession = rateLimit({
   windowMs: 60_000,
@@ -137,11 +142,16 @@ const server = createServer(async (req, res) => {
         desktopMinWidth: config.desktopMinWidth,
         specsLastVerified: PUBLISHING_SPECS.lastVerified,
         image: providerStatus(),
+        hybrid: Boolean(webDist),
       })
       return
     }
 
-    if (!path.startsWith('/v1/')) {
+    if (!path.startsWith('/v1') && webDist && tryServeStatic(req, res, webDist, path)) {
+      return
+    }
+
+    if (!path.startsWith('/v1')) {
       sendError(res, 404, 'Not found')
       return
     }
@@ -495,6 +505,6 @@ const server = createServer(async (req, res) => {
 
 server.listen(config.port, config.host, () => {
   console.info(
-    `[storyforge-api] http://${config.host}:${config.port} (desktop ≥${config.desktopMinWidth}px)`
+    `[storyforge-api] http://${config.host}:${config.port} (desktop ≥${config.desktopMinWidth}px static=${Boolean(webDist)})`
   )
 })

@@ -1,0 +1,32 @@
+---
+description: AuthorForge desktop non-fiction co-author (sibling app)
+globs: authorforge/**,src/lib/authorforge/**
+alwaysApply: false
+---
+
+# AuthorForge
+
+## Placement
+
+- **Not** a ScanLogic tab and **not** available on mobile.
+- Entry: Amazon Hub → `launchAuthorforgeDesktop()` → `VITE_AUTHORFORGE_URL`.
+- Code: `authorforge/` monorepo (`packages/*`, `apps/api`, `apps/web`, `apps/worker`).
+
+## Rules
+
+- Desktop min width **1024px** — enforce in web gate **and** API session issue / `requireDesktop`.
+- Credits = append-only ledger; show cost before jobs; refund on failure.
+- All LLM calls via `@authorforge/llm` on the AuthorForge API — **not** ScanLogic `/api/llm`, never from the browser.
+- Prompts are versioned under `packages/agents/prompts`; log prompt name+version on jobs.
+- Never invent credentials, quotes, stats, or citations in agents, fixtures, or UI copy.
+- No Amazon scraping; use `@authorforge/market` adapters only.
+- KDP values / checklist links live in `@authorforge/shared` publishing-specs with ⚠ notes.
+- Export files + checklist only — no unofficial Amazon upload automation.
+- Story slots + UNVERIFIED claims are first-class; soft export gate with explicit override warning.
+
+## Commands
+
+```bash
+cd authorforge && npm install && npm test
+npm run authorforge:dev   # from repo root — API :8788 + web :5181
+```

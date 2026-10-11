@@ -24,7 +24,10 @@ Cursor loads rules from `.cursor/rules/*.mdc`. Use the matching rule when editin
 | `16-ai-mobile-chat.mdc` | Always on — mobile AI answers immersive; tables; room to reply |
 | `17-design-system-rail.mdc` | UI files — Design System Rail (tokens, layouts, build loop) |
 | `18-storyforge.mdc` | StoryForge desktop studio + Launchpad (`storyforge/`) — not a mobile suite tab |
+| `19-authorforge.mdc` | AuthorForge desktop non-fiction co-author (`authorforge/`) — not a mobile suite tab |
 
 Human-readable security policy: `SECURITY.md`. StoryForge: `storyforge/SECURITY.md`.
 
 **SEO / Pages:** `https://codebwoy.github.io/aridscanlogic` — deploy via `deploy-github-pages.yml` (peaceiris → `gh-pages`). Enable Pages from branch `gh-pages` in repo settings. See `DEPLOY.md`.
+
+**Hybrid studios (production):** AuthorForge + StoryForge Docker/Fly — `authorforge/docs/HYBRID_DEPLOY.md`. ScanLogic Vercel sets `VITE_AUTHORFORGE_URL` / `VITE_STORYFORGE_URL` only (no studio secrets in `VITE_*`).

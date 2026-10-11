@@ -1,0 +1,19 @@
+{
+  "name": "@authorforge/agents",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "build": "node -e \"console.log('@authorforge/agents: ok')\"",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@authorforge/llm": "0.1.0",
+    "@authorforge/shared": "0.1.0",
+    "zod": "^3.24.2"
+  }
+}

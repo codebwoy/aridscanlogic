@@ -102,6 +102,16 @@ Always verify in the Amazon KDP Previewer before upload.
 
 Market-data providers, royalty calculator, Stripe live checkout, Redis-required multi-instance.
 
+## Production (hybrid)
+
+Deploy API + SPA as one Fly/Railway container; point ScanLogic `VITE_STORYFORGE_URL` at that host.  
+See [authorforge/docs/HYBRID_DEPLOY.md](../authorforge/docs/HYBRID_DEPLOY.md).
+
+```bash
+cd storyforge && fly secrets set STORYFORGE_SESSION_SECRET=... STORYFORGE_PUBLIC_HOST=...
+fly deploy
+```
+
 ## Security
 
 See [SECURITY.md](./SECURITY.md). Specs live in `@storyforge/shared` with `lastVerified`. No Amazon scraping.

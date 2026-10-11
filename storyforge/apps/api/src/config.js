@@ -14,16 +14,30 @@ function intEnv(name, fallback) {
 
 const isProd = process.env.NODE_ENV === 'production'
 
+function resolvePort() {
+  return intEnv('STORYFORGE_API_PORT', intEnv('PORT', 8787))
+}
+
+function resolveHost() {
+  if (process.env.STORYFORGE_API_HOST) return process.env.STORYFORGE_API_HOST
+  return isProd ? '0.0.0.0' : '127.0.0.1'
+}
+
 export const config = {
   isProd,
-  host: process.env.STORYFORGE_API_HOST || '127.0.0.1',
-  port: intEnv('STORYFORGE_API_PORT', 8787),
+  host: resolveHost(),
+  port: resolvePort(),
   sessionSecret: process.env.STORYFORGE_SESSION_SECRET || '',
   apiSecret: process.env.STORYFORGE_API_SECRET || '',
-  webOrigins: (process.env.STORYFORGE_WEB_ORIGIN || 'http://localhost:5180')
+  publicHost: (process.env.STORYFORGE_PUBLIC_HOST || '').trim().toLowerCase(),
+  webOrigins: (
+    process.env.STORYFORGE_WEB_ORIGIN ||
+    'http://localhost:5180,http://127.0.0.1:5180,http://localhost:5173,http://127.0.0.1:5173'
+  )
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean),
+  serveStatic: process.env.STORYFORGE_SERVE_STATIC !== '0',
   redisUrl: process.env.REDIS_URL || '',
   databaseUrl: process.env.DATABASE_URL || '',
   imageProvider: process.env.STORYFORGE_IMAGE_PROVIDER || 'mock',

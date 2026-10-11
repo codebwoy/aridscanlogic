@@ -14,8 +14,10 @@
     "dev:web": "npm run dev -w @storyforge/web",
     "dev:worker": "npm run dev -w @storyforge/worker",
     "build": "npm run build -w @storyforge/shared && npm run build -w @storyforge/api && npm run build -w @storyforge/web",
-    "test": "STORYFORGE_PERSIST=0 npm run test -w @storyforge/shared && STORYFORGE_PERSIST=0 npm run test -w @storyforge/api",
-    "lint": "npm run lint -w @storyforge/web --if-present"
+    "test": "STORYFORGE_PERSIST=0 STORYFORGE_IMAGE_PROVIDER=mock npm run test -w @storyforge/shared && STORYFORGE_PERSIST=0 STORYFORGE_IMAGE_PROVIDER=mock npm run test -w @storyforge/api",
+    "lint": "npm run lint -w @storyforge/web --if-present",
+    "start:prod": "NODE_ENV=production STORYFORGE_SERVE_STATIC=1 npm run start -w @storyforge/api",
+    "docker:build": "docker build -t scanlogic-storyforge ."
   },
   "engines": {
     "node": ">=20"

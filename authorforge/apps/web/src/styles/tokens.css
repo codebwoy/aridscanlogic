@@ -1,0 +1,27 @@
+:root {
+  --af-bg: #0f1419;
+  --af-bg-elevated: #171d25;
+  --af-bg-card: #1c2430;
+  --af-border: #2a3444;
+  --af-text: #e8eef6;
+  --af-muted: #9aa8bc;
+  --af-accent: #c4a574;
+  --af-accent-soft: rgba(196, 165, 116, 0.15);
+  --af-success: #6fbf8a;
+  --af-warning: #d4a54a;
+  --af-danger: #d67a7a;
+  --af-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --af-sans: 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+  --af-radius: 12px;
+  --af-touch: 44px;
+  color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

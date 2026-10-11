@@ -1,0 +1,150 @@
+import { readFileSync, readdirSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { z } from 'zod'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const PROMPTS_DIR = join(__dirname, '../prompts')
+
+const writerOutput = z.object({
+  content_md: z.string(),
+  story_slots: z.array(z.object({ prompt_to_user: z.string() })).default([]),
+  claims_needed: z.array(z.object({ text: z.string() })).default([]),
+  terms_introduced: z.array(z.string()).default([]),
+  open_loops: z.array(z.string()).default([]),
+})
+
+const outlineNode = z.lazy(() =>
+  z.object({
+    level: z.enum(['chapter', 'section', 'subsection']).optional(),
+    title: z.string(),
+    writing_direction: z.string(),
+    target_words: z.number().int().positive(),
+    focus_tags: z.array(z.string()).default([]),
+    children: z.array(outlineNode).default([]),
+  })
+)
+
+const REGISTRY = {
+  'writer.v1': {
+    name: 'writer',
+    version: 'v1',
+    file: 'writer.v1.md',
+    outputSchema: writerOutput,
+  },
+  'outline.v1': {
+    name: 'outline',
+    version: 'v1',
+    file: 'outline.v1.md',
+    outputSchema: z.object({
+      chapters: z.array(outlineNode),
+      note: z.string().optional(),
+    }),
+  },
+  'title.v1': {
+    name: 'title',
+    version: 'v1',
+    file: null,
+    inlineSystem: 'TitleAgent: title variations. Never invent bestseller claims. Return JSON options.',
+    outputSchema: z.object({
+      options: z.array(
+        z.object({
+          title: z.string(),
+          subtitle: z.string(),
+          risk: z.string().optional(),
+        })
+      ),
+      warnings: z.array(z.string()).optional(),
+    }),
+  },
+  'positioning.v1': {
+    name: 'positioning',
+    version: 'v1',
+    file: null,
+    inlineSystem: 'PositioningAgent: differentiated angles from public metadata only.',
+    outputSchema: z.object({
+      angles: z.array(
+        z.object({
+          name: z.string(),
+          rationale: z.string(),
+          confidence: z.string().optional(),
+        })
+      ),
+      disclaimer: z.string().optional(),
+    }),
+  },
+  'persona.v1': {
+    name: 'persona',
+    version: 'v1',
+    file: null,
+    inlineSystem: 'PersonaAgent: voice descriptor from samples; honest bio only from user facts.',
+    outputSchema: z.object({
+      voice_descriptor: z.record(z.any()),
+      style_guide: z.string(),
+      bio_draft: z.string(),
+    }),
+  },
+  'continuity.v1': {
+    name: 'continuity',
+    version: 'v1',
+    file: null,
+    inlineSystem: 'ContinuityAgent: summarize section 120-200 words; extract claims/terms/examples/open loops.',
+    outputSchema: z.object({
+      summary: z.string(),
+      key_claims: z.array(z.any()).default([]),
+      terms_introduced: z.array(z.string()).default([]),
+      examples_used: z.array(z.string()).default([]),
+      open_loops: z.array(z.string()).default([]),
+    }),
+  },
+  'description.v1': {
+    name: 'description',
+    version: 'v1',
+    file: null,
+    inlineSystem: 'DescriptionAgent: Amazon-ready description (HTML subset), 7 keywords, 3 categories.',
+    outputSchema: z.object({
+      description_html: z.string(),
+      keywords: z.array(z.string()),
+      categories: z.array(z.string()),
+    }),
+  },
+}
+
+export function listPrompts() {
+  return Object.keys(REGISTRY)
+}
+
+export function getPromptEntry(key) {
+  const entry = REGISTRY[key]
+  if (!entry) throw new Error(`Unknown prompt: ${key}`)
+  let template = entry.inlineSystem || ''
+  if (entry.file) {
+    template = readFileSync(join(PROMPTS_DIR, entry.file), 'utf8')
+  }
+  return { ...entry, template, key }
+}
+
+export function renderPrompt(template, vars = {}) {
+  return String(template).replace(/\{\{(\w+)\}\}/g, (_, k) =>
+    vars[k] != null ? String(vars[k]) : ''
+  )
+}
+
+export function parseAgentJson(text, schema) {
+  let raw = String(text || '').trim()
+  const fence = raw.match(/```(?:json)?\s*([\s\S]*?)```/)
+  if (fence) raw = fence[1].trim()
+  const start = raw.indexOf('{')
+  const end = raw.lastIndexOf('}')
+  if (start >= 0 && end > start) raw = raw.slice(start, end + 1)
+  const data = JSON.parse(raw)
+  return schema.parse(data)
+}
+
+export function promptFilesOnDisk() {
+  try {
+    return readdirSync(PROMPTS_DIR).filter((f) => f.endsWith('.md'))
+  } catch {
+    return []
+  }
+}
