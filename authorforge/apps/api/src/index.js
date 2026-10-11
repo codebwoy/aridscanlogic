@@ -63,7 +63,8 @@ const bookBody = z.object({
   author_name: z.string().max(120).optional(),
   genre: z.string().max(64).optional(),
   topic: z.string().max(500).optional(),
-  target_words: z.number().int().min(5000).max(120000).optional(),
+  // Short kids / novella projects need low floors; long non-fiction still capped.
+  target_words: z.number().int().min(500).max(120000).optional(),
   chapter_count: z.number().int().min(3).max(40).optional(),
   structure_type: z.string().max(64).optional(),
   language: z.enum(['en', 'de']).optional(),

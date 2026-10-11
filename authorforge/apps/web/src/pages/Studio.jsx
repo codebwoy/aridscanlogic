@@ -138,9 +138,25 @@ export default function Studio({ lang = 'en' }) {
 
   async function saveBasics(patch) {
     if (!book) return
-    const { book: b } = await patchBook(book.id, patch)
-    setBook(b)
-    setMessage('Saved')
+    try {
+      const { book: b } = await patchBook(book.id, patch)
+      setBook(b)
+      setMessage('Saved')
+    } catch (e) {
+      setMessage(e.message || 'Save failed')
+    }
+  }
+
+  async function navigateWizard(dir, stepId) {
+    if (!book) return
+    try {
+      const r = await stepBook(book.id, dir, stepId)
+      if (!r?.book) throw new Error('Could not update wizard step')
+      setBook(r.book)
+      setMessage('')
+    } catch (e) {
+      setMessage(e.message || 'Navigation failed — try again')
+    }
   }
 
   const leafNodes = useMemo(() => flattenLeaves(book?.outline?.chapters || []), [book])
@@ -183,7 +199,7 @@ export default function Studio({ lang = 'en' }) {
               <button
                 type="button"
                 className={s.id === step ? 'active' : stepIndexDone(step, s.id) ? 'done' : ''}
-                onClick={() => book && stepBook(book.id, 'set', s.id).then((r) => setBook(r.book))}
+                onClick={() => navigateWizard('set', s.id)}
               >
                 {s.number}. {s.title}
               </button>
@@ -263,10 +279,7 @@ export default function Studio({ lang = 'en' }) {
                 const out = await runJob('inline_edit', { instruction, selection })
                 return out
               }}
-              onNav={async (dir) => {
-                const r = await stepBook(book.id, dir)
-                setBook(r.book)
-              }}
+              onNav={(dir) => navigateWizard(dir)}
               lang={lang}
             />
           )}

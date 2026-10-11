@@ -1,5 +1,9 @@
 # fly launch --config fly.toml  (from authorforge/)
 # Docs: docs/HYBRID_DEPLOY.md
+#
+# Stateful in-memory + local .data — keep exactly ONE machine:
+#   fly scale count 1 -a scanlogic-authorforge
+# A second HA machine splits books/sessions and breaks Next/wizard.
 
 app = "scanlogic-authorforge"
 primary_region = "fra"
@@ -11,6 +15,7 @@ primary_region = "fra"
   NODE_ENV = "production"
   AUTHORFORGE_SERVE_STATIC = "1"
   AUTHORFORGE_LLM_PROVIDER = "anthropic"
+  AUTHORFORGE_PERSIST = "1"
 
 [http_service]
   internal_port = 8080

@@ -1,5 +1,8 @@
 # fly launch --config fly.toml  (from storyforge/)
 # Docs: authorforge/docs/HYBRID_DEPLOY.md (shared hybrid pattern)
+#
+# Stateful in-memory + local .data — keep exactly ONE machine:
+#   fly scale count 1 -a scanlogic-storyforge
 
 app = "scanlogic-storyforge"
 primary_region = "fra"

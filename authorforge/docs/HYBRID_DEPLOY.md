@@ -13,6 +13,13 @@ Each studio container serves **API + built SPA** on one origin (`/health`, `/v1/
 
 ## 1. AuthorForge on Fly
 
+**Single machine required.** The API uses in-memory state (+ optional local `.data`). Two machines = books created on A, “Next” hitting B → silent 404. After first deploy:
+
+```bash
+fly scale count 1 -a scanlogic-authorforge
+fly scale count 1 -a scanlogic-storyforge
+```
+
 ```bash
 cd authorforge
 fly auth login
