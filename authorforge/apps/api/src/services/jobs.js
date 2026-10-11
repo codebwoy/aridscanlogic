@@ -1,4 +1,4 @@
-import { costFor } from '@authorforge/shared'
+import { costFor, nicheContextForBook, nichesForStudio } from '@authorforge/shared'
 import { createLlmProvider } from '@authorforge/llm'
 import {
   runAgent,
@@ -136,11 +136,26 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
 
   switch (type) {
     case 'niche_search': {
-      return market.searchNiches(inputs.filters || {})
+      const product = nicheContextForBook(book)
+      const searched = await market.searchNiches({
+        studio: 'authorforge',
+        ...(inputs.filters || {}),
+      })
+      return {
+        ...searched,
+        product_lane: product,
+        recommended: nichesForStudio('authorforge').map((n) => ({
+          id: n.id,
+          priority: n.priority,
+          title: n.en.title,
+          angle: n.en.angle,
+        })),
+      }
     }
     case 'competitive_analysis': {
+      const product = nicheContextForBook(book)
       const meta = await market.competitorMeta({
-        topic: inputs.topic || book?.topic,
+        topic: inputs.topic || book?.topic || product.niche?.title,
         asin: inputs.asin,
       })
       // Comps UI needs meta.titles even if positioning JSON fails validation.
@@ -152,7 +167,13 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
       try {
         const agent = await runAgent(llm, 'positioning.v1', {
           modelClass: 'cheap',
-          input: { meta, topic: inputs.topic || book?.topic },
+          input: {
+            meta,
+            topic: inputs.topic || book?.topic,
+            product_lane: product,
+            instruction:
+              'Prefer culturally specific, niched-down angles for African-heritage / bilingual / Germany-based non-fiction. Avoid generic middle-of-market self-help. Never claim verified Amazon sales stats.',
+          },
           metadata: { bookId, jobId },
         })
         angles = agent.parsed
@@ -167,16 +188,20 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
       if (book && Array.isArray(meta?.titles) && meta.titles.length) {
         await store.updateBook(userId, bookId, { competitors: meta.titles })
       }
-      return { meta, angles, tokens }
+      return { meta, angles, tokens, product_lane: product }
     }
     case 'title_variations': {
       try {
+        const product = nicheContextForBook(book)
         const agent = await runAgent(llm, 'title.v1', {
           modelClass: 'cheap',
           input: {
             topic: book?.topic,
             bible: book?.bible,
             seed: inputs.seed || book?.working_title,
+            product_lane: product,
+            instruction:
+              'Propose non-fiction titles/subtitles for culturally specific guides, workbooks, or parenting books. No fiction. No children’s picture-book titles.',
           },
           metadata: { bookId, jobId },
         })
@@ -218,6 +243,7 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
       const chapterCount = Math.min(Math.max(Number(book?.chapter_count) || (targetWords <= 5000 ? 6 : 8), 1), 16)
       const outlineInput = {
         bookBible: book?.bible,
+        product_lane: nicheContextForBook(book),
         focus_tags: tags,
         target_words: targetWords,
         chapter_count: chapterCount,
@@ -321,6 +347,7 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
         modelClass: 'draft',
         input: {
           bookBible: book.bible,
+          product_lane: nicheContextForBook(book),
           persona: book.persona,
           continuity: book.continuity,
           node,
@@ -764,6 +791,7 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
             audience: book.bible?.audience || book.bible?.ideal_reader,
             structure_type: book.structure_type,
             existing_metadata: book.metadata || {},
+            product_lane: nicheContextForBook(book),
           },
           metadata: { bookId, jobId },
         })

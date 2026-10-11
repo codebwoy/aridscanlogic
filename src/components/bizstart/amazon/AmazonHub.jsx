@@ -42,6 +42,7 @@ import {
   launchAuthorforgeDesktop,
   probeAuthorforgeReady,
 } from '@/lib/authorforge/launch'
+import { hubNicheLadder, MARKET_DISCLAIMER as NICHE_MARKET_DISCLAIMER } from '@/lib/authorforge/recommendedNiches'
 import MerchConfigPanel from '@/components/bizstart/amazon/MerchConfigPanel'
 import KdpConfigPanel from '@/components/bizstart/amazon/KdpConfigPanel'
 import KdpResourcesPanel from '@/components/bizstart/amazon/KdpResourcesPanel'
@@ -271,6 +272,33 @@ export default function AmazonHub({ lang = 'en', onBack }) {
       <div className="premium-card mb-4 border border-brand-500/25 bg-gradient-to-br from-brand-900/30 to-slate-900/40 p-4">
         <p className="text-sm font-bold text-brand-100">{amazonT(lang, 'comboTitle')}</p>
         <p className="mt-1.5 text-xs leading-relaxed text-slate-300">{amazonT(lang, 'comboBody')}</p>
+      </div>
+
+      <div className="premium-card mb-4 border border-brand-500/20 p-4">
+        <p className="text-sm font-bold text-slate-100">{amazonT(lang, 'nicheLadderTitle')}</p>
+        <p className="mt-1.5 text-xs leading-relaxed text-slate-300">
+          {amazonT(lang, 'nicheLadderIntro')}
+        </p>
+        <ol className="mt-3 space-y-2">
+          {hubNicheLadder(lang).map((n) => (
+            <li
+              key={`${n.priority}-${n.title}`}
+              className="rounded-xl border border-slate-700/80 bg-slate-950/40 px-3 py-2.5"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-md bg-brand-600/25 px-2 py-0.5 text-[11px] font-semibold text-brand-200">
+                  #{n.priority}
+                </span>
+                <span className="text-[11px] font-medium text-slate-400">
+                  {amazonT(lang, 'nicheLadderStudio')}: {n.studio}
+                </span>
+              </div>
+              <p className="mt-1 text-sm font-semibold text-slate-100">{n.title}</p>
+              <p className="mt-0.5 text-[11px] leading-relaxed text-slate-400">{n.detail}</p>
+            </li>
+          ))}
+        </ol>
+        <p className="mt-3 text-[11px] leading-relaxed text-amber-100/80">{NICHE_MARKET_DISCLAIMER}</p>
       </div>
 
       <div className="premium-card mb-4 border border-brand-500/20 p-4">

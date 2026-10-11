@@ -10,6 +10,12 @@ export default function DesktopGate({ lang = 'en' }) {
         <h1 className="brand" style={{ marginTop: '0.75rem' }}>
           {t(lang, 'appName')}
         </h1>
+        <p className="badge" style={{ marginTop: '0.5rem', display: 'inline-block' }}>
+          {t(lang, 'categoryBadge')}
+        </p>
+        <p className="muted" style={{ marginTop: '0.5rem' }}>
+          {t(lang, 'positioningLead')}
+        </p>
         <p className="muted">{t(lang, 'desktopRequired')}</p>
         <p className="muted" style={{ marginTop: '0.75rem' }}>
           Minimum width: {DESKTOP_MIN_WIDTH}px. {t(lang, 'offlineHint')}

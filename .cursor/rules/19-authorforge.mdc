@@ -1,10 +1,45 @@
 ---
 description: AuthorForge desktop non-fiction co-author (sibling app)
-globs: authorforge/**,src/lib/authorforge/**
+globs: authorforge/**,src/lib/authorforge/**,src/components/bizstart/amazon/**
 alwaysApply: false
 ---
 
 # AuthorForge
+
+## Product positioning (non-negotiable)
+
+AuthorForge is an adult **non-fiction** co-author studio for KDP-oriented guides, workbooks, and
+**culturally specific** parenting / coaching / mindset books — not fiction and not children’s picture books.
+
+Strategic lane for this product (encode in UI + prompts via `@authorforge/shared` `product-positioning.js`):
+African-heritage, bilingual, Germany-based authors — **niche down hard**; generic middle is not the goal.
+
+| Priority | Niche | Studio |
+|----------|--------|--------|
+| #1 | Bilingual children’s picture books (Twi/EN, Twi/DE, …) | **StoryForge** |
+| #2 | Culturally specific parenting guide + workbook | **AuthorForge** |
+| #3 | Cultural journals / planners / trackers | **AuthorForge** |
+| #4 | Coaching workbooks for immigrant professionals in Europe | **AuthorForge** |
+| #5 | Identity-specific self-help (diaspora / first-gen in Europe) | **AuthorForge** |
+| #6 | Children’s activity & culture workbooks | **StoryForge** |
+
+**Hybrid brand (intended):**
+1. **StoryForge** — character-driven bilingual kids’ series (art + print pack)
+2. **AuthorForge** — companion parent guide, coaching workbook, journal, or identity self-help
+
+Canonical data: `authorforge/packages/shared/src/product-positioning.js` (`RECOMMENDED_NICHES`,
+`PRODUCT_COPY`, `applyRecommendedNiche`, `productPositioningPayload`). StoryForge niches:
+`storyforge/packages/shared/src/product-positioning.js`. Amazon Hub mirror:
+`src/lib/authorforge/recommendedNiches.js`. Expose via `/v1/specs` `product_positioning`.
+Keep UI, Hub, README, market mock, and agent `product_lane` inputs aligned.
+
+⚠ Niche “demand / competition” copy is **strategic guidance**, not verified Amazon sales data.
+Never present it as official KDP stats. Always keep the market disclaimer from that module.
+
+Do not invent fiction workflows, picture-book canvases, or “novel mode” inside AuthorForge.
+
+Prompts (`UNIVERSAL_COAUTHOR_RULES` / agents) must stay non-fiction: never invent credentials,
+quotes, stats, proverbs, or personal anecdotes; use STORY_SLOT / CLAIM markers.
 
 ## Placement
 
@@ -23,6 +58,7 @@ alwaysApply: false
 - KDP values / checklist links live in `@authorforge/shared` publishing-specs with ⚠ notes.
 - Export files + checklist only — no unofficial Amazon upload automation.
 - Story slots + UNVERIFIED claims are first-class; soft export gate with explicit override warning.
+- Prefer **local** `npm run authorforge:dev` for agent work; do not wake Fly unless the user asks (see `20-hybrid-fly-cost.mdc`).
 
 ## Commands
 

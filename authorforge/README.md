@@ -1,6 +1,8 @@
 # AuthorForge
 
-Desktop-only AI **non-fiction co-author** with a guided wizard, quality gates, KDP-oriented export, and a simple storefront. Sibling product to **ScanLogic Business Suite** and **StoryForge** — launched from BizStart → Amazon Business Hub on wide viewports only.
+Desktop-only AI **culturally specific adult non-fiction** co-author for African-heritage / bilingual / Germany-based authors: parenting guides, coaching workbooks, cultural journals, identity self-help. Guided wizard, quality gates, KDP-oriented export, storefront. **Not** for fiction or children’s picture books — those belong in **StoryForge**. Hybrid: bilingual kids’ series in StoryForge → companion parent / coaching book here. Sibling to **ScanLogic Business Suite** — Amazon Business Hub on wide viewports only.
+
+Product positioning + recommended niches (canonical): `packages/shared/src/product-positioning.js` and `.cursor/rules/19-authorforge.mdc`. Niche demand copy is strategic guidance with ⚠ — not verified Amazon sales data.
 
 > Not affiliated with or endorsed by Amazon.
 

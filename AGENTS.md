@@ -24,7 +24,7 @@ Cursor loads rules from `.cursor/rules/*.mdc`. Use the matching rule when editin
 | `16-ai-mobile-chat.mdc` | Always on — mobile AI answers immersive; tables; room to reply |
 | `17-design-system-rail.mdc` | UI files — Design System Rail (tokens, layouts, build loop) |
 | `18-storyforge.mdc` | StoryForge desktop studio + Launchpad (`storyforge/`) — not a mobile suite tab |
-| `19-authorforge.mdc` | AuthorForge desktop non-fiction co-author (`authorforge/`) — not a mobile suite tab |
+| `19-authorforge.mdc` | AuthorForge culturally specific adult non-fiction (parenting / coaching / journals / identity self-help; African-heritage · bilingual · DE lane) — kids’ books → StoryForge; not a mobile suite tab |
 | `20-hybrid-fly-cost.mdc` | Always on — no unnecessary Fly machine wakes (AuthorForge/StoryForge cost rail) |
 
 Human-readable security policy: `SECURITY.md`. StoryForge: `storyforge/SECURITY.md`.

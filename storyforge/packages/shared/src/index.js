@@ -119,3 +119,10 @@ export {
   wordCount as publicationWordCount,
   bannedPhraseHits as publicationBannedPhraseHits,
 } from './publication-readiness.js'
+export {
+  STORYFORGE_PRODUCT,
+  STORYFORGE_NICHES,
+  MARKET_DISCLAIMER as STORYFORGE_MARKET_DISCLAIMER,
+  storyforgeNicheLocalized,
+  applyStoryforgeNiche,
+} from './product-positioning.js'

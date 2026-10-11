@@ -6,6 +6,14 @@ alwaysApply: false
 
 # StoryForge
 
+## Product positioning
+
+StoryForge is the **children’s picture-book** studio (character consistency, print art, KDP pack) —
+especially **bilingual** African-language + EN/DE series (priority #1 in the shared niche ladder).
+Adult **non-fiction** / parenting / coaching guides belong in **AuthorForge** — not here. Hybrid:
+kids’ series here → companion parent guide in AuthorForge (`19-authorforge.mdc`,
+`authorforge/.../product-positioning.js`).
+
 ## Placement
 
 - **Not** a ScanLogic tab and **not** available on mobile.

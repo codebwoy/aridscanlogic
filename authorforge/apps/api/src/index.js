@@ -10,6 +10,7 @@ import {
   nextStepId,
   prevStepId,
   DEFAULT_BANNED_PHRASES,
+  productPositioningPayload,
 } from '@authorforge/shared'
 import { llmProviderStatus } from '@authorforge/llm'
 import { focusTagCoverage, listPrompts } from '@authorforge/agents'
@@ -209,6 +210,7 @@ const server = createServer(async (req, res) => {
         banned_phrases_default: DEFAULT_BANNED_PHRASES,
         llm: llmProviderStatus(getLlm()),
         book_budget_eur: config.bookBudgetEur,
+        product_positioning: productPositioningPayload('en'),
       })
       return
     }

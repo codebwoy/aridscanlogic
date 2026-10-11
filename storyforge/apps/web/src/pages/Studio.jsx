@@ -29,6 +29,10 @@ import {
   emptyPublicationSignoff,
   normalizePublicationSignoff,
   CONTINUITY_SIGNOFF_ITEMS,
+  STORYFORGE_NICHES,
+  STORYFORGE_MARKET_DISCLAIMER,
+  storyforgeNicheLocalized,
+  applyStoryforgeNiche,
 } from '@storyforge/shared'
 import { api } from '../lib/api.js'
 import { runAndWait } from '../lib/jobs.js'
@@ -76,6 +80,7 @@ export default function Studio({
     emotional_core: '',
     refrain: '',
     format_id: 'picture',
+    recommended_niche_id: '',
   })
   const [imageStatus, setImageStatus] = useState(null)
   const [falCatalogue, setFalCatalogue] = useState(null)
@@ -198,13 +203,36 @@ export default function Studio({
     }))
   }
 
+  function applyRecommendedNiche(nicheId) {
+    const seed = applyStoryforgeNiche(nicheId)
+    if (!seed) return
+    setCreateForm((f) => ({
+      ...f,
+      title: seed.title || f.title,
+      language: seed.language || f.language,
+      secondary_language: seed.secondary_language || '',
+      bilingual_layout: seed.bilingual_layout || f.bilingual_layout,
+      page_count: seed.page_count || f.page_count,
+      format_id: seed.format_id || f.format_id,
+      emotional_core: seed.emotional_core || f.emotional_core,
+      premise: seed.premise || f.premise,
+      recommended_niche_id: seed.recommended_niche_id || nicheId,
+    }))
+    setStatus('Niche applied — review title & languages, then Create project')
+  }
+
   async function createProject() {
     setBusy(true)
     setError('')
     try {
+      const { recommended_niche_id, ...rest } = createForm
       const body = {
-        ...createForm,
+        ...rest,
         secondary_language: createForm.secondary_language || null,
+        meta: {
+          recommended_niche_id: recommended_niche_id || null,
+          product_lane: 'bilingual_kids_hybrid',
+        },
       }
       const { project } = await api('/v1/projects', {
         method: 'POST',
@@ -541,6 +569,38 @@ export default function Studio({
 
         <div className="sf-card" style={{ marginBottom: '0.75rem' }}>
           <h3 style={{ marginTop: 0, fontFamily: 'var(--sf-font-display)' }}>New book</h3>
+          <p className="sf-muted" style={{ marginTop: 0, fontSize: '0.78rem' }}>
+            Priority lane: bilingual African-language + EN/DE picture books. Parenting non-fiction →
+            AuthorForge.
+          </p>
+          <div className="sf-field">
+            <label>Recommended niches</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+              {STORYFORGE_NICHES.map((raw) => {
+                const niche = storyforgeNicheLocalized(raw, 'en')
+                const selected = createForm.recommended_niche_id === niche.seed?.recommended_niche_id &&
+                  createForm.title === niche.seed?.title
+                return (
+                  <button
+                    key={niche.id}
+                    type="button"
+                    className={selected ? 'sf-btn sf-btn-primary' : 'sf-btn'}
+                    style={{ minHeight: 44, textAlign: 'left', whiteSpace: 'normal' }}
+                    disabled={busy}
+                    onClick={() => applyRecommendedNiche(niche.id)}
+                  >
+                    <strong>#{niche.priority}</strong> {niche.title}
+                    <span className="sf-muted" style={{ display: 'block', fontSize: '0.72rem', marginTop: 2 }}>
+                      {niche.angle}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+            <p className="sf-muted" style={{ margin: '0.4rem 0 0', fontSize: '0.7rem' }}>
+              {STORYFORGE_MARKET_DISCLAIMER}
+            </p>
+          </div>
           <div className="sf-field">
             <label htmlFor="title">Title</label>
             <input

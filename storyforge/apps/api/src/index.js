@@ -42,6 +42,9 @@ import {
   normalizePublicationSignoff,
   generateCharacterNames,
   characterNamesPayload,
+  STORYFORGE_PRODUCT,
+  STORYFORGE_NICHES,
+  STORYFORGE_MARKET_DISCLAIMER,
 } from '@storyforge/shared'
 import { config, assertRuntimeSecrets } from './config.js'
 import { createMemoryStore } from './db/memoryStore.js'
@@ -239,6 +242,18 @@ const server = createServer(async (req, res) => {
         pictureBook: pictureBookPayload(),
         publicationReadiness: publicationReadinessPayload(),
         characterNames: characterNamesPayload(),
+        product_positioning: {
+          product: STORYFORGE_PRODUCT,
+          market_disclaimer: STORYFORGE_MARKET_DISCLAIMER,
+          niches: STORYFORGE_NICHES.map((n) => ({
+            id: n.id,
+            priority: n.priority,
+            title: n.en.title,
+            angle: n.en.angle,
+            why: n.en.why,
+            seed: n.seed,
+          })),
+        },
       })
       return
     }

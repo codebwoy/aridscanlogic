@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BookOpen, Coins, Download, Save, Sparkles, Upload } from 'lucide-react'
-import { WIZARD_STEPS, t, costFor } from '@authorforge/shared'
+import {
+  WIZARD_STEPS,
+  t,
+  costFor,
+  productCopy,
+  RECOMMENDED_NICHES,
+  MARKET_DISCLAIMER,
+  applyRecommendedNiche,
+  nicheLocalized,
+} from '@authorforge/shared'
 import {
   createBook,
   deleteBook,
@@ -537,8 +546,14 @@ export default function Studio({ lang = 'en' }) {
     <div className="app-shell">
       <aside className="rail">
         <div className="brand">{t(lang, 'appName')}</div>
+        <p className="badge" style={{ marginTop: '0.45rem', display: 'inline-block' }}>
+          {t(lang, 'categoryBadge')}
+        </p>
         <p className="muted" style={{ marginTop: '0.35rem' }}>
           {t(lang, 'tagline')}
+        </p>
+        <p className="muted" style={{ marginTop: '0.5rem', fontSize: '0.72rem' }}>
+          {t(lang, 'hybridHint')}
         </p>
         <button type="button" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }} onClick={onNewBook} disabled={!!busy}>
           {t(lang, 'newBook')}
@@ -687,7 +702,8 @@ export default function Studio({ lang = 'en' }) {
 
           {!book ? (
             <div className="card">
-              <p>Create a book to start the guided wizard.</p>
+              <p>Create a non-fiction book to start the guided wizard.</p>
+              <PositioningCallout lang={lang} />
             </div>
           ) : (
             <WizardStep
@@ -746,12 +762,13 @@ export default function Studio({ lang = 'en' }) {
           <strong>Step assistant</strong>
         </div>
         <p className="muted" style={{ marginTop: '0.5rem' }}>
-          Scoped to this step. Suggestions never invent credentials or stats.
+          {t(lang, 'assistantIdle')}
         </p>
         <StepAssistant
           assist={assist}
           busy={busy}
           canSuggest={!!book}
+          idleCopy={t(lang, 'assistantIdle')}
           onSuggestTitles={() => runJob('title_variations', { seed: book?.working_title })}
           onApplyTitle={async (opt) => {
             if (!opt?.title) return
@@ -767,6 +784,88 @@ export default function Studio({ lang = 'en' }) {
           }}
         />
       </aside>
+    </div>
+  )
+}
+
+function PositioningCallout({ lang = 'en', book, onApplyNiche }) {
+  const copy = productCopy(lang)
+  const activeId = book?.bible?.recommended_niche_id || ''
+  return (
+    <div className="position-callout" role="note">
+      <p className="position-callout-lead">
+        <strong>{copy.categoryLabel}.</strong> {t(lang, 'positioningLead')}
+      </p>
+      <p className="muted" style={{ margin: '0 0 0.65rem', fontSize: '0.78rem' }}>
+        {copy.strategyLine}
+      </p>
+      <div className="position-callout-grid">
+        <div>
+          <h3>{copy.forLabel}</h3>
+          <ul>
+            {copy.forLines.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h3>{copy.notLabel}</h3>
+          <ul>
+            {copy.notLines.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      <h3 style={{ margin: '0.85rem 0 0.4rem' }}>{t(lang, 'nichesHeading')}</h3>
+      <ul className="niche-list">
+        {RECOMMENDED_NICHES.map((raw) => {
+          const niche = nicheLocalized(raw, lang)
+          const isAf = niche.studio === 'authorforge'
+          const selected = activeId === niche.id
+          return (
+            <li key={niche.id} className={selected ? 'niche-item niche-item-active' : 'niche-item'}>
+              <div className="niche-item-head">
+                <span className="badge">#{niche.priority}</span>
+                <strong>{niche.title}</strong>
+                <span className="muted" style={{ fontSize: '0.7rem' }}>
+                  {isAf ? 'AuthorForge' : 'StoryForge'}
+                </span>
+              </div>
+              <p className="muted" style={{ margin: '0.35rem 0', fontSize: '0.75rem' }}>
+                {niche.angle}
+              </p>
+              <p className="muted" style={{ margin: '0 0 0.5rem', fontSize: '0.72rem' }}>
+                {niche.why}
+              </p>
+              {isAf && onApplyNiche ? (
+                <button
+                  type="button"
+                  className={selected ? 'btn btn-primary' : 'btn'}
+                  style={{ minHeight: 44 }}
+                  onClick={() => onApplyNiche(niche.id)}
+                >
+                  {selected ? '✓ ' : ''}
+                  {copy.applyNiche}
+                </button>
+              ) : (
+                <p className="muted" style={{ margin: 0, fontSize: '0.72rem' }}>
+                  {isAf
+                    ? t(lang, 'applyNicheHint') ||
+                      'Create or open a book, then tap Use this niche to seed title, USP, and audience.'
+                    : `${copy.storyforgeOnly} — ${t(lang, 'hybridHint')}`}
+                </p>
+              )}
+            </li>
+          )
+        })}
+      </ul>
+      <p className="muted" style={{ margin: '0.65rem 0 0', fontSize: '0.72rem' }}>
+        {copy.hybridHint}
+      </p>
+      <p className="warn" style={{ margin: '0.35rem 0 0', fontSize: '0.72rem' }}>
+        {t(lang, 'marketDisclaimer') || MARKET_DISCLAIMER}
+      </p>
     </div>
   )
 }
@@ -1130,6 +1229,7 @@ function WizardStep(props) {
     onCompliance,
     onInlineAction,
     onMessage,
+    lang = 'en',
   } = props
 
   return (
@@ -1171,11 +1271,23 @@ function WizardStep(props) {
       {(step === 'basics' || step === 'positioning' || step === 'title_opt' || step === 'details' || step === 'bio') && (
         <div className="card">
           <h2>{step === 'basics' ? 'Book Basics' : step}</h2>
+          {step === 'basics' ? (
+            <PositioningCallout
+              lang={lang}
+              book={book}
+              onApplyNiche={async (nicheId) => {
+                const patch = applyRecommendedNiche(nicheId, lang)
+                if (!patch) return
+                await onSaveBasics(patch)
+                onMessage?.(`Applied niche — review title, USP, and audience, then continue.`)
+              }}
+            />
+          ) : null}
           <div className="grid-2">
             <div className="field">
               <label>Working title</label>
               <input
-                key={`${book.id}-title`}
+                key={`${book.id}-title-${book.bible?.recommended_niche_id || 'x'}-${book.working_title}`}
                 name="working_title"
                 defaultValue={book.working_title}
                 onBlur={(e) => onSaveBasics({ working_title: e.target.value })}
@@ -1184,7 +1296,7 @@ function WizardStep(props) {
             <div className="field">
               <label>Subtitle</label>
               <input
-                key={`${book.id}-subtitle`}
+                key={`${book.id}-subtitle-${book.bible?.recommended_niche_id || 'x'}`}
                 name="subtitle"
                 defaultValue={book.subtitle || ''}
                 onBlur={(e) => onSaveBasics({ subtitle: e.target.value })}
@@ -1202,7 +1314,7 @@ function WizardStep(props) {
             <div className="field">
               <label>Topic</label>
               <input
-                key={`${book.id}-topic`}
+                key={`${book.id}-topic-${book.bible?.recommended_niche_id || 'x'}`}
                 name="topic"
                 defaultValue={book.topic || ''}
                 onBlur={(e) => onSaveBasics({ topic: e.target.value })}
@@ -1211,7 +1323,7 @@ function WizardStep(props) {
             <div className="field">
               <label>Target words</label>
               <input
-                key={`${book.id}-words`}
+                key={`${book.id}-words-${book.bible?.recommended_niche_id || 'x'}`}
                 name="target_words"
                 type="number"
                 min={500}
@@ -1223,7 +1335,7 @@ function WizardStep(props) {
             <div className="field">
               <label>Trim size</label>
               <select
-                key={`${book.id}-trim`}
+                key={`${book.id}-trim-${book.bible?.recommended_niche_id || 'x'}`}
                 name="trim_size"
                 defaultValue={book.trim_size}
                 onChange={(e) => onSaveBasics({ trim_size: e.target.value })}
@@ -1231,13 +1343,14 @@ function WizardStep(props) {
                 <option value="5x8">5 × 8</option>
                 <option value="5.5x8.5">5.5 × 8.5</option>
                 <option value="6x9">6 × 9</option>
+                <option value="8.5x11">8.5 × 11 (workbook)</option>
               </select>
             </div>
           </div>
           <div className="field">
             <label>USP / what stands out</label>
             <textarea
-              key={`${book.id}-usp`}
+              key={`${book.id}-usp-${book.bible?.recommended_niche_id || 'x'}`}
               name="usp"
               defaultValue={book.bible?.usp || ''}
               onBlur={(e) => onSaveBasics({ bible: { ...book.bible, usp: e.target.value } })}
@@ -1246,10 +1359,27 @@ function WizardStep(props) {
           <div className="field">
             <label>Tone</label>
             <input
-              key={`${book.id}-tone`}
+              key={`${book.id}-tone-${book.bible?.recommended_niche_id || 'x'}`}
               name="tone"
               defaultValue={book.bible?.tone || ''}
               onBlur={(e) => onSaveBasics({ bible: { ...book.bible, tone: e.target.value } })}
+            />
+          </div>
+          <div className="field">
+            <label>Ideal reader / audience</label>
+            <textarea
+              key={`${book.id}-audience-${book.bible?.recommended_niche_id || 'x'}`}
+              name="audience"
+              defaultValue={book.bible?.audience || book.bible?.ideal_reader || ''}
+              onBlur={(e) =>
+                onSaveBasics({
+                  bible: {
+                    ...book.bible,
+                    audience: e.target.value,
+                    ideal_reader: e.target.value,
+                  },
+                })
+              }
             />
           </div>
           {step === 'title_opt' && (

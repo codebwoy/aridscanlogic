@@ -1,7 +1,7 @@
 import { Download, RefreshCw } from 'lucide-react'
 
 const IDLE_COPY =
-  'Ask for title ideas, positioning, or outline tweaks. I write into fields — you stay editor-in-chief.'
+  'Ask for title ideas, positioning, or outline tweaks for non-fiction. Suggestions never invent credentials or stats. Picture books → StoryForge.'
 
 function ptToIn(pt) {
   const n = Number(pt)
@@ -414,13 +414,15 @@ export default function StepAssistant({
   onApplyTitle,
   onDownload,
   canSuggest,
+  idleCopy,
 }) {
   const payload = normalizeAssist(assist)
   const type = payload?.type
   const outputs = payload?.outputs
   const downloaded = payload?.downloaded || 0
+  const idle = idleCopy || IDLE_COPY
 
-  let body = <p className="muted" style={{ margin: 0 }}>{IDLE_COPY}</p>
+  let body = <p className="muted" style={{ margin: 0 }}>{idle}</p>
 
   if (outputs) {
     if (

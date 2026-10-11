@@ -13,6 +13,12 @@ export const PUBLISHING_SPECS = {
     '5x8': { widthIn: 5, heightIn: 8, label: '5 × 8 in' },
     '5.5x8.5': { widthIn: 5.5, heightIn: 8.5, label: '5.5 × 8.5 in' },
     '6x9': { widthIn: 6, heightIn: 9, label: '6 × 9 in (default)' },
+    '8.5x11': {
+      widthIn: 8.5,
+      heightIn: 11,
+      label: '8.5 × 11 in (workbook)',
+      note: '⚠ Confirm this trim is available for your marketplace/paperback type in current KDP help before upload.',
+    },
   },
   defaultTrimId: '6x9',
   paperTypes: {

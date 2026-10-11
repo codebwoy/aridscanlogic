@@ -9,6 +9,10 @@ export const AMAZON_STRINGS = {
     comboTitle: 'Strongest immediate combo',
     comboBody:
       'KDP + Merch on Demand — same illustrations, two revenue streams, no extra inventory risk. Start KDP now; apply to Merch in parallel.',
+    nicheLadderTitle: 'Your niche ladder (African-heritage · bilingual · Germany)',
+    nicheLadderIntro:
+      'Niche down hard. Kids’ series in StoryForge; parenting / coaching / journals / identity self-help in AuthorForge. Hybrid brand wins.',
+    nicheLadderStudio: 'Studio',
     priorityTitle: 'Priority overview',
     programmesTitle: 'Amazon programmes',
     whatLabel: 'What it is',
@@ -36,9 +40,9 @@ export const AMAZON_STRINGS = {
     colEffort: 'Effort',
     colRelevance: 'Relevance',
     colPriority: 'Priority',
-    storyforgeTitle: 'StoryForge — children’s book studio',
+    storyforgeTitle: 'StoryForge — bilingual children’s book studio',
     storyforgeBody:
-      'Desktop-only: Character Turbo (pinned anchor), Editor Pro, Canvas, Launchpad course & KDP checklist. Not available on phones.',
+      'Desktop-only: bilingual African-language + EN/DE picture series (niche #1), activity companions, Character Turbo, Canvas, Launchpad & KDP pack. Parenting guides → AuthorForge.',
     storyforgeCta: 'Open StoryForge (desktop)',
     storyforgeLaunchpadCta: 'Open Launchpad',
     storyforgeLaunchpadHint:
@@ -49,9 +53,9 @@ export const AMAZON_STRINGS = {
     storyforgeOffline:
       'Local StoryForge is not running. Start it with npm run storyforge:dev (http://127.0.0.1:5180), or set VITE_STORYFORGE_URL to your Fly URL and redeploy ScanLogic.',
     storyforgeOnline: 'StoryForge is reachable — Open StoryForge will work.',
-    authorforgeTitle: 'AuthorForge — non-fiction co-author',
+    authorforgeTitle: 'AuthorForge — culturally specific non-fiction',
     authorforgeBody:
-      'Desktop-only guided wizard: book bible, outline, section drafting, fact-check, KDP package, and your own storefront. Co-author drafts — you edit and verify.',
+      'Desktop-only for African-heritage / bilingual / Germany-lane non-fiction: parenting guides, coaching workbooks, cultural journals, identity self-help (not fiction or kids’ picture books — StoryForge). Niche picker seeds your book. Hybrid: bilingual kids’ series in StoryForge → parent/coaching companion here. ⚠ Niche tips are strategic, not verified Amazon sales data.',
     authorforgeCta: 'Open AuthorForge (desktop)',
     authorforgeHint:
       'Production: VITE_AUTHORFORGE_URL → your Fly studio. Local: npm run authorforge:dev (:5181). Credits for generation; export + checklist only (no Amazon upload automation).',
@@ -289,6 +293,10 @@ export const AMAZON_STRINGS = {
     comboTitle: 'Stärkste Sofort-Kombination',
     comboBody:
       'KDP + Merch on Demand — dieselben Illustrationen, zwei Einnahmequellen, kein zusätzliches Lagerrisiko. KDP sofort starten; Merch parallel beantragen.',
+    nicheLadderTitle: 'Ihre Nischen-Leiter (afrikanisches Erbe · zweisprachig · Deutschland)',
+    nicheLadderIntro:
+      'Hart nichedown. Kinderbuch-Serie in StoryForge; Erziehung / Coaching / Journale / Identity-Self-Help in AuthorForge. Hybrid-Marke gewinnt.',
+    nicheLadderStudio: 'Studio',
     priorityTitle: 'Prioritäten-Übersicht',
     programmesTitle: 'Amazon-Programme',
     whatLabel: 'Was es ist',
@@ -316,9 +324,9 @@ export const AMAZON_STRINGS = {
     colEffort: 'Aufwand',
     colRelevance: 'Relevanz',
     colPriority: 'Priorität',
-    storyforgeTitle: 'StoryForge — Kinderbuch-Studio',
+    storyforgeTitle: 'StoryForge — zweisprachiges Kinderbuch-Studio',
     storyforgeBody:
-      'Nur Desktop: Character Turbo (Anker), Editor Pro, Canvas, Launchpad-Kurs & KDP-Checkliste. Nicht auf dem Handy verfügbar.',
+      'Nur Desktop: zweisprachige afrikanische Sprache + DE/EN Bilderbuchserie (Nische #1), Activity-Begleiter, Character Turbo, Canvas, Launchpad & KDP-Pack. Erziehungsratgeber → AuthorForge.',
     storyforgeCta: 'StoryForge öffnen (Desktop)',
     storyforgeLaunchpadCta: 'Launchpad öffnen',
     storyforgeLaunchpadHint:
@@ -329,9 +337,9 @@ export const AMAZON_STRINGS = {
     storyforgeOffline:
       'Lokales StoryForge läuft nicht. Start: npm run storyforge:dev (http://127.0.0.1:5180) — oder VITE_STORYFORGE_URL auf die Fly-URL setzen und ScanLogic neu deployen.',
     storyforgeOnline: 'StoryForge ist erreichbar — „StoryForge öffnen“ funktioniert.',
-    authorforgeTitle: 'AuthorForge — Sachbuch-Co-Autor',
+    authorforgeTitle: 'AuthorForge — kulturell spezifisches Sachbuch',
     authorforgeBody:
-      'Nur Desktop: geführter Assistent für Buch-Bibel, Gliederung, Kapitelentwurf, Fact-Check, KDP-Paket und eigenen Shop. Entwürfe zum Überarbeiten — Sie bleiben Herausgeber:in.',
+      'Nur Desktop für die Spur afrikanisches Erbe / Zweisprachigkeit / Deutschland: Erziehungsratgeber, Coaching-Workbooks, kulturelle Journale, Identity-Self-Help (keine Fiction/Bilderbücher — StoryForge). Nischen-Picker befüllt Ihr Buch. Hybrid: Kinderbuch-Serie in StoryForge → Eltern-/Coaching-Begleiter hier. ⚠ Nischen-Hinweise sind strategisch, keine verifizierten Amazon-Verkaufsdaten.',
     authorforgeCta: 'AuthorForge öffnen (Desktop)',
     authorforgeHint:
       'Produktion: VITE_AUTHORFORGE_URL → Fly-Studio. Lokal: npm run authorforge:dev (:5181). Credits für Generierung; nur Export + Checkliste (kein Amazon-Upload).',
