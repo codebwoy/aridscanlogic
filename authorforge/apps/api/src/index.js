@@ -129,6 +129,52 @@ const server = createServer(async (req, res) => {
       return
     }
 
+    // Signed export downloads: HMAC token in query is the credential.
+    // Must run before assertApiAccess so hybrid/prod downloads work without Origin/session.
+    if (path.startsWith('/v1/exports/') && req.method === 'GET') {
+      if (!limitApi(req, res)) return
+      const id = path.split('/')[3]
+      const token = url.searchParams.get('token') || ''
+      if (!verifyExportToken(token, id)) {
+        sendError(res, 403, 'Invalid export token', 'forbidden')
+        return
+      }
+      const art = await resolveExportArtifact(store, id)
+      if (!art) {
+        sendError(res, 404, 'Export not found', 'not_found')
+        return
+      }
+      const buf = Buffer.from(art.bytes, 'base64')
+      const ctype =
+        art.format === 'epub'
+          ? 'application/epub+zip'
+          : art.format === 'kdp_zip'
+            ? 'application/zip'
+            : art.format === 'docx'
+              ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+              : art.format?.includes('svg') || art.format?.startsWith('aplus_') || art.format === 'cover_svg'
+                ? 'image/svg+xml'
+                : 'application/pdf'
+      const ext =
+        art.format === 'epub'
+          ? 'epub'
+          : art.format === 'kdp_zip'
+            ? 'zip'
+            : art.format === 'docx'
+              ? 'docx'
+              : ctype === 'image/svg+xml'
+                ? 'svg'
+                : 'pdf'
+      res.writeHead(200, {
+        'Content-Type': ctype,
+        'Content-Length': buf.length,
+        'Content-Disposition': `attachment; filename="authorforge-${art.format}-${id.slice(0, 8)}.${ext}"`,
+        'Cache-Control': 'no-store',
+      })
+      res.end(buf)
+      return
+    }
+
     if (!assertApiAccess(req, res)) return
     if (!limitApi(req, res)) return
 
@@ -260,49 +306,6 @@ const server = createServer(async (req, res) => {
         content: chapters.join('\n\n---\n\n'),
         remaining_note: 'Token limited-use; regenerate via purchase if exhausted.',
       })
-      return
-    }
-
-    if (path.startsWith('/v1/exports/') && req.method === 'GET') {
-      const id = path.split('/')[3]
-      const token = url.searchParams.get('token') || ''
-      if (!verifyExportToken(token, id)) {
-        sendError(res, 403, 'Invalid export token', 'forbidden')
-        return
-      }
-      const art = await resolveExportArtifact(store, id)
-      if (!art) {
-        sendError(res, 404, 'Export not found', 'not_found')
-        return
-      }
-      const buf = Buffer.from(art.bytes, 'base64')
-      const ctype =
-        art.format === 'epub'
-          ? 'application/epub+zip'
-          : art.format === 'kdp_zip'
-            ? 'application/zip'
-            : art.format === 'docx'
-              ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-              : art.format?.includes('svg') || art.format?.startsWith('aplus_') || art.format === 'cover_svg'
-                ? 'image/svg+xml'
-                : 'application/pdf'
-      const ext =
-        art.format === 'epub'
-          ? 'epub'
-          : art.format === 'kdp_zip'
-            ? 'zip'
-            : art.format === 'docx'
-              ? 'docx'
-              : ctype === 'image/svg+xml'
-                ? 'svg'
-                : 'pdf'
-      res.writeHead(200, {
-        'Content-Type': ctype,
-        'Content-Length': buf.length,
-        'Content-Disposition': `attachment; filename="authorforge-${art.format}-${id.slice(0, 8)}.${ext}"`,
-        'Cache-Control': 'no-store',
-      })
-      res.end(buf)
       return
     }
 

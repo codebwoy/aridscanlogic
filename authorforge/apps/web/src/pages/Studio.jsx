@@ -151,23 +151,34 @@ export default function Studio({ lang = 'en' }) {
 
   async function downloadExportUrl(url, filename) {
     if (!url) return false
+    const name = filename || 'authorforge-export'
+    const clickAnchor = (href, downloadName) => {
+      const a = document.createElement('a')
+      a.href = href
+      if (downloadName) a.download = downloadName
+      a.rel = 'noopener noreferrer'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+    }
     try {
       const res = await fetch(url, { cache: 'no-store' })
       if (!res.ok) throw new Error(`Download failed (${res.status})`)
       const blob = await res.blob()
+      if (!blob.size) throw new Error('Empty export file')
       const objectUrl = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = objectUrl
-      a.download = filename || 'authorforge-export'
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      URL.revokeObjectURL(objectUrl)
+      clickAnchor(objectUrl, name)
+      // Delay revoke so the browser can finish starting the download
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000)
       return true
     } catch {
-      // Same-origin attachment URL — open as fallback if blob fetch fails
-      window.open(url, '_blank', 'noopener,noreferrer')
-      return true
+      // Anchor fallback (not window.open — popup blockers kill async opens)
+      try {
+        clickAnchor(url, name)
+        return true
+      } catch {
+        return false
+      }
     }
   }
 
@@ -244,10 +255,14 @@ export default function Studio({ lang = 'en' }) {
       if (book?.id) await loadBook(book.id)
       await refreshLibrary()
       const { downloaded, storefrontHref } = await consumeJobOutputs(type, done.outputs)
+      const isExportJob =
+        String(type).startsWith('export_') || type === 'cover_wrap' || type === 'cover_generate' || type === 'cover_revise'
       if (storefrontHref) {
         setMessage(`${type} completed — storefront opened`)
       } else if (downloaded > 0) {
         setMessage(`${type} completed — download started (${downloaded} file${downloaded > 1 ? 's' : ''})`)
+      } else if (isExportJob && (done.outputs?.url || done.outputs?.download || done.outputs?.cover?.export?.url)) {
+        setMessage(`${type} completed — file ready; use Download below if it did not start`)
       } else if (type === 'ad_script' && done.outputs?.ad_script) {
         setMessage('ad_script completed — script ready below')
       } else if (type === 'metadata_generate') {
@@ -1554,6 +1569,30 @@ function WizardStep(props) {
               Publish storefront
             </button>
           </div>
+          {assist?.outputs?.url &&
+          (String(assist?.type || '').startsWith('export_') || assist?.type === 'cover_wrap') ? (
+            <div className="row" style={{ marginTop: '0.75rem' }}>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={!!busy}
+                onClick={() => onDownloadExport?.(assist.outputs.url, assist.type)}
+              >
+                <Download size={14} /> Download{' '}
+                {String(assist.type || 'export')
+                  .replace(/^export_/, '')
+                  .replace(/_/g, ' ')}
+              </button>
+              <a
+                className="btn"
+                href={assist.outputs.url}
+                download
+                rel="noopener noreferrer"
+              >
+                Open export link
+              </a>
+            </div>
+          ) : null}
           {book.storefront?.slug ? (
             <p style={{ marginTop: '0.75rem' }}>
               Storefront:{' '}

@@ -96,7 +96,7 @@ function ExportSummary({ type, outputs, downloaded, onDownload }) {
           style={{ width: '100%', marginTop: '0.75rem' }}
           onClick={() => onDownload?.(urls[0])}
         >
-          <Download size={14} /> Download again
+          <Download size={14} /> {downloaded > 0 ? 'Download again' : 'Download file'}
         </button>
       ) : null}
     </div>
