@@ -27,6 +27,17 @@ import {
   PROGRESS_STEPS,
   craftLibraryPayload,
   falModelsPayload,
+  STORY_LANGUAGE_CODES,
+  BILINGUAL_LAYOUT_IDS,
+  normalizeLanguagePair,
+  languagesPayload,
+  normalizeIpCharacter,
+  validateIpCharacterForLock,
+  ipCharacterPayload,
+  emptyIpCharacter,
+  buildEscalatingBeatBriefs,
+  defaultRefrainForHook,
+  pictureBookPayload,
 } from '@storyforge/shared'
 import { config, assertRuntimeSecrets } from './config.js'
 import { createMemoryStore } from './db/memoryStore.js'
@@ -73,14 +84,21 @@ const sessionBody = z.object({
   externalRef: z.string().min(1).max(128).optional(),
 })
 
+const langCode = z.enum(/** @type {[string, ...string[]]} */ (STORY_LANGUAGE_CODES))
+const bilingualLayout = z.enum(/** @type {[string, ...string[]]} */ (BILINGUAL_LAYOUT_IDS))
+
 const projectBody = z.object({
   title: z.string().min(1).max(200).optional(),
-  language: z.enum(['de', 'en']).optional(),
+  language: langCode.optional(),
+  secondary_language: z.union([langCode, z.literal(''), z.null()]).optional(),
+  bilingual_layout: bilingualLayout.optional(),
+  secondary_verified: z.boolean().optional(),
   trim_id: z.string().max(32).optional(),
   paper_type: z.string().max(32).optional(),
   page_count: z.number().int().optional(),
   premise: z.string().max(2000).optional(),
   emotional_core: z.string().max(500).optional(),
+  refrain: z.string().max(200).optional(),
   format_id: z.string().max(32).optional(),
   style_preset: z.string().max(64).optional(),
   turbo_engine: z.string().max(16).optional(),
@@ -88,6 +106,38 @@ const projectBody = z.object({
   course_progress: z.record(z.any()).optional(),
   meta: z.record(z.any()).optional(),
 })
+
+function applyLanguagePairFields(body, existing = {}) {
+  const primary = body.language ?? existing.language ?? 'de'
+  const secondary =
+    body.secondary_language !== undefined
+      ? body.secondary_language
+      : existing.secondary_language ?? null
+  const layout = body.bilingual_layout ?? existing.bilingual_layout ?? 'stacked'
+  const verified =
+    body.secondary_verified !== undefined
+      ? body.secondary_verified
+      : existing.secondary_verified ?? false
+  const pair = normalizeLanguagePair({
+    primary,
+    secondary,
+    layout,
+    secondary_verified: verified,
+  })
+  if (!pair.ok) {
+    const err = new Error(pair.error)
+    err.status = 400
+    err.code = 'invalid_language_pair'
+    throw err
+  }
+  return {
+    ...body,
+    language: pair.primary,
+    secondary_language: pair.secondary,
+    bilingual_layout: pair.layout,
+    secondary_verified: pair.secondary_verified,
+  }
+}
 
 const pinBody = z.object({
   assetId: z.string().min(1).max(128).optional(),
@@ -118,6 +168,7 @@ const configPatchBody = z.object({
 
 const pageBody = z.object({
   text_content: z.string().max(4000).optional(),
+  text_secondary: z.string().max(4000).optional(),
   illustration_brief: z.string().max(2000).optional(),
 })
 
@@ -169,6 +220,9 @@ const server = createServer(async (req, res) => {
         turboEngines: CHARACTER_TURBO_ENGINES,
         image: providerStatus(),
         fal: falModelsPayload(),
+        languages: languagesPayload(),
+        ipCharacter: ipCharacterPayload(),
+        pictureBook: pictureBookPayload(),
       })
       return
     }
@@ -317,8 +371,16 @@ const server = createServer(async (req, res) => {
       return
     }
 
+    const seriesMatch = path.match(/^\/v1\/series\/([^/]+)\/ip-dna$/)
+    if (seriesMatch && req.method === 'GET') {
+      const seriesId = decodeURIComponent(seriesMatch[1])
+      const heroes = await store.listSeriesIpDna(userId, seriesId)
+      sendJson(res, 200, { seriesId, heroes })
+      return
+    }
+
     if (path === '/v1/projects' && req.method === 'POST') {
-      const body = projectBody.parse(await readJson(req))
+      const body = applyLanguagePairFields(projectBody.parse(await readJson(req)))
       const project = await store.createProject(userId, body)
       sendJson(res, 201, { project })
       return
@@ -343,7 +405,9 @@ const server = createServer(async (req, res) => {
       }
 
       if (rest === '' && req.method === 'PATCH') {
-        const body = projectBody.parse(await readJson(req))
+        const existing = await store.getProject(userId, id)
+        if (!existing) return sendError(res, 404, 'Project not found')
+        const body = applyLanguagePairFields(projectBody.parse(await readJson(req)), existing)
         const project = await store.updateProject(userId, id, body)
         if (!project) return sendError(res, 404, 'Project not found')
         sendJson(res, 200, { project })
@@ -355,6 +419,122 @@ const server = createServer(async (req, res) => {
         const project = await store.pinAnchor(userId, id, body)
         if (!project) return sendError(res, 404, 'Project not found')
         sendJson(res, 200, { project, pinned: project.pinned_anchor })
+        return
+      }
+
+      if (rest === '/ip-character' && req.method === 'GET') {
+        const project = await store.getProject(userId, id)
+        if (!project) return sendError(res, 404, 'Project not found')
+        sendJson(res, 200, {
+          ip_character: project.ip_character || emptyIpCharacter(),
+          locked: Boolean(project.ip_character?.locked_at),
+          catalogue: ipCharacterPayload(),
+        })
+        return
+      }
+
+      if (rest === '/ip-character' && req.method === 'PUT') {
+        const body = z.record(z.any()).parse(await readJson(req))
+        const { dna } = normalizeIpCharacter(body)
+        // Saving a draft clears lock only when client asks unlock:true
+        const unlock = body.unlock === true
+        const project = await store.setIpCharacter(userId, id, dna, { unlock })
+        if (!project) return sendError(res, 404, 'Project not found')
+        sendJson(res, 200, {
+          project,
+          ip_character: project.ip_character,
+          locked: Boolean(project.ip_character?.locked_at),
+        })
+        return
+      }
+
+      if (rest === '/seed-beats' && req.method === 'POST') {
+        const project = await store.getProject(userId, id)
+        if (!project) return sendError(res, 404, 'Project not found')
+        let body = {}
+        try {
+          body = z
+            .object({
+              overwrite: z.boolean().optional(),
+              refrain: z.string().max(200).optional(),
+            })
+            .parse(await readJson(req))
+        } catch {
+          body = {}
+        }
+        const dna = project.ip_character || {}
+        const refrain =
+          body.refrain ||
+          project.refrain ||
+          defaultRefrainForHook(dna.emotionalHook || project.emotional_core)
+        const beats = buildEscalatingBeatBriefs({
+          pageCount: project.page_count,
+          characterName: dna.name || project.pinned_anchor?.name || 'Hero',
+          emotionalCore: project.emotional_core || dna.emotionalHook || 'belonging',
+          signatureObject: dna.signatureObject || 'favorite toy',
+          refrain,
+        })
+        if (body.overwrite) {
+          for (const beat of beats) {
+            await store.setPage(userId, id, beat.page_index, {
+              illustration_brief: beat.illustration_brief,
+            })
+          }
+          if (refrain && !project.refrain) {
+            await store.updateProject(userId, id, { refrain })
+          }
+          sendJson(res, 200, {
+            project: await store.getProject(userId, id),
+            beats,
+            refrain,
+            seeded: beats.length,
+            mode: 'overwrite',
+          })
+          return
+        }
+        const seeded = await store.seedPageBeats(userId, id, beats)
+        if (refrain && !project.refrain) {
+          await store.updateProject(userId, id, { refrain })
+        }
+        sendJson(res, 200, {
+          project: await store.getProject(userId, id),
+          beats,
+          refrain,
+          seeded: beats.length,
+          mode: 'fill_empty',
+          previous: seeded,
+        })
+        return
+      }
+
+      if (rest === '/ip-character/lock' && req.method === 'POST') {
+        let body = {}
+        try {
+          body = z.record(z.any()).parse(await readJson(req))
+        } catch {
+          body = {}
+        }
+        const existing = await store.getProject(userId, id)
+        if (!existing) return sendError(res, 404, 'Project not found')
+        const merged = { ...(existing.ip_character || emptyIpCharacter()), ...body }
+        const validated = validateIpCharacterForLock(merged)
+        if (!validated.ok) {
+          sendJson(res, 400, {
+            error: validated.error,
+            code: 'ip_dna_incomplete',
+            missing: validated.missing,
+            unchecked: validated.unchecked,
+            nameCoach: validated.nameCoach,
+          })
+          return
+        }
+        const project = await store.setIpCharacter(userId, id, validated.dna, { lock: true })
+        sendJson(res, 200, {
+          project,
+          ip_character: project.ip_character,
+          locked: true,
+          nameCoach: validated.nameCoach,
+        })
         return
       }
 

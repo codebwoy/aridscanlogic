@@ -76,12 +76,13 @@ export default function PageCanvas({
           />
           {pageText ? (
             <Text
-              text={pageText.slice(0, 280)}
+              text={pageText.slice(0, 420)}
               x={safeInset + 16}
-              y={height - safeInset - 80}
+              y={height - safeInset - 110}
               width={width - safeInset * 2 - 32}
               fill={muted}
-              fontSize={14}
+              fontSize={13}
+              lineHeight={1.25}
             />
           ) : null}
         </Layer>

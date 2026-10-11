@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { createMemoryStore } from '../src/db/memoryStore.js'
 import { submitJob, wireLocalJobHandlers } from '../src/services/jobs.js'
 import { initQueue } from '../src/queue/queues.js'
+import { lockTestIpDna } from './helpers/ipDna.js'
 
 async function waitForJob(store, userId, jobId, tries = 60) {
   for (let i = 0; i < tries; i++) {
@@ -41,6 +42,7 @@ describe('scene_to_video (fal / mock)', () => {
   })
 
   it('rejects pageIndex without scene art after turbo pin', async () => {
+    await lockTestIpDna(store, user.id, project.id, { name: 'Luna' })
     const turbo = await submitJob(store, {
       userId: user.id,
       type: 'character_turbo',

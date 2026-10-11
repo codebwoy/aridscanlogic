@@ -58,6 +58,9 @@ Optional: `npm run dev:worker` with Redis. Real AI: set `STORYFORGE_IMAGE_PROVID
 
 - Desktop gate (client + API) + 20 trial credits (append-only ledger)
 - Character Turbo + pin anchor; Editor Pro from anchor; Story Scene Pro stub; Photo to Cartoon consent
+- **Bilingual mode** — selectable primary + secondary language pairs (ES/FR/IT/DE/EN + Twi/Igbo/Swahili/Arabic/…), per-page dual text, stacked / side-by-side / alternating layouts, L2 verified flag
+- **IP Character Builder** — merch-ready DNA gate (name suggestions + coach, one colour/trait/object, silhouette + Merch checks) must lock before Character Turbo
+- **Series DNA reuse**, escalating picture-book **beat seeding**, and **Merch PNG** export from pinned hero (manual Amazon Merch upload)
 - Print math preflight (blocks under-res); interior PDF via `pdf-lib`
 - Launchpad: Tutorials (Neolemon catalogue → StoryForge paths), Craft (Compass / DNA / styles / 7-day / continuity), Guides, Course (format table + Koala notes), Prompt Library, Disclosure Helper, Books slots, Admin config, S1–S52 traceability
 - Amazon Hub launch button in ScanLogic

@@ -10,7 +10,7 @@ export const NAMED_TOOLS = {
     jobType: 'character_turbo',
     sourceIds: ['S5'],
     description:
-      'Create the main character as a full-body, front-facing image on a white background.',
+      'Create the main character as a full-body, front-facing image on a white background. Requires locked IP Character DNA (merch-ready gate).',
   },
   editor_pro: {
     id: 'editor_pro',

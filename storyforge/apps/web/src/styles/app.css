@@ -551,6 +551,53 @@ textarea.sf-input {
   gap: 0.75rem;
 }
 
+.sf-bilingual-panel {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid hsl(var(--sf-border) / 0.55);
+}
+
+.sf-bilingual-panel .sf-btn {
+  margin-top: 0.35rem;
+}
+
+.sf-ip-builder {
+  margin: 0;
+}
+
+.sf-ip-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.sf-ip-fieldset:disabled {
+  opacity: 0.72;
+}
+
+.sf-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.4rem;
+}
+
+.sf-chip {
+  min-height: 44px;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--sf-border));
+  background: hsl(var(--sf-card));
+  color: hsl(var(--sf-fg));
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.sf-chip:hover {
+  border-color: hsl(var(--sf-primary));
+}
+
 .sf-check {
   display: flex;
   gap: 0.5rem;

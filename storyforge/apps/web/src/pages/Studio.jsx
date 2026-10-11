@@ -17,10 +17,18 @@ import {
   PUBLISHING_SPECS,
   FAL_DEFAULTS,
   estimateBookCredits,
+  STORY_LANGUAGES,
+  LANGUAGE_PAIR_PRESETS,
+  BILINGUAL_LAYOUTS,
+  formatLanguagePairLabel,
+  composeDisplayText,
+  languageLabel,
+  BOOK_FORMATS,
 } from '@storyforge/shared'
 import { api } from '../lib/api.js'
 import { runAndWait } from '../lib/jobs.js'
 import PageCanvas from '../components/PageCanvas.jsx'
+import IpCharacterBuilder from '../components/IpCharacterBuilder.jsx'
 
 const STEPS = ['story', 'characters', 'scenes', 'layout', 'preflight', 'export']
 
@@ -48,20 +56,26 @@ export default function Studio({
     'Subtle motion, keep face and outfit unchanged, soft children’s book lighting, steady camera',
   )
   const [pageText, setPageText] = useState('')
+  const [pageTextSecondary, setPageTextSecondary] = useState('')
   const [lastOutputs, setLastOutputs] = useState(null)
   const [consent, setConsent] = useState(false)
   const [createForm, setCreateForm] = useState({
     title: 'Mein Bilderbuch',
     language: 'de',
+    secondary_language: '',
+    bilingual_layout: 'stacked',
+    secondary_verified: false,
     trim_id: 'sq_85',
-    page_count: 24,
+    page_count: 32,
     premise: '',
     emotional_core: '',
+    refrain: '',
     format_id: 'picture',
   })
   const [imageStatus, setImageStatus] = useState(null)
   const [falCatalogue, setFalCatalogue] = useState(null)
   const [falModels, setFalModels] = useState({ ...FAL_DEFAULTS })
+  const [pairDraft, setPairDraft] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -93,26 +107,116 @@ export default function Studio({
     }
   }, [active?.id, active?.meta?.falModels])
 
+  useEffect(() => {
+    if (!active) {
+      setPairDraft(null)
+      return
+    }
+    setPairDraft({
+      language: active.language || 'de',
+      secondary_language: active.secondary_language || '',
+      bilingual_layout: active.bilingual_layout || 'stacked',
+      secondary_verified: Boolean(active.secondary_verified),
+    })
+  }, [
+    active?.id,
+    active?.language,
+    active?.secondary_language,
+    active?.bilingual_layout,
+    active?.secondary_verified,
+  ])
+
+  const syncedPrimary = active?.pages?.[pageIndex]?.text_content || ''
+  const syncedSecondary = active?.pages?.[pageIndex]?.text_secondary || ''
+  const syncedBrief = active?.pages?.[pageIndex]?.illustration_brief || ''
+  useEffect(() => {
+    setPageText(syncedPrimary)
+    setPageTextSecondary(syncedSecondary)
+    if (syncedBrief) setSceneBrief(syncedBrief)
+  }, [active?.id, pageIndex, syncedPrimary, syncedSecondary, syncedBrief])
+
   const estimate = estimateBookCredits({ pages: createForm.page_count, characters: 1 })
   const step = active?.progress_step || 'story'
   const stepIdx = Math.max(0, STEPS.indexOf(step))
   const currentPage = active?.pages?.[pageIndex]
+  const bilingualActive = Boolean(
+    (pairDraft?.secondary_language || active?.secondary_language) &&
+      (pairDraft?.secondary_language || active?.secondary_language) !==
+        (pairDraft?.language || active?.language),
+  )
+  const ipLocked = Boolean(active?.ip_character?.locked_at)
   const heroPreview =
     lastOutputs?.assets?.find((a) => a.role === 'hero_frame')?.url ||
     active?.pinned_anchor?.heroUrl ||
     currentPage?.asset?.url
+  const canvasText = active
+    ? composeDisplayText(
+        {
+          page_index: pageIndex,
+          text_content: pageText,
+          text_secondary: pageTextSecondary,
+        },
+        {
+          language: pairDraft?.language || active.language,
+          secondary_language: pairDraft?.secondary_language || active.secondary_language || null,
+          bilingual_layout: pairDraft?.bilingual_layout || active.bilingual_layout || 'stacked',
+        },
+      )
+    : pageText
+
+  function applyPreset(presetId) {
+    const preset = LANGUAGE_PAIR_PRESETS.find(
+      (p) => `${p.primary}-${p.secondary}` === presetId,
+    )
+    if (!preset) return
+    setCreateForm((f) => ({
+      ...f,
+      language: preset.primary,
+      secondary_language: preset.secondary,
+    }))
+  }
 
   async function createProject() {
     setBusy(true)
     setError('')
     try {
+      const body = {
+        ...createForm,
+        secondary_language: createForm.secondary_language || null,
+      }
       const { project } = await api('/v1/projects', {
         method: 'POST',
-        body: createForm,
+        body,
       })
       setProjects((p) => [project, ...p])
       await onSelectProject(project.id)
-      setStatus('Project created — start with Character Turbo')
+      setStatus(
+        `Project created — ${formatLanguagePairLabel(project.language, project.secondary_language)}. Lock IP Character DNA, then Character Turbo`,
+      )
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function saveLanguagePair() {
+    if (!active || !pairDraft) return
+    setBusy(true)
+    setError('')
+    try {
+      const { project } = await api(`/v1/projects/${active.id}`, {
+        method: 'PATCH',
+        body: {
+          language: pairDraft.language,
+          secondary_language: pairDraft.secondary_language || null,
+          bilingual_layout: pairDraft.bilingual_layout,
+          secondary_verified: Boolean(pairDraft.secondary_verified),
+        },
+      })
+      setProjects((list) => list.map((p) => (p.id === project.id ? project : p)))
+      await onSelectProject(project.id)
+      setStatus(`Languages saved — ${formatLanguagePairLabel(project.language, project.secondary_language)}`)
     } catch (e) {
       setError(e.message)
     } finally {
@@ -134,6 +238,26 @@ export default function Studio({
       a.href = file.dataUrl
       a.download = file.filename || fallbackName || 'export'
       a.click()
+    }
+  }
+
+  async function seedBeats(overwrite = false) {
+    if (!active) return
+    setBusy(true)
+    setError('')
+    try {
+      const res = await api(`/v1/projects/${active.id}/seed-beats`, {
+        method: 'POST',
+        body: { overwrite, refrain: active.refrain || createForm.refrain || undefined },
+      })
+      await onSelectProject(active.id)
+      setStatus(
+        `Seeded ${res.seeded} escalating page beats (${res.mode}) — edit briefs, then illustrate`,
+      )
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -192,6 +316,7 @@ export default function Studio({
         if (active?.id) await onSelectProject(active.id)
         downloadArtifact(res.job.outputs?.zip, `${type}.zip`)
         downloadArtifact(res.job.outputs?.pdf, `${type}.pdf`)
+        downloadArtifact(res.job.outputs?.png, `${type}.png`)
       }
       return res
     } catch (e) {
@@ -302,7 +427,11 @@ export default function Studio({
     try {
       await api(`/v1/projects/${active.id}/pages/${pageIndex}`, {
         method: 'PATCH',
-        body: { text_content: pageText, illustration_brief: sceneBrief },
+        body: {
+          text_content: pageText,
+          text_secondary: pageTextSecondary,
+          illustration_brief: sceneBrief,
+        },
       })
       await onSelectProject(active.id)
       setStatus(`Page ${pageIndex + 1} text saved (0 credits)`)
@@ -335,16 +464,73 @@ export default function Studio({
             />
           </div>
           <div className="sf-field">
-            <label htmlFor="lang">Language</label>
+            <label htmlFor="pair-preset">Language pair preset</label>
             <select
-              id="lang"
-              value={createForm.language}
-              onChange={(e) => setCreateForm((f) => ({ ...f, language: e.target.value }))}
+              id="pair-preset"
+              defaultValue=""
+              onChange={(e) => {
+                if (e.target.value) applyPreset(e.target.value)
+              }}
             >
-              <option value="de">Deutsch</option>
-              <option value="en">English</option>
+              <option value="">Custom — pick primary + secondary</option>
+              {LANGUAGE_PAIR_PRESETS.map((p) => (
+                <option key={`${p.primary}-${p.secondary}`} value={`${p.primary}-${p.secondary}`}>
+                  {p.label}
+                </option>
+              ))}
             </select>
           </div>
+          <div className="sf-grid-2">
+            <div className="sf-field">
+              <label htmlFor="lang">Primary language</label>
+              <select
+                id="lang"
+                value={createForm.language}
+                onChange={(e) => setCreateForm((f) => ({ ...f, language: e.target.value }))}
+              >
+                {STORY_LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.label} ({l.nativeLabel || l.code})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="sf-field">
+              <label htmlFor="lang2">Secondary (optional)</label>
+              <select
+                id="lang2"
+                value={createForm.secondary_language}
+                onChange={(e) =>
+                  setCreateForm((f) => ({ ...f, secondary_language: e.target.value }))
+                }
+              >
+                <option value="">None — monolingual</option>
+                {STORY_LANGUAGES.filter((l) => l.code !== createForm.language).map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.label} ({l.nativeLabel || l.code})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          {createForm.secondary_language ? (
+            <div className="sf-field">
+              <label htmlFor="bilayout">Bilingual layout</label>
+              <select
+                id="bilayout"
+                value={createForm.bilingual_layout}
+                onChange={(e) =>
+                  setCreateForm((f) => ({ ...f, bilingual_layout: e.target.value }))
+                }
+              >
+                {BILINGUAL_LAYOUTS.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.label} — {l.description}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
           <div className="sf-field">
             <label htmlFor="trim">Trim</label>
             <select
@@ -359,21 +545,37 @@ export default function Studio({
               ))}
             </select>
           </div>
-          <div className="sf-field">
-            <label htmlFor="pages">Pages</label>
-            <select
-              id="pages"
-              value={createForm.page_count}
-              onChange={(e) =>
-                setCreateForm((f) => ({ ...f, page_count: Number(e.target.value) }))
-              }
-            >
-              {[24, 32, 40].map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
+          <div className="sf-grid-2">
+            <div className="sf-field">
+              <label htmlFor="format">Format</label>
+              <select
+                id="format"
+                value={createForm.format_id}
+                onChange={(e) => setCreateForm((f) => ({ ...f, format_id: e.target.value }))}
+              >
+                {BOOK_FORMATS.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.format} ({f.ageRange})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="sf-field">
+              <label htmlFor="pages">Pages</label>
+              <select
+                id="pages"
+                value={createForm.page_count}
+                onChange={(e) =>
+                  setCreateForm((f) => ({ ...f, page_count: Number(e.target.value) }))
+                }
+              >
+                {[24, 32, 40].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <div className="sf-field">
             <label htmlFor="core">Emotional core</label>
@@ -381,7 +583,16 @@ export default function Studio({
               id="core"
               value={createForm.emotional_core}
               onChange={(e) => setCreateForm((f) => ({ ...f, emotional_core: e.target.value }))}
-              placeholder="e.g. overcoming fear"
+              placeholder="e.g. belonging, courage"
+            />
+          </div>
+          <div className="sf-field">
+            <label htmlFor="refrain">Refrain (optional)</label>
+            <input
+              id="refrain"
+              value={createForm.refrain}
+              onChange={(e) => setCreateForm((f) => ({ ...f, refrain: e.target.value }))}
+              placeholder="e.g. I love you this much"
             />
           </div>
           <button
@@ -480,12 +691,98 @@ export default function Studio({
             <div className="sf-card">
               <h2 style={{ marginTop: 0, fontFamily: 'var(--sf-font-display)' }}>{active.title}</h2>
               <p className="sf-muted">
-                Trim {active.trim_id} · {active.page_count} pages ·{' '}
+                {formatLanguagePairLabel(active.language, active.secondary_language)} · Trim{' '}
+                {active.trim_id} · {active.page_count} pages ·{' '}
                 {printReq
                   ? `print min ${printReq.widthPx}×${printReq.heightPx}px @ ${printReq.dpi} DPI`
                   : ''}{' '}
                 · specs {PUBLISHING_SPECS.lastVerified}
               </p>
+              {pairDraft ? (
+                <div className="sf-bilingual-panel">
+                  <h3 style={{ margin: '0.5rem 0 0.35rem', fontSize: '0.95rem' }}>
+                    Languages
+                  </h3>
+                  <div className="sf-grid-2">
+                    <div className="sf-field">
+                      <label htmlFor="active-lang">Primary</label>
+                      <select
+                        id="active-lang"
+                        value={pairDraft.language}
+                        onChange={(e) =>
+                          setPairDraft((d) => ({ ...d, language: e.target.value }))
+                        }
+                      >
+                        {STORY_LANGUAGES.map((l) => (
+                          <option key={l.code} value={l.code}>
+                            {l.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="sf-field">
+                      <label htmlFor="active-lang2">Secondary</label>
+                      <select
+                        id="active-lang2"
+                        value={pairDraft.secondary_language || ''}
+                        onChange={(e) =>
+                          setPairDraft((d) => ({ ...d, secondary_language: e.target.value }))
+                        }
+                      >
+                        <option value="">None — monolingual</option>
+                        {STORY_LANGUAGES.filter((l) => l.code !== pairDraft.language).map((l) => (
+                          <option key={l.code} value={l.code}>
+                            {l.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  {pairDraft.secondary_language ? (
+                    <>
+                      <div className="sf-field">
+                        <label htmlFor="active-layout">Layout</label>
+                        <select
+                          id="active-layout"
+                          value={pairDraft.bilingual_layout}
+                          onChange={(e) =>
+                            setPairDraft((d) => ({ ...d, bilingual_layout: e.target.value }))
+                          }
+                        >
+                          {BILINGUAL_LAYOUTS.map((l) => (
+                            <option key={l.id} value={l.id}>
+                              {l.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <label className="sf-check">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(pairDraft.secondary_verified)}
+                          onChange={(e) =>
+                            setPairDraft((d) => ({
+                              ...d,
+                              secondary_verified: e.target.checked,
+                            }))
+                          }
+                        />
+                        <span>
+                          Secondary language reviewed by a fluent speaker (recommended before KDP)
+                        </span>
+                      </label>
+                    </>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="sf-btn"
+                    disabled={busy}
+                    onClick={saveLanguagePair}
+                  >
+                    Save languages
+                  </button>
+                </div>
+              ) : null}
               {active.pinned_anchor ? (
                 <div className="sf-anchor">
                   {active.pinned_anchor.heroUrl ? (
@@ -501,7 +798,11 @@ export default function Studio({
                   </div>
                 </div>
               ) : (
-                <p className="sf-warn-note">No anchor pinned yet — use Character Turbo, then Approve.</p>
+                <p className="sf-warn-note">
+                  {ipLocked
+                    ? 'No anchor pinned yet — use Character Turbo, then Approve.'
+                    : 'Lock IP Character Builder first, then Character Turbo → Approve.'}
+                </p>
               )}
               <div className="sf-filmstrip" aria-label="Storyboard">
                 {(active.pages || []).map((p) => (
@@ -509,11 +810,7 @@ export default function Studio({
                     key={p.page_index}
                     type="button"
                     className={`sf-film ${pageIndex === p.page_index ? 'sf-film-active' : ''}`}
-                    onClick={() => {
-                      setPageIndex(p.page_index)
-                      setPageText(p.text_content || '')
-                      setSceneBrief(p.illustration_brief || sceneBrief)
-                    }}
+                    onClick={() => setPageIndex(p.page_index)}
                   >
                     {p.page_index + 1}
                     {p.consistencyBadge ? ` · ${p.consistencyBadge}` : ''}
@@ -527,12 +824,14 @@ export default function Studio({
               title={`Page ${pageIndex + 1}`}
               previewUrl={heroPreview}
               pageLabel={`Page ${pageIndex + 1}`}
-              pageText={currentPage?.text_content || pageText}
+              pageText={canvasText}
             />
 
             <div className="sf-card">
               <div className="sf-field">
-                <label htmlFor="pagetext">Page text (0 credits)</label>
+                <label htmlFor="pagetext">
+                  Primary text — {languageLabel(pairDraft?.language || active.language)} (0 credits)
+                </label>
                 <textarea
                   id="pagetext"
                   value={pageText}
@@ -540,9 +839,55 @@ export default function Studio({
                   placeholder="Short text for this page…"
                 />
               </div>
-              <button type="button" className="sf-btn" disabled={busy} onClick={savePageText}>
-                Save page text
-              </button>
+              {bilingualActive ? (
+                <div className="sf-field">
+                  <label htmlFor="pagetext2">
+                    Secondary text —{' '}
+                    {languageLabel(
+                      pairDraft?.secondary_language || active.secondary_language,
+                    )}{' '}
+                    (0 credits)
+                  </label>
+                  <textarea
+                    id="pagetext2"
+                    value={pageTextSecondary}
+                    onChange={(e) => setPageTextSecondary(e.target.value)}
+                    placeholder="Translation / partner-language line for this page…"
+                  />
+                </div>
+              ) : null}
+              <div className="sf-btn-row">
+                <button type="button" className="sf-btn" disabled={busy} onClick={savePageText}>
+                  Save page text
+                </button>
+                <button
+                  type="button"
+                  className="sf-btn"
+                  disabled={busy || !active}
+                  onClick={() => seedBeats(false)}
+                >
+                  Seed escalating beats (empty only)
+                </button>
+                <button
+                  type="button"
+                  className="sf-btn"
+                  disabled={busy || !active}
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        'Overwrite all page illustration briefs with escalating beat templates?',
+                      )
+                    )
+                      seedBeats(true)
+                  }}
+                >
+                  Reseed all beats
+                </button>
+              </div>
+              <p className="sf-muted" style={{ marginBottom: 0 }}>
+                Beats follow a meet → escalate → resolve arc (picture-book blueprint). Write final
+                bilingual lines yourself; briefs guide Editor Pro scenes.
+              </p>
             </div>
           </>
         )}
@@ -563,87 +908,128 @@ export default function Studio({
         </div>
 
         {toolTab === 'character_turbo' ? (
-          <div className="sf-card">
-            <h3 style={{ marginTop: 0 }}>{NAMED_TOOLS.character_turbo.label}</h3>
-            <p className="sf-muted">{NAMED_TOOLS.character_turbo.description}</p>
-            <div className="sf-field">
-              <label htmlFor="cname">Character name</label>
-              <input id="cname" value={charName} onChange={(e) => setCharName(e.target.value)} />
+          <>
+            <div className="sf-card">
+              {active ? (
+                <IpCharacterBuilder
+                  projectId={active.id}
+                  initialDna={active.ip_character}
+                  busy={busy}
+                  setBusy={setBusy}
+                  setError={setError}
+                  setStatus={setStatus}
+                  onLocked={(dna) => {
+                    if (dna?.name) setCharName(dna.name)
+                  }}
+                  onProject={(project) => {
+                    setProjects((list) => list.map((p) => (p.id === project.id ? project : p)))
+                    if (project.ip_character?.name) setCharName(project.ip_character.name)
+                    onSelectProject(project.id)
+                  }}
+                />
+              ) : (
+                <p className="sf-muted">Create a project to open the IP Character Builder.</p>
+              )}
             </div>
-            <div className="sf-field">
-              <label htmlFor="engine">Engine</label>
-              <select id="engine" value={engine} onChange={(e) => setEngine(e.target.value)}>
-                {CHARACTER_TURBO_ENGINES.map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {e.label}
-                    {e.default ? ' (default)' : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <ModelSelect role="generate" label="fal text→image model" value={falModels.generate} />
-            <div className="sf-btn-row">
-              <button
-                type="button"
-                className="sf-btn sf-btn-primary"
-                disabled={busy || !active}
-                onClick={() =>
-                  runJob('character_turbo', { name: charName, engine, quality: 'final' })
-                }
-              >
-                <Sparkles size={16} aria-hidden /> Generate ({CREDIT_COSTS.character_turbo})
-              </button>
+            <div className="sf-card">
+              <h3 style={{ marginTop: 0 }}>{NAMED_TOOLS.character_turbo.label}</h3>
+              <p className="sf-muted">
+                {NAMED_TOOLS.character_turbo.description} Runs only after IP DNA is locked — prompt
+                uses your merch-ready colour, trait, object, and silhouette.
+              </p>
+              {!ipLocked ? (
+                <p className="sf-warn-note">Lock IP Character DNA above before generating.</p>
+              ) : null}
+              <div className="sf-field">
+                <label htmlFor="cname">Character name</label>
+                <input
+                  id="cname"
+                  value={charName}
+                  onChange={(e) => setCharName(e.target.value)}
+                  disabled={!ipLocked}
+                />
+              </div>
+              <div className="sf-field">
+                <label htmlFor="engine">Engine</label>
+                <select id="engine" value={engine} onChange={(e) => setEngine(e.target.value)}>
+                  {CHARACTER_TURBO_ENGINES.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.label}
+                      {e.default ? ' (default)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <ModelSelect role="generate" label="fal text→image model" value={falModels.generate} />
+              <div className="sf-btn-row">
+                <button
+                  type="button"
+                  className="sf-btn sf-btn-primary"
+                  disabled={busy || !active || !ipLocked}
+                  onClick={() =>
+                    runJob('character_turbo', {
+                      name: active?.ip_character?.name || charName,
+                      engine,
+                      quality: 'final',
+                    })
+                  }
+                >
+                  <Sparkles size={16} aria-hidden /> Generate ({CREDIT_COSTS.character_turbo})
+                </button>
+                <button
+                  type="button"
+                  className="sf-btn"
+                  disabled={busy || !active || !lastOutputs}
+                  onClick={approvePin}
+                >
+                  <Check size={16} aria-hidden /> Approve / pin
+                </button>
+              </div>
+              <hr style={{ border: 0, borderTop: '1px solid hsl(var(--sf-border))', margin: '1rem 0' }} />
+              <h4 style={{ marginBottom: '0.35rem' }}>{NAMED_TOOLS.photo_to_cartoon.label}</h4>
+              <p className="sf-muted">
+                Child photos require guardian consent. Raw photo bytes are never sent to the job API.
+                Photos are not used for model training. Also requires locked IP DNA.
+              </p>
+              <label className="sf-check">
+                <input
+                  type="checkbox"
+                  checked={consent}
+                  onChange={(e) => setConsent(e.target.checked)}
+                />
+                <span>
+                  I am the guardian / have authority; no model training; prefer delete after approval
+                </span>
+              </label>
               <button
                 type="button"
                 className="sf-btn"
-                disabled={busy || !active || !lastOutputs}
-                onClick={approvePin}
+                disabled={busy || !active || !consent || !ipLocked}
+                onClick={async () => {
+                  try {
+                    await api(`/v1/projects/${active.id}/consent`, {
+                      method: 'POST',
+                      body: {
+                        guardian_name: 'Guardian',
+                        relationship: 'parent_or_guardian',
+                        acknowledged_guardian: true,
+                        acknowledged_no_model_training: true,
+                      },
+                    })
+                    await runJob('photo_to_cartoon', {
+                      name: active?.ip_character?.name || charName,
+                      engine,
+                      photoRef: 'client-transient-only',
+                    })
+                  } catch (e) {
+                    setError(e.message)
+                  }
+                }}
               >
-                <Check size={16} aria-hidden /> Approve / pin
+                Photo to Cartoon ({CREDIT_COSTS.photo_to_cartoon})
               </button>
             </div>
-            <hr style={{ border: 0, borderTop: '1px solid hsl(var(--sf-border))', margin: '1rem 0' }} />
-            <h4 style={{ marginBottom: '0.35rem' }}>{NAMED_TOOLS.photo_to_cartoon.label}</h4>
-            <p className="sf-muted">
-              Child photos require guardian consent. Raw photo bytes are never sent to the job API.
-              Photos are not used for model training.
-            </p>
-            <label className="sf-check">
-              <input
-                type="checkbox"
-                checked={consent}
-                onChange={(e) => setConsent(e.target.checked)}
-              />
-              <span>I am the guardian / have authority; no model training; prefer delete after approval</span>
-            </label>
-            <button
-              type="button"
-              className="sf-btn"
-              disabled={busy || !active || !consent}
-              onClick={async () => {
-                try {
-                  await api(`/v1/projects/${active.id}/consent`, {
-                    method: 'POST',
-                    body: {
-                      guardian_name: 'Guardian',
-                      relationship: 'parent_or_guardian',
-                      acknowledged_guardian: true,
-                      acknowledged_no_model_training: true,
-                    },
-                  })
-                  await runJob('photo_to_cartoon', {
-                    name: charName,
-                    engine,
-                    photoRef: 'client-transient-only',
-                  })
-                } catch (e) {
-                  setError(e.message)
-                }
-              }}
-            >
-              Photo to Cartoon ({CREDIT_COSTS.photo_to_cartoon})
-            </button>
-          </div>
+          </>
         ) : null}
 
         {toolTab === 'editor_pro' ? (
@@ -876,11 +1262,27 @@ export default function Studio({
                 <Package size={16} aria-hidden /> Finish pack (
                 {CREDIT_COSTS.export_source_zip})
               </button>
+              <button
+                type="button"
+                className="sf-btn sf-btn-primary"
+                disabled={busy || !active || !active?.pinned_anchor?.heroUrl}
+                onClick={async () => {
+                  const res = await runJob('export_merch_png', { background: 'transparent' })
+                  downloadArtifact(
+                    res?.job?.outputs?.png,
+                    `${active?.ip_character?.name || 'character'}-merch.png`,
+                  )
+                }}
+              >
+                <FileOutput size={16} aria-hidden /> Merch PNG (
+                {CREDIT_COSTS.export_merch_png})
+              </button>
             </div>
             <ModelSelect role="upscale" label="fal upscale model" value={falModels.upscale} />
             <p className="sf-muted">
               Print pipeline: 2.5× upscale → print-ready interior PDF + cover wrap → signed ZIP
-              (preflight + checklist + manuscript). Always re-check in the Amazon KDP Previewer.
+              (preflight + checklist + manuscript). Merch PNG = pinned hero on Merch canvas
+              (manual Amazon Merch upload). Always re-check in the Amazon KDP Previewer.
             </p>
           </div>
         ) : null}

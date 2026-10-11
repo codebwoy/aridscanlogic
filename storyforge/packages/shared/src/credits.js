@@ -30,6 +30,8 @@ export const CREDIT_COSTS = {
   export_interior_pdf: 3,
   export_cover_pdf: 3,
   export_source_zip: 1,
+  /** Transparent / Merch-sized PNG from pinned Character Turbo anchor */
+  export_merch_png: 1,
   /** Launchpad content surfaces — always free */
   launchpad_guide: 0,
   launchpad_course: 0,

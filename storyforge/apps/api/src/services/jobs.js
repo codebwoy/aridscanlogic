@@ -6,6 +6,11 @@ import {
   requiredBleedPixels,
   coverWrapLayout,
   isAllowedFalModel,
+  languageLabel,
+  formatLanguagePairLabel,
+  resolvePageTextLines,
+  isIpCharacterLocked,
+  buildTurboDescriptionFromDna,
 } from '@storyforge/shared'
 import { sha256Hex } from '../security/crypto.js'
 import { config } from '../config.js'
@@ -15,6 +20,7 @@ import { PRINT_UPSCALE_FACTOR } from '../providers/imageUtils.js'
 import { buildInteriorPdf, buildCoverWrapPdf } from './pdfExport.js'
 import { attachSignedDownload } from './exportStore.js'
 import { buildZip, dataUrlToBuffer } from './zipPack.js'
+import { buildMerchPngFromHero } from './merchExport.js'
 
 const provider = createImageProvider(config.imageProvider)
 
@@ -102,6 +108,35 @@ export async function submitJob(store, { userId, type, projectId, inputs }) {
     const id = safeInputs[key]
     if (id && !isAllowedFalModel(role, id)) {
       throw fail(400, 'invalid_fal_model', `Unknown fal ${role} model: ${id}`)
+    }
+  }
+
+  // Merch-ready DNA gate before Character Turbo / Photo to Cartoon / bible final
+  if (
+    projectId &&
+    project &&
+    (type === 'character_turbo' ||
+      type === 'photo_to_cartoon' ||
+      type === 'character_bible_final' ||
+      type === 'character_bible_draft')
+  ) {
+    if (!isIpCharacterLocked(project)) {
+      throw fail(
+        400,
+        'ip_dna_required',
+        'Lock IP Character Builder (merch-ready DNA) before Character Turbo',
+      )
+    }
+    const dna = project.ip_character
+    safeInputs.name = safeInputs.name || dna.name
+    safeInputs.characterName = safeInputs.characterName || dna.name
+    safeInputs.description = safeInputs.description || buildTurboDescriptionFromDna(dna)
+    safeInputs.ipDna = {
+      signatureColor: dna.signatureColor,
+      definingTrait: dna.definingTrait,
+      signatureObject: dna.signatureObject,
+      emotionalHook: dna.emotionalHook,
+      silhouetteNote: dna.silhouetteNote,
     }
   }
 
@@ -468,6 +503,30 @@ async function runExportJob(store, data) {
       return
     }
 
+    if (type === 'export_merch_png') {
+      if (!project?.pinned_anchor?.heroUrl) {
+        throw fail(400, 'anchor_required', 'Pin a Character Turbo anchor before Merch PNG export')
+      }
+      const png = await buildMerchPngFromHero({
+        heroUrl: project.pinned_anchor.heroUrl,
+        title: project.ip_character?.name || project.title || 'character',
+        background: inputs?.background === 'white' ? 'white' : 'transparent',
+        userId,
+      })
+      await store.updateJob(jobId, {
+        status: 'completed',
+        outputs: {
+          type,
+          png,
+          merch: png.merch || PUBLISHING_SPECS.merch,
+          checklist: png.checklist,
+          note: 'Manual Merch upload — StoryForge does not push to Amazon',
+          specsLastVerified: PUBLISHING_SPECS.lastVerified,
+        },
+      })
+      return
+    }
+
     // Full print pack: interior + cover + preflight + checklist as signed ZIP
     if (type === 'export_source_zip') {
       const title = project?.title || inputs?.title || 'StoryForge Book'
@@ -478,6 +537,9 @@ async function runExportJob(store, data) {
         pageCount,
         showGuides: false,
         showChrome: false,
+        language: project?.language || 'de',
+        secondaryLanguage: project?.secondary_language || null,
+        bilingualLayout: project?.bilingual_layout || 'stacked',
       })
       const coverRaw = await buildCoverWrapPdf({
         title,
@@ -524,9 +586,7 @@ async function runExportJob(store, data) {
         PUBLISHING_SPECS.disclaimers.notAffiliated,
       ].join('\n')
 
-      const manuscript = (project?.pages || [])
-        .map((p, i) => `--- Page ${i + 1} ---\n${p.text_content || '(no text)'}\n`)
-        .join('\n')
+      const manuscript = formatBilingualManuscript(project)
 
       const zipBytes = buildZip([
         {
@@ -673,6 +733,9 @@ async function runExportJob(store, data) {
         pageCount,
         showGuides: Boolean(inputs?.showGuides),
         showChrome: Boolean(inputs?.showChrome),
+        language: project?.language || 'de',
+        secondaryLanguage: project?.secondary_language || null,
+        bilingualLayout: project?.bilingual_layout || 'stacked',
       })
       const pdf = attachSignedDownload(pdfRaw, { userId })
       const softNotes = softNormalized
@@ -727,4 +790,43 @@ async function runExportJob(store, data) {
     if (cost > 0) await chargeOrRefund(store, { userId, cost, reason: type, jobId, refund: true })
     console.error('[storyforge] export failed', jobId, err.message)
   }
+}
+
+function formatBilingualManuscript(project) {
+  const primary = project?.language || 'de'
+  const secondary = project?.secondary_language || null
+  const layout = project?.bilingual_layout || 'stacked'
+  const header = [
+    `Title: ${project?.title || 'Untitled'}`,
+    `Languages: ${formatLanguagePairLabel(primary, secondary)}`,
+    secondary ? `Layout: ${layout}` : 'Mode: monolingual',
+    secondary
+      ? `Secondary verified: ${project?.secondary_verified ? 'yes' : 'no — review before KDP'}`
+      : null,
+    '',
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  const body = (project?.pages || [])
+    .map((p, i) => {
+      const resolved = resolvePageTextLines({
+        primaryCode: primary,
+        secondaryCode: secondary,
+        primaryText: p.text_content || '',
+        secondaryText: p.text_secondary || '',
+        layout,
+        pageIndex: p.page_index ?? i,
+      })
+      if (!resolved.lines.length) {
+        return `--- Page ${i + 1} ---\n(no text)\n`
+      }
+      const blocks = resolved.lines
+        .map((line) => `[${languageLabel(line.code)}]\n${line.text}`)
+        .join('\n\n')
+      return `--- Page ${i + 1} ---\n${blocks}\n`
+    })
+    .join('\n')
+
+  return `${header}\n${body}`
 }

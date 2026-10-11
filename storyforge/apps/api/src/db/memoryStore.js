@@ -88,6 +88,7 @@ export function createMemoryStore(options = {}) {
     return Array.from({ length: pageCount }, (_, i) => ({
       page_index: i,
       text_content: '',
+      text_secondary: '',
       illustration_brief: '',
       status: 'empty',
       layers: [],
@@ -158,11 +159,18 @@ export function createMemoryStore(options = {}) {
 
     async createProject(userId, data) {
       const pageCount = data.page_count || 32
+      const secondary =
+        data.secondary_language == null || data.secondary_language === ''
+          ? null
+          : data.secondary_language
       const project = {
         id: randomUUID(),
         user_id: userId,
         title: data.title || 'Untitled book',
         language: data.language || 'de',
+        secondary_language: secondary,
+        bilingual_layout: data.bilingual_layout || 'stacked',
+        secondary_verified: Boolean(data.secondary_verified),
         trim_id: data.trim_id || 'sq_85',
         paper_type: data.paper_type || 'premium_color',
         page_count: pageCount,
@@ -170,12 +178,14 @@ export function createMemoryStore(options = {}) {
         progress_step: data.progress_step || 'story',
         premise: data.premise || '',
         emotional_core: data.emotional_core || '',
+        refrain: data.refrain || '',
         format_id: data.format_id || 'picture',
         style_preset: data.style_preset || 'storybook',
         pinned_anchor_asset_id: null,
         pinned_anchor: null,
         turbo_engine: data.turbo_engine || 'v3',
         meta: data.meta || {},
+        ip_character: data.ip_character || null,
         characters: [],
         pages: emptyPages(pageCount),
         course_progress: {},
@@ -201,11 +211,14 @@ export function createMemoryStore(options = {}) {
           id: p.id,
           title: p.title,
           language: p.language,
+          secondary_language: p.secondary_language || null,
+          bilingual_layout: p.bilingual_layout || 'stacked',
           trim_id: p.trim_id,
           page_count: p.page_count,
           progress_step: p.progress_step,
           pinned_anchor_asset_id: p.pinned_anchor_asset_id,
           format_id: p.format_id,
+          ip_locked: Boolean(p.ip_character?.locked_at),
           updated_at: p.updated_at,
           created_at: p.created_at,
         }))
@@ -217,6 +230,9 @@ export function createMemoryStore(options = {}) {
       const allowed = [
         'title',
         'language',
+        'secondary_language',
+        'bilingual_layout',
+        'secondary_verified',
         'trim_id',
         'paper_type',
         'page_count',
@@ -224,6 +240,7 @@ export function createMemoryStore(options = {}) {
         'progress_step',
         'premise',
         'emotional_core',
+        'refrain',
         'format_id',
         'style_preset',
         'turbo_engine',
@@ -231,12 +248,16 @@ export function createMemoryStore(options = {}) {
         'course_progress',
         'pages',
         'characters',
+        'ip_character',
         'pinned_anchor_asset_id',
         'pinned_anchor',
         'last_job_outputs',
       ]
       for (const key of allowed) {
         if (patch[key] !== undefined) p[key] = patch[key]
+      }
+      if (patch.secondary_language === '' || patch.secondary_language === undefined) {
+        if (patch.secondary_language === '') p.secondary_language = null
       }
       if (patch.page_count && Number(patch.page_count) !== p.pages.length) {
         const n = Number(patch.page_count)
@@ -247,6 +268,64 @@ export function createMemoryStore(options = {}) {
           p.page_count = n
         }
       }
+      p.updated_at = new Date().toISOString()
+      scheduleSave()
+      return p
+    },
+
+    async listSeriesIpDna(userId, seriesId) {
+      const sid = String(seriesId || '').trim().toLowerCase()
+      if (!sid) return []
+      return [...projects.values()]
+        .filter(
+          (p) =>
+            p.user_id === userId &&
+            p.ip_character?.locked_at &&
+            String(p.ip_character.seriesId || '')
+              .trim()
+              .toLowerCase() === sid,
+        )
+        .map((p) => ({
+          projectId: p.id,
+          title: p.title,
+          ip_character: p.ip_character,
+          pinned_anchor: p.pinned_anchor
+            ? { name: p.pinned_anchor.name, heroUrl: p.pinned_anchor.heroUrl }
+            : null,
+          updated_at: p.updated_at,
+        }))
+        .sort((a, b) => String(b.updated_at).localeCompare(String(a.updated_at)))
+    },
+
+    async seedPageBeats(userId, projectId, beats) {
+      const p = projects.get(projectId)
+      if (!p || p.user_id !== userId) return null
+      const list = Array.isArray(beats) ? beats : []
+      for (const beat of list) {
+        const page = p.pages.find((x) => x.page_index === beat.page_index)
+        if (!page) continue
+        // Only fill empty briefs so author edits are preserved
+        if (!String(page.illustration_brief || '').trim()) {
+          page.illustration_brief = beat.illustration_brief || ''
+        }
+      }
+      p.updated_at = new Date().toISOString()
+      scheduleSave()
+      return p
+    },
+
+    async setIpCharacter(userId, projectId, dna, { lock = false, unlock = false } = {}) {
+      const p = projects.get(projectId)
+      if (!p || p.user_id !== userId) return null
+      let lockedAt = p.ip_character?.locked_at || null
+      if (unlock) lockedAt = null
+      if (lock) lockedAt = new Date().toISOString()
+      p.ip_character = {
+        ...dna,
+        locked_at: lockedAt,
+        updated_at: new Date().toISOString(),
+      }
+      if (lock && p.progress_step === 'story') p.progress_step = 'characters'
       p.updated_at = new Date().toISOString()
       scheduleSave()
       return p

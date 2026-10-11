@@ -5,6 +5,8 @@
  * Legal/pricing pages of third parties are NOT imported as StoryForge policy.
  */
 
+import { ipCharacterPayload } from './ip-character.js'
+
 export const CRAFT_META = {
   lastVerified: '2026-10-11',
   independenceNote:
@@ -349,6 +351,7 @@ export function craftLibraryPayload() {
   return {
     meta: CRAFT_META,
     storytellingCompass: STORYTELLING_COMPASS,
+    ipCharacterBuilder: ipCharacterPayload(),
     characterDna: CHARACTER_DNA_GUIDE,
     artStyles: ART_STYLE_GUIDE,
     coverDesign: COVER_DESIGN_RULES,

@@ -3,12 +3,15 @@ import {
   requiredBleedPixels,
   coverWrapLayout,
   PUBLISHING_SPECS,
+  resolvePageTextLines,
+  languageLabel,
 } from '@storyforge/shared'
 
 /**
  * Print-ready interior PDF at bleed size.
  * - Full-bleed illustrations when present
  * - Story text in safe margin (bottom band)
+ * - Bilingual: stacked / side-by-side / alternating order
  * - No decorative chrome on print pages (optional guides for proof)
  */
 export async function buildInteriorPdf({
@@ -18,6 +21,9 @@ export async function buildInteriorPdf({
   pageCount,
   showGuides = false,
   showChrome = false,
+  language = 'de',
+  secondaryLanguage = null,
+  bilingualLayout = 'stacked',
 }) {
   const req = requiredBleedPixels(trimId)
   const pdf = await PDFDocument.create()
@@ -66,9 +72,16 @@ export async function buildInteriorPdf({
       pageNotes.push({ page: i + 1, hasArt: false })
     }
 
-    const text = String(pageData.text_content || '').trim()
-    if (text) {
-      const textBandH = pageH * 0.22
+    const resolved = resolvePageTextLines({
+      primaryCode: language,
+      secondaryCode: secondaryLanguage,
+      primaryText: pageData.text_content || '',
+      secondaryText: pageData.text_secondary || '',
+      layout: bilingualLayout,
+      pageIndex: pageData.page_index ?? i,
+    })
+    if (resolved.lines.length) {
+      const textBandH = pageH * (secondaryLanguage ? 0.28 : 0.22)
       // Soft translucent band so text stays readable over busy art
       page.drawRectangle({
         x: safePts,
@@ -78,15 +91,15 @@ export async function buildInteriorPdf({
         color: rgb(1, 1, 1),
         opacity: embedded ? 0.82 : 0,
       })
-      drawWrappedText(page, text.slice(0, 900), {
+      drawBilingualTextBand(page, resolved, {
         x: safePts + 4,
-        y: safePts + textBandH - 16,
-        maxWidth: pageW - safePts * 2 - 8,
-        size: 12,
-        lineHeight: 15,
+        y: safePts + textBandH - 14,
+        width: pageW - safePts * 2 - 8,
+        height: textBandH - 10,
         font,
+        bold,
         color: rgb(0.08, 0.1, 0.09),
-        maxLines: 8,
+        muted: rgb(0.35, 0.38, 0.36),
       })
     } else if (!embedded) {
       page.drawText('Missing illustration — generate + 2.5× upscale before KDP upload', {
@@ -364,6 +377,67 @@ export async function buildCoverWrapPdf({
     },
     specsLastVerified: PUBLISHING_SPECS.lastVerified,
     independenceDisclaimer: PUBLISHING_SPECS.disclaimers.notAffiliated,
+  }
+}
+
+function drawBilingualTextBand(page, resolved, opts) {
+  const { x, y, width, height, font, bold, color, muted } = opts
+  const lines = resolved.lines || []
+  if (!lines.length) return
+
+  if (resolved.layout === 'side_by_side' && lines.length >= 2) {
+    const gap = 10
+    const colW = (width - gap) / 2
+    lines.slice(0, 2).forEach((line, idx) => {
+      const cx = x + idx * (colW + gap)
+      const label = languageLabel(line.code)
+      page.drawText(label.slice(0, 28), {
+        x: cx,
+        y,
+        size: 8,
+        font: bold,
+        color: muted,
+        maxWidth: colW,
+      })
+      drawWrappedText(page, line.text.slice(0, 450), {
+        x: cx,
+        y: y - 12,
+        maxWidth: colW,
+        size: 11,
+        lineHeight: 14,
+        font,
+        color,
+        maxLines: 6,
+      })
+    })
+    return
+  }
+
+  let cy = y
+  const blockH = height / Math.max(lines.length, 1)
+  for (const line of lines) {
+    if (lines.length > 1) {
+      page.drawText(languageLabel(line.code).slice(0, 36), {
+        x,
+        y: cy,
+        size: 8,
+        font: bold,
+        color: muted,
+        maxWidth: width,
+      })
+      cy -= 11
+    }
+    drawWrappedText(page, line.text.slice(0, 500), {
+      x,
+      y: cy,
+      maxWidth: width,
+      size: 12,
+      lineHeight: 15,
+      font,
+      color,
+      maxLines: Math.max(3, Math.floor(blockH / 15) - 1),
+    })
+    cy -= blockH - 4
   }
 }
 

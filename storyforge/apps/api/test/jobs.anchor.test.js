@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { createMemoryStore } from '../src/db/memoryStore.js'
 import { submitJob, wireLocalJobHandlers } from '../src/services/jobs.js'
 import { initQueue } from '../src/queue/queues.js'
+import { lockTestIpDna } from './helpers/ipDna.js'
 
 async function waitForJob(store, userId, jobId, tries = 40) {
   for (let i = 0; i < tries; i++) {
@@ -39,7 +40,21 @@ describe('anchor-required jobs', () => {
     )
   })
 
+  it('rejects character_turbo without locked IP DNA', async () => {
+    await assert.rejects(
+      () =>
+        submitJob(store, {
+          userId: user.id,
+          type: 'character_turbo',
+          projectId: project.id,
+          inputs: { name: 'Luna' },
+        }),
+      (err) => err.code === 'ip_dna_required',
+    )
+  })
+
   it('rejects photo_to_cartoon without recorded consent', async () => {
+    await lockTestIpDna(store, user.id, project.id, { name: 'Kid' })
     await assert.rejects(
       () =>
         submitJob(store, {
@@ -72,6 +87,7 @@ describe('anchor-required jobs', () => {
   })
 
   it('character_turbo pins anchor then editor_pro succeeds', async () => {
+    await lockTestIpDna(store, user.id, project.id, { name: 'Luna' })
     const job = await submitJob(store, {
       userId: user.id,
       type: 'character_turbo',

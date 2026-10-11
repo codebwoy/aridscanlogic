@@ -8,6 +8,7 @@ test('craft library payload has core modules', () => {
   const p = craftLibraryPayload()
   assert.equal(STORYTELLING_COMPASS.steps.length, 5)
   assert.ok(p.characterDna.fields.length >= 10)
+  assert.ok(p.ipCharacterBuilder?.merchChecks?.length >= 5)
   assert.ok(p.artStyles.styles.length >= 9)
   assert.equal(p.sevenDayPlan.days.length, 7)
   assert.ok(p.externalLearningIndex.length >= 3)

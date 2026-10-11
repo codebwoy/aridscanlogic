@@ -88,4 +88,22 @@ export const TRACEABILITY = [
     status: 'done',
     note: 'Full fal catalogue pickers (FLUX/Nano/Kontext/Kling Pro/Veo/Seedance)',
   },
+  {
+    id: 'S57',
+    area: 'Bilingual',
+    status: 'done',
+    note: 'Selectable primary + secondary language pairs + page dual text + layouts',
+  },
+  {
+    id: 'S58',
+    area: 'IP Character',
+    status: 'done',
+    note: 'Merch-ready DNA gate before Character Turbo (silhouette, colour, trait, object)',
+  },
+  {
+    id: 'S59',
+    area: 'IP / Blueprint',
+    status: 'done',
+    note: 'Merch PNG export + escalating beat seed + series DNA reuse + name suggestions',
+  },
 ]

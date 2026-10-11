@@ -64,3 +64,39 @@ export {
   isAllowedFalModel,
   falModelMeta,
 } from './fal-models.js'
+export {
+  STORY_LANGUAGES,
+  STORY_LANGUAGE_CODES,
+  LANGUAGE_PAIR_PRESETS,
+  BILINGUAL_LAYOUTS,
+  BILINGUAL_LAYOUT_IDS,
+  isStoryLanguageCode,
+  getStoryLanguage,
+  languageLabel,
+  normalizeLanguagePair,
+  formatLanguagePairLabel,
+  resolvePageTextLines,
+  composeDisplayText,
+  languagesPayload,
+} from './languages.js'
+export {
+  IP_CHARACTER_META,
+  IP_SIGNATURE_COLORS,
+  IP_EMOTIONAL_HOOKS,
+  IP_NAME_SUGGESTIONS,
+  MERCH_READY_CHECKS,
+  IP_DNA_FIELDS,
+  emptyIpCharacter,
+  assessCharacterName,
+  normalizeIpCharacter,
+  validateIpCharacterForLock,
+  isIpCharacterLocked,
+  buildTurboDescriptionFromDna,
+  ipCharacterPayload,
+} from './ip-character.js'
+export {
+  PICTURE_BOOK_META,
+  buildEscalatingBeatBriefs,
+  defaultRefrainForHook,
+  pictureBookPayload,
+} from './picture-book.js'

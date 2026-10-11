@@ -6,10 +6,17 @@ const KIDS_STYLE =
 
 export function characterPrompt(input) {
   const name = input.name || input.characterName || 'Hero'
-  const desc = input.description || input.brief || 'friendly child character'
+  const desc =
+    input.description ||
+    input.brief ||
+    'friendly child character, simple bold shapes, merch-ready silhouette'
+  const dnaBits = input.ipDna
+    ? ` Signature colour ${input.ipDna.signatureColor || ''}; trait ${input.ipDna.definingTrait || ''}; object ${input.ipDna.signatureObject || ''}.`
+    : ''
   return [
-    `Full-body front-facing cartoon character named ${name}: ${desc}.`,
-    'Standing on plain white background, centered, consistent design bible sheet style.',
+    `Full-body front-facing cartoon character named ${name}: ${desc}.${dnaBits}`,
+    'Standing on plain white background, centered, consistent design bible sheet style,',
+    'bold merch-ready silhouette, minimal detail, high contrast for T-shirt print.',
     KIDS_STYLE,
   ].join(' ')
 }

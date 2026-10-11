@@ -60,6 +60,9 @@ Status after print-pipeline + fal catalogue completion.
 | S53 | Scene → video (fal image-to-video) | done | `scene_to_video` job + Studio tab; requires page still |
 | S55 | Print pack + signed exports | done | Print-ready interior/cover PDFs, HMAC download URLs, `export_source_zip` |
 | S56 | Full fal model catalogue | done | Shared `fal-models.js` + Studio pickers (Kontext/Kling Pro/Veo/Seedance/…) |
+| S57 | Bilingual primary + secondary pairs | done | `languages.js` + Studio pair pickers + per-page dual text + PDF/manuscript layouts |
+| S58 | IP Character Builder (merch DNA gate) | done | `ip-character.js` + Studio builder; `ip_dna_required` before Character Turbo |
+| S59 | Merch PNG + beats + series reuse | done | `export_merch_png`, `seed-beats`, series IP DNA, name suggestions |
 
 Public catalogues distilled: [Neolemon Tutorials](https://www.neolemon.com/tutorials/), [Guides](https://www.neolemon.com/guides/), [Blog](https://www.neolemon.com/blog). StoryForge is not affiliated — see `TUTORIALS_META` / `CRAFT_META.independenceNote`. Third-party pricing/legal pages are linked only, never imported as StoryForge policy.
 
