@@ -10,6 +10,16 @@ export function getAuthorforgeWebUrl() {
   return raw.replace(/\/$/, '')
 }
 
+/** Localhost studios — hard probe required. Remote (Fly) — open without blocking on /health. */
+export function isLocalAuthorforgeUrl(baseUrl = getAuthorforgeWebUrl()) {
+  try {
+    const host = new URL(baseUrl).hostname.toLowerCase()
+    return host === 'localhost' || host === '127.0.0.1' || host === '[::1]'
+  } catch {
+    return true
+  }
+}
+
 export function isAuthorforgeDesktopViewport(width = typeof window !== 'undefined' ? window.innerWidth : 0) {
   return Number(width) >= AUTHORFORGE_DESKTOP_MIN_WIDTH
 }
@@ -64,9 +74,13 @@ export async function launchAuthorforgeDesktop(opts = {}) {
   const slug = opts.slug ? `&slug=${encodeURIComponent(opts.slug)}` : ''
   const url = `${base}/?view=${view}${slug}#${view}`
 
-  const ready = await probeAuthorforgeReady(base)
-  if (!ready) {
-    return { opened: false, reason: 'offline', url }
+  // Local: avoid opening a dead tab. Remote (Fly): auto-stop cold starts exceed short probes —
+  // open the studio; navigation wakes the machine.
+  if (isLocalAuthorforgeUrl(base)) {
+    const ready = await probeAuthorforgeReady(base, 2500)
+    if (!ready) {
+      return { opened: false, reason: 'offline', url }
+    }
   }
 
   const win = window.open(url, 'authorforge_studio')

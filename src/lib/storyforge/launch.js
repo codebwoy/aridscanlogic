@@ -1,7 +1,6 @@
 /**
  * Launch StoryForge desktop studio from ScanLogic (Amazon Hub).
  * Mobile / narrow viewports must not open the editor — show messaging instead.
- * Probes the local studio before opening so users never land on ERR_CONNECTION_REFUSED.
  */
 
 export const STORYFORGE_DESKTOP_MIN_WIDTH = 1024
@@ -9,6 +8,16 @@ export const STORYFORGE_DESKTOP_MIN_WIDTH = 1024
 export function getStoryforgeWebUrl() {
   const raw = (import.meta.env.VITE_STORYFORGE_URL || 'http://127.0.0.1:5180').trim()
   return raw.replace(/\/$/, '')
+}
+
+/** Localhost studios — hard probe required. Remote (Fly) — open without blocking on /health. */
+export function isLocalStoryforgeUrl(baseUrl = getStoryforgeWebUrl()) {
+  try {
+    const host = new URL(baseUrl).hostname.toLowerCase()
+    return host === 'localhost' || host === '127.0.0.1' || host === '[::1]'
+  } catch {
+    return true
+  }
 }
 
 export function isStoryforgeDesktopViewport(width = typeof window !== 'undefined' ? window.innerWidth : 0) {
@@ -65,9 +74,13 @@ export async function launchStoryforgeDesktop(opts = {}) {
   const view = opts.view === 'launchpad' ? 'launchpad' : 'studio'
   const url = `${base}/?view=${view}#${view}`
 
-  const ready = await probeStoryforgeReady(base)
-  if (!ready) {
-    return { opened: false, reason: 'offline', url }
+  // Local: avoid opening a dead tab. Remote (Fly): auto-stop cold starts exceed short probes —
+  // open the studio; navigation wakes the machine.
+  if (isLocalStoryforgeUrl(base)) {
+    const ready = await probeStoryforgeReady(base, 2500)
+    if (!ready) {
+      return { opened: false, reason: 'offline', url }
+    }
   }
 
   // Do not pass noopener as windowFeatures — Chrome then returns null even when the tab opens.

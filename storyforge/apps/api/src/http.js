@@ -44,7 +44,8 @@ export function securityHeaders(res) {
   res.setHeader('X-Frame-Options', 'DENY')
   res.setHeader('Referrer-Policy', 'no-referrer')
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
-  res.setHeader('Cross-Origin-Resource-Policy', 'same-site')
+  // cross-origin: ScanLogic (Vercel) must probe /health and call the API across sites.
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
 }
 
 export function cors(req, res) {

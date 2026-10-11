@@ -30,8 +30,18 @@ import { toast } from 'sonner'
 import { programmesByPriority } from '@/lib/bizstart/amazon/programmes'
 import { AMAZON_GUIDES } from '@/lib/bizstart/amazon/guides'
 import { amazonT } from '@/lib/bizstart/amazon/i18n'
-import { launchStoryforgeDesktop, probeStoryforgeReady } from '@/lib/storyforge/launch'
-import { launchAuthorforgeDesktop, probeAuthorforgeReady } from '@/lib/authorforge/launch'
+import {
+  getStoryforgeWebUrl,
+  isLocalStoryforgeUrl,
+  launchStoryforgeDesktop,
+  probeStoryforgeReady,
+} from '@/lib/storyforge/launch'
+import {
+  getAuthorforgeWebUrl,
+  isLocalAuthorforgeUrl,
+  launchAuthorforgeDesktop,
+  probeAuthorforgeReady,
+} from '@/lib/authorforge/launch'
 import MerchConfigPanel from '@/components/bizstart/amazon/MerchConfigPanel'
 import KdpConfigPanel from '@/components/bizstart/amazon/KdpConfigPanel'
 import KdpResourcesPanel from '@/components/bizstart/amazon/KdpResourcesPanel'
@@ -122,20 +132,36 @@ export default function AmazonHub({ lang = 'en', onBack }) {
   const [authorforgeReady, setAuthorforgeReady] = useState(null)
 
   useEffect(() => {
+    // Only probe localhost studios. Remote Fly URLs: never poll /health (wakes machines +
+    // CORP/cold-start false "offline"). Cloud studios open on click.
+    const sfLocal = isLocalStoryforgeUrl(getStoryforgeWebUrl())
+    const afLocal = isLocalAuthorforgeUrl(getAuthorforgeWebUrl())
+    if (!sfLocal) setStoryforgeReady(null)
+    if (!afLocal) setAuthorforgeReady(null)
+    if (!sfLocal && !afLocal) return undefined
+
     let cancelled = false
-    probeStoryforgeReady().then((ok) => {
-      if (!cancelled) setStoryforgeReady(ok)
-    })
-    probeAuthorforgeReady().then((ok) => {
-      if (!cancelled) setAuthorforgeReady(ok)
-    })
-    const id = setInterval(() => {
+    if (sfLocal) {
       probeStoryforgeReady().then((ok) => {
         if (!cancelled) setStoryforgeReady(ok)
       })
+    }
+    if (afLocal) {
       probeAuthorforgeReady().then((ok) => {
         if (!cancelled) setAuthorforgeReady(ok)
       })
+    }
+    const id = setInterval(() => {
+      if (sfLocal) {
+        probeStoryforgeReady().then((ok) => {
+          if (!cancelled) setStoryforgeReady(ok)
+        })
+      }
+      if (afLocal) {
+        probeAuthorforgeReady().then((ok) => {
+          if (!cancelled) setAuthorforgeReady(ok)
+        })
+      }
     }, 8000)
     return () => {
       cancelled = true
