@@ -3,6 +3,7 @@ import { BookOpen, Coins, RefreshCw, Sparkles } from 'lucide-react'
 import { WIZARD_STEPS, t, costFor } from '@authorforge/shared'
 import {
   createBook,
+  deleteBook,
   ensureSession,
   getBook,
   getCoverage,
@@ -136,14 +137,72 @@ export default function Studio({ lang = 'en' }) {
     }
   }
 
+  function syncBookListEntry(b) {
+    if (!b?.id) return
+    setBooks((prev) => {
+      const row = {
+        id: b.id,
+        working_title: b.working_title,
+        wizard_step: b.wizard_step,
+        status: b.status,
+        updated_at: b.updated_at,
+      }
+      const idx = prev.findIndex((x) => x.id === b.id)
+      if (idx < 0) return [row, ...prev]
+      const next = [...prev]
+      next[idx] = { ...next[idx], ...row }
+      return next
+    })
+  }
+
+  /** Flush visible wizard inputs before Next/Back — blur-only save was dropping titles. */
+  function collectWizardPatch(current) {
+    const form = document.getElementById('af-wizard-form')
+    if (!form || !current) return null
+    const fd = new FormData(form)
+    const patch = {}
+    const str = (key) => {
+      if (!fd.has(key)) return null
+      return String(fd.get(key) ?? '')
+    }
+    const wt = str('working_title')
+    if (wt != null && wt.trim()) patch.working_title = wt.trim().slice(0, 200)
+    const sub = str('subtitle')
+    if (sub != null) patch.subtitle = sub.slice(0, 300)
+    const author = str('author_name')
+    if (author != null) patch.author_name = author.slice(0, 120)
+    const topic = str('topic')
+    if (topic != null) patch.topic = topic.slice(0, 4000)
+    const tw = str('target_words')
+    if (tw != null && tw !== '') {
+      const n = Number(tw)
+      if (Number.isFinite(n)) patch.target_words = Math.max(500, Math.min(120000, Math.floor(n)))
+    }
+    const trim = str('trim_size')
+    if (trim != null && trim) patch.trim_size = trim
+    const usp = str('usp')
+    const tone = str('tone')
+    if (usp != null || tone != null) {
+      patch.bible = {
+        ...(current.bible || {}),
+        ...(usp != null ? { usp } : {}),
+        ...(tone != null ? { tone } : {}),
+      }
+    }
+    return Object.keys(patch).length ? patch : null
+  }
+
   async function saveBasics(patch) {
-    if (!book) return
+    if (!book) return null
     try {
       const { book: b } = await patchBook(book.id, patch)
       setBook(b)
+      syncBookListEntry(b)
       setMessage('Saved')
+      return b
     } catch (e) {
       setMessage(e.message || 'Save failed')
+      return null
     }
   }
 
@@ -168,9 +227,15 @@ export default function Studio({ lang = 'en' }) {
   async function navigateWizard(dir, stepId) {
     if (!book) return
     try {
+      const patch = collectWizardPatch(book)
+      if (patch) {
+        const saved = await saveBasics(patch)
+        if (!saved && patch.working_title) return
+      }
       const r = await stepBook(book.id, dir, stepId)
       if (!r?.book) throw new Error('Could not update wizard step')
       setBook(r.book)
+      syncBookListEntry(r.book)
       setMessage('')
     } catch (e) {
       if (e.status === 404 || e.code === 'not_found' || /not found/i.test(e.message || '')) {
@@ -178,6 +243,23 @@ export default function Studio({ lang = 'en' }) {
         return
       }
       setMessage(e.message || 'Navigation failed — try again')
+    }
+  }
+
+  async function onDeleteBook(id) {
+    if (!id) return
+    if (!window.confirm('Delete this book permanently?')) return
+    try {
+      await deleteBook(id)
+      setBooks((prev) => prev.filter((b) => b.id !== id))
+      if (book?.id === id) {
+        const rest = books.filter((b) => b.id !== id)
+        if (rest[0]) await loadBook(rest[0].id)
+        else setBook(null)
+      }
+      setMessage('Book deleted')
+    } catch (e) {
+      setMessage(e.message || 'Delete failed')
     }
   }
 
@@ -203,15 +285,29 @@ export default function Studio({ lang = 'en' }) {
         </button>
         <div style={{ marginTop: '1rem' }}>
           {(books || []).map((b) => (
-            <button
-              key={b.id}
-              type="button"
-              className="btn"
-              style={{ width: '100%', marginBottom: '0.4rem', textAlign: 'left' }}
-              onClick={() => loadBook(b.id)}
-            >
-              {b.working_title}
-            </button>
+            <div key={b.id} className="row" style={{ marginBottom: '0.4rem', gap: '0.35rem' }}>
+              <button
+                type="button"
+                className={`btn ${book?.id === b.id ? 'btn-primary' : ''}`}
+                style={{ flex: 1, textAlign: 'left', minWidth: 0 }}
+                onClick={() => loadBook(b.id)}
+                title={b.working_title}
+              >
+                <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {b.working_title || 'Untitled'}
+                </span>
+              </button>
+              <button
+                type="button"
+                className="btn"
+                style={{ padding: '0.35rem 0.55rem' }}
+                title="Delete book"
+                aria-label={`Delete ${b.working_title || 'book'}`}
+                onClick={() => onDeleteBook(b.id)}
+              >
+                ×
+              </button>
+            </div>
           ))}
         </div>
         <h3 style={{ marginTop: '1.25rem', fontSize: '0.85rem', color: 'var(--af-muted)' }}>Wizard</h3>
@@ -302,6 +398,7 @@ export default function Studio({ lang = 'en' }) {
                 return out
               }}
               onNav={(dir) => navigateWizard(dir)}
+              onMessage={setMessage}
               lang={lang}
             />
           )}
@@ -380,6 +477,7 @@ function WizardStep(props) {
     onConfirmClaim,
     onCompliance,
     onInlineAction,
+    onMessage,
   } = props
 
   return (
@@ -393,6 +491,7 @@ function WizardStep(props) {
         </button>
       </div>
 
+      <form id="af-wizard-form" onSubmit={(e) => e.preventDefault()}>
       {step === 'niche' && (
         <div className="card">
           <h2>Niche Hunter</h2>
@@ -424,29 +523,47 @@ function WizardStep(props) {
             <div className="field">
               <label>Working title</label>
               <input
+                key={`${book.id}-title`}
+                name="working_title"
                 defaultValue={book.working_title}
                 onBlur={(e) => onSaveBasics({ working_title: e.target.value })}
               />
             </div>
             <div className="field">
               <label>Subtitle</label>
-              <input defaultValue={book.subtitle || ''} onBlur={(e) => onSaveBasics({ subtitle: e.target.value })} />
+              <input
+                key={`${book.id}-subtitle`}
+                name="subtitle"
+                defaultValue={book.subtitle || ''}
+                onBlur={(e) => onSaveBasics({ subtitle: e.target.value })}
+              />
             </div>
             <div className="field">
               <label>Author name (real)</label>
               <input
+                key={`${book.id}-author`}
+                name="author_name"
                 defaultValue={book.author_name || ''}
                 onBlur={(e) => onSaveBasics({ author_name: e.target.value })}
               />
             </div>
             <div className="field">
               <label>Topic</label>
-              <input defaultValue={book.topic || ''} onBlur={(e) => onSaveBasics({ topic: e.target.value })} />
+              <input
+                key={`${book.id}-topic`}
+                name="topic"
+                defaultValue={book.topic || ''}
+                onBlur={(e) => onSaveBasics({ topic: e.target.value })}
+              />
             </div>
             <div className="field">
               <label>Target words</label>
               <input
+                key={`${book.id}-words`}
+                name="target_words"
                 type="number"
+                min={500}
+                max={120000}
                 defaultValue={book.target_words}
                 onBlur={(e) => onSaveBasics({ target_words: Number(e.target.value) || 28000 })}
               />
@@ -454,6 +571,8 @@ function WizardStep(props) {
             <div className="field">
               <label>Trim size</label>
               <select
+                key={`${book.id}-trim`}
+                name="trim_size"
                 defaultValue={book.trim_size}
                 onChange={(e) => onSaveBasics({ trim_size: e.target.value })}
               >
@@ -466,6 +585,8 @@ function WizardStep(props) {
           <div className="field">
             <label>USP / what stands out</label>
             <textarea
+              key={`${book.id}-usp`}
+              name="usp"
               defaultValue={book.bible?.usp || ''}
               onBlur={(e) => onSaveBasics({ bible: { ...book.bible, usp: e.target.value } })}
             />
@@ -473,6 +594,8 @@ function WizardStep(props) {
           <div className="field">
             <label>Tone</label>
             <input
+              key={`${book.id}-tone`}
+              name="tone"
               defaultValue={book.bible?.tone || ''}
               onBlur={(e) => onSaveBasics({ bible: { ...book.bible, tone: e.target.value } })}
             />
@@ -488,26 +611,40 @@ function WizardStep(props) {
       {step === 'comps' && (
         <div className="card">
           <h2>Comparable titles (metadata only)</h2>
+          <p className="muted">
+            Mock/licensed metadata only — not live Amazon scrape. Click Fetch comps, then Next to continue.
+          </p>
           <button
             type="button"
             className="btn btn-primary"
             disabled={!!busy}
             onClick={async () => {
-              const out = await onRunJob('competitive_analysis', { topic: book.topic })
-              if (out?.meta?.titles) {
-                await onSaveBasics({ competitors: out.meta.titles })
+              const out = await onRunJob('competitive_analysis', {
+                topic: book.topic || book.working_title,
+              })
+              const titles = out?.meta?.titles
+              if (titles?.length) {
+                await onSaveBasics({ competitors: titles })
+              } else if (out) {
+                onMessage?.('No comparable titles returned — you can still continue with Next.')
               }
             }}
           >
             Fetch comps
           </button>
-          <ul>
-            {(book.competitors || []).map((c) => (
-              <li key={c.asin || c.title}>
-                {c.title} — <span className="muted">est. only</span>
-              </li>
-            ))}
-          </ul>
+          {(book.competitors || []).length ? (
+            <ul>
+              {(book.competitors || []).map((c) => (
+                <li key={c.asin || c.title}>
+                  {c.title} — <span className="muted">est. only</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted" style={{ marginTop: '0.75rem' }}>
+              No comps loaded yet.
+            </p>
+          )}
         </div>
       )}
 
@@ -838,6 +975,7 @@ function WizardStep(props) {
           </button>
         </div>
       )}
+      </form>
     </div>
   )
 }

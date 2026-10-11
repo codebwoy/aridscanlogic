@@ -256,6 +256,17 @@ export function createMemoryStore(options = {}) {
       return next
     },
 
+    async deleteBook(userId, bookId) {
+      const b = await api.getBook(userId, bookId)
+      if (!b) return false
+      books.delete(bookId)
+      for (const [jid, job] of jobs) {
+        if (job.book_id === bookId) jobs.delete(jid)
+      }
+      scheduleSave()
+      return true
+    },
+
     async addLlmCost(userId, bookId, costUsd) {
       const b = await api.getBook(userId, bookId)
       if (!b) return null

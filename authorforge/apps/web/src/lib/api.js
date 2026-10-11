@@ -66,6 +66,10 @@ export async function patchBook(id, body) {
   return api(`/v1/books/${id}`, { method: 'PATCH', body })
 }
 
+export async function deleteBook(id) {
+  return api(`/v1/books/${id}`, { method: 'DELETE' })
+}
+
 export async function stepBook(id, direction, step) {
   return api(`/v1/books/${id}/step`, { method: 'POST', body: { direction, step } })
 }

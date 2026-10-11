@@ -170,48 +170,64 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
       return { meta, angles, tokens }
     }
     case 'title_variations': {
-      const agent = await runAgent(llm, 'title.v1', {
-        modelClass: 'cheap',
-        input: {
-          topic: book?.topic,
-          bible: book?.bible,
-          seed: inputs.seed,
-        },
-        metadata: { bookId, jobId },
-      })
-      if (book) await store.addLlmCost(userId, bookId, agent.completion.costUsd)
-      return agent.parsed
+      try {
+        const agent = await runAgent(llm, 'title.v1', {
+          modelClass: 'cheap',
+          input: {
+            topic: book?.topic,
+            bible: book?.bible,
+            seed: inputs.seed,
+          },
+          metadata: { bookId, jobId },
+        })
+        if (book) await store.addLlmCost(userId, bookId, agent.completion.costUsd)
+        return agent.parsed
+      } catch (e) {
+        return {
+          options: [],
+          warnings: [`Title suggestions unavailable (${e.message || 'parse error'}). Enter a title manually.`],
+        }
+      }
     }
     case 'persona_derive': {
-      const agent = await runAgent(llm, 'persona.v1', {
-        modelClass: 'cheap',
-        input: {
-          samples: inputs.samples || [],
-          real_experience_notes: inputs.real_experience_notes || '',
-          name: inputs.name || book?.author_name,
-        },
-        metadata: { bookId, jobId },
-      })
-      if (book) {
-        await store.addLlmCost(userId, bookId, agent.completion.costUsd)
-        await store.updateBook(userId, bookId, { persona: agent.parsed })
+      try {
+        const agent = await runAgent(llm, 'persona.v1', {
+          modelClass: 'cheap',
+          input: {
+            samples: inputs.samples || [],
+            real_experience_notes: inputs.real_experience_notes || '',
+            name: inputs.name || book?.author_name,
+          },
+          metadata: { bookId, jobId },
+        })
+        if (book) {
+          await store.addLlmCost(userId, bookId, agent.completion.costUsd)
+          await store.updateBook(userId, bookId, { persona: agent.parsed })
+        }
+        return agent.parsed
+      } catch (e) {
+        throw new Error(`Persona derive failed: ${e.message || 'invalid model output'}. Try again or fill bio manually.`)
       }
-      return agent.parsed
     }
     case 'outline_generate':
     case 'outline_regenerate_subtree': {
       const tags = book?.bible?.focus_tags || inputs.focus_tags || []
-      const agent = await runAgent(llm, 'outline.v1', {
-        modelClass: 'draft',
-        input: {
-          bookBible: book?.bible,
-          focus_tags: tags,
-          target_words: book?.target_words,
-          chapter_count: book?.chapter_count,
-          structure_type: book?.structure_type,
-        },
-        metadata: { bookId, jobId },
-      })
+      let agent
+      try {
+        agent = await runAgent(llm, 'outline.v1', {
+          modelClass: 'draft',
+          input: {
+            bookBible: book?.bible,
+            focus_tags: tags,
+            target_words: book?.target_words,
+            chapter_count: book?.chapter_count,
+            structure_type: book?.structure_type,
+          },
+          metadata: { bookId, jobId },
+        })
+      } catch (e) {
+        throw new Error(`Outline failed: ${e.message || 'invalid model output'}. Check focus tags / topic and retry.`)
+      }
       // Ensure tag coverage — attach missing tags to first chapters if fake/model missed
       let chapters = agent.parsed.chapters || []
       let coverage = focusTagCoverage(tags, chapters)

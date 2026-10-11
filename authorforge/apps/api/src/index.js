@@ -62,10 +62,10 @@ const bookBody = z.object({
   subtitle: z.string().max(300).optional(),
   author_name: z.string().max(120).optional(),
   genre: z.string().max(64).optional(),
-  topic: z.string().max(500).optional(),
+  topic: z.string().max(4000).optional(),
   // Short kids / novella projects need low floors; long non-fiction still capped.
   target_words: z.number().int().min(500).max(120000).optional(),
-  chapter_count: z.number().int().min(3).max(40).optional(),
+  chapter_count: z.number().int().min(1).max(40).optional(),
   structure_type: z.string().max(64).optional(),
   language: z.enum(['en', 'de']).optional(),
   trim_size: z.string().max(32).optional(),
@@ -367,6 +367,16 @@ const server = createServer(async (req, res) => {
         const body = bookBody.parse(await readJson(req))
         const updated = await store.updateBook(userId, bookId, body)
         sendJson(res, 200, { book: updated })
+        return
+      }
+
+      if (rest === '' && req.method === 'DELETE') {
+        const ok = await store.deleteBook(userId, bookId)
+        if (!ok) {
+          sendError(res, 404, 'Book not found', 'not_found')
+          return
+        }
+        sendJson(res, 200, { ok: true })
         return
       }
 
