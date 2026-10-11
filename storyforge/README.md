@@ -62,6 +62,7 @@ Optional: `npm run dev:worker` with Redis. Real AI: set `STORYFORGE_IMAGE_PROVID
 - **IP Character Builder** — merch-ready DNA gate (name suggestions + coach, one colour/trait/object, silhouette + Merch checks) must lock before Character Turbo
 - **Series DNA reuse**, escalating picture-book **beat seeding**, and **Merch PNG** export from pinned hero (manual Amazon Merch upload)
 - Print math preflight (blocks under-res); interior PDF via `pdf-lib`
+- **Publication readiness** — free score (print + continuity QC + copy lint + KDP Previewer sign-off); never claims 100% publish perfection; included in KDP ZIP as `publication-readiness.json`
 - Launchpad: Tutorials (Neolemon catalogue → StoryForge paths), Craft (Compass / DNA / styles / 7-day / continuity), Guides, Course (format table + Koala notes), Prompt Library, Disclosure Helper, Books slots, Admin config, S1–S52 traceability
 - Amazon Hub launch button in ScanLogic
 

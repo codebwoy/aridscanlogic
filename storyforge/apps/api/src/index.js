@@ -38,6 +38,8 @@ import {
   buildEscalatingBeatBriefs,
   defaultRefrainForHook,
   pictureBookPayload,
+  publicationReadinessPayload,
+  normalizePublicationSignoff,
 } from '@storyforge/shared'
 import { config, assertRuntimeSecrets } from './config.js'
 import { createMemoryStore } from './db/memoryStore.js'
@@ -104,6 +106,16 @@ const projectBody = z.object({
   turbo_engine: z.string().max(16).optional(),
   progress_step: z.string().max(32).optional(),
   course_progress: z.record(z.any()).optional(),
+  publication_signoff: z
+    .object({
+      continuity: z.record(z.boolean()).optional(),
+      kdp_previewer_reviewed: z.boolean().optional(),
+      kdp_previewer_reviewed_at: z.string().max(64).optional().nullable(),
+      notes: z.string().max(2000).optional(),
+      updated_at: z.string().max(64).optional().nullable(),
+    })
+    .optional()
+    .nullable(),
   meta: z.record(z.any()).optional(),
 })
 
@@ -223,6 +235,7 @@ const server = createServer(async (req, res) => {
         languages: languagesPayload(),
         ipCharacter: ipCharacterPayload(),
         pictureBook: pictureBookPayload(),
+        publicationReadiness: publicationReadinessPayload(),
       })
       return
     }
@@ -304,6 +317,7 @@ const server = createServer(async (req, res) => {
         workflowPlaybooks: WORKFLOW_PLAYBOOKS,
         tutorialsMeta: TUTORIALS_META,
         craft: craftLibraryPayload(),
+        publicationReadiness: publicationReadinessPayload(),
         commercialUse: COMMERCIAL_USE_STATEMENT,
         tools: NAMED_TOOLS,
         config: cfg,
@@ -408,6 +422,25 @@ const server = createServer(async (req, res) => {
         const existing = await store.getProject(userId, id)
         if (!existing) return sendError(res, 404, 'Project not found')
         const body = applyLanguagePairFields(projectBody.parse(await readJson(req)), existing)
+        if (body.publication_signoff) {
+          const prev = normalizePublicationSignoff(existing.publication_signoff)
+          const next = normalizePublicationSignoff({
+            ...prev,
+            ...body.publication_signoff,
+            continuity: {
+              ...prev.continuity,
+              ...(body.publication_signoff.continuity || {}),
+            },
+          })
+          const reviewed = Boolean(next.kdp_previewer_reviewed)
+          body.publication_signoff = {
+            ...next,
+            updated_at: new Date().toISOString(),
+            kdp_previewer_reviewed_at: reviewed
+              ? next.kdp_previewer_reviewed_at || new Date().toISOString()
+              : null,
+          }
+        }
         const project = await store.updateProject(userId, id, body)
         if (!project) return sendError(res, 404, 'Project not found')
         sendJson(res, 200, { project })

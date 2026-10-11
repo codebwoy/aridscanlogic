@@ -484,6 +484,30 @@ export default function Launchpad({ activeProject, onRefreshProject, setStatus, 
               </div>
             </div>
 
+            {data.publicationReadiness ? (
+              <div className="sf-card">
+                <h3 style={{ marginTop: 0 }}>
+                  {data.publicationReadiness.meta?.title || 'Publication readiness'}
+                </h3>
+                <p className="sf-muted">{data.publicationReadiness.meta?.disclaimer}</p>
+                <div className="sf-grid-2">
+                  {Object.entries(data.publicationReadiness.weights || {}).map(([gate, weight]) => (
+                    <div key={gate}>
+                      <strong style={{ textTransform: 'capitalize' }}>{gate}</strong>
+                      <span className="sf-muted"> · weight {weight}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="sf-muted" style={{ marginBottom: 0 }}>
+                  Run the live score in Studio → Canvas (Save &amp; score). Levels:{' '}
+                  {(data.publicationReadiness.meta?.levels || [])
+                    .map((l) => l.label)
+                    .join(' → ')}
+                  .
+                </p>
+              </div>
+            ) : null}
+
             <div className="sf-grid-2">
               <div className="sf-card">
                 <h3 style={{ marginTop: 0 }}>{craft.characterDesignPrinciples?.title}</h3>
@@ -851,7 +875,7 @@ export default function Launchpad({ activeProject, onRefreshProject, setStatus, 
 
         {tab === 'trace' ? (
           <div className="sf-card">
-            <h2 style={{ marginTop: 0 }}>Traceability S1–S52</h2>
+            <h2 style={{ marginTop: 0 }}>Traceability S1–S60</h2>
             <div className="sf-table-wrap">
               <table className="sf-table">
                 <thead>

@@ -189,6 +189,7 @@ export function createMemoryStore(options = {}) {
         characters: [],
         pages: emptyPages(pageCount),
         course_progress: {},
+        publication_signoff: data.publication_signoff || null,
         last_job_outputs: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -251,6 +252,7 @@ export function createMemoryStore(options = {}) {
         'ip_character',
         'pinned_anchor_asset_id',
         'pinned_anchor',
+        'publication_signoff',
         'last_job_outputs',
       ]
       for (const key of allowed) {

@@ -11,6 +11,8 @@ import {
   resolvePageTextLines,
   isIpCharacterLocked,
   buildTurboDescriptionFromDna,
+  assessPublicationReadiness,
+  normalizePublicationSignoff,
 } from '@storyforge/shared'
 import { sha256Hex } from '../security/crypto.js'
 import { config } from '../config.js'
@@ -206,7 +208,10 @@ export async function submitJob(store, { userId, type, projectId, inputs }) {
     await chargeOrRefund(store, { userId, cost, reason: type, jobId: job.id })
   }
 
-  const queueName = type.startsWith('export_') || type === 'preflight' ? exportQueueName : generationQueueName
+  const queueName =
+    type.startsWith('export_') || type === 'preflight' || type === 'publication_readiness'
+      ? exportQueueName
+      : generationQueueName
   await enqueue(queueName, type, {
     jobId: job.id,
     userId,
@@ -421,6 +426,50 @@ async function runExportJob(store, data) {
     const paperTypeId = inputs?.paper_type || project?.paper_type || 'white'
     const wrapLayout = coverWrapLayout(trimId, pageCount, paperTypeId)
 
+    if (type === 'publication_readiness') {
+      if (!project) {
+        await store.updateJob(jobId, {
+          status: 'failed',
+          error: 'projectId required for publication readiness',
+        })
+        return
+      }
+      const signoff = normalizePublicationSignoff(
+        inputs?.publication_signoff ?? project.publication_signoff,
+      )
+      if (inputs?.publication_signoff) {
+        await store.updateProject(userId, projectId, {
+          publication_signoff: {
+            ...signoff,
+            updated_at: new Date().toISOString(),
+            kdp_previewer_reviewed_at: signoff.kdp_previewer_reviewed
+              ? signoff.kdp_previewer_reviewed_at || new Date().toISOString()
+              : null,
+          },
+        })
+      }
+      const fresh = await store.getProject(userId, projectId)
+      const readiness = assessPublicationReadiness(fresh, {
+        signoff: fresh.publication_signoff,
+      })
+      const stepPatch = {}
+      const step = fresh.progress_step || 'story'
+      const stepOrder = ['story', 'characters', 'scenes', 'layout', 'preflight', 'export']
+      if (stepOrder.indexOf(step) < stepOrder.indexOf('preflight')) {
+        stepPatch.progress_step = 'preflight'
+      }
+      await store.updateProject(userId, projectId, {
+        last_job_outputs: { publication_readiness: readiness },
+        meta: { ...(fresh.meta || {}), last_readiness: readiness },
+        ...stepPatch,
+      })
+      await store.updateJob(jobId, {
+        status: 'completed',
+        outputs: { readiness, publication_readiness: readiness },
+      })
+      return
+    }
+
     // Preflight-only job
     if (type === 'preflight') {
       const checks = images.length
@@ -575,6 +624,10 @@ async function runExportJob(store, data) {
       const checks = softForZip.map((img) =>
         preflightImageResolution(img.widthPx || 0, img.heightPx || 0, trimId),
       )
+      const manuscript = formatBilingualManuscript(project)
+      const readiness = assessPublicationReadiness(project, {
+        signoff: project?.publication_signoff,
+      })
       const checklist = [
         '1. Upload interior PDF as paperback manuscript',
         '2. Upload cover-wrap PDF as paperback cover',
@@ -582,11 +635,10 @@ async function runExportJob(store, data) {
         '4. Keep barcode reserve clear on back cover',
         '5. Disclose AI-assisted art if required by Amazon policy',
         '6. Always verify in KDP Online Previewer before publishing',
+        `7. StoryForge publication readiness score: ${readiness.score}/100 (${readiness.levelLabel}) — checklist only, not Amazon approval`,
         '',
         PUBLISHING_SPECS.disclaimers.notAffiliated,
       ].join('\n')
-
-      const manuscript = formatBilingualManuscript(project)
 
       const zipBytes = buildZip([
         {
@@ -621,6 +673,11 @@ async function runExportJob(store, data) {
           ),
           compress: true,
         },
+        {
+          name: 'publication-readiness.json',
+          data: JSON.stringify(readiness, null, 2),
+          compress: true,
+        },
         { name: 'UPLOAD-CHECKLIST.txt', data: checklist, compress: true },
         { name: 'manuscript.txt', data: manuscript || '(empty)', compress: true },
         {
@@ -631,8 +688,17 @@ async function runExportJob(store, data) {
               trimId,
               pageCount,
               paperTypeId,
-              files: [interiorRaw.filename, coverRaw.filename, 'preflight.json', 'UPLOAD-CHECKLIST.txt', 'manuscript.txt'],
+              files: [
+                interiorRaw.filename,
+                coverRaw.filename,
+                'preflight.json',
+                'publication-readiness.json',
+                'UPLOAD-CHECKLIST.txt',
+                'manuscript.txt',
+              ],
               printReady: true,
+              readinessScore: readiness.score,
+              readinessLevel: readiness.level,
               independenceDisclaimer: PUBLISHING_SPECS.disclaimers.notAffiliated,
             },
             null,
@@ -662,6 +728,7 @@ async function runExportJob(store, data) {
           pdf: attachSignedDownload(interiorRaw, { userId }),
           coverPdf: attachSignedDownload(coverRaw, { userId }),
           preflight: checks,
+          readiness,
           coverWrap: {
             widthPx: wrapLayout.widthPx,
             heightPx: wrapLayout.heightPx,

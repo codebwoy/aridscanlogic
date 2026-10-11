@@ -100,3 +100,14 @@ export {
   defaultRefrainForHook,
   pictureBookPayload,
 } from './picture-book.js'
+export {
+  PUBLICATION_READINESS_META,
+  CONTINUITY_SIGNOFF_ITEMS,
+  PICTURE_BOOK_BANNED_PHRASES,
+  emptyPublicationSignoff,
+  normalizePublicationSignoff,
+  assessPublicationReadiness,
+  publicationReadinessPayload,
+  wordCount as publicationWordCount,
+  bannedPhraseHits as publicationBannedPhraseHits,
+} from './publication-readiness.js'

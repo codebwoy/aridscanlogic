@@ -106,4 +106,10 @@ export const TRACEABILITY = [
     status: 'done',
     note: 'Merch PNG export + escalating beat seed + series DNA reuse + name suggestions',
   },
+  {
+    id: 'S60',
+    area: 'Export',
+    status: 'done',
+    note: 'Publication readiness score (print + continuity + copy + human KDP Previewer sign-off)',
+  },
 ]

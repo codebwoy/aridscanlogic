@@ -38,8 +38,18 @@ export const NAMED_TOOLS = {
     label: 'Canvas',
     jobType: null,
     surface: 'layout',
-    sourceIds: ['S9'],
-    description: 'Layout at KDP trim sizes, text, speech bubbles, page-by-page export.',
+    sourceIds: ['S9', 'S60'],
+    description:
+      'Layout at KDP trim sizes, story text, publication readiness score (print + continuity + copy + KDP Previewer sign-off), and print export.',
+  },
+  publication_readiness: {
+    id: 'publication_readiness',
+    label: 'Publication readiness',
+    jobType: 'publication_readiness',
+    surface: 'canvas',
+    sourceIds: ['S60'],
+    description:
+      'Free checklist score before KDP upload — not a guarantee of Amazon acceptance or editorial perfection.',
   },
   editor_action: {
     id: 'editor_action',

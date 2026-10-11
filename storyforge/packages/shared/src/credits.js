@@ -27,6 +27,8 @@ export const CREDIT_COSTS = {
   consistency_rescore: 0,
   story_text: 0,
   preflight: 0,
+  /** Checklist score: print + continuity + copy + KDP Previewer sign-off */
+  publication_readiness: 0,
   export_interior_pdf: 3,
   export_cover_pdf: 3,
   export_source_zip: 1,

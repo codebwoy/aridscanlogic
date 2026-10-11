@@ -147,7 +147,16 @@ export const SEVEN_DAY_PLAN = {
     { day: 1, title: 'Market research', tasks: ['Scan Amazon age/category comps', 'Note pain points (bedtime, emotions, school)', 'Pick one niche + age band'] },
     { day: 2, title: 'Story draft', tasks: ['Fill Storytelling Compass', 'Draft page beats for ~24–32 pages', 'Stay inside age word-count band'] },
     { day: 3, title: 'Character + scenes', tasks: ['Write Character DNA', 'Pin Character Turbo / Photo-to-Cartoon anchor', 'Generate pages from anchor'] },
-    { day: 4, title: 'Format + export', tasks: ['Canvas at KDP trim/bleed', 'Upscale for print if needed (300 DPI target)', 'Interior + cover export checklist'] },
+    {
+      day: 4,
+      title: 'Format + export',
+      tasks: [
+        'Canvas at KDP trim/bleed',
+        'Upscale for print if needed (300 DPI target)',
+        'Publication readiness score + continuity QC',
+        'Interior + cover export checklist',
+      ],
+    },
     { day: 5, title: 'Listing setup', tasks: ['Title/subtitle/keywords/categories', 'Description + A+ plan', 'AI disclosure decision'] },
     { day: 6, title: 'Soft launch prep', tasks: ['Author Central', 'Compliant early readers plan', 'Optional short ads budget'] },
     { day: 7, title: 'Launch + learn', tasks: ['Publish', 'Watch BSR/orders', 'Note one fix for book 2'] },

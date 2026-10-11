@@ -3,6 +3,7 @@ import {
   BookOpen,
   Check,
   Clapperboard,
+  ClipboardCheck,
   FileOutput,
   Package,
   Pin,
@@ -24,6 +25,10 @@ import {
   composeDisplayText,
   languageLabel,
   BOOK_FORMATS,
+  assessPublicationReadiness,
+  emptyPublicationSignoff,
+  normalizePublicationSignoff,
+  CONTINUITY_SIGNOFF_ITEMS,
 } from '@storyforge/shared'
 import { api } from '../lib/api.js'
 import { runAndWait } from '../lib/jobs.js'
@@ -76,6 +81,7 @@ export default function Studio({
   const [falCatalogue, setFalCatalogue] = useState(null)
   const [falModels, setFalModels] = useState({ ...FAL_DEFAULTS })
   const [pairDraft, setPairDraft] = useState(null)
+  const [signoffDraft, setSignoffDraft] = useState(() => emptyPublicationSignoff())
 
   useEffect(() => {
     let cancelled = false
@@ -126,6 +132,14 @@ export default function Studio({
     active?.secondary_verified,
   ])
 
+  useEffect(() => {
+    if (!active) {
+      setSignoffDraft(emptyPublicationSignoff())
+      return
+    }
+    setSignoffDraft(normalizePublicationSignoff(active.publication_signoff))
+  }, [active?.id, active?.publication_signoff])
+
   const syncedPrimary = active?.pages?.[pageIndex]?.text_content || ''
   const syncedSecondary = active?.pages?.[pageIndex]?.text_secondary || ''
   const syncedBrief = active?.pages?.[pageIndex]?.illustration_brief || ''
@@ -139,6 +153,14 @@ export default function Studio({
   const step = active?.progress_step || 'story'
   const stepIdx = Math.max(0, STEPS.indexOf(step))
   const currentPage = active?.pages?.[pageIndex]
+  const readiness = active
+    ? assessPublicationReadiness(active, { signoff: signoffDraft })
+    : null
+  const readinessFromJob =
+    lastOutputs?.readiness ||
+    lastOutputs?.publication_readiness ||
+    active?.meta?.last_readiness ||
+    null
   const bilingualActive = Boolean(
     (pairDraft?.secondary_language || active?.secondary_language) &&
       (pairDraft?.secondary_language || active?.secondary_language) !==
@@ -285,10 +307,16 @@ export default function Studio({
     }
   }
 
-  async function runJob(type, inputs = {}) {
+  async function runJob(type, inputs = {}, { skipConfirm = false } = {}) {
     if (!active && type !== 'character_turbo') return
     const cost = CREDIT_COSTS[type] ?? 0
-    if (cost > 0 && !window.confirm(`Run “${type}” for ${cost} credit(s)?`)) return
+    if (cost > 0 && !skipConfirm) {
+      const isExport = type.startsWith('export_')
+      const ok = isExport
+        ? confirmExportWithReadiness(`Run “${type}”`, cost)
+        : window.confirm(`Run “${type}” for ${cost} credit(s)?`)
+      if (!ok) return
+    }
     setBusy(true)
     setError('')
     try {
@@ -302,8 +330,13 @@ export default function Studio({
         setStatus(`Failed: ${type}`)
       } else {
         setLastOutputs(res.job.outputs)
+        const readinessOut = res.job.outputs?.readiness || res.job.outputs?.publication_readiness
         setStatus(
           `Done: ${type}${
+            readinessOut?.score != null
+              ? ` · readiness ${readinessOut.score}/100 (${readinessOut.levelLabel || readinessOut.level})`
+              : ''
+          }${
             res.job.outputs?.consistencyBadge
               ? ` · consistency ${res.job.outputs.consistencyBadge}`
               : ''
@@ -327,14 +360,64 @@ export default function Studio({
     }
   }
 
+  async function savePublicationSignoff(next) {
+    if (!active) return
+    const normalized = normalizePublicationSignoff(next)
+    setSignoffDraft(normalized)
+    setBusy(true)
+    setError('')
+    try {
+      const res = await api(`/v1/projects/${active.id}`, {
+        method: 'PATCH',
+        body: { publication_signoff: normalized },
+      })
+      await onSelectProject(res.project?.id || active.id)
+      setStatus('Publication sign-off saved (0 credits)')
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function toggleContinuityItem(itemId) {
+    const next = normalizePublicationSignoff({
+      ...signoffDraft,
+      continuity: {
+        ...signoffDraft.continuity,
+        [itemId]: !signoffDraft.continuity[itemId],
+      },
+    })
+    await savePublicationSignoff(next)
+  }
+
+  async function toggleKdpPreviewerReviewed() {
+    const reviewed = !signoffDraft.kdp_previewer_reviewed
+    await savePublicationSignoff({
+      ...signoffDraft,
+      kdp_previewer_reviewed: reviewed,
+      kdp_previewer_reviewed_at: reviewed ? new Date().toISOString() : null,
+    })
+  }
+
+  function confirmExportWithReadiness(actionLabel, cost) {
+    const score = readiness?.score ?? 0
+    const level = readiness?.levelLabel || readiness?.level || 'unknown'
+    const blocks = readiness?.issues?.filter((i) => i.severity === 'block').length || 0
+    let msg = `${actionLabel} for ${cost} credit(s)?\n\nPublication readiness: ${score}/100 (${level}).`
+    if (blocks > 0) {
+      msg += `\n\n⚠ ${blocks} blocking issue(s) remain. Export is still allowed — this score is a checklist, not Amazon approval.`
+    } else if (score < 70) {
+      msg += '\n\nScore is below “Almost ready”. Consider fixing print/copy/continuity first.'
+    }
+    msg += '\n\nAlways verify in the Amazon KDP Online Previewer before publishing.'
+    return window.confirm(msg)
+  }
+
   async function runFinishPack() {
     if (!active) return
     const total = CREDIT_COSTS.export_source_zip || 1
-    if (
-      !window.confirm(
-        `KDP finish pack (interior + cover + checklist ZIP) for ${total} credit(s)?`,
-      )
-    )
+    if (!confirmExportWithReadiness('KDP finish pack (interior + cover + checklist ZIP)', total))
       return
     setBusy(true)
     setError('')
@@ -355,8 +438,11 @@ export default function Studio({
       }
       downloadArtifact(pack.job.outputs?.zip, 'kdp-pack.zip')
       setLastOutputs(pack.job.outputs)
+      const packScore = pack.job.outputs?.readiness?.score
       setStatus(
-        'KDP pack ready — ZIP includes interior PDF, cover wrap, preflight, checklist. Verify in KDP Previewer.',
+        `KDP pack ready — ZIP includes interior, cover, preflight, publication-readiness.json${
+          packScore != null ? ` (score ${packScore})` : ''
+        }, checklist. Verify in KDP Previewer.`,
       )
       await onSelectProject(active.id)
     } catch (e) {
@@ -636,6 +722,23 @@ export default function Studio({
               </>
             ) : null}
           </p>
+          {readiness ? (
+            <p className="sf-muted" style={{ marginTop: '0.35rem' }}>
+              Readiness:{' '}
+              <span className={`sf-badge sf-readiness-${readiness.level}`}>
+                {readiness.score}/100 · {readiness.levelLabel}
+              </span>
+              <button
+                type="button"
+                className="sf-btn sf-btn-ghost"
+                style={{ marginLeft: '0.35rem', minHeight: 44 }}
+                disabled={busy || !active}
+                onClick={() => setToolTab('canvas')}
+              >
+                Open Canvas
+              </button>
+            </p>
+          ) : null}
           <button
             type="button"
             className="sf-btn"
@@ -1183,6 +1286,119 @@ export default function Studio({
                 )}
               </p>
             ) : null}
+            {readiness ? (
+              <div className="sf-readiness" aria-live="polite">
+                <div className="sf-readiness-head">
+                  <div>
+                    <h3>
+                      <ClipboardCheck size={18} aria-hidden /> Publication readiness
+                    </h3>
+                    <p className="sf-muted" style={{ margin: '0.25rem 0 0' }}>
+                      Checklist measure — not a guarantee of Amazon acceptance.
+                    </p>
+                  </div>
+                  <div
+                    className={`sf-readiness-score sf-readiness-${readiness.level}`}
+                    title={readiness.levelLabel}
+                  >
+                    <strong>{readiness.score}</strong>
+                    <span>{readiness.levelLabel}</span>
+                  </div>
+                </div>
+                <div className="sf-readiness-gates">
+                  {['print', 'continuity', 'copy', 'human'].map((id) => {
+                    const g = readiness.gates[id]
+                    return (
+                      <div key={id} className={`sf-readiness-gate sf-gate-${g.status}`}>
+                        <div className="sf-readiness-gate-top">
+                          <span>{id}</span>
+                          <span>
+                            {g.score}% · w{g.weight}
+                          </span>
+                        </div>
+                        <div className="sf-readiness-bar">
+                          <i style={{ width: `${g.score}%` }} />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+                <div className="sf-readiness-summary sf-muted">
+                  Art {readiness.summary.pagesWithArt}/{readiness.summary.pages} · Text{' '}
+                  {readiness.summary.pagesWithText}/{readiness.summary.pages} · Continuity{' '}
+                  {readiness.summary.continuityChecked}/{readiness.summary.continuityTotal}
+                  {readinessFromJob?.score != null
+                    ? ` · Last saved score ${readinessFromJob.score}`
+                    : ''}
+                </div>
+                {(readiness.issues.length > 0 || readiness.warnings.length > 0) && (
+                  <ul className="sf-readiness-findings">
+                    {readiness.issues.slice(0, 6).map((f, i) => (
+                      <li key={`i-${i}`} className="sf-find-block">
+                        [{f.gate}] {f.message}
+                      </li>
+                    ))}
+                    {readiness.warnings.slice(0, 4).map((f, i) => (
+                      <li key={`w-${i}`} className="sf-find-warn">
+                        [{f.gate}] {f.message}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <details className="sf-readiness-details">
+                  <summary>Human continuity QC ({CONTINUITY_SIGNOFF_ITEMS.length})</summary>
+                  <div className="sf-readiness-checks">
+                    {CONTINUITY_SIGNOFF_ITEMS.map((item) => (
+                      <label key={item.id} className="sf-check-row">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(signoffDraft.continuity[item.id])}
+                          disabled={busy || !active}
+                          onChange={() => toggleContinuityItem(item.id)}
+                        />
+                        <span>
+                          <small className="sf-muted">{item.passTitle}</small>
+                          <br />
+                          {item.label}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </details>
+                <label className="sf-check-row sf-check-row-primary">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(signoffDraft.kdp_previewer_reviewed)}
+                    disabled={busy || !active}
+                    onChange={() => toggleKdpPreviewerReviewed()}
+                  />
+                  <span>
+                    I reviewed this book in the Amazon KDP Online Previewer
+                    {signoffDraft.kdp_previewer_reviewed_at ? (
+                      <small className="sf-muted">
+                        {' '}
+                        · {new Date(signoffDraft.kdp_previewer_reviewed_at).toLocaleString()}
+                      </small>
+                    ) : null}
+                  </span>
+                </label>
+                <div className="sf-btn-row">
+                  <button
+                    type="button"
+                    className="sf-btn"
+                    disabled={busy || !active}
+                    onClick={() =>
+                      runJob('publication_readiness', {
+                        publication_signoff: signoffDraft,
+                      })
+                    }
+                  >
+                    <ClipboardCheck size={16} aria-hidden /> Save &amp; score (0)
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
             <div className="sf-btn-row">
               <button
                 type="button"
@@ -1280,9 +1496,10 @@ export default function Studio({
             </div>
             <ModelSelect role="upscale" label="fal upscale model" value={falModels.upscale} />
             <p className="sf-muted">
-              Print pipeline: 2.5× upscale → print-ready interior PDF + cover wrap → signed ZIP
-              (preflight + checklist + manuscript). Merch PNG = pinned hero on Merch canvas
-              (manual Amazon Merch upload). Always re-check in the Amazon KDP Previewer.
+              Print pipeline: readiness score → 2.5× upscale → interior PDF + cover wrap → signed ZIP
+              (preflight + publication-readiness.json + checklist + manuscript). Merch PNG = pinned
+              hero on Merch canvas. Always re-check in the Amazon KDP Previewer — no tool certifies
+              100% publication perfection.
             </p>
           </div>
         ) : null}
