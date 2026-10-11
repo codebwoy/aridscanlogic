@@ -1,0 +1,49 @@
+---
+description: Protect Fly.io machine runtime — no unnecessary wakes (AuthorForge/StoryForge)
+globs: authorforge/**,storyforge/**,src/lib/authorforge/**,src/lib/storyforge/**,**/fly.toml,**/HYBRID_DEPLOY.md
+alwaysApply: true
+---
+
+# Hybrid Fly cost rail (AuthorForge + StoryForge)
+
+ScanLogic stays on Vercel. Studios on Fly use **auto-stop** machines. Every cold hit to
+`*.fly.dev` (page load, `/health`, deploy smoke) can **start a machine** and burn trial
+(7 days **or** 2h runtime) / pay-as-you-go credits.
+
+Treat Fly runtime like API keys: **default deny** unnecessary use.
+
+## Non-negotiables
+
+1. **Do not wake production Fly** unless the user explicitly asked to deploy, debug prod, or open the live studio.
+2. Prefer **local** studios (`authorforge` / `storyforge` `npm run …:dev`, FakeLLM / mock images) for agent work, tests, and UI iteration.
+3. **Never** add background polling of Fly `/health` from ScanLogic (Hub, dashboards, intervals, prefetch on mount). Health probes only on **explicit user launch** (`launchAuthorforgeDesktop` / `launchStoryforgeDesktop`).
+4. Do not “verify” prod by looping `curl …/health`, opening both studios, or refreshing studio tabs during agent sessions.
+5. Keep `fly.toml`: `auto_stop_machines = "stop"`, `auto_start_machines = true`, `min_machines_running = 0` unless the user explicitly wants always-on (and accepts cost).
+6. Do not allocate dedicated IPv4, extra machines, Redis, Postgres, or second regions “just in case.”
+7. Production secrets stay on Fly (`fly secrets`); never put studio secrets in `VITE_*`.
+8. After intentional prod smoke: one `/health` per app is enough — then stop.
+
+## When Fly wake *is* allowed
+
+- User asked to deploy / set secrets / fix a prod outage
+- User is actively testing the live URL
+- Single post-deploy smoke: `curl …/health` once per app
+
+## Agent checklist before any `fly` / `*.fly.dev` action
+
+- [ ] User requested prod/Fly explicitly?
+- [ ] Can this be done locally with mock/fake?
+- [ ] Will this start a stopped machine? If yes, minimize to one request.
+- [ ] Avoid leaving `fly logs` / `fly ssh` sessions open.
+
+## Parallel to LLM/API key discipline
+
+| Cost surface | Default | Prod use |
+|--------------|---------|----------|
+| Anthropic / fal / Replicate | fake/mock in tests; no drive-by live calls | only when implementing/debugging paid path |
+| Fly machines | local hybrid / stopped | only intentional deploy, smoke, or user launch |
+
+## Related
+
+- `18-storyforge.mdc`, `19-authorforge.mdc`, `authorforge/docs/HYBRID_DEPLOY.md`
+- Launch probes: `src/lib/authorforge/launch.js`, `src/lib/storyforge/launch.js`
