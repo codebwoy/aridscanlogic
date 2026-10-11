@@ -91,7 +91,10 @@ Never invent sales ranks, review counts, or Amazon scrape claims. Use estimates/
     name: 'continuity',
     version: 'v1',
     file: null,
-    inlineSystem: 'ContinuityAgent: summarize section 120-200 words; extract claims/terms/examples/open loops.',
+    inlineSystem: `ContinuityAgent: summarize the section in 40-80 words.
+Return ONLY JSON:
+{"summary":"...","key_claims":[],"terms_introduced":[],"examples_used":[],"open_loops":[]}
+Do not invent credentials or statistics.`,
     outputSchema: z.object({
       summary: z.string(),
       key_claims: z.array(z.any()).default([]),

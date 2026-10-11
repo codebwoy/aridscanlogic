@@ -212,24 +212,66 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
     case 'outline_generate':
     case 'outline_regenerate_subtree': {
       const tags = book?.bible?.focus_tags || inputs.focus_tags || []
-      let agent
+      const targetWords = Number(book?.target_words) || 28000
+      const chapterCount = Math.min(Math.max(Number(book?.chapter_count) || (targetWords <= 5000 ? 6 : 8), 1), 16)
+      const outlineInput = {
+        bookBible: book?.bible,
+        focus_tags: tags,
+        target_words: targetWords,
+        chapter_count: chapterCount,
+        structure_type: book?.structure_type,
+        topic: book?.topic || book?.working_title,
+        compact: targetWords <= 5000,
+      }
+
+      function stubChapters() {
+        const per = Math.max(200, Math.floor(targetWords / chapterCount))
+        return Array.from({ length: chapterCount }, (_, i) => ({
+          level: 'chapter',
+          title: `Chapter ${i + 1}`,
+          writing_direction: `Develop part ${i + 1} of: ${outlineInput.topic || 'the topic'}.`,
+          target_words: per,
+          focus_tags: tags.length ? [tags[i % tags.length]] : [],
+          children: [],
+        }))
+      }
+
+      let agent = null
+      let chapters = []
+      let usedStub = false
       try {
         agent = await runAgent(llm, 'outline.v1', {
           modelClass: 'draft',
-          input: {
-            bookBible: book?.bible,
-            focus_tags: tags,
-            target_words: book?.target_words,
-            chapter_count: book?.chapter_count,
-            structure_type: book?.structure_type,
-          },
-          metadata: { bookId, jobId },
+          input: outlineInput,
+          metadata: { bookId, jobId, maxTokens: targetWords <= 5000 ? 4096 : 12288 },
         })
-      } catch (e) {
-        throw new Error(`Outline failed: ${e.message || 'invalid model output'}. Check focus tags / topic and retry.`)
+        chapters = agent.parsed.chapters || []
+      } catch (firstErr) {
+        try {
+          agent = await runAgent(llm, 'outline.v1', {
+            modelClass: 'cheap',
+            input: {
+              ...outlineInput,
+              compact: true,
+              retry: true,
+              instruction:
+                'Previous JSON was invalid/truncated. Return a SMALLER valid JSON outline: flat chapters only, one-sentence writing_direction each.',
+            },
+            metadata: { bookId, jobId, maxTokens: 4096 },
+          })
+          chapters = agent.parsed.chapters || []
+        } catch {
+          chapters = stubChapters()
+          usedStub = true
+          agent = {
+            promptName: 'outline',
+            promptVersion: 'v1-stub',
+            completion: { costUsd: 0 },
+          }
+          console.warn('[authorforge] outline stub used after parse failures', firstErr.message)
+        }
       }
       // Ensure tag coverage — attach missing tags to first chapters if fake/model missed
-      let chapters = agent.parsed.chapters || []
       let coverage = focusTagCoverage(tags, chapters)
       if (!coverage.passed) {
         chapters = chapters.map((ch, i) => {
@@ -240,14 +282,25 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
         coverage = focusTagCoverage(tags, chapters)
       }
       if (book) {
-        await store.addLlmCost(userId, bookId, agent.completion.costUsd)
+        if (agent?.completion?.costUsd) await store.addLlmCost(userId, bookId, agent.completion.costUsd)
         await store.updateBook(userId, bookId, {
-          outline: { chapters, coverage },
+          outline: {
+            chapters,
+            coverage,
+            note: usedStub
+              ? 'Stub outline (model JSON failed). Edit titles/directions, then regenerate if needed.'
+              : undefined,
+          },
           status: 'outlined',
           wizard_step: 'outline',
         })
       }
-      return { chapters, coverage, prompt: { name: agent.promptName, version: agent.promptVersion } }
+      return {
+        chapters,
+        coverage,
+        stub: usedStub,
+        prompt: { name: agent.promptName, version: agent.promptVersion },
+      }
     }
     case 'section_draft':
     case 'section_regenerate': {
@@ -321,11 +374,24 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
         ],
       }
       const sections = { ...(book.sections || {}), [inputs.sectionKey]: section }
-      const continuityAgent = await runAgent(llm, 'continuity.v1', {
-        modelClass: 'cheap',
-        input: { title: node.title, content_md },
-        metadata: { bookId, jobId },
-      })
+      let continuityCost = 0
+      let continuityParsed = {
+        summary: content_md.split(/\s+/).slice(0, 40).join(' ') + '…',
+        terms_introduced: agent.parsed.terms_introduced || [],
+        examples_used: [],
+        open_loops: agent.parsed.open_loops || [],
+      }
+      try {
+        const continuityAgent = await runAgent(llm, 'continuity.v1', {
+          modelClass: 'cheap',
+          input: { title: node.title, content_md },
+          metadata: { bookId, jobId, maxTokens: 1024 },
+        })
+        continuityParsed = continuityAgent.parsed
+        continuityCost = continuityAgent.completion.costUsd || 0
+      } catch (e) {
+        console.warn('[authorforge] continuity soft-fail', e.message)
+      }
       const continuity = {
         ...book.continuity,
         summaries: [
@@ -333,26 +399,22 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
           {
             id: inputs.sectionKey,
             title: node.title,
-            summary: continuityAgent.parsed.summary,
+            summary: continuityParsed.summary,
           },
         ].slice(-80),
         terms: [
           ...new Set([
             ...(book.continuity?.terms || []),
-            ...(continuityAgent.parsed.terms_introduced || []),
+            ...(continuityParsed.terms_introduced || []),
           ]),
         ],
         used_examples: [
           ...(book.continuity?.used_examples || []),
-          ...(continuityAgent.parsed.examples_used || []),
+          ...(continuityParsed.examples_used || []),
         ].slice(-80),
-        open_loops: continuityAgent.parsed.open_loops || [],
+        open_loops: continuityParsed.open_loops || [],
       }
-      await store.addLlmCost(
-        userId,
-        bookId,
-        agent.completion.costUsd + continuityAgent.completion.costUsd
-      )
+      await store.addLlmCost(userId, bookId, (agent.completion.costUsd || 0) + continuityCost)
       await store.updateBook(userId, bookId, {
         sections,
         continuity,
