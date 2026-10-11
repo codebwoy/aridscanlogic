@@ -1,7 +1,7 @@
 import { ExternalLink, ShieldAlert } from 'lucide-react'
 import { INSPIRATION_CONFIG } from '@/lib/bizstart/amazon/inspirationConfig'
 import { amazonT } from '@/lib/bizstart/amazon/i18n'
-import { launchStoryforgeDesktop } from '@/lib/storyforge/launch'
+import { launchStoryforgeDesktop, notifyStoryforgeLaunchResult } from '@/lib/storyforge/launch'
 import { toast } from 'sonner'
 
 /** Books for inspiration, age bands, tools beyond one-off AI image apps. */
@@ -9,15 +9,13 @@ export default function InspirationPanel({ lang = 'en', onOpenStoryforge }) {
   const cfg = INSPIRATION_CONFIG
   const L = (obj) => obj?.[lang] || obj?.en || ''
 
-  function openStudio() {
+  async function openStudio() {
     if (onOpenStoryforge) {
-      onOpenStoryforge('studio')
+      await onOpenStoryforge('studio')
       return
     }
-    const result = launchStoryforgeDesktop({ view: 'studio' })
-    if (result.opened) return
-    if (result.reason === 'mobile') toast.message(amazonT(lang, 'storyforgeMobile'))
-    else toast.error(amazonT(lang, 'storyforgePopupBlocked'))
+    const result = await launchStoryforgeDesktop({ view: 'studio' })
+    notifyStoryforgeLaunchResult((key) => amazonT(lang, key), result, toast)
   }
 
   return (

@@ -8,12 +8,13 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "npm run dev -w @storyforge/api & npm run dev -w @storyforge/web & npm run dev -w @storyforge/worker",
+    "dev": "node scripts/dev-studio.mjs",
+    "dev:studio": "node scripts/dev-studio.mjs",
     "dev:api": "npm run dev -w @storyforge/api",
     "dev:web": "npm run dev -w @storyforge/web",
     "dev:worker": "npm run dev -w @storyforge/worker",
     "build": "npm run build -w @storyforge/shared && npm run build -w @storyforge/api && npm run build -w @storyforge/web",
-    "test": "npm run test -w @storyforge/shared && npm run test -w @storyforge/api",
+    "test": "STORYFORGE_PERSIST=0 npm run test -w @storyforge/shared && STORYFORGE_PERSIST=0 npm run test -w @storyforge/api",
     "lint": "npm run lint -w @storyforge/web --if-present"
   },
   "engines": {

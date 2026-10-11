@@ -42,10 +42,13 @@ export const AMAZON_STRINGS = {
     storyforgeCta: 'Open StoryForge (desktop)',
     storyforgeLaunchpadCta: 'Open Launchpad',
     storyforgeLaunchpadHint:
-      'Launchpad = guides, 6-step publish course, prompts, disclosure helper (0 credits). Generation tools use credits. Desktop only.',
+      'Launchpad = tutorials → StoryForge paths, guides, 6-step course, prompts, disclosure helper (0 credits). Generation uses credits. Desktop only.',
     storyforgeMobile:
       'StoryForge needs a desktop screen (≥1024px). Open ScanLogic on a computer to use the studio. On mobile, use this hub for KDP programme guidance only.',
     storyforgePopupBlocked: 'Pop-up blocked — allow pop-ups or open StoryForge manually.',
+    storyforgeOffline:
+      'StoryForge is not running. In a terminal: npm run storyforge:dev — then open http://127.0.0.1:5180 and try again.',
+    storyforgeOnline: 'StoryForge is running on this machine — Open StoryForge will work.',
     playbooksTitle: 'KDP + Merch playbooks',
     playbooksIntro:
       'Practical deep-dives for Germany: account & assets, tax basics, Merch ops, market research, brand loop, and milestones. Creation tools stay in StoryForge (desktop).',
@@ -94,9 +97,20 @@ export const AMAZON_STRINGS = {
       'Open the KDP requirements playbook for the full Germany checklist (account, tax ⚠, files, picture-book tech).',
     kdpResourcesTitle: 'KDP learning centre',
     kdpResourcesHint:
-      'Official KDP Jumpstart + Reedsy Self-Publishing 101 + post-launch listing optimisation (keywords, A+, reviews, ads), Help library, free path, children’s courses — with ⚠ on upsells.',
+      'Hard Topics from official KDP Help (print math, AI disclosure, categories) + Jumpstart + Reedsy Self-Publishing 101 + listing optimisation — with ⚠ on upsells. Amazon pages always win.',
     kdpResourcesMeta: 'KDP resources last verified',
     kdpResourcesRec: 'Recommendation',
+    kdpHardTitle: 'Hardest KDP topics — explained simply',
+    kdpHardMeta: 'Hard topics last verified',
+    kdpHardOneSentence: 'In one sentence',
+    kdpHardWhy: 'Why people get stuck',
+    kdpHardLearn: 'In simple words',
+    kdpHardDoThis: 'Do this',
+    kdpHardFormula: 'Simple math',
+    kdpHardPitfalls: 'Common mistakes',
+    kdpHardOrder: 'Learn in this order',
+    kdpHardOpenHelp: 'Optional: check on Amazon',
+    kdpHardDifficulty: 'Hard',
     kdpJumpstartTitle: 'Official KDP Jumpstart curriculum',
     kdpJumpstartMeta: 'Jumpstart curriculum last verified',
     kdpJumpstartGuidelines: 'Content Guidelines',
@@ -296,10 +310,13 @@ export const AMAZON_STRINGS = {
     storyforgeCta: 'StoryForge öffnen (Desktop)',
     storyforgeLaunchpadCta: 'Launchpad öffnen',
     storyforgeLaunchpadHint:
-      'Launchpad = Guides, 6-Schritte-Kurs, Prompts, Disclosure-Helfer (0 Credits). Generierung kostet Credits.',
+      'Launchpad = Tutorials → StoryForge-Pfade, Guides, 6-Schritte-Kurs, Prompts, Disclosure-Helfer (0 Credits). Generierung kostet Credits.',
     storyforgeMobile:
       'StoryForge braucht einen Desktop-Bildschirm (≥1024px). Öffnen Sie ScanLogic am Computer. Auf dem Handy bleibt dieser Hub die KDP-Programm-Hilfe.',
     storyforgePopupBlocked: 'Pop-up blockiert — erlauben Sie Pop-ups oder öffnen Sie StoryForge manuell.',
+    storyforgeOffline:
+      'StoryForge läuft nicht. Im Terminal: npm run storyforge:dev — dann http://127.0.0.1:5180 öffnen und erneut versuchen.',
+    storyforgeOnline: 'StoryForge läuft auf diesem Rechner — „StoryForge öffnen“ funktioniert.',
     playbooksTitle: 'KDP + Merch Playbooks',
     playbooksIntro:
       'Praxis-Deep-Dives für Deutschland: Konto & Assets, Steuer, Merch-Ops (was verkauft), Recherche, Marken-Loop, Merch-Skalierung (Ads/IP/Kanäle) und Meilensteine. Erstellung bleibt in StoryForge (Desktop).',
@@ -349,9 +366,20 @@ export const AMAZON_STRINGS = {
       'Im Playbook „KDP-Anforderungen“: komplette DE-Checkliste (Konto, Steuern ⚠, Dateien, Bilderbuch-Technik).',
     kdpResourcesTitle: 'KDP Lernzentrum',
     kdpResourcesHint:
-      'Offizielles KDP-Jumpstart + Reedsy Self-Publishing 101 + Listing-Optimierung nach Live (Keywords, A+, Reviews, Ads), Help-Bibliothek, Free-Pfad, Kinderbuch-Kurse — mit ⚠ zu Upsells.',
+      'Schwierigsthemen aus offiziellem KDP Help (Print-Mathe, KI-Disclosure, Kategorien) + Jumpstart + Reedsy Self-Publishing 101 + Listing-Optimierung — mit ⚠ zu Upsells. Amazon-Seiten gelten.',
     kdpResourcesMeta: 'KDP-Ressourcen zuletzt geprüft',
     kdpResourcesRec: 'Empfehlung',
+    kdpHardTitle: 'Schwierigste KDP-Themen — einfach erklärt',
+    kdpHardMeta: 'Schwierigsthemen zuletzt geprüft',
+    kdpHardOneSentence: 'In einem Satz',
+    kdpHardWhy: 'Warum Leute stecken bleiben',
+    kdpHardLearn: 'Einfach erklärt',
+    kdpHardDoThis: 'So machen Sie es',
+    kdpHardFormula: 'Einfache Rechnung',
+    kdpHardPitfalls: 'Typische Fehler',
+    kdpHardOrder: 'In dieser Reihenfolge lernen',
+    kdpHardOpenHelp: 'Optional: bei Amazon nachprüfen',
+    kdpHardDifficulty: 'Schwer',
     kdpJumpstartTitle: 'Offizielles KDP-Jumpstart-Curriculum',
     kdpJumpstartMeta: 'Jumpstart-Curriculum zuletzt geprüft',
     kdpJumpstartGuidelines: 'Content Guidelines',

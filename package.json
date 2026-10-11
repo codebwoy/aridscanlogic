@@ -17,6 +17,7 @@
     "preview": "vite preview",
     "storyforge:install": "npm install --prefix storyforge",
     "storyforge:test": "npm run test --prefix storyforge",
+    "storyforge:dev": "npm run dev:studio --prefix storyforge",
     "storyforge:dev:api": "npm run dev:api --prefix storyforge",
     "storyforge:dev:web": "npm run dev:web --prefix storyforge"
   },

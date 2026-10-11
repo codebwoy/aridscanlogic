@@ -5,13 +5,16 @@
  */
 
 import { KDP_JUMPSTART_CONFIG } from '@/lib/bizstart/amazon/kdpJumpstartConfig'
+import { KDP_HARD_TOPICS_CONFIG } from '@/lib/bizstart/amazon/kdpHardTopicsConfig'
 import { REEDSY_LEARNING_CONFIG } from '@/lib/bizstart/amazon/reedsyLearningConfig'
 import { KDP_LISTING_OPTIMIZE_CONFIG } from '@/lib/bizstart/amazon/kdpListingOptimizeConfig'
 
 export const KDP_RESOURCES_CONFIG = {
-  lastVerified: '2026-04-11',
+  lastVerified: '2026-10-11',
   sourceLabel:
-    'Owner-curated path — Amazon KDP Jumpstart + Reedsy Self-Publishing 101 + post-launch listing optimisation, then free/paid third parties (ratings & sales claims are source notes)',
+    'Owner-curated path — official KDP hard topics + Jumpstart + Reedsy Self-Publishing 101 + post-launch listing optimisation, then free/paid third parties (ratings & sales claims are source notes)',
+  /** Hardest official Help concepts (print math, AI disclosure, categories, Select…) */
+  hardTopics: KDP_HARD_TOPICS_CONFIG,
   /** Official Jumpstart curriculum (rich learning centre core) */
   jumpstart: KDP_JUMPSTART_CONFIG,
   /** Reedsy Learning — Self-Publishing 101 + related free courses */
@@ -23,8 +26,8 @@ export const KDP_RESOURCES_CONFIG = {
     de: 'Nicht mit Amazon oder Kursanbietern verbunden. Ratings, „verified“-Zahlen und Verlags-Verkaufsansprüche sind Quellen-Notizen — vor Kauf auf der Plattform prüfen. Upsells kritisch sehen. Offizielle Amazon-Seiten gelten bei abweichendem Wortlaut.',
   },
   recommendation: {
-    en: 'Start free: (1) KDP Jumpstart (2) Reedsy Self-Publishing 101 study modules (3) Picture Book course. After Live: use the listing optimisation playbook (keywords → A+ → reviews → short ads). Paid Udemy only after a draft concept and demand check.',
-    de: 'Zuerst kostenlos: (1) KDP Jumpstart (2) Reedsy Self-Publishing-101-Studienmodule (3) Bilderbuch-Kurs. Nach Live: Listing-Optimierungs-Playbook (Keywords → A+ → Reviews → kurze Ads). Bezahlte Udemy erst nach Konzept und Nachfrage-Check.',
+    en: 'Start free: (1) KDP Hard Topics — print royalty math, AI disclosure, categories (2) KDP Jumpstart chapters 1–6 (3) Reedsy Self-Publishing 101. After Live: listing optimisation playbook. Always verify numbers in the official print/royalty calculator. Paid Udemy only after a draft concept and demand check.',
+    de: 'Zuerst kostenlos: (1) KDP-Schwierigsthemen — Print-Royalty-Mathe, KI-Disclosure, Kategorien (2) KDP-Jumpstart Kapitel 1–6 (3) Reedsy Self-Publishing 101. Nach Live: Listing-Optimierungs-Playbook. Zahlen immer im offiziellen Print-/Royalty-Rechner prüfen. Bezahlte Udemy erst nach Konzept und Nachfrage-Check.',
   },
   /** Part 1 — paid courses (ratings are as-of source notes) */
   paidCourses: [
@@ -157,6 +160,20 @@ export const KDP_RESOURCES_CONFIG = {
   freePath: [
     {
       order: 1,
+      name: {
+        en: 'KDP Hard Topics (in this app)',
+        de: 'KDP-Schwierigsthemen (in dieser App)',
+      },
+      why: {
+        en: 'Master the concepts that break publishers: print 50%/60% − cost, eBook VAT/delivery, AI disclosure, categories/reading age, Select/KU, trim/bleed, tax. Distilled from official Help with live links.',
+        de: 'Die Konzepte, an denen Publisher scheitern: Print 50%/60% − Kosten, E-Book MwSt./Delivery, KI-Disclosure, Kategorien/Lesealter, Select/KU, Trim/Bleed, Steuern. Destilliert aus offiziellem Help mit Live-Links.',
+      },
+      cost: { en: 'Free (in Hub)', de: 'Kostenlos (im Hub)' },
+      url: 'https://kdp.amazon.com/en_US/help/topic/GSQF43YAMUPFTMSP',
+      urlLabel: 'Open calculator (official)',
+    },
+    {
+      order: 2,
       name: { en: 'Amazon KDP Jumpstart', de: 'Amazon KDP Jumpstart' },
       why: {
         en: 'Official beginner walkthrough: account, manuscript, cover, title setup, publishing, review, promotion, payment — and content guidelines before upload.',
@@ -167,18 +184,18 @@ export const KDP_RESOURCES_CONFIG = {
       urlLabel: 'KDP Jumpstart',
     },
     {
-      order: 2,
+      order: 3,
       name: { en: 'KDP Content Guidelines', de: 'KDP Content Guidelines' },
       why: {
-        en: 'Read before upload — applies to title, cover, description, and interior. Required companion to Jumpstart.',
-        de: 'Vor Upload lesen — gilt für Titel, Cover, Beschreibung und Innenteil. Pflicht-Begleiter zu Jumpstart.',
+        en: 'Read before upload — applies to title, cover, description, and interior (incl. AI-generated content rules). Required companion to Jumpstart.',
+        de: 'Vor Upload lesen — gilt für Titel, Cover, Beschreibung und Innenteil (inkl. KI-Regeln). Pflicht-Begleiter zu Jumpstart.',
       },
       cost: { en: 'Free', de: 'Kostenlos' },
       url: 'https://kdp.amazon.com/en_US/help/topic/G200672390',
       urlLabel: 'Content Guidelines',
     },
     {
-      order: 3,
+      order: 4,
       name: { en: 'Amazon KDP Help Center', de: 'Amazon KDP Help Center' },
       why: {
         en: 'Reference manual for formatting, print specs, royalties, tax details, and troubleshooting.',
@@ -189,7 +206,7 @@ export const KDP_RESOURCES_CONFIG = {
       urlLabel: 'KDP Help',
     },
     {
-      order: 4,
+      order: 5,
       name: { en: 'Kindlepreneur', de: 'Kindlepreneur' },
       why: {
         en: 'Strong free library for Amazon SEO, keywords, categories, descriptions, launches, and ads; often includes a free Amazon Ads intro.',
@@ -204,7 +221,7 @@ export const KDP_RESOURCES_CONFIG = {
       },
     },
     {
-      order: 5,
+      order: 6,
       name: {
         en: 'Reedsy Learning: Self-Publishing 101',
         de: 'Reedsy Learning: Self-Publishing 101',
@@ -222,7 +239,7 @@ export const KDP_RESOURCES_CONFIG = {
       },
     },
     {
-      order: 6,
+      order: 7,
       name: {
         en: 'Self Publishing Titans — free KDP intro course',
         de: 'Self Publishing Titans — kostenloser KDP-Intro-Kurs',
@@ -393,8 +410,8 @@ export const KDP_RESOURCES_CONFIG = {
     {
       days: { en: 'Days 1–7', de: 'Tag 1–7' },
       detail: {
-        en: 'Complete official Jumpstart §§1–3 in this learning centre + Content Guidelines; start Reedsy Self-Publishing 101',
-        de: 'Offizielles Jumpstart §§1–3 in diesem Lernzentrum + Content Guidelines; Reedsy Self-Publishing 101 starten',
+        en: 'Hard Topics (print math + AI disclosure + categories) + Jumpstart §§1–3 + Content Guidelines; start Reedsy Self-Publishing 101',
+        de: 'Schwierigsthemen (Print-Mathe + KI-Disclosure + Kategorien) + Jumpstart §§1–3 + Content Guidelines; Reedsy Self-Publishing 101 starten',
       },
     },
     {

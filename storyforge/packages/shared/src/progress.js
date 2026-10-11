@@ -13,7 +13,7 @@ export function stepIndex(id) {
   return found ? found.index : 0
 }
 
-/** Traceability S1–S32 for Launchpad acceptance UI. */
+/** Traceability S1–S52 for Launchpad acceptance UI. */
 export const TRACEABILITY = [
   { id: 'S1', area: 'Onboarding', status: 'done', note: 'Non-illustrator + consistency problem' },
   { id: 'S2', area: 'Onboarding', status: 'done', note: 'Anchor solution explained' },
@@ -30,6 +30,8 @@ export const TRACEABILITY = [
   { id: 'S13', area: 'Prompts', status: 'done', note: 'Prompt library + apply' },
   { id: 'S14', area: 'Photo niche', status: 'done', note: 'Personalised entry' },
   { id: 'S15', area: 'Photo niche', status: 'done', note: 'Consent + Turbo fallback' },
+  { id: 'S53', area: 'Live image API', status: 'done', note: 'Replicate/fal providers + 2.5× upscale_print' },
+  { id: 'S54', area: 'Cover wrap PDF', status: 'done', note: 'export_cover_pdf finish flow BACK|SPINE|FRONT' },
   { id: 'S16', area: 'Guides', status: 'done', note: 'Back to School + Baby Books' },
   { id: 'S17', area: 'Guides', status: 'done', note: 'Manual market fields' },
   { id: 'S18', area: 'Guides', status: 'done', note: 'Timing + Trends link' },
@@ -48,4 +50,42 @@ export const TRACEABILITY = [
   { id: 'S30', area: 'Course', status: 'done', note: 'KDP upload checklist' },
   { id: 'S31', area: 'Course', status: 'done', note: 'Post-launch' },
   { id: 'S32', area: 'Books panel', status: 'done', note: 'Editable reading slots' },
+  { id: 'S33', area: 'Tutorials', status: 'done', note: 'Consistency masterclass mapped from public tutorials' },
+  { id: 'S34', area: 'Tutorials', status: 'done', note: 'Crayon / drawing → character recipe' },
+  { id: 'S35', area: 'Tutorials', status: 'done', note: 'Personalised bedtime recipe' },
+  { id: 'S36', area: 'Tutorials', status: 'done', note: 'Editor Pro new-setting-from-anchor rule' },
+  { id: 'S37', area: 'Tutorials', status: 'done', note: 'Multi-character masterclass recipe' },
+  { id: 'S38', area: 'Tutorials', status: 'done', note: 'KDP print-ready studio path (Canvas)' },
+  { id: 'S39', area: 'Craft', status: 'done', note: 'Storytelling Compass (5 steps)' },
+  { id: 'S40', area: 'Craft', status: 'done', note: 'Character DNA template + identity prompts' },
+  { id: 'S41', area: 'Craft', status: 'done', note: 'Art style lock catalogue' },
+  { id: 'S42', area: 'Craft', status: 'done', note: 'Children’s cover design rules' },
+  { id: 'S43', area: 'Craft', status: 'done', note: 'Age-band word counts' },
+  { id: 'S44', area: 'Craft', status: 'done', note: '7-day idea → launch skeleton' },
+  { id: 'S45', area: 'Craft', status: 'done', note: 'Multi-character identity→position→action' },
+  { id: 'S46', area: 'Craft', status: 'done', note: 'Expression / emotion arc' },
+  { id: 'S47', area: 'Craft', status: 'done', note: 'Two-pass continuity QC' },
+  { id: 'S48', area: 'Craft', status: 'done', note: '7 character-design principles' },
+  { id: 'S49', area: 'Craft', status: 'done', note: 'Camera / body / age cues' },
+  { id: 'S50', area: 'Craft', status: 'done', note: 'Coloring pages from story art' },
+  { id: 'S51', area: 'Craft', status: 'done', note: 'KDP earnings realism ⚠' },
+  { id: 'S52', area: 'Craft', status: 'done', note: 'Action / expression / outfit editor playbooks' },
+  {
+    id: 'S53',
+    area: 'Video',
+    status: 'done',
+    note: 'scene_to_video from pinned still via fal image-to-video',
+  },
+  {
+    id: 'S55',
+    area: 'Export',
+    status: 'done',
+    note: 'Print-ready PDFs + signed downloads + export_source_zip KDP pack',
+  },
+  {
+    id: 'S56',
+    area: 'fal models',
+    status: 'done',
+    note: 'Full fal catalogue pickers (FLUX/Nano/Kontext/Kling Pro/Veo/Seedance)',
+  },
 ]

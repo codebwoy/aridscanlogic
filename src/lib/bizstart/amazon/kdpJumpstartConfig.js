@@ -5,7 +5,7 @@
  */
 
 export const KDP_JUMPSTART_CONFIG = {
-  lastVerified: '2026-04-11',
+  lastVerified: '2026-10-11',
   sourceLabel:
     'Distilled from Amazon KDP Jumpstart + linked Help topics — not a substitute for official pages',
   hub: {
@@ -223,6 +223,9 @@ export const KDP_JUMPSTART_CONFIG = {
           'Upload from a computer (desktop/laptop) — mobile upload not recommended by KDP',
           'If cover has no barcode, KDP can place one — keep that zone clear',
           '4.3 Rights & Pricing: IP rights, territories, list price, royalties; eBook-only KDP Select (90-day enrolment option)',
+          'Print royalties are (50% or 60% × list price) − printing cost — rate depends on list price + marketplace (see Hard Topics + Paperback Royalty Help)',
+          'eBook 70% deducts VAT + delivery costs; always open the Digital Book Pricing Page before locking prices',
+          'Disclose AI-generated text/images/translations in Content Guidelines terms when publishing/republishing',
           'Low-content books: free KDP ISBN rules differ — check low-content Help if relevant',
         ],
         de: [
@@ -233,6 +236,9 @@ export const KDP_JUMPSTART_CONFIG = {
           'Upload vom Computer — Mobile laut KDP nicht empfohlen',
           'Ohne eigenen Barcode setzt KDP einen — Zone freilassen',
           '4.3 Rights & Pricing: Rechte, Territorien, Listenpreis, Royalties; nur E-Book: KDP Select (90 Tage optional)',
+          'Print-Royalties = (50 % oder 60 % × Listenpreis) − Druckkosten — Satz hängt von Preis + Marktplatz ab (Schwierigsthemen + Paperback-Royalty-Help)',
+          'E-Book 70 % zieht MwSt. + Delivery ab; vor Preisentscheidung Digital Book Pricing Page öffnen',
+          'KI-generierte Texte/Bilder/Übersetzungen laut Content Guidelines beim Publish/Republish angeben',
           'Low-Content: andere ISBN-Regeln — Help prüfen falls relevant',
         ],
       },
@@ -241,13 +247,22 @@ export const KDP_JUMPSTART_CONFIG = {
         { label: 'Create a book', url: 'https://kdp.amazon.com/en_US/help/topic/G202172740' },
         { label: 'Book detail resources', url: 'https://kdp.amazon.com/en_US/help/topic/G200645680' },
         { label: 'Keywords', url: 'https://kdp.amazon.com/en_US/help/topic/G200652310' },
+        { label: 'Categories', url: 'https://kdp.amazon.com/en_US/help/topic/G200652170' },
         { label: 'ISBN & imprint', url: 'https://kdp.amazon.com/en_US/help/topic/G201354010' },
         { label: 'Price your book', url: 'https://kdp.amazon.com/en_US/help/topic/G200649470' },
         {
           label: 'Printing cost & royalty calculator',
-          url: 'https://kdp.amazon.com/en_US/help/topic/G201411300',
+          url: 'https://kdp.amazon.com/en_US/help/topic/GSQF43YAMUPFTMSP',
         },
-        { label: 'KDP Select', url: 'https://kdp.amazon.com/en_US/help/topic/G200634500' },
+        {
+          label: 'Paperback Royalty',
+          url: 'https://kdp.amazon.com/en_US/help/topic/G201834330',
+        },
+        {
+          label: 'Digital Book Pricing',
+          url: 'https://kdp.amazon.com/en_US/help/topic/G200634500',
+        },
+        { label: 'KDP Select', url: 'https://kdp.amazon.com/en_US/help/topic/G200798990' },
         {
           label: 'Link your books together',
           url: 'https://kdp.amazon.com/en_US/help/topic/G200654100',
@@ -408,7 +423,23 @@ export const KDP_JUMPSTART_CONFIG = {
         { label: 'ISBN & imprint', url: 'https://kdp.amazon.com/en_US/help/topic/G201354010' },
         {
           label: 'Printing cost & royalty calculator',
-          url: 'https://kdp.amazon.com/en_US/help/topic/G201411300',
+          url: 'https://kdp.amazon.com/en_US/help/topic/GSQF43YAMUPFTMSP',
+        },
+        {
+          label: 'Paperback Royalty (50%/60%)',
+          url: 'https://kdp.amazon.com/en_US/help/topic/G201834330',
+        },
+        {
+          label: 'eBook Royalties (70%/35%)',
+          url: 'https://kdp.amazon.com/en_US/help/topic/G200644210',
+        },
+        {
+          label: 'KDP Categories',
+          url: 'https://kdp.amazon.com/en_US/help/topic/G200652170',
+        },
+        {
+          label: 'KDP Select',
+          url: 'https://kdp.amazon.com/en_US/help/topic/G200798990',
         },
         { label: 'Timelines', url: 'https://kdp.amazon.com/en_US/help/topic/G202173620' },
       ],

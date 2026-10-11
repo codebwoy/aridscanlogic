@@ -1,7 +1,7 @@
 import { ExternalLink, ShieldAlert } from 'lucide-react'
 import { KDP_CONFIG } from '@/lib/bizstart/amazon/kdpConfig'
 import { amazonT } from '@/lib/bizstart/amazon/i18n'
-import { launchStoryforgeDesktop } from '@/lib/storyforge/launch'
+import { launchStoryforgeDesktop, notifyStoryforgeLaunchResult } from '@/lib/storyforge/launch'
 import { toast } from 'sonner'
 
 /**
@@ -11,15 +11,13 @@ export default function KdpConfigPanel({ lang = 'en', onOpenStoryforge }) {
   const cfg = KDP_CONFIG
   const L = (obj) => obj?.[lang] || obj?.en || ''
 
-  function openLaunchpad() {
+  async function openLaunchpad() {
     if (onOpenStoryforge) {
-      onOpenStoryforge('launchpad')
+      await onOpenStoryforge('launchpad')
       return
     }
-    const result = launchStoryforgeDesktop({ view: 'launchpad' })
-    if (result.opened) return
-    if (result.reason === 'mobile') toast.message(amazonT(lang, 'storyforgeMobile'))
-    else toast.error(amazonT(lang, 'storyforgePopupBlocked'))
+    const result = await launchStoryforgeDesktop({ view: 'launchpad' })
+    notifyStoryforgeLaunchResult((key) => amazonT(lang, key), result, toast)
   }
 
   return (

@@ -21,6 +21,8 @@ export const CREDIT_COSTS = {
   editor_background: 1,
   editor_erase: 1,
   editor_reframe: 1,
+  /** Image-to-video from an approved pinned scene still (fal Kling etc.) */
+  scene_to_video: 12,
   upscale_print: 2,
   consistency_rescore: 0,
   story_text: 0,
@@ -33,6 +35,7 @@ export const CREDIT_COSTS = {
   launchpad_course: 0,
   launchpad_prompt_library: 0,
   launchpad_disclosure: 0,
+  launchpad_craft: 0,
 }
 
 export const FREE_ACTIONS = new Set(

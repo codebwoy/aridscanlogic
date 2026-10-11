@@ -50,6 +50,8 @@ describe('coverWrapPixels', () => {
     const wrap = coverWrapPixels('sq_85', 32, 'white')
     assert.ok(wrap.widthPx > page.widthPx)
     assert.equal(wrap.heightPx, page.heightPx)
+    assert.ok(wrap.back && wrap.spine && wrap.front)
+    assert.ok(wrap.barcode?.widthIn >= 2)
   })
 })
 

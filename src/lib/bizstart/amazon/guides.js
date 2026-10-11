@@ -33,28 +33,34 @@ export const AMAZON_GUIDES = [
       de: 'KDP-Anforderungen — Start in Deutschland',
     },
     summary: {
-      en: 'Complete practical checklist to start Amazon KDP from Germany: account, tax (critical), book assets, and picture-book technical files. Pair with the KDP learning centre Jumpstart curriculum (official Amazon 6-step guide). Config tables below include ⚠ verification notes.',
-      de: 'Praktische Checkliste für Amazon KDP aus Deutschland: Konto, Steuern (kritisch), Buch-Assets und Bilderbuch-Technik. Dazu das KDP-Lernzentrum Jumpstart-Curriculum (offizieller Amazon-6-Schritte-Guide). Tabellen unten mit ⚠ Prüfen-Hinweisen.',
+      en: 'Complete practical checklist to start Amazon KDP from Germany: account, tax (critical), book assets, and picture-book technical files. Pair with the KDP learning centre: Hard Topics (print math, AI disclosure, categories) + Jumpstart (official Amazon 6-step guide). Config tables below include ⚠ verification notes.',
+      de: 'Praktische Checkliste für Amazon KDP aus Deutschland: Konto, Steuern (kritisch), Buch-Assets und Bilderbuch-Technik. Dazu das KDP-Lernzentrum: Schwierigsthemen (Print-Mathe, KI-Disclosure, Kategorien) + Jumpstart (offizieller Amazon-6-Schritte-Guide). Tabellen unten mit ⚠ Prüfen-Hinweisen.',
     },
     sections: [
       {
         heading: {
-          en: '0. Official learning path (KDP Jumpstart)',
-          de: '0. Offizieller Lernpfad (KDP Jumpstart)',
+          en: '0. Official learning path (Hard Topics + Jumpstart)',
+          de: '0. Offizieller Lernpfad (Schwierigsthemen + Jumpstart)',
         },
         bullets: {
           en: [
-            'Study Amazon’s Jumpstart before + Create on the Bookshelf: (1) account (2) manuscript (3) cover (4) title setup (5) publishing & review (6) promote & get paid',
-            'Read Content Guidelines first — they apply to title, cover, description, and interior',
-            'Open the full chapter notes + Help links in Amazon Hub → KDP learning centre',
+            'First: Amazon Hub → KDP learning centre → Hard Topics (print 50%/60% − cost, eBook VAT/delivery, AI disclosure, categories/reading age, Select/KU, trim/bleed, tax)',
+            'Then Jumpstart before + Create: (1) account (2) manuscript (3) cover (4) title setup (5) publishing & review (6) promote & get paid',
+            'Read Content Guidelines first — they apply to title, cover, description, and interior (including AI-generated images/text/translations)',
+            'Verify every price with the official Printing Cost & Royalty Calculator — never hardcode blog “60%” maths',
           ],
           de: [
-            'Amazons Jumpstart vor + Create auf dem Bookshelf: (1) Konto (2) Manuskript (3) Cover (4) Titel-Setup (5) Publish & Review (6) Promotion & Auszahlung',
-            'Zuerst Content Guidelines — gelten für Titel, Cover, Beschreibung und Innenteil',
-            'Vollständige Kapitel-Notizen + Help-Links im Amazon Hub → KDP-Lernzentrum',
+            'Zuerst: Amazon Hub → KDP-Lernzentrum → Schwierigsthemen (Print 50%/60% − Kosten, E-Book MwSt./Delivery, KI-Disclosure, Kategorien/Lesealter, Select/KU, Trim/Bleed, Steuern)',
+            'Dann Jumpstart vor + Create: (1) Konto (2) Manuskript (3) Cover (4) Titel-Setup (5) Publish & Review (6) Promotion & Auszahlung',
+            'Zuerst Content Guidelines — gelten für Titel, Cover, Beschreibung und Innenteil (inkl. KI-generierte Bilder/Text/Übersetzungen)',
+            'Jeden Preis mit dem offiziellen Printing Cost & Royalty Calculator prüfen — keine Blog-„60 %-Mathe“ fest verdrahten',
           ],
         },
         links: [
+          {
+            label: 'KDP home',
+            url: 'https://kdp.amazon.com/',
+          },
           {
             label: 'KDP Jumpstart',
             url: 'https://kdp.amazon.com/en_US/help/topic/G202187740',
@@ -62,6 +68,14 @@ export const AMAZON_GUIDES = [
           {
             label: 'Content Guidelines',
             url: 'https://kdp.amazon.com/en_US/help/topic/G200672390',
+          },
+          {
+            label: 'Print & royalty calculator',
+            url: 'https://kdp.amazon.com/en_US/help/topic/GSQF43YAMUPFTMSP',
+          },
+          {
+            label: 'Paperback Royalty',
+            url: 'https://kdp.amazon.com/en_US/help/topic/G201834330',
           },
         ],
       },
@@ -212,30 +226,37 @@ export const AMAZON_GUIDES = [
       de: 'Ressourcen für den KDP-Start',
     },
     summary: {
-      en: 'Best free starting path (Jumpstart → Help → Kindlepreneur → Reedsy), children’s-book resources after KDP basics, one optional paid course, what to learn first, and a realistic 30-day plan. Prefer free first — treat upsells critically.',
-      de: 'Bester Free-Pfad (Jumpstart → Help → Kindlepreneur → Reedsy), Kinderbuch-Ressourcen nach KDP-Basics, optional ein bezahlter Kurs, Lernreihenfolge und realistischer 30-Tage-Plan. Zuerst kostenlos — Upsells kritisch prüfen.',
+      en: 'Best free starting path (Hard Topics → Jumpstart → Help → Kindlepreneur → Reedsy), children’s-book resources after KDP basics, one optional paid course, what to learn first, and a realistic 30-day plan. Prefer free first — treat upsells critically.',
+      de: 'Bester Free-Pfad (Schwierigsthemen → Jumpstart → Help → Kindlepreneur → Reedsy), Kinderbuch-Ressourcen nach KDP-Basics, optional ein bezahlter Kurs, Lernreihenfolge und realistischer 30-Tage-Plan. Zuerst kostenlos — Upsells kritisch prüfen.',
     },
     sections: [
       {
         heading: { en: 'Best free starting path', de: 'Bester kostenloser Einstieg' },
         bullets: {
           en: [
+            '0) Amazon Hub → KDP learning centre → Hard Topics (print 50%/60% − cost, eBook VAT/delivery, AI disclosure, categories)',
             '1) Amazon KDP Jumpstart — official account → publish → payment walkthrough + content guidelines',
-            '2) KDP Help Center — formatting, print specs, royalties, tax troubleshooting',
+            '2) KDP Help Center — formatting, print specs, royalties, tax troubleshooting + live calculator',
             '3) Kindlepreneur — free SEO/keywords/categories/descriptions/ads library',
             '4) Reedsy Self-Publishing 101 — free ~10-day email course on craft + distribution basics',
             '5) Self Publishing Titans free intro — useful videos; ignore hype and upsells',
           ],
           de: [
+            '0) Amazon Hub → KDP-Lernzentrum → Schwierigsthemen (Print 50%/60% − Kosten, E-Book MwSt./Delivery, KI-Disclosure, Kategorien)',
             '1) Amazon KDP Jumpstart — offizieller Weg Konto → Publish → Zahlung + Content-Guidelines',
-            '2) KDP Help Center — Formatierung, Print-Specs, Royalties, Steuer-Troubleshooting',
+            '2) KDP Help Center — Formatierung, Print-Specs, Royalties, Steuer-Troubleshooting + Live-Rechner',
             '3) Kindlepreneur — kostenlose SEO-/Keyword-/Kategorie-/Ads-Bibliothek',
             '4) Reedsy Self-Publishing 101 — ca. 10-Tage-E-Mail-Kurs zu Craft + Distribution',
             '5) Self Publishing Titans Free-Intro — nützliche Videos; Hype und Upsells ignorieren',
           ],
         },
         links: [
-          { label: 'KDP Jumpstart', url: 'https://kdp.amazon.com/en_US/help/topic/G200672390' },
+          { label: 'KDP home', url: 'https://kdp.amazon.com/' },
+          { label: 'KDP Jumpstart', url: 'https://kdp.amazon.com/en_US/help/topic/G202187740' },
+          {
+            label: 'Print & royalty calculator',
+            url: 'https://kdp.amazon.com/en_US/help/topic/GSQF43YAMUPFTMSP',
+          },
           { label: 'KDP Help', url: 'https://kdp.amazon.com/help' },
           { label: 'Kindlepreneur', url: 'https://kindlepreneur.com/' },
           { label: 'Reedsy Learning', url: 'https://reedsy.com/learning' },
@@ -1448,14 +1469,14 @@ export const AMAZON_GUIDES = [
           en: [
             'Apply to Merch on Demand',
             'Finish character + emotional core for book 1',
-            'Open StoryForge Launchpad course on desktop (≥1024px)',
+            'Open StoryForge Launchpad Tutorials tab on desktop (≥1024px) — map videos to Character Turbo / Editor Pro / Canvas',
             'Run one Amazon.de autocomplete research session before designing Merch',
             'Draft your first 10 Merch slots from the four design types',
           ],
           de: [
             'Merch on Demand beantragen',
             'Figur + emotionaler Kern für Buch 1 fertigstellen',
-            'StoryForge-Launchpad-Kurs am Desktop öffnen (≥1024px)',
+            'StoryForge-Launchpad-Tab Tutorials am Desktop öffnen (≥1024px) — Videos auf Character Turbo / Editor Pro / Canvas mappen',
             'Eine Amazon.de-Autocomplete-Recherche vor dem ersten Merch-Design',
             'Erste 10 Merch-Slots aus den vier Design-Typen skizzieren',
           ],

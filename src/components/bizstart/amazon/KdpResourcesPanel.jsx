@@ -1,7 +1,7 @@
 import { ExternalLink, ShieldAlert } from 'lucide-react'
 import { KDP_RESOURCES_CONFIG } from '@/lib/bizstart/amazon/kdpResourcesConfig'
 import { amazonT } from '@/lib/bizstart/amazon/i18n'
-import { launchStoryforgeDesktop } from '@/lib/storyforge/launch'
+import { launchStoryforgeDesktop, notifyStoryforgeLaunchResult } from '@/lib/storyforge/launch'
 import { toast } from 'sonner'
 
 /** Free/paid learning path + 30-day plan for starting KDP (children’s books). */
@@ -9,15 +9,13 @@ export default function KdpResourcesPanel({ lang = 'en', onOpenStoryforge }) {
   const cfg = KDP_RESOURCES_CONFIG
   const L = (obj) => obj?.[lang] || obj?.en || ''
 
-  function openStudio() {
+  async function openStudio() {
     if (onOpenStoryforge) {
-      onOpenStoryforge('launchpad')
+      await onOpenStoryforge('launchpad')
       return
     }
-    const result = launchStoryforgeDesktop({ view: 'launchpad' })
-    if (result.opened) return
-    if (result.reason === 'mobile') toast.message(amazonT(lang, 'storyforgeMobile'))
-    else toast.error(amazonT(lang, 'storyforgePopupBlocked'))
+    const result = await launchStoryforgeDesktop({ view: 'launchpad' })
+    notifyStoryforgeLaunchResult((key) => amazonT(lang, key), result, toast)
   }
 
   return (
@@ -35,6 +33,8 @@ export default function KdpResourcesPanel({ lang = 'en', onOpenStoryforge }) {
       <ConfigBlock title={amazonT(lang, 'kdpResourcesRec')}>
         <p className="text-xs leading-relaxed text-slate-300">{L(cfg.recommendation)}</p>
       </ConfigBlock>
+
+      {cfg.hardTopics ? <HardTopicsCurriculum lang={lang} hard={cfg.hardTopics} /> : null}
 
       {cfg.jumpstart ? <JumpstartCurriculum lang={lang} jumpstart={cfg.jumpstart} /> : null}
 
@@ -804,6 +804,147 @@ function ReedsyCurriculum({ lang, reedsy }) {
               {amazonT(lang, 'kdpReedsyOpenCourse')}
             </a>
           </div>
+        ))}
+      </div>
+    </ConfigBlock>
+  )
+}
+
+function HardTopicsCurriculum({ lang, hard }) {
+  const L = (obj) => obj?.[lang] || obj?.en || ''
+  const hub = hard.hub
+
+  return (
+    <ConfigBlock title={amazonT(lang, 'kdpHardTitle')}>
+      <p className="text-[11px] leading-relaxed text-slate-500">
+        {amazonT(lang, 'kdpHardMeta')} · {hard.lastVerified}
+        <span className="block text-slate-600">{hard.sourceLabel}</span>
+      </p>
+      <p className="text-xs leading-relaxed text-slate-300">{L(hub.intro)}</p>
+      <p className="text-xs leading-relaxed text-amber-100/85">{L(hard.whyThisExists)}</p>
+
+      <div className="flex flex-wrap gap-2">
+        {(hard.quickLinks || []).map((link) => (
+          <a
+            key={`hard-ql-${link.url}-${link.label}`}
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-brand-500/40 bg-brand-950/40 px-3 py-2 text-xs font-semibold text-brand-100"
+          >
+            <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+            {link.label}
+          </a>
+        ))}
+      </div>
+
+      <div className="space-y-2 pt-1">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          {amazonT(lang, 'kdpHardOrder')}
+        </p>
+        <ol className="list-decimal space-y-1 pl-4 text-xs leading-relaxed text-slate-300">
+          {(hard.studyOrder[lang] || hard.studyOrder.en).map((line) => (
+            <li key={line}>{line.replace(/^\d+\)\s*/, '')}</li>
+          ))}
+        </ol>
+      </div>
+
+      <div className="space-y-3 pt-1">
+        {hard.topics.map((topic) => (
+          <details
+            key={topic.id}
+            className="rounded-lg border border-slate-800/80 bg-slate-900/40 open:bg-slate-900/60"
+          >
+            <summary className="flex min-h-[48px] cursor-pointer list-none items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-100 [&::-webkit-details-marker]:hidden">
+              <span className="flex h-6 shrink-0 items-center justify-center rounded-md bg-amber-600/30 px-1.5 text-[10px] text-amber-100">
+                {amazonT(lang, 'kdpHardDifficulty')} {topic.difficulty}/5
+              </span>
+              <span className="min-w-0 flex-1">{L(topic.title)}</span>
+            </summary>
+            <div className="space-y-2 border-t border-slate-800/80 px-3 py-3">
+              {topic.inOneSentence ? (
+                <>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    {amazonT(lang, 'kdpHardOneSentence')}
+                  </p>
+                  <p className="rounded-lg border border-brand-500/25 bg-brand-950/30 px-2.5 py-2 text-xs font-medium leading-relaxed text-slate-100">
+                    {L(topic.inOneSentence)}
+                  </p>
+                </>
+              ) : null}
+
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                {amazonT(lang, 'kdpHardWhy')}
+              </p>
+              <p className="text-xs leading-relaxed text-slate-300">{L(topic.whyHard)}</p>
+
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                {amazonT(lang, 'kdpHardLearn')}
+              </p>
+              <ul className="list-disc space-y-1 pl-4 text-xs leading-relaxed text-slate-300">
+                {(topic.learn[lang] || topic.learn.en).map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+
+              {topic.doThis ? (
+                <>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    {amazonT(lang, 'kdpHardDoThis')}
+                  </p>
+                  <ol className="list-decimal space-y-1 pl-4 text-xs font-medium leading-relaxed text-slate-200">
+                    {(topic.doThis[lang] || topic.doThis.en).map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ol>
+                </>
+              ) : null}
+
+              {(topic.formulas[lang] || topic.formulas.en)?.length ? (
+                <>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    {amazonT(lang, 'kdpHardFormula')}
+                  </p>
+                  <ul className="list-disc space-y-1 pl-4 text-xs leading-relaxed text-slate-200">
+                    {(topic.formulas[lang] || topic.formulas.en).map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                </>
+              ) : null}
+
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                {amazonT(lang, 'kdpHardPitfalls')}
+              </p>
+              <ul className="list-disc space-y-1 pl-4 text-xs leading-relaxed text-slate-300">
+                {(topic.pitfalls[lang] || topic.pitfalls.en).map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+
+              {topic.note ? (
+                <p className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-2.5 py-1.5 text-[11px] leading-relaxed text-amber-100/90">
+                  {L(topic.note)}
+                </p>
+              ) : null}
+
+              <p className="pt-1 text-[11px] text-slate-500">{amazonT(lang, 'kdpHardOpenHelp')}</p>
+              <div className="flex flex-wrap gap-2">
+                {topic.links.map((link) => (
+                  <a
+                    key={`${topic.id}-${link.url}-${link.label}`}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-slate-600 bg-slate-900/50 px-3 py-2 text-xs font-medium text-brand-200"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </details>
         ))}
       </div>
     </ConfigBlock>

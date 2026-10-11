@@ -28,6 +28,10 @@ export class ImageProvider {
   async upscale(_input) {
     throw new Error('Not implemented')
   }
+  /** Image-to-video from an approved still (pinned scene / page). */
+  async generateVideo(_input) {
+    throw new Error('Not implemented')
+  }
   async removeBackground(_input) {
     throw new Error('Not implemented')
   }

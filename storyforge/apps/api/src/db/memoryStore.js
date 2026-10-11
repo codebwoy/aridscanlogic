@@ -1,9 +1,23 @@
 import { randomUUID } from 'node:crypto'
 import { config } from '../config.js'
 import { CONFIG_VALUES, configMap } from '@storyforge/shared'
+import {
+  resolveDataPath,
+  loadPersistedState,
+  createDebouncedSaver,
+} from './persist.js'
 
-/** Dev / fallback store when DATABASE_URL is unset. Not for multi-instance production. */
-export function createMemoryStore() {
+/** Dev / fallback store when DATABASE_URL is unset. Persists locally for operational use. */
+export function createMemoryStore(options = {}) {
+  const envPersist = process.env.STORYFORGE_PERSIST
+  const persistEnabled =
+    options.persist === true ||
+    (options.persist !== false &&
+      !config.isProd &&
+      envPersist !== '0' &&
+      envPersist !== 'false' &&
+      !process.env.NODE_TEST_CONTEXT)
+  const persistPath = resolveDataPath(options.persistPath || process.env.STORYFORGE_DATA_PATH)
   const users = new Map()
   const ledger = []
   const projects = new Map()
@@ -14,6 +28,43 @@ export function createMemoryStore() {
   const disclosureByProject = new Map()
   /** @type {Map<string, object>} key = `${userId}:${projectId}` */
   const photoConsents = new Map()
+
+  function snapshot() {
+    return {
+      version: 1,
+      savedAt: new Date().toISOString(),
+      users: [...users.values()],
+      ledger: ledger.slice(-2000),
+      projects: [...projects.values()],
+      // Keep recent jobs only (outputs can be large)
+      jobs: [...jobs.values()].slice(-80),
+      configOverrides: [...configOverrides.entries()],
+      disclosures: [...disclosureByProject.entries()],
+      photoConsents: [...photoConsents.entries()],
+    }
+  }
+
+  const scheduleSave = persistEnabled
+    ? createDebouncedSaver(persistPath, snapshot)
+    : () => {}
+
+  if (persistEnabled) {
+    const loaded = loadPersistedState(persistPath)
+    if (loaded) {
+      for (const u of loaded.users || []) users.set(u.id, u)
+      for (const e of loaded.ledger || []) ledger.push(e)
+      for (const p of loaded.projects || []) projects.set(p.id, p)
+      for (const j of loaded.jobs || []) jobs.set(j.id, j)
+      for (const [k, v] of loaded.configOverrides || []) configOverrides.set(k, v)
+      for (const [k, v] of loaded.disclosures || []) disclosureByProject.set(k, v)
+      for (const [k, v] of loaded.photoConsents || []) photoConsents.set(k, v)
+      console.info(
+        `[storyforge] restored local state (${users.size} users, ${projects.size} projects) from ${persistPath}`
+      )
+    } else {
+      console.info(`[storyforge] local state file: ${persistPath} (will create on first save)`)
+    }
+  }
 
   function balance(userId) {
     return ledger.filter((e) => e.user_id === userId).reduce((s, e) => s + e.delta, 0)
@@ -41,7 +92,9 @@ export function createMemoryStore() {
     }))
   }
 
-  return {
+  const api = {
+    persistPath: persistEnabled ? persistPath : null,
+
     async ensureUser(externalRef = 'local-dev') {
       for (const u of users.values()) {
         if (u.external_ref === externalRef) return u
@@ -64,6 +117,7 @@ export function createMemoryStore() {
         meta: { never_expires: false, kind: 'trial' },
         created_at: new Date().toISOString(),
       })
+      scheduleSave()
       return user
     },
 
@@ -86,6 +140,7 @@ export function createMemoryStore() {
         created_at: new Date().toISOString(),
       }
       ledger.push(entry)
+      scheduleSave()
       return entry
     },
 
@@ -124,6 +179,7 @@ export function createMemoryStore() {
         updated_at: new Date().toISOString(),
       }
       projects.set(project.id, project)
+      scheduleSave()
       return project
     },
 
@@ -187,6 +243,7 @@ export function createMemoryStore() {
         }
       }
       p.updated_at = new Date().toISOString()
+      scheduleSave()
       return p
     },
 
@@ -223,6 +280,7 @@ export function createMemoryStore() {
         }
       }
       p.updated_at = new Date().toISOString()
+      scheduleSave()
       return p
     },
 
@@ -233,6 +291,7 @@ export function createMemoryStore() {
       if (!page) return null
       Object.assign(page, patch)
       p.updated_at = new Date().toISOString()
+      scheduleSave()
       return page
     },
 
@@ -248,6 +307,7 @@ export function createMemoryStore() {
       disclosureByProject.set(projectId, row)
       p.meta = { ...p.meta, disclosure: row }
       p.updated_at = new Date().toISOString()
+      scheduleSave()
       return row
     },
 
@@ -273,6 +333,7 @@ export function createMemoryStore() {
       photoConsents.set(`${userId}:${projectId}`, row)
       p.meta = { ...p.meta, photoConsent: row }
       p.updated_at = new Date().toISOString()
+      scheduleSave()
       return row
     },
 
@@ -314,6 +375,7 @@ export function createMemoryStore() {
           patch.verified_note ?? configOverrides.get(key)?.verified_note ?? base.verified_note,
       }
       configOverrides.set(key, next)
+      scheduleSave()
       return { key, ...base, ...next }
     },
 
@@ -333,6 +395,7 @@ export function createMemoryStore() {
         updated_at: new Date().toISOString(),
       }
       jobs.set(job.id, job)
+      scheduleSave()
       return job
     },
 
@@ -340,6 +403,7 @@ export function createMemoryStore() {
       const job = jobs.get(jobId)
       if (!job) return null
       Object.assign(job, patch, { updated_at: new Date().toISOString() })
+      scheduleSave()
       return job
     },
 
@@ -349,4 +413,6 @@ export function createMemoryStore() {
       return job
     },
   }
+
+  return api
 }

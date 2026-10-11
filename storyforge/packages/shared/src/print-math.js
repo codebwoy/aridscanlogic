@@ -45,23 +45,107 @@ export function spineWidthPixels(pageCount, paperTypeId, dpi = PUBLISHING_SPECS.
 }
 
 /**
- * Cover wrap width = back + spine + front, each with bleed on outer edges.
- * Simplified: (trimW + bleed)*2 + spine, height = trimH + 2*bleed.
+ * Cover wrap = back + spine + front with outer bleed.
+ * Flat layout (left→right): BACK | SPINE | FRONT.
+ * Width = 2×(trimW + bleed) + spine; height = trimH + 2×bleed.
+ *
+ * ⚠ Spine inches/page are owner-config placeholders — re-check KDP cover calculator before upload.
  */
 export function coverWrapPixels(trimId, pageCount, paperTypeId) {
+  return coverWrapLayout(trimId, pageCount, paperTypeId)
+}
+
+/**
+ * Full cover-wrap geometry for PDF export + Studio guides.
+ */
+export function coverWrapLayout(trimId, pageCount, paperTypeId = 'white') {
   const page = requiredBleedPixels(trimId)
-  const spinePx = spineWidthPixels(pageCount, paperTypeId, page.dpi)
   const trim = getTrimSize(trimId)
+  if (!trim) throw new Error(`Unknown trim size: ${trimId}`)
+  const paper = getPaperType(paperTypeId) || getPaperType('white')
   const bleed = PUBLISHING_SPECS.bleedInches
   const d = page.dpi
+  const spineIn = spineWidthInches(pageCount, paper.id)
+  const spinePx = Math.ceil(spineIn * d)
   // Front and back each: trim + outer bleed; spine has no horizontal bleed double-count
   const panelW = Math.ceil((trim.width + bleed) * d)
+  const widthPx = panelW * 2 + spinePx
+  const heightPx = page.heightPx
+  const widthIn = widthPx / d
+  const heightIn = heightPx / d
+  const panelWIn = panelW / d
+  const spineInExact = spineIn
+
+  // Positions in inches from left / bottom (PDF coords use bottom-left origin)
+  const back = {
+    xIn: 0,
+    widthIn: panelWIn,
+    /** Live area (inside bleed) for back cover art/text */
+    live: {
+      xIn: bleed,
+      yIn: bleed,
+      widthIn: trim.width,
+      heightIn: trim.height,
+    },
+  }
+  const spine = {
+    xIn: panelWIn,
+    widthIn: spineInExact,
+    live: {
+      xIn: panelWIn,
+      yIn: bleed,
+      widthIn: spineInExact,
+      heightIn: trim.height,
+    },
+  }
+  const front = {
+    xIn: panelWIn + spineInExact,
+    widthIn: panelWIn,
+    live: {
+      xIn: panelWIn + spineInExact,
+      yIn: bleed,
+      widthIn: trim.width,
+      heightIn: trim.height,
+    },
+  }
+
+  /** KDP barcode reserve on back (approx) — keep clear of art/text */
+  const barcode = {
+    widthIn: 2,
+    heightIn: 1.2,
+    /** inset from back live right / bottom */
+    insetRightIn: 0.25,
+    insetBottomIn: 0.25,
+  }
+  barcode.xIn = back.live.xIn + back.live.widthIn - barcode.insetRightIn - barcode.widthIn
+  barcode.yIn = back.live.yIn + barcode.insetBottomIn
+
+  /** KDP commonly omits spine text on thin books; we gate by page count (verify live calculator). */
+  const spineTextMinPages = 80
+  const spineTextAllowed = Number(pageCount) >= spineTextMinPages
+
   return {
-    widthPx: panelW * 2 + spinePx,
-    heightPx: page.heightPx,
-    spinePx,
-    panelW,
+    trimId,
+    pageCount: Number(pageCount),
+    paperTypeId: paper.id,
     dpi: d,
+    bleedInches: bleed,
+    trim,
+    widthPx,
+    heightPx,
+    widthIn,
+    heightIn,
+    spinePx,
+    spineIn: spineInExact,
+    panelW,
+    panelWIn,
+    back,
+    spine,
+    front,
+    barcode,
+    spineTextAllowed,
+    spineTextMinPages,
+    note: 'Verify final wrap size in the current Amazon KDP cover calculator before upload.',
   }
 }
 

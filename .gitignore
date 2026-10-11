@@ -20,6 +20,7 @@ dev-dist
 *.key
 *.p12
 secrets/
+storyforge/.data/
 
 # Editor directories and files
 .vscode/*

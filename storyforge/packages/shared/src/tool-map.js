@@ -41,6 +41,35 @@ export const NAMED_TOOLS = {
     sourceIds: ['S9'],
     description: 'Layout at KDP trim sizes, text, speech bubbles, page-by-page export.',
   },
+  editor_action: {
+    id: 'editor_action',
+    label: 'Action Editor',
+    jobType: 'editor_action',
+    sourceIds: ['S52', 'S6'],
+    description: 'Change pose/action from a pinned anchor without rewriting character identity.',
+  },
+  editor_expression: {
+    id: 'editor_expression',
+    label: 'Expression Editor',
+    jobType: 'editor_expression',
+    sourceIds: ['S46', 'S52'],
+    description: 'Change facial emotion while locking hair, outfit, and face proportions.',
+  },
+  editor_background: {
+    id: 'editor_background',
+    label: 'Background / outfit Editor',
+    jobType: 'editor_background',
+    sourceIds: ['S52', 'S6'],
+    description: 'Story-motivated outfit or place changes; prefer restarting from the anchor for new settings.',
+  },
+  scene_to_video: {
+    id: 'scene_to_video',
+    label: 'Scene → Video',
+    jobType: 'scene_to_video',
+    sourceIds: ['S53'],
+    description:
+      'Animate an approved page still with short motion. Always starts from a pinned scene — never invents a new character from text alone.',
+  },
 }
 
 /** Engine versions for Character Turbo (S5). */

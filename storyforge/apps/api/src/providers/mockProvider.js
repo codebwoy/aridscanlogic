@@ -192,6 +192,46 @@ export class MockImageProvider extends ImageProvider {
     }
   }
 
+  /** Deterministic placeholder — no network. Real video needs fal provider. */
+  async generateVideo(input) {
+    const source = input.imageUrl || input.startImageUrl || input.sceneUrl || ''
+    if (!source) {
+      const err = new Error('scene_to_video requires a scene imageUrl')
+      err.status = 400
+      err.code = 'image_url_required'
+      throw err
+    }
+    const durationSec = Number(input.duration || 5) || 5
+    // Tiny silent MP4 is heavy to embed; return a data URI poster + mock video marker URL
+    const poster = svgDataUrl({
+      w: 640,
+      h: 640,
+      label: `video ${durationSec}s`,
+      fill: '#E8F0FE',
+      accent: '#3B82F6',
+    })
+    return {
+      provider: this.name,
+      model: 'mock-image-to-video',
+      assets: [
+        {
+          role: 'scene_video',
+          assetId: `vid_${randomToken(6)}`,
+          url: poster,
+          remoteUrl: null,
+          placeholder: true,
+          mime: 'image/svg+xml',
+          durationSec,
+          quality: 'draft',
+          usedAnchor: true,
+          startImageUrl: source,
+          note: 'Mock provider — switch STORYFORGE_IMAGE_PROVIDER=fal for real clips',
+        },
+      ],
+      provenance: { source: 'mock', generationMode: 'image_to_video', vendor: 'mock' },
+    }
+  }
+
   async removeBackground(input) {
     return this.generateScene({ ...input, brief: 'cutout' })
   }
@@ -215,8 +255,3 @@ export class MockImageProvider extends ImageProvider {
   }
 }
 
-export function createImageProvider(name) {
-  if (name === 'mock' || !name) return new MockImageProvider()
-  console.warn(`[storyforge] Unknown image provider "${name}", falling back to mock`)
-  return new MockImageProvider()
-}

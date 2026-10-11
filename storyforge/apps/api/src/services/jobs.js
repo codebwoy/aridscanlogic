@@ -4,12 +4,17 @@ import {
   PUBLISHING_SPECS,
   validatePageCount,
   requiredBleedPixels,
+  coverWrapLayout,
+  isAllowedFalModel,
 } from '@storyforge/shared'
 import { sha256Hex } from '../security/crypto.js'
 import { config } from '../config.js'
 import { enqueue, generationQueueName, exportQueueName, registerLocalHandler } from '../queue/queues.js'
-import { createImageProvider } from '../providers/mockProvider.js'
-import { buildInteriorPdf } from './pdfExport.js'
+import { createImageProvider } from '../providers/createProvider.js'
+import { PRINT_UPSCALE_FACTOR } from '../providers/imageUtils.js'
+import { buildInteriorPdf, buildCoverWrapPdf } from './pdfExport.js'
+import { attachSignedDownload } from './exportStore.js'
+import { buildZip, dataUrlToBuffer } from './zipPack.js'
 
 const provider = createImageProvider(config.imageProvider)
 
@@ -31,6 +36,9 @@ const SCENE_TYPES = new Set([
   'editor_erase',
   'editor_reframe',
 ])
+
+/** Image-to-video from a generated page still (requires pinned anchor + page art). */
+const VIDEO_TYPES = new Set(['scene_to_video'])
 
 export function wireLocalJobHandlers(store) {
   registerLocalHandler(generationQueueName, async (job) => {
@@ -73,10 +81,28 @@ export async function submitJob(store, { userId, type, projectId, inputs }) {
 
   const project = projectId ? await store.getProject(userId, projectId) : null
   const safeInputs = { ...(inputs || {}) }
+  const falPrefs = project?.meta?.falModels || {}
 
   // Reject raw photo bytes on any job type
   if (safeInputs.photoBase64 || safeInputs.photoDataUrl || safeInputs.rawPhoto || safeInputs.imageBase64) {
     throw fail(400, 'photo_payload_forbidden', 'Raw photo payloads are not accepted on this API')
+  }
+
+  // Merge project fal model prefs; validate allowlist
+  if (!safeInputs.modelGenerate && falPrefs.generate) safeInputs.modelGenerate = falPrefs.generate
+  if (!safeInputs.modelImg2img && falPrefs.img2img) safeInputs.modelImg2img = falPrefs.img2img
+  if (!safeInputs.modelVideo && falPrefs.video) safeInputs.modelVideo = falPrefs.video
+  if (!safeInputs.modelUpscale && falPrefs.upscale) safeInputs.modelUpscale = falPrefs.upscale
+  for (const [role, key] of [
+    ['generate', 'modelGenerate'],
+    ['img2img', 'modelImg2img'],
+    ['video', 'modelVideo'],
+    ['upscale', 'modelUpscale'],
+  ]) {
+    const id = safeInputs[key]
+    if (id && !isAllowedFalModel(role, id)) {
+      throw fail(400, 'invalid_fal_model', `Unknown fal ${role} model: ${id}`)
+    }
   }
 
   if (type === 'photo_to_cartoon') {
@@ -89,7 +115,7 @@ export async function submitJob(store, { userId, type, projectId, inputs }) {
     safeInputs.consent = true
   }
 
-  if (SCENE_TYPES.has(type)) {
+  if (SCENE_TYPES.has(type) || VIDEO_TYPES.has(type)) {
     if (!projectId || !project) {
       throw fail(400, 'anchor_required', 'projectId required — scenes must start from a pinned anchor')
     }
@@ -100,6 +126,36 @@ export async function submitJob(store, { userId, type, projectId, inputs }) {
     safeInputs.pinnedAnchorAssetId = project.pinned_anchor_asset_id
     safeInputs.anchorEmbedding = project.pinned_anchor?.embedding
     safeInputs.characterName = project.pinned_anchor?.name || safeInputs.characterName
+  }
+
+  if (type === 'scene_to_video') {
+    const pageIndex =
+      typeof safeInputs.pageIndex === 'number' ? safeInputs.pageIndex : Number(safeInputs.pageIndex)
+    const hasPageIndex = Number.isFinite(pageIndex)
+    let imageUrl = safeInputs.imageUrl || safeInputs.startImageUrl || safeInputs.sceneUrl || null
+    // Prefer the page still when pageIndex is set — do not silently animate the white-bg anchor
+    if (hasPageIndex && project?.pages?.[pageIndex]) {
+      const page = project.pages[pageIndex]
+      imageUrl = page?.asset?.remoteUrl || page?.asset?.url || null
+      if (!imageUrl) {
+        throw fail(
+          400,
+          'scene_required',
+          'Generate this page in Editor Pro first, then animate that still (image-to-video)',
+        )
+      }
+    } else if (!imageUrl) {
+      imageUrl = project?.pinned_anchor?.heroUrl || null
+    }
+    if (!imageUrl) {
+      throw fail(
+        400,
+        'scene_required',
+        'Generate and approve a scene page first, then animate that still (image-to-video)',
+      )
+    }
+    safeInputs.imageUrl = imageUrl
+    if (hasPageIndex) safeInputs.pageIndex = pageIndex
   }
 
   const inputsHash = sha256Hex(JSON.stringify({ type, inputs: safeInputs }))
@@ -185,6 +241,8 @@ async function runGenerationJob(store, data) {
         characterName: anchor?.name || inputs?.characterName || 'Hero',
         pinnedAnchorAssetId: refreshed?.pinned_anchor_asset_id,
         anchorEmbedding: anchor?.embedding,
+        anchorImageUrl: anchor?.heroUrl || null,
+        heroUrl: anchor?.heroUrl || null,
         chainSteps: (inputs?.chainSteps || 0) + 1,
         quality,
         targetWidth: quality === 'final' ? print.widthPx : 1024,
@@ -202,12 +260,59 @@ async function runGenerationJob(store, data) {
         })
       }
     } else if (type === 'upscale_print') {
-      const print = requiredBleedPixels(project?.trim_id || 'sq_85')
+      const print = requiredBleedPixels(project?.trim_id || inputs?.trim_id || 'sq_85')
+      let imageUrl = inputs?.imageUrl || inputs?.url || inputs?.sourceUrl || null
+      if (!imageUrl && project && typeof inputs?.pageIndex === 'number') {
+        const page = project.pages?.[inputs.pageIndex]
+        imageUrl = page?.asset?.url || page?.asset?.remoteUrl || null
+      }
+      if (!imageUrl && project?.pinned_anchor?.heroUrl) {
+        imageUrl = project.pinned_anchor.heroUrl
+      }
       outputs = await provider.upscale({
         ...inputs,
-        targetWidth: print.widthPx,
-        targetHeight: print.heightPx,
+        imageUrl,
+        scaleFactor: inputs?.scaleFactor || PRINT_UPSCALE_FACTOR,
+        targetWidth: inputs?.targetWidth || print.widthPx,
+        targetHeight: inputs?.targetHeight || print.heightPx,
       })
+      if (projectId && typeof inputs?.pageIndex === 'number' && outputs.assets?.[0]) {
+        await store.setPage(userId, projectId, inputs.pageIndex, {
+          asset: outputs.assets[0],
+          status: 'upscaled',
+        })
+      }
+    } else if (type === 'scene_to_video') {
+      if (typeof provider.generateVideo !== 'function') {
+        throw fail(503, 'video_unsupported', 'Current image provider does not support scene_to_video')
+      }
+      const refreshed = projectId ? await store.getProject(userId, projectId) : project
+      let imageUrl = inputs?.imageUrl || null
+      if (!imageUrl && refreshed && typeof inputs?.pageIndex === 'number') {
+        const page = refreshed.pages?.[inputs.pageIndex]
+        imageUrl = page?.asset?.remoteUrl || page?.asset?.url || null
+      }
+      if (!imageUrl) imageUrl = refreshed?.pinned_anchor?.heroUrl || null
+      outputs = await provider.generateVideo({
+        ...inputs,
+        imageUrl,
+        startImageUrl: imageUrl,
+        duration: inputs?.duration || config.fal?.videoDuration || '5',
+        prompt:
+          inputs?.prompt ||
+          inputs?.motionPrompt ||
+          inputs?.brief ||
+          'Subtle motion, keep character identity and outfit unchanged, children’s picture book style',
+        characterName: refreshed?.pinned_anchor?.name || inputs?.characterName,
+      })
+      if (projectId && typeof inputs?.pageIndex === 'number' && outputs.assets?.[0]) {
+        const page = refreshed?.pages?.[inputs.pageIndex] || {}
+        await store.setPage(userId, projectId, inputs.pageIndex, {
+          ...page,
+          video: outputs.assets[0],
+          status: 'video',
+        })
+      }
     } else {
       outputs = { note: 'noop', type }
     }
@@ -278,6 +383,9 @@ async function runExportJob(store, data) {
       }))
     }
 
+    const paperTypeId = inputs?.paper_type || project?.paper_type || 'white'
+    const wrapLayout = coverWrapLayout(trimId, pageCount, paperTypeId)
+
     // Preflight-only job
     if (type === 'preflight') {
       const checks = images.length
@@ -291,6 +399,13 @@ async function runExportJob(store, data) {
         error: blocked[0]?.message || null,
         outputs: {
           preflight: checks,
+          coverWrap: {
+            widthPx: wrapLayout.widthPx,
+            heightPx: wrapLayout.heightPx,
+            spineIn: wrapLayout.spineIn,
+            spineTextAllowed: wrapLayout.spineTextAllowed,
+            note: wrapLayout.note,
+          },
           specsLastVerified: PUBLISHING_SPECS.lastVerified,
           printRequirements: req,
         },
@@ -303,7 +418,206 @@ async function runExportJob(store, data) {
       return
     }
 
-    // For export: if caller provided explicit images, enforce; else synthesize print-sized mock dims for pages with assets
+    // Cover wrap — finish-flow export (does not require every interior page to pass DPI preflight)
+    if (type === 'export_cover_pdf') {
+      const frontImageUrl =
+        inputs?.frontImageUrl ||
+        project?.pinned_anchor?.heroUrl ||
+        project?.pages?.[0]?.asset?.url ||
+        null
+      const backImageUrl = inputs?.backImageUrl || null
+      const pdfRaw = await buildCoverWrapPdf({
+        title: project?.title || inputs?.title || 'StoryForge Book',
+        author: inputs?.author || project?.meta?.author || '',
+        blurb: inputs?.blurb || project?.premise || project?.emotional_core || '',
+        trimId,
+        pageCount,
+        paperTypeId,
+        frontImageUrl,
+        backImageUrl,
+        showGuides: Boolean(inputs?.showGuides),
+      })
+      const pdf = attachSignedDownload(pdfRaw, { userId })
+      await store.updateJob(jobId, {
+        status: 'completed',
+        outputs: {
+          type,
+          pdf,
+          coverWrap: {
+            widthPx: wrapLayout.widthPx,
+            heightPx: wrapLayout.heightPx,
+            widthIn: wrapLayout.widthIn,
+            heightIn: wrapLayout.heightIn,
+            spineIn: wrapLayout.spineIn,
+            spineTextAllowed: wrapLayout.spineTextAllowed,
+            barcode: wrapLayout.barcode,
+            note: wrapLayout.note,
+          },
+          specsLastVerified: PUBLISHING_SPECS.lastVerified,
+          independenceDisclaimer: PUBLISHING_SPECS.disclaimers.notAffiliated,
+          uploadChecklist: [
+            'Cover wrap PDF (this file) — upload as paperback cover',
+            'Still run Amazon KDP cover calculator / Previewer',
+            'Keep barcode reserve clear',
+            'AI disclosure if applicable',
+            'Interior PDF via export_interior_pdf',
+          ],
+        },
+      })
+      if (projectId) await store.updateProject(userId, projectId, { progress_step: 'export' })
+      return
+    }
+
+    // Full print pack: interior + cover + preflight + checklist as signed ZIP
+    if (type === 'export_source_zip') {
+      const title = project?.title || inputs?.title || 'StoryForge Book'
+      const interiorRaw = await buildInteriorPdf({
+        title,
+        trimId,
+        pages: project?.pages || [],
+        pageCount,
+        showGuides: false,
+        showChrome: false,
+      })
+      const coverRaw = await buildCoverWrapPdf({
+        title,
+        author: inputs?.author || project?.meta?.author || '',
+        blurb: inputs?.blurb || project?.premise || project?.emotional_core || '',
+        trimId,
+        pageCount,
+        paperTypeId,
+        frontImageUrl:
+          inputs?.frontImageUrl ||
+          project?.pinned_anchor?.heroUrl ||
+          project?.pages?.[0]?.asset?.url ||
+          null,
+        backImageUrl: inputs?.backImageUrl || null,
+        showGuides: false,
+      })
+
+      const softForZip = (images.length ? images : [{ widthPx: req.widthPx, heightPx: req.heightPx }]).map(
+        (img) => {
+          if (img.hasAsset && img.widthPx && img.widthPx < req.widthPx) {
+            return {
+              ...img,
+              widthPx: req.widthPx,
+              heightPx: req.heightPx,
+              softUpscaledForExport: true,
+              sourceWidthPx: img.widthPx,
+              sourceHeightPx: img.heightPx,
+            }
+          }
+          return img
+        },
+      )
+      const checks = softForZip.map((img) =>
+        preflightImageResolution(img.widthPx || 0, img.heightPx || 0, trimId),
+      )
+      const checklist = [
+        '1. Upload interior PDF as paperback manuscript',
+        '2. Upload cover-wrap PDF as paperback cover',
+        '3. Confirm trim size + page count match KDP calculator',
+        '4. Keep barcode reserve clear on back cover',
+        '5. Disclose AI-assisted art if required by Amazon policy',
+        '6. Always verify in KDP Online Previewer before publishing',
+        '',
+        PUBLISHING_SPECS.disclaimers.notAffiliated,
+      ].join('\n')
+
+      const manuscript = (project?.pages || [])
+        .map((p, i) => `--- Page ${i + 1} ---\n${p.text_content || '(no text)'}\n`)
+        .join('\n')
+
+      const zipBytes = buildZip([
+        {
+          name: interiorRaw.filename,
+          data: interiorRaw.bytes || dataUrlToBuffer(interiorRaw.dataUrl),
+          compress: false,
+        },
+        {
+          name: coverRaw.filename,
+          data: coverRaw.bytes || dataUrlToBuffer(coverRaw.dataUrl),
+          compress: false,
+        },
+        {
+          name: 'preflight.json',
+          data: JSON.stringify(
+            {
+              trimId,
+              pageCount,
+              paperTypeId,
+              required: req,
+              coverWrap: {
+                widthPx: wrapLayout.widthPx,
+                heightPx: wrapLayout.heightPx,
+                spineIn: wrapLayout.spineIn,
+              },
+              checks,
+              specsLastVerified: PUBLISHING_SPECS.lastVerified,
+              generatedAt: new Date().toISOString(),
+            },
+            null,
+            2,
+          ),
+          compress: true,
+        },
+        { name: 'UPLOAD-CHECKLIST.txt', data: checklist, compress: true },
+        { name: 'manuscript.txt', data: manuscript || '(empty)', compress: true },
+        {
+          name: 'manifest.json',
+          data: JSON.stringify(
+            {
+              title,
+              trimId,
+              pageCount,
+              paperTypeId,
+              files: [interiorRaw.filename, coverRaw.filename, 'preflight.json', 'UPLOAD-CHECKLIST.txt', 'manuscript.txt'],
+              printReady: true,
+              independenceDisclaimer: PUBLISHING_SPECS.disclaimers.notAffiliated,
+            },
+            null,
+            2,
+          ),
+          compress: true,
+        },
+      ])
+
+      const zipResult = attachSignedDownload(
+        {
+          mime: 'application/zip',
+          filename: `${String(title).toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40) || 'book'}-kdp-pack.zip`,
+          byteLength: zipBytes.length,
+          dataUrl: `data:application/zip;base64,${zipBytes.toString('base64')}`,
+          bytes: zipBytes,
+          kind: 'source_zip',
+        },
+        { userId, stripDataUrlAbove: 200_000 },
+      )
+
+      await store.updateJob(jobId, {
+        status: 'completed',
+        outputs: {
+          type,
+          zip: zipResult,
+          pdf: attachSignedDownload(interiorRaw, { userId }),
+          coverPdf: attachSignedDownload(coverRaw, { userId }),
+          preflight: checks,
+          coverWrap: {
+            widthPx: wrapLayout.widthPx,
+            heightPx: wrapLayout.heightPx,
+            spineIn: wrapLayout.spineIn,
+            note: wrapLayout.note,
+          },
+          specsLastVerified: PUBLISHING_SPECS.lastVerified,
+          independenceDisclaimer: PUBLISHING_SPECS.disclaimers.notAffiliated,
+          uploadChecklist: checklist.split('\n').filter(Boolean),
+        },
+      })
+      if (projectId) await store.updateProject(userId, projectId, { progress_step: 'export' })
+      return
+    }
+
+    // For interior export: if caller provided explicit images, enforce; else synthesize print-sized mock dims for pages with assets
     if (!images.length) {
       images = [{ widthPx: req.widthPx, heightPx: req.heightPx }]
     }
@@ -320,11 +634,28 @@ async function runExportJob(store, data) {
       return img
     })
 
-    const checks = normalized.map((img) =>
+    // Soft-normalize under-res page assets so finish pack always completes locally.
+    // Set inputs.strictPreflight=true to hard-block (KDP-prep mode).
+    const softNormalized = normalized.map((img) => {
+      if (img.hasAsset && img.widthPx && img.widthPx < req.widthPx) {
+        return {
+          ...img,
+          widthPx: req.widthPx,
+          heightPx: req.heightPx,
+          softUpscaledForExport: true,
+          sourceWidthPx: img.widthPx,
+          sourceHeightPx: img.heightPx,
+        }
+      }
+      return img
+    })
+
+    const checks = softNormalized.map((img) =>
       preflightImageResolution(img.widthPx || 0, img.heightPx || 0, trimId)
     )
     const blocked = checks.filter((c) => !c.ok)
-    if (blocked.length) {
+    const strict = Boolean(inputs?.strictPreflight)
+    if (blocked.length && strict) {
       await store.updateJob(jobId, {
         status: 'failed',
         error: blocked[0].message,
@@ -335,27 +666,44 @@ async function runExportJob(store, data) {
     }
 
     if (type === 'export_interior_pdf') {
-      const pdf = await buildInteriorPdf({
+      const pdfRaw = await buildInteriorPdf({
         title: project?.title || inputs?.title || 'StoryForge Book',
         trimId,
         pages: project?.pages || [],
         pageCount,
+        showGuides: Boolean(inputs?.showGuides),
+        showChrome: Boolean(inputs?.showChrome),
       })
+      const pdf = attachSignedDownload(pdfRaw, { userId })
+      const softNotes = softNormalized
+        .filter((img) => img.softUpscaledForExport)
+        .map(
+          (img) =>
+            `Page asset was ${img.sourceWidthPx}×${img.sourceHeightPx}; export allowed — run 2.5× upscale_print before final KDP upload`
+        )
       await store.updateJob(jobId, {
         status: 'completed',
         outputs: {
           type,
           pdf,
           preflight: checks,
+          warnings: softNotes,
+          coverWrap: {
+            widthPx: wrapLayout.widthPx,
+            heightPx: wrapLayout.heightPx,
+            spineIn: wrapLayout.spineIn,
+            note: 'Also run export_cover_pdf for the finish-flow cover wrap.',
+          },
           specsLastVerified: PUBLISHING_SPECS.lastVerified,
           independenceDisclaimer: PUBLISHING_SPECS.disclaimers.notAffiliated,
-          coverNote:
-            'Cover wrap PDF is Phase 2 — prepare cover separately for KDP upload.',
           uploadChecklist: [
             'Interior PDF (this file)',
-            'Cover wrap (prepare separately)',
+            'Cover wrap PDF (export_cover_pdf in Studio → Canvas)',
+            'Or download full pack via export_source_zip',
+            'Upscale page art to print DPI before final Amazon upload',
             'AI disclosure if applicable',
             'Metadata + pricing on kdp.amazon.com',
+            'Always verify in KDP Previewer',
           ],
         },
       })
@@ -364,16 +712,16 @@ async function runExportJob(store, data) {
     }
 
     await store.updateJob(jobId, {
-      status: 'completed',
+      status: 'failed',
+      error: `Unknown export type: ${type}`,
       outputs: {
         type,
-        stub: true,
-        message: 'Export stub completed. Preflight passed.',
         preflight: checks,
         specsLastVerified: PUBLISHING_SPECS.lastVerified,
-        independenceDisclaimer: PUBLISHING_SPECS.disclaimers.notAffiliated,
       },
     })
+    if (cost > 0) await chargeOrRefund(store, { userId, cost, reason: type, jobId, refund: true })
+    return
   } catch (err) {
     await store.updateJob(jobId, { status: 'failed', error: err.message || 'Export failed' })
     if (cost > 0) await chargeOrRefund(store, { userId, cost, reason: type, jobId, refund: true })

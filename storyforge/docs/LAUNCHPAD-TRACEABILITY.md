@@ -1,6 +1,6 @@
 # Launchpad Part A — Traceability (S1–S32)
 
-Status after initial implementation. Export PDF pipeline remains a preflight stub (real signed URLs = next).
+Status after print-pipeline + fal catalogue completion.
 
 | ID | Requirement | Status | Where |
 |----|-------------|--------|-------|
@@ -37,6 +37,31 @@ Status after initial implementation. Export PDF pipeline remains a preflight stu
 | S30 | KDP upload checklist + 60% | done | Step 5 + royalty config ⚠ |
 | S31 | Post-launch checklist | done | Course step 6 |
 | S32 | Books & Guides slots | done | Empty editable slots by group |
+| S33 | Consistency masterclass tutorials | done | `VIDEO_TUTORIALS` + `guide_consistency_masterclass` |
+| S34 | Crayon / drawing → character | done | `recipe_crayon_character` + guide |
+| S35 | Personalised bedtime | done | `recipe_bedtime_personalised` + guide |
+| S36 | Editor Pro new-setting-from-anchor | done | Prompt `pt_new_setting_from_anchor` + course S28 |
+| S37 | Multi-character masterclass | done | `recipe_multi_character_masterclass` |
+| S38 | KDP print-ready studio path | done | `recipe_kdp_print_ready` + Canvas checklist |
+| S39 | Storytelling Compass | done | `craft-library.js` + Launchpad Craft tab |
+| S40 | Character DNA | done | DNA fields + `pt_identity_block` |
+| S41 | Art style lock | done | 11-style catalogue |
+| S42 | Cover design rules | done | Craft cover section + `pt_cover_from_dna` |
+| S43 | Age word counts | done | Craft age table |
+| S44 | 7-day launch skeleton | done | `recipe_seven_day_launch` |
+| S45 | Multi-character 3-part prompts | done | `pt_multi_char_3part` |
+| S46 | Expression / emotion arc | done | Craft expression section |
+| S47 | Continuity QC | done | Two-pass checklist |
+| S48 | Character design principles | done | 7 principles |
+| S49 | Camera / body / age cues | done | Craft tips |
+| S50 | Coloring from story art | done | `recipe_coloring_from_story` |
+| S51 | KDP earnings realism ⚠ | done | Craft earnings section |
+| S52 | Action / expression editors | done | `EDITOR_VARIATION_PLAYBOOKS` |
+| S53 | Scene → video (fal image-to-video) | done | `scene_to_video` job + Studio tab; requires page still |
+| S55 | Print pack + signed exports | done | Print-ready interior/cover PDFs, HMAC download URLs, `export_source_zip` |
+| S56 | Full fal model catalogue | done | Shared `fal-models.js` + Studio pickers (Kontext/Kling Pro/Veo/Seedance/…) |
+
+Public catalogues distilled: [Neolemon Tutorials](https://www.neolemon.com/tutorials/), [Guides](https://www.neolemon.com/guides/), [Blog](https://www.neolemon.com/blog). StoryForge is not affiliated — see `TUTORIALS_META` / `CRAFT_META.independenceNote`. Third-party pricing/legal pages are linked only, never imported as StoryForge policy.
 
 ## Part B (not built unless approved)
 

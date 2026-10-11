@@ -3,17 +3,19 @@ import { Copy, ExternalLink } from 'lucide-react'
 import { api } from '../lib/api.js'
 
 const TABS = [
+  { id: 'tutorials', label: 'Tutorials' },
+  { id: 'craft', label: 'Craft' },
   { id: 'guides', label: 'Guides' },
   { id: 'course', label: 'Course' },
   { id: 'prompts', label: 'Prompt Library' },
   { id: 'disclosure', label: 'Disclosure Helper' },
   { id: 'books', label: 'Books & Guides' },
   { id: 'admin', label: 'Admin config' },
-  { id: 'trace', label: 'S1–S32' },
+  { id: 'trace', label: 'S1–S52' },
 ]
 
 export default function Launchpad({ activeProject, onRefreshProject, setStatus, setError }) {
-  const [tab, setTab] = useState('guides')
+  const [tab, setTab] = useState('tutorials')
   const [data, setData] = useState(null)
   const [busy, setBusy] = useState(false)
   const [mode, setMode] = useState('prompt')
@@ -24,6 +26,13 @@ export default function Launchpad({ activeProject, onRefreshProject, setStatus, 
     sceneBrief: 'first day of school',
     emotionalCore: 'bravery',
     secondCharacterName: 'Max',
+    ageBand: '8-year-old',
+    whoDescriptor: 'curious explorer',
+    features: 'large round eyes, freckles, messy auburn bob with a tuft',
+    outfit: 'yellow raincoat and red rain boots',
+    styleLock: '2D flat, thick black outlines, soft cel shading, warm palette',
+    actionVerb: 'waving hello with raised hand',
+    emotion: 'worried, eyes looking down, mouth small frown, eyebrows raised',
   })
   const [filled, setFilled] = useState('')
 
@@ -161,6 +170,7 @@ export default function Launchpad({ activeProject, onRefreshProject, setStatus, 
   }
 
   const cfg = data.config?.map || {}
+  const craft = data.craft || {}
 
   return (
     <div className="sf-main sf-launchpad-main">
@@ -184,6 +194,360 @@ export default function Launchpad({ activeProject, onRefreshProject, setStatus, 
       </aside>
 
       <main className="sf-canvas-wrap">
+        {tab === 'tutorials' ? (
+          <div className="sf-stack">
+            <div className="sf-card">
+              <h2 style={{ marginTop: 0, fontFamily: 'var(--sf-font-display)' }}>
+                Video tutorials → StoryForge path
+              </h2>
+              <p className="sf-muted">
+                Catalogue last verified {data.tutorialsMeta?.lastVerified}. Learn the consistency
+                workflow, then build with Character Turbo, Editor Pro, Story Scene Pro, Photo to
+                Cartoon, and Canvas.
+              </p>
+              <p className="sf-warn-note">{data.tutorialsMeta?.independenceNote}</p>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <a
+                  className="sf-btn"
+                  href={data.tutorialsMeta?.catalogueUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open catalogue <ExternalLink size={14} aria-hidden />
+                </a>
+                <a
+                  className="sf-btn"
+                  href={data.tutorialsMeta?.channelUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  YouTube channel <ExternalLink size={14} aria-hidden />
+                </a>
+              </div>
+            </div>
+
+            <div className="sf-grid-2">
+              {(data.videoTutorials || []).map((v) => (
+                <div key={v.id} className="sf-card">
+                  <h3 style={{ marginTop: 0, fontFamily: 'var(--sf-font-display)' }}>{v.title}</h3>
+                  <p className="sf-muted">{v.summary}</p>
+                  <p>
+                    <strong>In StoryForge:</strong> {v.storyforgePath}
+                  </p>
+                  <p className="sf-muted">
+                    Recipe: {v.recipeId}
+                    {v.guideId ? ` · Guide: ${v.guideId}` : ''}
+                  </p>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <a
+                      className="sf-btn sf-btn-primary"
+                      href={v.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Watch on YouTube <ExternalLink size={14} aria-hidden />
+                    </a>
+                    <button
+                      type="button"
+                      className="sf-btn"
+                      onClick={() =>
+                        setStatus?.(
+                          `Next: open Studio and run recipe ${v.recipeId} (pin anchor before scenes)`,
+                        )
+                      }
+                    >
+                      Use this recipe
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="sf-card">
+              <h3 style={{ marginTop: 0, fontFamily: 'var(--sf-font-display)' }}>
+                Tool playbooks
+              </h3>
+              <p className="sf-muted">
+                Distilled rules for StoryForge tools — not third-party scripts.
+              </p>
+              <div className="sf-grid-2">
+                {(data.workflowPlaybooks || []).map((wf) => (
+                  <div key={wf.id} className="sf-card">
+                    <h4 style={{ marginTop: 0 }}>{wf.title}</h4>
+                    <ul>
+                      {wf.bullets.map((b) => (
+                        <li key={b}>{b}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {tab === 'craft' ? (
+          <div className="sf-stack">
+            <div className="sf-card">
+              <h2 style={{ marginTop: 0, fontFamily: 'var(--sf-font-display)' }}>
+                Craft library
+              </h2>
+              <p className="sf-muted">
+                Plan → lock identity → pick a style → produce → QC. StoryForge-owned distillations
+                of public children’s-book consistency teaching (incl. themes from Neolemon guides /
+                blog). Verified {craft.meta?.lastVerified}.
+              </p>
+              <p className="sf-warn-note">{craft.meta?.independenceNote}</p>
+            </div>
+
+            <div className="sf-card">
+              <h3 style={{ marginTop: 0 }}>{craft.storytellingCompass?.title}</h3>
+              <ol>
+                {(craft.storytellingCompass?.steps || []).map((s) => (
+                  <li key={s.id}>
+                    <strong>{s.label}:</strong> {s.prompt}
+                  </li>
+                ))}
+              </ol>
+              <p className="sf-muted">{craft.storytellingCompass?.note}</p>
+            </div>
+
+            <div className="sf-card">
+              <h3 style={{ marginTop: 0 }}>{craft.characterDna?.title}</h3>
+              <ul>
+                {(craft.characterDna?.bullets || []).map((b) => (
+                  <li key={b}>{b}</li>
+                ))}
+              </ul>
+              <div className="sf-table-wrap">
+                <table className="sf-table">
+                  <thead>
+                    <tr>
+                      <th>Field</th>
+                      <th>Your notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(craft.characterDna?.fields || []).map((f) => (
+                      <tr key={f.key}>
+                        <td>{f.label}</td>
+                        <td>
+                          <input placeholder="Fill in Studio / notes" readOnly />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="sf-card">
+              <h3 style={{ marginTop: 0 }}>{craft.artStyles?.title}</h3>
+              <p className="sf-muted">{craft.artStyles?.note}</p>
+              <ul>
+                {(craft.artStyles?.chooseBy || []).map((c) => (
+                  <li key={c}>{c}</li>
+                ))}
+              </ul>
+              <div className="sf-table-wrap">
+                <table className="sf-table">
+                  <thead>
+                    <tr>
+                      <th>Style</th>
+                      <th>Best for</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(craft.artStyles?.styles || []).map((st) => (
+                      <tr key={st.id}>
+                        <td>{st.label}</td>
+                        <td>{st.bestFor}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="sf-grid-2">
+              <div className="sf-card">
+                <h3 style={{ marginTop: 0 }}>{craft.coverDesign?.title}</h3>
+                <ul>
+                  {(craft.coverDesign?.bullets || []).map((b) => (
+                    <li key={b}>{b}</li>
+                  ))}
+                </ul>
+                <p className="sf-warn-note">{craft.coverDesign?.note}</p>
+              </div>
+              <div className="sf-card">
+                <h3 style={{ marginTop: 0 }}>{craft.ageWordCounts?.title}</h3>
+                <div className="sf-table-wrap">
+                  <table className="sf-table">
+                    <thead>
+                      <tr>
+                        <th>Ages</th>
+                        <th>Words</th>
+                        <th>Notes</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(craft.ageWordCounts?.rows || []).map((r) => (
+                        <tr key={r.ages}>
+                          <td>{r.ages}</td>
+                          <td>{r.words}</td>
+                          <td>{r.notes}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div className="sf-card">
+              <h3 style={{ marginTop: 0 }}>{craft.sevenDayPlan?.title}</h3>
+              <p className="sf-warn-note">{craft.sevenDayPlan?.note}</p>
+              <ol>
+                {(craft.sevenDayPlan?.days || []).map((d) => (
+                  <li key={d.day}>
+                    <strong>
+                      Day {d.day}: {d.title}
+                    </strong>
+                    <ul>
+                      {d.tasks.map((t) => (
+                        <li key={t}>{t}</li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+              </ol>
+              <button
+                type="button"
+                className="sf-btn sf-btn-primary"
+                onClick={() =>
+                  setStatus?.(
+                    'Next: recipe_seven_day_launch — Compass + DNA before Character Turbo',
+                  )
+                }
+              >
+                Use 7-day recipe
+              </button>
+            </div>
+
+            <div className="sf-grid-2">
+              <div className="sf-card">
+                <h3 style={{ marginTop: 0 }}>{craft.multiCharacterMethod?.title}</h3>
+                <ul>
+                  {(craft.multiCharacterMethod?.bullets || []).map((b) => (
+                    <li key={b}>{b}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="sf-card">
+                <h3 style={{ marginTop: 0 }}>{craft.expressionArc?.title}</h3>
+                <p>
+                  <strong>Hierarchy</strong>
+                </p>
+                <ul>
+                  {(craft.expressionArc?.hierarchy || []).map((h) => (
+                    <li key={h.id}>
+                      <strong>{h.label}:</strong> {h.tip}
+                    </li>
+                  ))}
+                </ul>
+                <p>
+                  <strong>3-act emotions</strong>
+                </p>
+                <ul>
+                  {(craft.expressionArc?.acts || []).map((a) => (
+                    <li key={a.act}>
+                      Act {a.act} · {a.label}: {a.tip}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className="sf-card">
+              <h3 style={{ marginTop: 0 }}>{craft.continuityChecklist?.title}</h3>
+              <div className="sf-grid-2">
+                {(craft.continuityChecklist?.passes || []).map((p) => (
+                  <div key={p.id}>
+                    <h4>{p.title}</h4>
+                    <ul>
+                      {p.items.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="sf-grid-2">
+              <div className="sf-card">
+                <h3 style={{ marginTop: 0 }}>{craft.characterDesignPrinciples?.title}</h3>
+                <ol>
+                  {(craft.characterDesignPrinciples?.principles || []).map((p) => (
+                    <li key={p.id}>
+                      <strong>{p.label}:</strong> {p.tip}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+              <div className="sf-card">
+                <h3 style={{ marginTop: 0 }}>{craft.cameraBodyAge?.title}</h3>
+                <ul>
+                  {(craft.cameraBodyAge?.bullets || []).map((b) => (
+                    <li key={b}>{b}</li>
+                  ))}
+                </ul>
+                <h4>{craft.coloringWorkflow?.title}</h4>
+                <ul>
+                  {(craft.coloringWorkflow?.bullets || []).map((b) => (
+                    <li key={b}>{b}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className="sf-card">
+              <h3 style={{ marginTop: 0 }}>{craft.kdpEarningsRealism?.title}</h3>
+              <ul>
+                {(craft.kdpEarningsRealism?.bullets || []).map((b) => (
+                  <li key={b}>{b}</li>
+                ))}
+              </ul>
+              <p className="sf-warn-note">{craft.kdpEarningsRealism?.note}</p>
+            </div>
+
+            <div className="sf-card">
+              <h3 style={{ marginTop: 0 }}>External learning index</h3>
+              <p className="sf-muted">
+                Links to public Neolemon pages for further reading — content stays on their site.
+                Their pricing / legal pages are not StoryForge policy.
+              </p>
+              {(craft.externalLearningIndex || []).map((group) => (
+                <div key={group.group} style={{ marginBottom: '0.75rem' }}>
+                  <h4>{group.group}</h4>
+                  <ul>
+                    {group.links.map((link) => (
+                      <li key={link.url}>
+                        <a href={link.url} target="_blank" rel="noopener noreferrer">
+                          {link.label} <ExternalLink size={12} aria-hidden />
+                        </a>
+                        {link.warn ? (
+                          <span className="sf-warn-note"> · third-party / not our policy</span>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         {tab === 'guides' ? (
           <div className="sf-grid-2">
             {data.guides.map((g) => (
@@ -487,7 +851,7 @@ export default function Launchpad({ activeProject, onRefreshProject, setStatus, 
 
         {tab === 'trace' ? (
           <div className="sf-card">
-            <h2 style={{ marginTop: 0 }}>Traceability S1–S32</h2>
+            <h2 style={{ marginTop: 0 }}>Traceability S1–S52</h2>
             <div className="sf-table-wrap">
               <table className="sf-table">
                 <thead>

@@ -7,7 +7,7 @@
 | `STORYFORGE_SESSION_SECRET` | `storyforge/.env` | Client / `VITE_*` |
 | `STORYFORGE_API_SECRET` | server | Client bundle |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | server | Client |
-| Image provider keys (`FAL_KEY`, etc.) | server | Client |
+| Image provider keys (`REPLICATE_API_TOKEN`, `FAL_KEY`) | server | Client |
 | `VITE_STORYFORGE_URL` | ScanLogic client | Must be URL only |
 
 ## Desktop enforcement

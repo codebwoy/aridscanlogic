@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   ArrowLeft,
   BookOpen,
@@ -30,7 +30,7 @@ import { toast } from 'sonner'
 import { programmesByPriority } from '@/lib/bizstart/amazon/programmes'
 import { AMAZON_GUIDES } from '@/lib/bizstart/amazon/guides'
 import { amazonT } from '@/lib/bizstart/amazon/i18n'
-import { launchStoryforgeDesktop } from '@/lib/storyforge/launch'
+import { launchStoryforgeDesktop, probeStoryforgeReady } from '@/lib/storyforge/launch'
 import MerchConfigPanel from '@/components/bizstart/amazon/MerchConfigPanel'
 import KdpConfigPanel from '@/components/bizstart/amazon/KdpConfigPanel'
 import KdpResourcesPanel from '@/components/bizstart/amazon/KdpResourcesPanel'
@@ -117,12 +117,35 @@ function PriorityBadge({ lang, priority }) {
 export default function AmazonHub({ lang = 'en', onBack }) {
   const programmes = programmesByPriority()
   const [focusGuideId, setFocusGuideId] = useState(null)
+  const [storyforgeReady, setStoryforgeReady] = useState(null)
 
-  function onOpenStoryforge(view = 'studio') {
-    const result = launchStoryforgeDesktop({ view })
+  useEffect(() => {
+    let cancelled = false
+    probeStoryforgeReady().then((ok) => {
+      if (!cancelled) setStoryforgeReady(ok)
+    })
+    const id = setInterval(() => {
+      probeStoryforgeReady().then((ok) => {
+        if (!cancelled) setStoryforgeReady(ok)
+      })
+    }, 8000)
+    return () => {
+      cancelled = true
+      clearInterval(id)
+    }
+  }, [])
+
+  async function onOpenStoryforge(view = 'studio') {
+    const result = await launchStoryforgeDesktop({ view })
+    setStoryforgeReady(result.opened || result.reason !== 'offline')
     if (result.opened) return
     if (result.reason === 'mobile') {
       toast.message(amazonT(lang, 'storyforgeMobile'))
+      return
+    }
+    if (result.reason === 'offline') {
+      setStoryforgeReady(false)
+      toast.error(amazonT(lang, 'storyforgeOffline'))
       return
     }
     toast.error(amazonT(lang, 'storyforgePopupBlocked'))
@@ -227,6 +250,15 @@ export default function AmazonHub({ lang = 'en', onBack }) {
             <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
               {amazonT(lang, 'storyforgeLaunchpadHint')}
             </p>
+            {storyforgeReady === false ? (
+              <p className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-2 text-[11px] leading-relaxed text-amber-100/90">
+                {amazonT(lang, 'storyforgeOffline')}
+              </p>
+            ) : storyforgeReady === true ? (
+              <p className="mt-2 text-[11px] font-medium text-emerald-300/90">
+                {amazonT(lang, 'storyforgeOnline')}
+              </p>
+            ) : null}
           </div>
         </div>
       </div>

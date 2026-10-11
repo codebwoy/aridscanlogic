@@ -16,12 +16,17 @@ import {
   MANUSCRIPT_PRINCIPLES,
   REFERENCE_BOOKS,
   READING_RESOURCES,
+  VIDEO_TUTORIALS,
+  WORKFLOW_PLAYBOOKS,
+  TUTORIALS_META,
   COMMERCIAL_USE_STATEMENT,
   NAMED_TOOLS,
   CHARACTER_TURBO_ENGINES,
   TRACEABILITY,
   fillPrompt,
   PROGRESS_STEPS,
+  craftLibraryPayload,
+  falModelsPayload,
 } from '@storyforge/shared'
 import { config, assertRuntimeSecrets } from './config.js'
 import { createMemoryStore } from './db/memoryStore.js'
@@ -36,8 +41,11 @@ import {
   cors,
   assertApiAccess,
   requireDesktop,
+  isLocalSocket,
 } from './http.js'
 import { submitJob, wireLocalJobHandlers } from './services/jobs.js'
+import { providerStatus } from './providers/createProvider.js'
+import { resolveExportArtifact, verifyExportToken } from './services/exportStore.js'
 
 assertRuntimeSecrets()
 const store = createMemoryStore()
@@ -128,6 +136,7 @@ const server = createServer(async (req, res) => {
         service: 'storyforge-api',
         desktopMinWidth: config.desktopMinWidth,
         specsLastVerified: PUBLISHING_SPECS.lastVerified,
+        image: providerStatus(),
       })
       return
     }
@@ -148,7 +157,40 @@ const server = createServer(async (req, res) => {
         progressSteps: PROGRESS_STEPS,
         tools: NAMED_TOOLS,
         turboEngines: CHARACTER_TURBO_ENGINES,
+        image: providerStatus(),
+        fal: falModelsPayload(),
       })
+      return
+    }
+
+    // Signed export download (token in query — no desktop session required)
+    const exportMatch = path.match(/^\/v1\/exports\/([^/]+)$/)
+    if (exportMatch && req.method === 'GET') {
+      const exportId = exportMatch[1]
+      const token = url.searchParams.get('token') || ''
+      const artifact = resolveExportArtifact(exportId)
+      if (!artifact) {
+        sendError(res, 404, 'Export not found or expired', 'export_not_found')
+        return
+      }
+      const ownerId = artifact.userId
+      if (!ownerId || !verifyExportToken(exportId, ownerId, token)) {
+        sendError(res, 403, 'Invalid or expired download token', 'export_forbidden')
+        return
+      }
+      const expiresMs = Date.parse(artifact.meta?.expiresAt || '')
+      if (Number.isFinite(expiresMs) && Date.now() > expiresMs) {
+        sendError(res, 410, 'Download link expired', 'export_expired')
+        return
+      }
+      res.writeHead(200, {
+        'Content-Type': artifact.mime || 'application/octet-stream',
+        'Content-Length': artifact.bytes.length,
+        'Content-Disposition': `attachment; filename="${artifact.filename}"`,
+        'Cache-Control': 'private, no-store',
+        'X-Content-Type-Options': 'nosniff',
+      })
+      res.end(artifact.bytes)
       return
     }
 
@@ -194,6 +236,10 @@ const server = createServer(async (req, res) => {
         manuscriptPrinciples: MANUSCRIPT_PRINCIPLES,
         referenceBooks: REFERENCE_BOOKS,
         readingResources: READING_RESOURCES,
+        videoTutorials: VIDEO_TUTORIALS,
+        workflowPlaybooks: WORKFLOW_PLAYBOOKS,
+        tutorialsMeta: TUTORIALS_META,
+        craft: craftLibraryPayload(),
         commercialUse: COMMERCIAL_USE_STATEMENT,
         tools: NAMED_TOOLS,
         config: cfg,
@@ -215,6 +261,31 @@ const server = createServer(async (req, res) => {
         dailyCap: config.dailyCreditCap,
         surface: session.surface,
         trialCredits: config.trialCredits,
+        image: providerStatus(),
+        persistPath: store.persistPath || null,
+        operational: true,
+      })
+      return
+    }
+
+    /** Local-only top-up so you can keep working without Stripe (dev). */
+    if (path === '/v1/credits/grant' && req.method === 'POST') {
+      if (config.isProd || !isLocalSocket(req)) {
+        sendError(res, 403, 'Credit grants only on local non-production API', 'grant_blocked')
+        return
+      }
+      const body = z
+        .object({ amount: z.number().int().min(1).max(500).default(100) })
+        .parse(await readJson(req))
+      await store.appendLedger({
+        userId,
+        delta: body.amount,
+        reason: 'local_grant',
+        meta: { local_only: true },
+      })
+      sendJson(res, 200, {
+        granted: body.amount,
+        credits: await store.getBalance(userId),
       })
       return
     }

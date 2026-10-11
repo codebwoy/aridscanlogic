@@ -1,17 +1,21 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   BookOpen,
   Check,
+  Clapperboard,
   FileOutput,
+  Package,
   Pin,
   Sparkles,
   Wand2,
+  ZoomIn,
 } from 'lucide-react'
 import {
   CREDIT_COSTS,
   CHARACTER_TURBO_ENGINES,
   NAMED_TOOLS,
   PUBLISHING_SPECS,
+  FAL_DEFAULTS,
   estimateBookCredits,
 } from '@storyforge/shared'
 import { api } from '../lib/api.js'
@@ -40,6 +44,9 @@ export default function Studio({
   const [charName, setCharName] = useState('Luna')
   const [engine, setEngine] = useState('v3')
   const [sceneBrief, setSceneBrief] = useState('waves hello in a sunny park')
+  const [motionPrompt, setMotionPrompt] = useState(
+    'Subtle motion, keep face and outfit unchanged, soft children’s book lighting, steady camera',
+  )
   const [pageText, setPageText] = useState('')
   const [lastOutputs, setLastOutputs] = useState(null)
   const [consent, setConsent] = useState(false)
@@ -52,6 +59,39 @@ export default function Studio({
     emotional_core: '',
     format_id: 'picture',
   })
+  const [imageStatus, setImageStatus] = useState(null)
+  const [falCatalogue, setFalCatalogue] = useState(null)
+  const [falModels, setFalModels] = useState({ ...FAL_DEFAULTS })
+
+  useEffect(() => {
+    let cancelled = false
+    api('/v1/specs', { auth: false })
+      .then((data) => {
+        if (cancelled) return
+        setImageStatus(data.image || null)
+        const fal = data.fal || data.image?.fal || null
+        setFalCatalogue(fal?.catalogue || null)
+        if (data.image?.models) {
+          setFalModels((prev) => ({
+            generate: data.image.models.generate || prev.generate,
+            img2img: data.image.models.img2img || prev.img2img,
+            video: data.image.models.video || prev.video,
+            upscale: data.image.models.upscale || prev.upscale,
+          }))
+        }
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    const prefs = active?.meta?.falModels
+    if (prefs && typeof prefs === 'object') {
+      setFalModels((prev) => ({ ...prev, ...prefs }))
+    }
+  }, [active?.id, active?.meta?.falModels])
 
   const estimate = estimateBookCredits({ pages: createForm.page_count, characters: 1 })
   const step = active?.progress_step || 'story'
@@ -80,6 +120,47 @@ export default function Studio({
     }
   }
 
+  function downloadArtifact(file, fallbackName) {
+    if (!file) return
+    const a = document.createElement('a')
+    if (file.downloadPath || file.downloadUrl) {
+      a.href = file.downloadPath || file.downloadUrl
+      a.download = file.filename || fallbackName || 'export'
+      a.rel = 'noopener'
+      a.click()
+      return
+    }
+    if (file.dataUrl) {
+      a.href = file.dataUrl
+      a.download = file.filename || fallbackName || 'export'
+      a.click()
+    }
+  }
+
+  async function persistFalModels(next) {
+    setFalModels(next)
+    if (!active?.id) return
+    try {
+      const { project } = await api(`/v1/projects/${active.id}`, {
+        method: 'PATCH',
+        body: { meta: { ...(active.meta || {}), falModels: next } },
+      })
+      setProjects((list) => list.map((p) => (p.id === project.id ? project : p)))
+      await onSelectProject(project.id)
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
+  function modelInputs() {
+    return {
+      modelGenerate: falModels.generate,
+      modelImg2img: falModels.img2img,
+      modelVideo: falModels.video,
+      modelUpscale: falModels.upscale,
+    }
+  }
+
   async function runJob(type, inputs = {}) {
     if (!active && type !== 'character_turbo') return
     const cost = CREDIT_COSTS[type] ?? 0
@@ -89,7 +170,7 @@ export default function Studio({
     try {
       const res = await runAndWait(type, {
         projectId: active?.id,
-        inputs,
+        inputs: { ...modelInputs(), ...inputs },
       })
       setSession((s) => (s ? { ...s, credits: res.balance } : s))
       if (res.job.status === 'failed') {
@@ -102,21 +183,87 @@ export default function Studio({
             res.job.outputs?.consistencyBadge
               ? ` · consistency ${res.job.outputs.consistencyBadge}`
               : ''
-          }`
+          }${
+            res.job.outputs?.coverWrap
+              ? ` · wrap ${Math.round(res.job.outputs.coverWrap.widthPx)}×${Math.round(res.job.outputs.coverWrap.heightPx)}px`
+              : ''
+          }${res.job.outputs?.pdf?.signed || res.job.outputs?.zip?.signed ? ' · signed download ready' : ''}`,
         )
         if (active?.id) await onSelectProject(active.id)
-        if (res.job.outputs?.pdf?.dataUrl) {
-          const a = document.createElement('a')
-          a.href = res.job.outputs.pdf.dataUrl
-          a.download = res.job.outputs.pdf.filename || 'interior.pdf'
-          a.click()
-        }
+        downloadArtifact(res.job.outputs?.zip, `${type}.zip`)
+        downloadArtifact(res.job.outputs?.pdf, `${type}.pdf`)
       }
+      return res
+    } catch (e) {
+      setError(e.message)
+      return null
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function runFinishPack() {
+    if (!active) return
+    const total = CREDIT_COSTS.export_source_zip || 1
+    if (
+      !window.confirm(
+        `KDP finish pack (interior + cover + checklist ZIP) for ${total} credit(s)?`,
+      )
+    )
+      return
+    setBusy(true)
+    setError('')
+    try {
+      const pack = await runAndWait('export_source_zip', {
+        projectId: active.id,
+        inputs: {
+          trim_id: active.trim_id,
+          page_count: active.page_count,
+          paper_type: active.paper_type || 'white',
+          blurb: active.premise || active.emotional_core || '',
+        },
+      })
+      setSession((s) => (s ? { ...s, credits: pack.balance } : s))
+      if (pack.job.status === 'failed') {
+        setError(pack.job.error || 'Finish pack failed')
+        return
+      }
+      downloadArtifact(pack.job.outputs?.zip, 'kdp-pack.zip')
+      setLastOutputs(pack.job.outputs)
+      setStatus(
+        'KDP pack ready — ZIP includes interior PDF, cover wrap, preflight, checklist. Verify in KDP Previewer.',
+      )
+      await onSelectProject(active.id)
     } catch (e) {
       setError(e.message)
     } finally {
       setBusy(false)
     }
+  }
+
+  function ModelSelect({ role, label, value }) {
+    const options = falCatalogue?.[role] || []
+    if (!options.length) return null
+    return (
+      <div className="sf-field">
+        <label htmlFor={`fal-${role}`}>{label}</label>
+        <select
+          id={`fal-${role}`}
+          value={value}
+          onChange={(e) => persistFalModels({ ...falModels, [role]: e.target.value })}
+        >
+          {options.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.label}
+              {m.tier ? ` · ${m.tier}` : ''}
+            </option>
+          ))}
+        </select>
+        <p className="sf-muted" style={{ margin: '0.25rem 0 0', fontSize: '0.8rem' }}>
+          {options.find((m) => m.id === value)?.note || ''}
+        </p>
+      </div>
+    )
   }
 
   async function approvePin() {
@@ -267,6 +414,42 @@ export default function Studio({
           ))}
         </ul>
 
+        <div className="sf-card" style={{ marginTop: '0.75rem' }}>
+          <p className="sf-muted" style={{ marginTop: 0 }}>
+            Credits: <strong>{session?.credits ?? '—'}</strong>
+            {imageStatus ? (
+              <>
+                {' '}
+                · API <strong>{imageStatus.provider}</strong>
+                {imageStatus.ready ? ' ready' : ' (configure key)'}
+              </>
+            ) : null}
+          </p>
+          <button
+            type="button"
+            className="sf-btn"
+            style={{ width: '100%' }}
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true)
+              setError('')
+              try {
+                const res = await api('/v1/credits/grant', {
+                  method: 'POST',
+                  body: { amount: 100 },
+                })
+                setSession((s) => (s ? { ...s, credits: res.credits } : s))
+                setStatus(`Granted +${res.granted} local credits (balance ${res.credits})`)
+              } catch (e) {
+                setError(e.message)
+              } finally {
+                setBusy(false)
+              }
+            }}
+          >
+            +100 local credits
+          </button>
+        </div>
         <p className="sf-disclaimer">{PUBLISHING_SPECS.disclaimers.notAffiliated}</p>
       </aside>
 
@@ -367,7 +550,7 @@ export default function Studio({
 
       <aside className="sf-tools">
         <div className="sf-tabs" role="tablist">
-          {['character_turbo', 'editor_pro', 'canvas'].map((id) => (
+          {['character_turbo', 'editor_pro', 'scene_to_video', 'canvas'].map((id) => (
             <button
               key={id}
               type="button"
@@ -398,6 +581,7 @@ export default function Studio({
                 ))}
               </select>
             </div>
+            <ModelSelect role="generate" label="fal text→image model" value={falModels.generate} />
             <div className="sf-btn-row">
               <button
                 type="button"
@@ -466,6 +650,7 @@ export default function Studio({
           <div className="sf-card">
             <h3 style={{ marginTop: 0 }}>{NAMED_TOOLS.editor_pro.label}</h3>
             <p className="sf-muted">{NAMED_TOOLS.editor_pro.description}</p>
+            <ModelSelect role="img2img" label="fal Editor img2img model" value={falModels.img2img} />
             <div className="sf-field">
               <label htmlFor="brief">Scene brief</label>
               <textarea
@@ -513,11 +698,121 @@ export default function Studio({
           </div>
         ) : null}
 
+        {toolTab === 'scene_to_video' ? (
+          <div className="sf-card">
+            <h3 style={{ marginTop: 0 }}>{NAMED_TOOLS.scene_to_video.label}</h3>
+            <p className="sf-muted">{NAMED_TOOLS.scene_to_video.description}</p>
+            <p className="sf-warn-note">
+              Requires a generated page still (Editor Pro first). Real clips need{' '}
+              <code>STORYFORGE_IMAGE_PROVIDER=fal</code> + <code>FAL_KEY</code>. Mock mode returns a
+              poster only. Prefer Kling image→video for identity lock; Veo/Seedance are text-led.
+            </p>
+            <ModelSelect role="video" label="fal video model" value={falModels.video} />
+            <div className="sf-field">
+              <label htmlFor="motion">Motion prompt</label>
+              <textarea
+                id="motion"
+                value={motionPrompt}
+                onChange={(e) => setMotionPrompt(e.target.value)}
+              />
+            </div>
+            <div className="sf-btn-row">
+              <button
+                type="button"
+                className="sf-btn sf-btn-primary"
+                disabled={busy || !active || !currentPage?.asset?.url}
+                onClick={() =>
+                  runJob('scene_to_video', {
+                    pageIndex,
+                    brief: sceneBrief,
+                    prompt: motionPrompt,
+                    duration: '5',
+                    imageUrl: currentPage?.asset?.remoteUrl || currentPage?.asset?.url,
+                  })
+                }
+              >
+                <Clapperboard size={16} aria-hidden /> Animate page ({CREDIT_COSTS.scene_to_video})
+              </button>
+            </div>
+            {currentPage?.video?.url ? (
+              <div style={{ marginTop: '0.75rem' }}>
+                <p className="sf-muted" style={{ marginBottom: '0.35rem' }}>
+                  Last clip {currentPage.video.durationSec ? `(${currentPage.video.durationSec}s)` : ''}
+                  {currentPage.video.placeholder ? ' · mock' : ''}
+                </p>
+                {String(currentPage.video.mime || '').startsWith('video/') ||
+                /\.mp4(\?|$)/i.test(currentPage.video.url) ? (
+                  <video
+                    src={currentPage.video.url}
+                    controls
+                    playsInline
+                    style={{ width: '100%', borderRadius: 8, background: '#000' }}
+                  />
+                ) : (
+                  <img
+                    src={currentPage.video.url}
+                    alt="Video poster"
+                    style={{ width: '100%', borderRadius: 8 }}
+                  />
+                )}
+              </div>
+            ) : null}
+            {imageStatus?.models?.video ? (
+              <p className="sf-muted" style={{ marginTop: '0.75rem' }}>
+                fal video model: {imageStatus.models.video}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
         {toolTab === 'canvas' ? (
           <div className="sf-card">
             <h3 style={{ marginTop: 0 }}>{NAMED_TOOLS.canvas.label}</h3>
             <p className="sf-muted">{NAMED_TOOLS.canvas.description}</p>
+            {imageStatus ? (
+              <p
+                className="sf-muted"
+                style={{
+                  marginBottom: '0.75rem',
+                  padding: '0.5rem 0.65rem',
+                  borderRadius: 8,
+                  border: '1px solid hsl(var(--sf-border))',
+                }}
+              >
+                Image API:{' '}
+                <strong>{imageStatus.provider}</strong>
+                {imageStatus.ready ? ' · ready' : ' · not configured'}
+                {imageStatus.connectHint ? (
+                  <span className="sf-warn-note" style={{ display: 'block', marginTop: 4 }}>
+                    {imageStatus.connectHint}
+                  </span>
+                ) : (
+                  <span style={{ display: 'block', marginTop: 4 }}>
+                    Gen: {imageStatus.models?.generate}
+                    {imageStatus.models?.img2img ? ` · Img2img: ${imageStatus.models.img2img}` : ''}
+                    {imageStatus.models?.video ? ` · Video: ${imageStatus.models.video}` : ''}
+                    {' · '}
+                    Upscale 2.5× via {imageStatus.models?.upscale}
+                  </span>
+                )}
+              </p>
+            ) : null}
             <div className="sf-btn-row">
+              <button
+                type="button"
+                className="sf-btn"
+                disabled={busy || !active || !currentPage?.asset?.url}
+                onClick={() =>
+                  runJob('upscale_print', {
+                    pageIndex,
+                    scaleFactor: 2.5,
+                    imageUrl: currentPage?.asset?.url,
+                  })
+                }
+              >
+                <ZoomIn size={16} aria-hidden /> 2.5× print upscale (
+                {CREDIT_COSTS.upscale_print})
+              </button>
               <button
                 type="button"
                 className="sf-btn"
@@ -542,21 +837,50 @@ export default function Studio({
               </button>
               <button
                 type="button"
-                className="sf-btn"
+                className="sf-btn sf-btn-primary"
                 disabled={busy || !active}
                 onClick={() =>
-                  runJob('export_interior_pdf', {
+                  runJob('export_cover_pdf', {
                     trim_id: active.trim_id,
                     page_count: active.page_count,
-                    images: [{ widthPx: 2560, heightPx: 2560 }],
+                    paper_type: active.paper_type || 'white',
+                    blurb: active.premise || active.emotional_core || '',
                   })
                 }
               >
-                Test under-res block
+                <FileOutput size={16} aria-hidden /> Export cover wrap (
+                {CREDIT_COSTS.export_cover_pdf})
+              </button>
+              <button
+                type="button"
+                className="sf-btn"
+                disabled={busy || !active}
+                onClick={() =>
+                  runJob('export_source_zip', {
+                    trim_id: active.trim_id,
+                    page_count: active.page_count,
+                    paper_type: active.paper_type || 'white',
+                    blurb: active.premise || active.emotional_core || '',
+                  })
+                }
+              >
+                <Package size={16} aria-hidden /> KDP ZIP pack (
+                {CREDIT_COSTS.export_source_zip})
+              </button>
+              <button
+                type="button"
+                className="sf-btn sf-btn-primary"
+                disabled={busy || !active}
+                onClick={runFinishPack}
+              >
+                <Package size={16} aria-hidden /> Finish pack (
+                {CREDIT_COSTS.export_source_zip})
               </button>
             </div>
+            <ModelSelect role="upscale" label="fal upscale model" value={falModels.upscale} />
             <p className="sf-muted">
-              Cover wrap is Phase 2 — prepare cover separately for KDP.
+              Print pipeline: 2.5× upscale → print-ready interior PDF + cover wrap → signed ZIP
+              (preflight + checklist + manuscript). Always re-check in the Amazon KDP Previewer.
             </p>
           </div>
         ) : null}
