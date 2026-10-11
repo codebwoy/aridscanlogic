@@ -476,6 +476,177 @@ export const AMAZON_GUIDES = [
     ],
   },
   {
+    id: 'bilingual-story',
+    title: {
+      en: 'How to write a bilingual children’s book story',
+      de: 'Bilinguale Kinderbuch-Story schreiben',
+    },
+    summary: {
+      en: 'One emotional core → character → ~14 spreads → rhyme or lyrical prose → bilingual layout → native translation. Belonging / two-worlds themes for diaspora. Study comps — never copy.',
+      de: 'Ein emotionaler Kern → Figur → ca. 14 Spreads → Reim oder lyrische Prosa → bilinguales Layout → Muttersprach-Übersetzung. Zugehörigkeit / Zwei-Welten für Diaspora. Comps studieren — nie kopieren.',
+    },
+    sections: [
+      {
+        heading: {
+          en: 'Craft formula (study, don’t copy)',
+          de: 'Craft-Formel (studieren, nicht kopieren)',
+        },
+        bullets: {
+          en: [
+            'One universal feeling + one character with a clear problem + hopeful close',
+            'Diaspora themes: belonging between two worlds / brave in a new place / heritage pride',
+            'Heritage-culture names can signal authenticity when community-checked',
+            '~32 pages ≈ 14 spreads: open → problem → struggle → turn → resolve → memorable close',
+          ],
+          de: [
+            'Ein universelles Gefühl + eine Figur mit klarem Problem + hoffnungsvoller Schluss',
+            'Diaspora-Themen: Zugehörigkeit zwischen zwei Welten / Mut an neuem Ort / Heritage-Stolz',
+            'Heritage-Kultur-Namen können Authentizität signalisieren, wenn community-geprüft',
+            'Ca. 32 Seiten ≈ 14 Spreads: Öffnen → Problem → Kampf → Wendung → Auflösung → merkbarer Schluss',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: 'Bilingual layout + translation',
+          de: 'Bilinguales Layout + Übersetzung',
+        },
+        bullets: {
+          en: [
+            'Side-by-side or top/bottom split work best for parent–child reading on Amazon.de',
+            'Rhyme rarely survives direct translation — separate rhymes per language or use lyrical prose',
+            'Never raw machine-translate Twi/Igbo/Swahili/Zulu — two native verifiers before publish',
+            'Aim ~300–500 words per language so pages stay light',
+          ],
+          de: [
+            'Side-by-side oder oben/unten-Split am besten für Eltern–Kind-Lesen auf Amazon.de',
+            'Reim überlebt Direktübersetzung selten — getrennte Reime pro Sprache oder lyrische Prosa',
+            'Nie rohe Maschinenübersetzung für Twi/Igbo/Swahili/Zulu — zwei Muttersprach-Checks vor Publish',
+            'Ca. 300–500 Wörter pro Sprache, damit Seiten leicht bleiben',
+          ],
+        },
+        note: {
+          en: 'Full template + tables in the module below. Cross-check niche research + bilingual kids demand first. For Twi/Igbo: use the heritage translator playbook.',
+          de: 'Volles Template + Tabellen im Modul unten. Zuerst Nischen-Research + Bilingual-Kids-Demand gegenprüfen. Für Twi/Igbo: Heritage-Übersetzer-Playbook nutzen.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'heritage-translator',
+    title: {
+      en: 'How to find a Twi or Igbo translator',
+      de: 'Twi- oder Igbo-Übersetzer:in finden',
+    },
+    summary: {
+      en: 'Machine tools fail for Twi/Igbo. Community-first in DE diaspora → verify with two natives → brief + dialect. Freelance sites optional with samples. Authenticity beats a thin existing listing.',
+      de: 'Maschinen-Tools scheitern bei Twi/Igbo. Community-first in der DE-Diaspora → zwei Muttersprach-Checks → Briefing + Dialekt. Freelance optional mit Samples. Authentizität schlägt ein dünnes bestehendes Listing.',
+    },
+    sections: [
+      {
+        heading: {
+          en: 'Human native only + where to look',
+          de: 'Nur Muttersprach + wo suchen',
+        },
+        bullets: {
+          en: [
+            'Google Translate / DeepL / consumer apps / Kindle Translate are unreliable or unsupported for Twi & Igbo',
+            'Best: Ghanaian / Nigerian Facebook & WhatsApp groups and churches in Germany (credit + free copy or modest pay)',
+            'Universities with African Studies (Hamburg, HU Berlin, Leipzig) often have students open to paid short projects',
+            'Fiverr / Upwork / ProZ: always buy a sample paragraph; confirm dialect (Asante/Fante; Igbo variants)',
+          ],
+          de: [
+            'Google Translate / DeepL / Consumer-Apps / Kindle Translate sind für Twi & Igbo unzuverlässig oder nicht unterstützt',
+            'Beste Quelle: ghanaische / nigerianische Facebook- & WhatsApp-Gruppen und Kirchen in DE (Credit + Freiexemplar oder bescheidene Bezahlung)',
+            'Unis mit Afrikanistik (Hamburg, HU Berlin, Leipzig) haben oft Studierende für kurze bezahlte Projekte',
+            'Fiverr / Upwork / ProZ: immer Sample-Absatz kaufen; Dialekt bestätigen (Asante/Fante; Igbo-Varianten)',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: 'Verify, brief, cost reality',
+          de: 'Prüfen, briefen, Kosten-Realität',
+        },
+        bullets: {
+          en: [
+            'Two-translator rule + read-aloud + cultural + back-translation before publish',
+            'Brief: ages 3–7, short lines, warm tone, names unchanged, dialect stated, credit agreed',
+            '⚠ € ranges in the module are owner snapshots — negotiate in writing',
+            'Study any Igbo–DE comps on Amazon.de for layout/keywords — never copy; authenticity + community promo is the edge',
+          ],
+          de: [
+            'Zwei-Übersetzer-Regel + Lautlese + Kultur + Rückübersetzung vor Publish',
+            'Briefing: Alter 3–7, kurze Zeilen, warmer Ton, Namen unverändert, Dialekt genannt, Credit vereinbart',
+            '⚠ €-Ranges im Modul sind Owner-Snapshots — schriftlich verhandeln',
+            'Igbo–DE-Comps auf Amazon.de für Layout/Keywords studieren — nie kopieren; Authentizität + Community-Promo ist der Vorteil',
+          ],
+        },
+        note: {
+          en: 'Full tables, post template, and checklists in the module below.',
+          de: 'Volle Tabellen, Post-Vorlage und Checklisten im Modul unten.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'kdp-niche-research',
+    title: {
+      en: 'How to research KDP niches before publishing',
+      de: 'KDP-Nischen recherchieren vor dem Publish',
+    },
+    summary: {
+      en: 'Research first, write second. Free stack: autocomplete → category Top 100 → 3-point BSR check → competition lights → keywords → cover audit. BSR→€ tables ⚠. Bilingual DE workflow included.',
+      de: 'Zuerst Research, dann schreiben. Free-Stack: Autocomplete → Kategorie Top 100 → 3-Punkt-BSR-Check → Konkurrenz-Ampel → Keywords → Cover-Audit. BSR→€-Tabellen ⚠. Bilingual-DE-Workflow inklusive.',
+    },
+    sections: [
+      {
+        heading: {
+          en: 'Golden rule + free idea generation',
+          de: 'Goldene Regel + Free-Ideenfindung',
+        },
+        bullets: {
+          en: [
+            'Most KDP failures are research failures — spend 2–3 hours before writing',
+            'Incognito Amazon.de Books autocomplete with seed phrases (Kinderbuch / bilingual / activity)',
+            'Scan Children’s Books subcategory Top 100; note themes, BSR, reviews, price, year',
+            'Diaspora niches: validate in Facebook/WhatsApp groups before creating',
+          ],
+          de: [
+            'Die meisten KDP-Misserfolge sind Research-Fehler — 2–3 Stunden vor dem Schreiben',
+            'Inkognito Amazon.de Bücher-Autocomplete mit Seed-Phrasen (Kinderbuch / bilingual / Activity)',
+            'Kinderbuch-Unterkategorie Top 100 scannen; Themen, BSR, Reviews, Preis, Jahr notieren',
+            'Diaspora-Nischen: in Facebook-/WhatsApp-Gruppen validieren vor dem Erstellen',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: 'Demand, competition, keywords',
+          de: 'Demand, Konkurrenz, Keywords',
+        },
+        bullets: {
+          en: [
+            '3-point check: several BSR under ~300k, some under ~200 reviews, recent entrants still ranking',
+            'Green / yellow / red competition lights before you commit',
+            'Keywords must match buyer language; bilingual patterns in both DE + partner language',
+            'Cover must win at thumbnail size — weak comps = your design edge',
+          ],
+          de: [
+            '3-Punkt-Check: mehrere BSR unter ca. 300k, einige unter ca. 200 Reviews, neue Einträge ranken noch',
+            'Grün-/Gelb-/Rot-Konkurrenz-Ampel vor dem Commit',
+            'Keywords müssen Käufersprache matchen; bilinguale Muster in DE + Partnersprache',
+            'Cover muss in Thumbnail-Größe gewinnen — schwache Comps = Ihr Design-Vorteil',
+          ],
+        },
+        note: {
+          en: '⚠ BSR→monthly sales and royalty € examples are third-party heuristics — use live KDP calculator. Paid tools optional. Full module below.',
+          de: '⚠ BSR→Monats-Sales und Royalty-€-Beispiele sind Drittanbieter-Heuristiken — Live-KDP-Rechner nutzen. Bezahlte Tools optional. Volles Modul unten.',
+        },
+      },
+    ],
+  },
+  {
     id: 'german-first',
     title: {
       en: 'How to start KDP in Germany — language & market',

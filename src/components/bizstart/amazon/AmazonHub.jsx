@@ -37,6 +37,9 @@ import KdpResourcesPanel from '@/components/bizstart/amazon/KdpResourcesPanel'
 import InspirationPanel from '@/components/bizstart/amazon/InspirationPanel'
 import PublishWhatPanel from '@/components/bizstart/amazon/PublishWhatPanel'
 import GermanFirstPanel from '@/components/bizstart/amazon/GermanFirstPanel'
+import NicheResearchPanel from '@/components/bizstart/amazon/NicheResearchPanel'
+import BilingualStoryPanel from '@/components/bizstart/amazon/BilingualStoryPanel'
+import HeritageTranslatorPanel from '@/components/bizstart/amazon/HeritageTranslatorPanel'
 
 const ICONS = {
   kdp: BookOpen,
@@ -56,6 +59,9 @@ const GUIDE_ICONS = {
   'kdp-resources': GraduationCap,
   inspiration: Lightbulb,
   'publish-what': Target,
+  'kdp-niche-research': Search,
+  'bilingual-story': BookOpen,
+  'heritage-translator': Languages,
   'german-first': Languages,
   'merch-ops': Shirt,
   'research-de': Search,
@@ -154,6 +160,18 @@ export default function AmazonHub({ lang = 'en', onBack }) {
 
   function openGermanFirst() {
     openPlaybook('german-first')
+  }
+
+  function openNicheResearch() {
+    openPlaybook('kdp-niche-research')
+  }
+
+  function openBilingualStory() {
+    openPlaybook('bilingual-story')
+  }
+
+  function openHeritageTranslator() {
+    openPlaybook('heritage-translator')
   }
 
   return (
@@ -292,6 +310,39 @@ export default function AmazonHub({ lang = 'en', onBack }) {
                       {amazonT(lang, 'publishWhatHint')}
                     </p>
                     <PublishWhatPanel lang={lang} onOpenStoryforge={onOpenStoryforge} />
+                  </>
+                ) : null}
+                {guide.id === 'bilingual-story' ? (
+                  <>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      {amazonT(lang, 'bilingualStoryTitle')}
+                    </p>
+                    <p className="text-[11px] leading-relaxed text-slate-400">
+                      {amazonT(lang, 'bilingualStoryHint')}
+                    </p>
+                    <BilingualStoryPanel lang={lang} onOpenStoryforge={onOpenStoryforge} />
+                  </>
+                ) : null}
+                {guide.id === 'heritage-translator' ? (
+                  <>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      {amazonT(lang, 'heritageTranslatorTitle')}
+                    </p>
+                    <p className="text-[11px] leading-relaxed text-slate-400">
+                      {amazonT(lang, 'heritageTranslatorHint')}
+                    </p>
+                    <HeritageTranslatorPanel lang={lang} />
+                  </>
+                ) : null}
+                {guide.id === 'kdp-niche-research' ? (
+                  <>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      {amazonT(lang, 'nicheResearchTitle')}
+                    </p>
+                    <p className="text-[11px] leading-relaxed text-slate-400">
+                      {amazonT(lang, 'nicheResearchHint')}
+                    </p>
+                    <NicheResearchPanel lang={lang} />
                   </>
                 ) : null}
                 {guide.id === 'german-first' ? (
@@ -457,6 +508,27 @@ export default function AmazonHub({ lang = 'en', onBack }) {
                       className="flex min-h-[44px] w-full items-center justify-center rounded-xl border border-brand-500/40 bg-brand-950/40 px-3 text-xs font-semibold text-brand-100 sm:w-auto"
                     >
                       {amazonT(lang, 'germanFirstCta')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={openNicheResearch}
+                      className="flex min-h-[44px] w-full items-center justify-center rounded-xl border border-brand-500/40 bg-brand-950/40 px-3 text-xs font-semibold text-brand-100 sm:w-auto"
+                    >
+                      {amazonT(lang, 'nicheResearchCta')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={openBilingualStory}
+                      className="flex min-h-[44px] w-full items-center justify-center rounded-xl border border-brand-500/40 bg-brand-950/40 px-3 text-xs font-semibold text-brand-100 sm:w-auto"
+                    >
+                      {amazonT(lang, 'bilingualStoryCta')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={openHeritageTranslator}
+                      className="flex min-h-[44px] w-full items-center justify-center rounded-xl border border-brand-500/40 bg-brand-950/40 px-3 text-xs font-semibold text-brand-100 sm:w-auto"
+                    >
+                      {amazonT(lang, 'heritageTranslatorCta')}
                     </button>
                   </div>
                 </div>
