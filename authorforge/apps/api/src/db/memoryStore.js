@@ -4,13 +4,18 @@ import { resolveDataPath, loadPersistedState, createDebouncedSaver } from './per
 
 export function createMemoryStore(options = {}) {
   const envPersist = process.env.AUTHORFORGE_PERSIST
-  const persistEnabled =
+  const explicitlyOff =
+    options.persist === false || envPersist === '0' || envPersist === 'false'
+  const explicitlyOn =
     options.persist === true ||
-    (options.persist !== false &&
-      !config.isProd &&
-      envPersist !== '0' &&
-      envPersist !== 'false' &&
-      !process.env.NODE_TEST_CONTEXT)
+    envPersist === '1' ||
+    envPersist === 'true' ||
+    Boolean(process.env.AUTHORFORGE_DATA_PATH)
+  // Dev: persist by default. Prod: only when AUTHORFORGE_PERSIST=1 or DATA_PATH (Fly volume).
+  const persistEnabled =
+    !explicitlyOff &&
+    !process.env.NODE_TEST_CONTEXT &&
+    (explicitlyOn || !config.isProd)
   const persistPath = resolveDataPath(options.persistPath || process.env.AUTHORFORGE_DATA_PATH)
 
   const users = new Map()

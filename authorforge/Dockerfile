@@ -18,12 +18,15 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV AUTHORFORGE_SERVE_STATIC=1
 ENV AUTHORFORGE_WEB_DIST=/app/apps/web/dist
+ENV AUTHORFORGE_PERSIST=1
+ENV AUTHORFORGE_DATA_PATH=/data/state.json
 COPY --from=build /app/package.json /app/package-lock.json* ./
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/packages ./packages
 COPY --from=build /app/apps ./apps
+RUN mkdir -p /data
 EXPOSE 8080
 ENV PORT=8080
 ENV AUTHORFORGE_API_PORT=8080
-USER node
+# Run as root so Fly volume mount at /data is writable after auto-stop/start
 CMD ["node", "apps/api/src/index.js"]

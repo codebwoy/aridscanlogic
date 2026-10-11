@@ -10,13 +10,18 @@ import {
 /** Dev / fallback store when DATABASE_URL is unset. Persists locally for operational use. */
 export function createMemoryStore(options = {}) {
   const envPersist = process.env.STORYFORGE_PERSIST
-  const persistEnabled =
+  const explicitlyOff =
+    options.persist === false || envPersist === '0' || envPersist === 'false'
+  const explicitlyOn =
     options.persist === true ||
-    (options.persist !== false &&
-      !config.isProd &&
-      envPersist !== '0' &&
-      envPersist !== 'false' &&
-      !process.env.NODE_TEST_CONTEXT)
+    envPersist === '1' ||
+    envPersist === 'true' ||
+    Boolean(process.env.STORYFORGE_DATA_PATH)
+  // Dev: persist by default. Prod: only when STORYFORGE_PERSIST=1 or DATA_PATH (Fly volume).
+  const persistEnabled =
+    !explicitlyOff &&
+    !process.env.NODE_TEST_CONTEXT &&
+    (explicitlyOn || !config.isProd)
   const persistPath = resolveDataPath(options.persistPath || process.env.STORYFORGE_DATA_PATH)
   const users = new Map()
   const ledger = []

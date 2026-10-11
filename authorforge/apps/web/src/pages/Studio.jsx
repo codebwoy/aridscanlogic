@@ -147,6 +147,24 @@ export default function Studio({ lang = 'en' }) {
     }
   }
 
+  async function recoverStaleBook(reason) {
+    setMessage(reason || 'Book session expired — reloading…')
+    setBook(null)
+    try {
+      await ensureSession()
+      const list = await listBooks()
+      setBooks(list.books || [])
+      if (list.books?.[0]) {
+        await loadBook(list.books[0].id)
+        setMessage('Reloaded your latest book. Continue from the wizard steps.')
+      } else {
+        setMessage('Server restarted with an empty library. Click “New book” to start again.')
+      }
+    } catch (e) {
+      setMessage(e.message || 'Could not recover session')
+    }
+  }
+
   async function navigateWizard(dir, stepId) {
     if (!book) return
     try {
@@ -155,6 +173,10 @@ export default function Studio({ lang = 'en' }) {
       setBook(r.book)
       setMessage('')
     } catch (e) {
+      if (e.status === 404 || e.code === 'not_found' || /not found/i.test(e.message || '')) {
+        await recoverStaleBook('Book not found (server restarted). Reloading…')
+        return
+      }
       setMessage(e.message || 'Navigation failed — try again')
     }
   }

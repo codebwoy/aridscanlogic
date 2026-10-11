@@ -13,10 +13,11 @@ Each studio container serves **API + built SPA** on one origin (`/health`, `/v1/
 
 ## 1. AuthorForge on Fly
 
-**Single machine required.** The API uses in-memory state (+ optional local `.data`). Two machines = books created on A, “Next” hitting B → silent 404. After first deploy:
+**Single machine + volume required.** The API uses in-memory state persisted to a Fly volume (`/data/state.json`). Without a volume, auto-stop wipes books and Next shows “Book not found”. Two machines also split state.
 
 ```bash
 fly scale count 1 -a scanlogic-authorforge
+fly volumes create authorforge_data --region fra --size 1 -a scanlogic-authorforge   # once
 fly scale count 1 -a scanlogic-storyforge
 ```
 

@@ -16,6 +16,11 @@ primary_region = "fra"
   AUTHORFORGE_SERVE_STATIC = "1"
   AUTHORFORGE_LLM_PROVIDER = "anthropic"
   AUTHORFORGE_PERSIST = "1"
+  AUTHORFORGE_DATA_PATH = "/data/state.json"
+
+[mounts]
+  source = "authorforge_data"
+  destination = "/data"
 
 [http_service]
   internal_port = 8080
