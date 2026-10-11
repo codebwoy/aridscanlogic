@@ -4,6 +4,7 @@ Cursor loads rules from `.cursor/rules/*.mdc`. Use the matching rule when editin
 
 | Rule file | Scope |
 |-----------|--------|
+| `000-design-non-negotiables.mdc` | Always on — design tokens, no freehand UI |
 | `00-project-core.mdc` | Always on — stack, entities, conventions |
 | `01-server-api.mdc` | `server/`, `vite.config.js` |
 | `02-data-layer.mdc` | `appApi`, Supabase sync, `apiFetch` |
@@ -21,7 +22,9 @@ Cursor loads rules from `.cursor/rules/*.mdc`. Use the matching rule when editin
 | `14-tailorcv.mdc` | TailorCV job-targeted CV / cover letter (BizStart) |
 | `15-listingengine.mdc` | German E-Commerce Listing Engine (eBay.de copy + compliance) |
 | `16-ai-mobile-chat.mdc` | Always on — mobile AI answers immersive; tables; room to reply |
+| `17-design-system-rail.mdc` | UI files — Design System Rail (tokens, layouts, build loop) |
+| `18-storyforge.mdc` | StoryForge desktop studio + Launchpad (`storyforge/`) — not a mobile suite tab |
 
-Human-readable security policy: `SECURITY.md`.
+Human-readable security policy: `SECURITY.md`. StoryForge: `storyforge/SECURITY.md`.
 
 **SEO / Pages:** `https://codebwoy.github.io/aridscanlogic` — deploy via `deploy-github-pages.yml` (peaceiris → `gh-pages`). Enable Pages from branch `gh-pages` in repo settings. See `DEPLOY.md`.

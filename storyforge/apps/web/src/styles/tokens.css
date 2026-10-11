@@ -1,0 +1,73 @@
+/* Storybook teal — single primary hue ~172; HSL triplets only */
+:root {
+  --sf-bg: 160 30% 98%;
+  --sf-fg: 175 35% 12%;
+  --sf-muted: 175 12% 38%;
+  --sf-card: 0 0% 100%;
+  --sf-border: 168 18% 86%;
+  --sf-primary: 172 55% 32%;
+  --sf-primary-fg: 160 40% 98%;
+  --sf-secondary: 168 25% 92%;
+  --sf-accent: 42 70% 92%;
+  --sf-warning: 38 92% 48%;
+  --sf-danger: 0 72% 48%;
+  --sf-success: 152 55% 36%;
+  --sf-radius: 0.5rem;
+  --sf-font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --sf-font: "Source Sans 3", "Source Sans Pro", "Segoe UI", "Helvetica Neue", sans-serif;
+  --sf-shell-bg: 165 28% 94%;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sf-bg: 175 28% 8%;
+    --sf-fg: 160 30% 96%;
+    --sf-muted: 165 12% 68%;
+    --sf-card: 175 22% 12%;
+    --sf-border: 168 16% 22%;
+    --sf-primary: 172 50% 42%;
+    --sf-primary-fg: 160 40% 98%;
+    --sf-secondary: 168 18% 18%;
+    --sf-accent: 42 40% 22%;
+    --sf-shell-bg: 175 24% 10%;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--sf-font);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, hsl(172 55% 32% / 0.12), transparent 55%),
+    radial-gradient(900px 500px at 90% 0%, hsl(42 70% 70% / 0.14), transparent 50%),
+    hsl(var(--sf-shell-bg));
+  color: hsl(var(--sf-fg));
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid hsl(var(--sf-primary));
+  outline-offset: 2px;
+}

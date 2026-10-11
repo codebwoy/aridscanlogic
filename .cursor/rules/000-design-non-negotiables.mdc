@@ -1,0 +1,17 @@
+---
+description: Design non-negotiables — apply to every UI change
+alwaysApply: true
+---
+
+# Design Non-Negotiables
+
+- NEVER write a hex code, `rgb()`, or a raw utility color class in components. Every color is a token from `src/index.css` `@theme` / `:root` (`brand-*`, `surface-*`, semantic tokens). Add new semantics in that file first.
+- NEVER hand-roll a button, modal, table, input, or card if a shared primitive already exists (`premium-card`, layout shell pieces, module patterns). Search `src/components/` and reuse/compose.
+- NEVER invent a one-off layout. Select from the named layout archetypes in `design-system-rail.mdc` only.
+- A user's design input is minimal — DERIVE the full coordinated token set programmatically; never ask for more inputs than necessary and never freehand the rest per screen.
+- Minimum 44×44px touch targets on every interactive element (`--touch-min`, `.touch-target`, `min-h-[48px]` where neighbors already use it).
+- After any UI change, run the build (`npm run build`) and fix errors before considering the task done.
+- Mobile-first always; AI multi-line answers follow `16-ai-mobile-chat.mdc` immersive rules.
+- Prefer German UI copy where neighboring strings are DE; keep `SafeMarkdown` for AI/OCR HTML.
+
+Full detail: `17-design-system-rail.mdc`.

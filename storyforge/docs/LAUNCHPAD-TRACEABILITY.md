@@ -1,0 +1,43 @@
+# Launchpad Part A — Traceability (S1–S32)
+
+Status after initial implementation. Export PDF pipeline remains a preflight stub (real signed URLs = next).
+
+| ID | Requirement | Status | Where |
+|----|-------------|--------|-------|
+| S1 | Non-illustrators / KDP children’s books | done | Studio + Launchpad onboarding copy (`i18n.js`, `LaunchpadPanel`) |
+| S2 | Midjourney/DALL·E consistency problem | done | Onboarding + Character step (`StudioWorkbench`, Launchpad intro) |
+| S3 | One full-body front white-bg anchor | done | `character_turbo` / Character Turbo UI |
+| S4 | Every page from pinned anchor | done | `ANCHOR_REQUIRED_TYPES` in `jobs.js`; `AnchorStrip` |
+| S5 | Character Turbo + V3 selector | done | Named tool + `CHARACTER_TURBO_ENGINES` |
+| S6 | Editor Pro from anchor | done | `editor_pro` job + UI tab |
+| S7 | Story Scene Pro (two characters) | done | `story_scene_pro` job + Studio tool |
+| S8 | Photo to Cartoon | done | Recorded consent API + no raw photo on jobs |
+| S9 | Canvas trim / text / bubbles / page export | done | `PageCanvas` + Studio layout |
+| S10 | Correct trim sizes | done | `publishing-specs` + project trim |
+| S11 | Direct-to-KDP file / checklist | done | Interior PDF via `pdfExport` + upload checklist |
+| S12 | Quick Book ~10 min estimate | done | Recipe + config `quick_book_time_estimate` ⚠ |
+| S13 | Prompt Library copy/apply | done | `/v1/launchpad/prompts` + UI |
+| S14 | Photo → personalised book | done | Photo tool + recipe; consent required |
+| S15 | Gift niche entry | done | Personalised Baby Books guide + warning |
+| S16 | Niche guides (BTS + Baby) | done | Seed guides + Start this book |
+| S17 | BSR / revenue fields | done | Manual `marketData` fields (no scrape) |
+| S18 | Seasonal timing + publish-by | done | Dual source strings + countdown field |
+| S19 | Google Trends panel | done | Official Trends link + note field |
+| S20 | AI disclosure during upload / confidential claim | done | Config + course; ⚠ verify |
+| S21 | Prompt → disclose | done | `assessDisclosure` |
+| S22 | Enhance hand-painted → assisted | done | `assessDisclosure` + ⚠ |
+| S23 | Commercial-use statement | done | `COMMERCIAL_USE_STATEMENT` (mock) |
+| S24 | US copyright explainer | done | Config value S24 |
+| S25 | 20 free credits | done | `STORYFORGE_TRIAL_CREDITS` default 20 + UI |
+| S26 | Format chooser table | done | Course step 1 |
+| S27 | Manuscript coach principles | done | Course step 2 |
+| S27b | Koala Who Could reference card | done | Notes-only reference book |
+| S28 | Illustrate checklist | done | Course step 3 → tools |
+| S29 | Layout Canvas checklist | done | Course step 4 + Canvas |
+| S30 | KDP upload checklist + 60% | done | Step 5 + royalty config ⚠ |
+| S31 | Post-launch checklist | done | Course step 6 |
+| S32 | Books & Guides slots | done | Empty editable slots by group |
+
+## Part B (not built unless approved)
+
+B-1 light (manual BSR) shipped with Part A. B-3 warning + B-4 consent gate shipped as security for S14/S15. Full B-2 royalty calculator, B-5 versioned official links, B-6 DACH calendar, etc. remain optional.

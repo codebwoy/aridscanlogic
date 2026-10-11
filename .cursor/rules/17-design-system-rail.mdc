@@ -1,0 +1,153 @@
+---
+description: Design System Rail — tokens, component-library-only UI, named layouts, self-healing build loop
+globs: src/**/*.{jsx,js,css},src/components/**/*,src/pages/**/*,src/index.css
+alwaysApply: false
+---
+
+# Design System Rail
+
+Portable constraint: the model must not invent color or layout freely — only select from the pre-engineered rail of tokens, shared primitives, and named layout archetypes. Treat as an engineering constraint, not a suggestion.
+
+## ScanLogic adaptation (filled blanks)
+
+| Blank | Value |
+|-------|--------|
+| Framework / UI kit | React 19 + Vite 8 + Tailwind 4; shared shell via `AppShell`, `premium-card`, module patterns — prefer existing primitives over new libraries |
+| Design input | One primary brand hue (or short vibe). Derive secondary/muted/accent/surfaces from it. Do not interview for a full palette. |
+| Layout archetypes | `suite-shell`, `module-home`, `wizard-steps`, `ai-chat-immersive`, `centered-form`, `settings-stack` |
+| Extra semantic tokens | `brand-*`, `surface` / `surface-elevated` / `surface-card`, success/warning/destructive when needed — add in `src/index.css` `@theme` first |
+
+Canonical token file: `src/index.css` (`@theme` + `:root`).
+
+## Cursor enforcement
+
+Whenever a task involves UI (pages, components, forms, tables, dashboards, auth, landing, settings, mobile/responsive, dark surfaces, admin), apply this rail automatically.
+
+Before creating UI:
+
+1. Search the codebase for reusable components.
+2. Prefer composition over duplication.
+3. Never create a second implementation of an existing component.
+4. Extend existing primitives whenever possible.
+
+---
+
+## The Rail
+
+### 1. Colors — design tokens only, never hardcoded
+
+Define every color as CSS custom properties / Tailwind `@theme` tokens in **one place** (`src/index.css`), once.
+
+Preferred token shape (HSL triplets for new work — shadcn/Tailwind-compatible; existing hex `@theme` values stay until migrated as a deliberate token change):
+
+```css
+:root {
+  --background: 222 47% 6%;
+  --foreground: 210 40% 98%;
+  --primary: 239 84% 67%; /* brand seed */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 217 33% 17%;
+  --secondary-foreground: 210 40% 98%;
+  --accent: 217 33% 20%;
+  --muted: 217 33% 14%;
+  --muted-foreground: 215 16% 65%;
+  --border: 217 33% 22%;
+  --radius: 0.5rem;
+}
+```
+
+Rules:
+
+- Components reference tokens (`bg-brand-600`, `bg-surface-card`, `text-slate-*` only if already tokenized / theme-mapped — prefer `brand-*` / `surface-*`). Never `#6366f1` or `bg-[#…]` in JSX.
+- A genuinely new semantic color (success, warning, destructive) is added to `@theme` / `:root` first, then used.
+- Border radius, shadow depth, and structural tokens are platform-wide — not re-decided per screen. Prefer existing scales (`rounded-xl`, `rounded-2xl`, `.premium-card`).
+
+### 2. Turning ONE input into a full coordinated palette
+
+Never ask for more than one or two inputs (primary brand color or a short vibe). Then derive:
+
+1. Resolve input to a base hue (HSL from color, or map vibe → hue/saturation).
+2. Clamp primary lightness into a readable range (~L 35–55% on light; adjust for dark surfaces so contrast holds).
+3. Compute foreground automatically — near-white or near-black for WCAG AA (≥4.5:1). Never assume white/black without checking.
+4. Derive secondary / muted / accent as fixed offsets of the **same hue** (vary S/L only).
+5. Re-check contrast on the full set; iterate lightness until every pairing passes. Never ship a failing palette.
+
+This is context hydration: fill unspecified design inside a constrained space — do not freehand per screen.
+
+### 3. Components — established primitives only, never hand-rolled
+
+Commit to existing ScanLogic primitives and patterns:
+
+- Cards / panels: `premium-card`, `premium-card-gradient`
+- Shell / nav: `AppShell`, `TabBar`, `ResponsiveNav`, `ResponsiveTabs`
+- Feedback: `sonner` toasts; `PremiumModal` for premium gates
+- AI bodies: `SafeMarkdown` / `LawyerMarkdown` — never unsanitized HTML
+- Forms / lists: match neighboring module JSX (DocDraft, Tax Vault, Contracts, etc.)
+
+Compose app-specific UI by wrapping these — never a parallel button/modal/card stack with duplicated internal styling.
+
+Minimum **44×44px** touch targets (`--touch-min`, `.touch-target`). Verify custom size variants.
+
+If introducing an external kit (e.g. shadcn later), adopt it project-wide for new primitives — do not mix one-off library forks.
+
+### 4. Layout — named archetypes, not freehand invention
+
+Select via intent / structure — do not “design a layout” from scratch:
+
+| Archetype | Use when |
+|-----------|----------|
+| `suite-shell` | Suite tabs inside Dashboard + AppShell; bottom nav &lt; lg, sidebar ≥ lg |
+| `module-home` | Module landing with header + scrollable content + primary CTA |
+| `wizard-steps` | Multi-step flows (BizStart, registration, builders) |
+| `ai-chat-immersive` | Multi-line AI answers — see `16-ai-mobile-chat.mdc` |
+| `centered-form` | Auth, short settings forms, single-purpose capture |
+| `settings-stack` | Vertical stacked rows / toggles (`SettingsPage`, module settings) |
+
+Inventing a new archetype is a deliberate, flagged decision — not the default.
+
+### 5. Typography & spacing — fixed scale, no arbitrary values
+
+- Font sizes: Tailwind scale only (`text-sm` … `text-3xl`) — never `text-[17px]`.
+- Spacing: default scale (4px multiples) — never `p-[13px]`.
+- Fonts: keep the app’s curated stack from `index.css` / existing pages — no open-ended font picker.
+- Inputs ≥16px on mobile (already enforced in `index.css`).
+
+### 6. Self-healing build loop
+
+After generating or editing UI:
+
+1. Fix syntax / import errors.
+2. Fix lint issues if configured.
+3. Run `npm run build` and resolve failures.
+4. Remove unused / dead styles and orphaned components.
+5. If visual feedback is available (browser preview), verify the render — compile ≠ looks right.
+
+A UI task is not done until the project builds successfully.
+
+---
+
+## Token enforcement
+
+Never introduce in components: hardcoded colors, arbitrary spacing, arbitrary font sizes, arbitrary border radii, arbitrary shadows. New semantics → global token system first.
+
+## Layout enforcement
+
+Choose the closest existing archetype. New archetype only if none fit.
+
+## Accessibility (required)
+
+- WCAG AA contrast
+- Keyboard navigation
+- Visible focus states
+- Accessible labels where appropriate
+- ≥44×44px interactive targets
+
+## Responsive design
+
+Mobile-first on first implementation. Never defer responsiveness.
+
+## Quality bar
+
+Before completing UI work: remove duplicated patterns; simplify overbuilt layouts; consistent spacing, typography, tokens, and components.
+
+Assume production SaaS quality (maintainable, reusable, accessible, consistent with this rail). If multiple valid implementations exist, pick the most maintainable and rail-aligned one.

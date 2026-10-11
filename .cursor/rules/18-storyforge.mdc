@@ -1,0 +1,34 @@
+---
+description: StoryForge desktop children’s book studio (sibling app)
+globs: storyforge/**,src/lib/storyforge/**
+alwaysApply: false
+---
+
+# StoryForge
+
+## Placement
+
+- **Not** a ScanLogic tab and **not** available on mobile.
+- Entry: Amazon Hub → `launchStoryforgeDesktop()` → `VITE_STORYFORGE_URL`.
+- Code: `storyforge/` monorepo (`packages/shared`, `apps/api`, `apps/worker`, `apps/web`).
+
+## Rules
+
+- Desktop min width **1024px** — enforce in web gate **and** API session issue / `requireDesktop`.
+- Credits = append-only ledger; show cost before jobs; refund on failure.
+- Amazon trim/bleed/spine/DPI values live in `@storyforge/shared` `publishing-specs` with `lastVerified`.
+- Image provider keys server-only; use `ImageProvider` interface + mock for tests.
+- No unofficial Amazon upload automation — export files + checklist only.
+- Do not claim guaranteed copyright ownership of pure AI art; keep independence disclaimer.
+- **Launchpad** lives in StoryForge web (`#launchpad` / `?view=launchpad`), not as a ScanLogic tab. Hub only deep-links.
+- Scene jobs must start from a **pinned Character Turbo / Photo-to-Cartoon anchor**.
+- Photo path: guardian consent required; never accept raw photo bytes on `/v1/jobs`.
+- Source-traced KDP claims use editable config with ⚠ `verified_note` — do not hardcode as verified law.
+
+## Commands
+
+```bash
+cd storyforge && npm install && npm test
+npm run dev:api   # :8787
+npm run dev:web   # :5180
+```

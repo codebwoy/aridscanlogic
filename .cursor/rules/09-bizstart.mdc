@@ -18,7 +18,9 @@ Steps include (via step components):
 - `InfoCollector.jsx` — business data
 - `StepGewerbe.jsx`, `StepFinanzamt.jsx`, `StepVat.jsx`, `StepHandelsregister.jsx`, `StepIhk.jsx`, `StepBank.jsx`
 - `StepComplete.jsx`
-- `StepTailorCv.jsx` / `StepListingEngine.jsx` — optional tools (not registration steps)
+- `StepTailorCv.jsx` / `StepListingEngine.jsx` / `StepAmazonHub.jsx` — optional tools (not registration steps)
+- Amazon hub: `lib/bizstart/amazon/*` + `components/bizstart/amazon/AmazonHub.jsx` — KDP/Merch programmes + DE playbooks (`guides.js` + `kdpConfig`/`kdpResourcesConfig`/`inspirationConfig`/`publishWhatConfig`/`germanFirstConfig`/`merchConfig` panels: requirements, learning path, what-to-publish, German-first language/market, Merch ops/scale with ⚠; not eBay Listing Engine; no Amazon scrape/API publish)
+- StoryForge desktop launch: `lib/storyforge/launch.js` from Amazon Hub (desktop ≥1024px only; studio code in `storyforge/`)
 - `ComplianceCalendar.jsx` — deadlines
 - `RegistrationChat.jsx` — LLM assistant (BizStart-specific prompt, not licensed advisor)
 

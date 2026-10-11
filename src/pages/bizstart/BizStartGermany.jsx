@@ -13,6 +13,7 @@ import {
   Mail,
   Sparkles,
   Package,
+  ShoppingBag,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { t } from '@/lib/bizstart/i18n'
@@ -40,6 +41,7 @@ import StepLebenslauf from './StepLebenslauf'
 import StepAnschreiben from './StepAnschreiben'
 import StepTailorCv from './StepTailorCv'
 import StepListingEngine from './StepListingEngine'
+import StepAmazonHub from './StepAmazonHub'
 import StepComplete from './StepComplete'
 import ComplianceCalendar from './ComplianceCalendar'
 import RegistrationChat from './RegistrationChat'
@@ -233,6 +235,15 @@ export default function BizStartGermany({ onExit, onComplete }) {
     )
   }
 
+  if (screen === 'amazonHub') {
+    return (
+      <div className="w-full min-w-0 max-w-full">
+        <StepAmazonHub lang={lang} onBack={() => setScreen('home')} />
+        <RegistrationChat lang={lang} open={chatOpen} onClose={setChatOpen} />
+      </div>
+    )
+  }
+
   if (stepScreens[screen]) {
     const Step = stepScreens[screen]
     return (
@@ -396,6 +407,27 @@ export default function BizStartGermany({ onExit, onComplete }) {
             {lang === 'de'
               ? 'Kann ich verkaufen? · Listing bereit machen · Profit & Publish Readiness'
               : 'Can I sell this? · Make listing ready · Profit & Publish Readiness'}
+          </p>
+        </div>
+        <ChevronRight className="h-5 w-5 shrink-0 text-brand-400" />
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setScreen('amazonHub')}
+        className="premium-card mb-4 flex w-full min-w-0 items-center gap-3 p-4 text-left"
+      >
+        <ShoppingBag className="h-5 w-5 shrink-0 text-brand-400" />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold">
+            {lang === 'de'
+              ? 'Amazon — KDP, Merch & Businesses'
+              : 'Amazon — KDP, Merch & businesses'}
+          </p>
+          <p className="text-xs text-slate-500">
+            {lang === 'de'
+              ? 'KDP · Merch · PartnerNet · ACX · FBA/FBM · Prioritäten für DE'
+              : 'KDP · Merch · Associates · ACX · FBA/FBM · DE priorities'}
           </p>
         </div>
         <ChevronRight className="h-5 w-5 shrink-0 text-brand-400" />

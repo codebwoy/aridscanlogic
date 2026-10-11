@@ -72,6 +72,14 @@ Static hosts (GitHub Pages, S3-only) **cannot** run the LLM proxy. Options:
 - Publish requires `human_approved` and rejects `compliance_blocked` on the server.
 - Prefer **sandbox** (`EBAY_ENV=sandbox`) until policies, locations, and category IDs are verified.
 
+## StoryForge (desktop studio)
+
+- Lives under `storyforge/` — separate API (`:8787`) and web (`:5180`), not inside the Vite PWA bundle.
+- Launch from BizStart → Amazon Hub via `VITE_STORYFORGE_URL` (URL only).
+- Server secrets (`STORYFORGE_SESSION_SECRET`, `STORYFORGE_API_SECRET`, provider keys) stay in `storyforge/.env` — never `VITE_*`.
+- Mutating APIs require an HMAC **desktop** session; mobile is product-gated.
+- Details: `storyforge/SECURITY.md`.
+
 ## Reporting
 
 Open a private security issue on the repository or contact the maintainer directly.

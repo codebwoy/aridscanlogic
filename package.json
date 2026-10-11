@@ -14,7 +14,11 @@
     "pwa:icons": "node scripts/generate-pwa-icons.mjs",
     "db:migrate": "psql \"$DATABASE_URL\" -f supabase/migrations/20250602000000_scanlogic_schema.sql",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "storyforge:install": "npm install --prefix storyforge",
+    "storyforge:test": "npm run test --prefix storyforge",
+    "storyforge:dev:api": "npm run dev:api --prefix storyforge",
+    "storyforge:dev:web": "npm run dev:web --prefix storyforge"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.107.0",
