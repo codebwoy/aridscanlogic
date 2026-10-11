@@ -143,13 +143,31 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
         topic: inputs.topic || book?.topic,
         asin: inputs.asin,
       })
-      const agent = await runAgent(llm, 'positioning.v1', {
-        modelClass: 'cheap',
-        input: { meta, topic: inputs.topic || book?.topic },
-        metadata: { bookId, jobId },
-      })
-      if (book) await store.addLlmCost(userId, bookId, agent.completion.costUsd)
-      return { meta, angles: agent.parsed, tokens: agent.completion }
+      // Comps UI needs meta.titles even if positioning JSON fails validation.
+      let angles = {
+        angles: [],
+        disclaimer: 'Comparable titles from market adapter (estimates only).',
+      }
+      let tokens = null
+      try {
+        const agent = await runAgent(llm, 'positioning.v1', {
+          modelClass: 'cheap',
+          input: { meta, topic: inputs.topic || book?.topic },
+          metadata: { bookId, jobId },
+        })
+        angles = agent.parsed
+        tokens = agent.completion
+        if (book) await store.addLlmCost(userId, bookId, agent.completion.costUsd)
+      } catch (e) {
+        angles = {
+          angles: [],
+          disclaimer: `Titles loaded; positioning angles skipped (${e.message || 'parse error'}).`,
+        }
+      }
+      if (book && Array.isArray(meta?.titles) && meta.titles.length) {
+        await store.updateBook(userId, bookId, { competitors: meta.titles })
+      }
+      return { meta, angles, tokens }
     }
     case 'title_variations': {
       const agent = await runAgent(llm, 'title.v1', {

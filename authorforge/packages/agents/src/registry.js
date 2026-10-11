@@ -61,7 +61,10 @@ const REGISTRY = {
     name: 'positioning',
     version: 'v1',
     file: null,
-    inlineSystem: 'PositioningAgent: differentiated angles from public metadata only.',
+    inlineSystem: `PositioningAgent: differentiated angles from public metadata only.
+Return ONLY JSON shaped exactly as:
+{"angles":[{"name":"...","rationale":"...","confidence":"low|medium|high"}],"disclaimer":"..."}
+Never invent sales ranks, review counts, or Amazon scrape claims. Use estimates/fixtures only.`,
     outputSchema: z.object({
       angles: z.array(
         z.object({
@@ -130,15 +133,69 @@ export function renderPrompt(template, vars = {}) {
   )
 }
 
+/** Coerce common LLM shapes into the registered Zod schema before parse. */
+function normalizeAgentPayload(data, schema) {
+  if (data == null) return data
+  const shape = schema?.shape || null
+  const preferredArrayKey =
+    (shape && Object.keys(shape).find((k) => k === 'angles' || k === 'options' || k === 'items')) ||
+    'angles'
+
+  // Root array → wrap
+  if (Array.isArray(data)) {
+    return { [preferredArrayKey]: data }
+  }
+  if (typeof data !== 'object') return data
+
+  let next = data
+  // Alias keys models often use instead of `angles`
+  if (next.angles == null) {
+    const alt =
+      next.positioning ||
+      next.competitive_angles ||
+      next.differentiators ||
+      next.options ||
+      next.items
+    if (Array.isArray(alt)) next = { ...next, angles: alt }
+  }
+  // Map { title, reason } style objects into name/rationale
+  if (Array.isArray(next.angles)) {
+    next = {
+      ...next,
+      angles: next.angles.map((a) => {
+        if (!a || typeof a !== 'object') return a
+        return {
+          name: a.name || a.title || a.angle || 'Angle',
+          rationale: a.rationale || a.reason || a.description || a.summary || '',
+          confidence: a.confidence,
+        }
+      }),
+    }
+  }
+  return next
+}
+
 export function parseAgentJson(text, schema) {
   let raw = String(text || '').trim()
   const fence = raw.match(/```(?:json)?\s*([\s\S]*?)```/)
   if (fence) raw = fence[1].trim()
-  const start = raw.indexOf('{')
-  const end = raw.lastIndexOf('}')
-  if (start >= 0 && end > start) raw = raw.slice(start, end + 1)
-  const data = JSON.parse(raw)
-  return schema.parse(data)
+  // Prefer object; fall back to array JSON
+  const objStart = raw.indexOf('{')
+  const objEnd = raw.lastIndexOf('}')
+  const arrStart = raw.indexOf('[')
+  const arrEnd = raw.lastIndexOf(']')
+  if (objStart >= 0 && objEnd > objStart && (arrStart < 0 || objStart <= arrStart)) {
+    raw = raw.slice(objStart, objEnd + 1)
+  } else if (arrStart >= 0 && arrEnd > arrStart) {
+    raw = raw.slice(arrStart, arrEnd + 1)
+  }
+  let data = JSON.parse(raw)
+  data = normalizeAgentPayload(data, schema)
+  const result = schema.safeParse(data)
+  if (result.success) return result.data
+  const issue = result.error.issues?.[0]
+  const hint = issue ? `${issue.path.join('.') || 'root'}: ${issue.message}` : 'invalid JSON shape'
+  throw new Error(`Agent output failed validation (${hint}). Try again.`)
 }
 
 export function promptFilesOnDisk() {
