@@ -787,3 +787,49 @@ textarea.sf-input {
   background: hsl(var(--sf-primary) / 0.08);
   font-weight: 600;
 }
+
+/* Theme-aware name ideas (IP Character Builder) */
+.sf-name-context {
+  margin: 0.75rem 0 1rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid hsl(var(--sf-border));
+  border-radius: var(--sf-radius);
+  background: hsl(var(--sf-primary) / 0.06);
+}
+
+.sf-name-ideas {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0.65rem 0 0.5rem;
+}
+
+.sf-name-idea {
+  display: grid;
+  gap: 0.25rem;
+  text-align: left;
+  min-height: 48px;
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--sf-radius);
+  border: 1px solid hsl(var(--sf-border));
+  background: hsl(var(--sf-card));
+  color: hsl(var(--sf-fg));
+  cursor: pointer;
+}
+
+.sf-name-idea:hover:not(:disabled) {
+  border-color: hsl(var(--sf-primary));
+  background: hsl(var(--sf-primary) / 0.08);
+}
+
+.sf-name-idea-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sf-name-idea-why {
+  font-size: 0.78rem;
+  color: hsl(var(--sf-muted));
+  line-height: 1.35;
+}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   IP_SIGNATURE_COLORS,
   IP_EMOTIONAL_HOOKS,
@@ -7,6 +7,8 @@ import {
   emptyIpCharacter,
   assessCharacterName,
   IP_CHARACTER_META,
+  generateCharacterNames,
+  CHARACTER_NAME_META,
 } from '@storyforge/shared'
 import { api } from '../lib/api.js'
 
@@ -14,21 +16,68 @@ import { api } from '../lib/api.js'
 export default function IpCharacterBuilder({
   projectId,
   initialDna,
+  bookContext,
   busy,
   setBusy,
   setError,
   setStatus,
   onLocked,
   onProject,
+  onBookContextSaved,
 }) {
   const [dna, setDna] = useState(() => emptyIpCharacter(initialDna || {}))
   const [seriesHits, setSeriesHits] = useState([])
+  const [nameIdeas, setNameIdeas] = useState(null)
+  const [shuffleSeed, setShuffleSeed] = useState(1)
+  const [coreDraft, setCoreDraft] = useState(bookContext?.emotional_core || '')
+  const autoSeededFor = useRef('')
   const locked = Boolean(dna.locked_at)
   const nameCoach = useMemo(() => assessCharacterName(dna.name), [dna.name])
+
+  const nameContext = useMemo(
+    () => ({
+      bookTitle: bookContext?.title || '',
+      emotionalCore: coreDraft || bookContext?.emotional_core || '',
+      premise: bookContext?.premise || '',
+      refrain: bookContext?.refrain || '',
+      emotionalHook: dna.emotionalHook,
+      definingTrait: dna.definingTrait,
+      culturalEnrichment: dna.culturalEnrichment,
+    }),
+    [
+      bookContext?.title,
+      bookContext?.emotional_core,
+      bookContext?.premise,
+      bookContext?.refrain,
+      coreDraft,
+      dna.emotionalHook,
+      dna.definingTrait,
+      dna.culturalEnrichment,
+    ],
+  )
 
   useEffect(() => {
     setDna(emptyIpCharacter(initialDna || {}))
   }, [projectId, initialDna?.updated_at, initialDna?.locked_at])
+
+  useEffect(() => {
+    setCoreDraft(bookContext?.emotional_core || '')
+  }, [projectId, bookContext?.emotional_core])
+
+  // Auto-seed a first batch once when opening an unlocked project (local, 0 credits)
+  useEffect(() => {
+    if (!projectId || locked) return
+    if (autoSeededFor.current === projectId) return
+    autoSeededFor.current = projectId
+    const batch = generateCharacterNames({
+      ...nameContext,
+      seed: hashLite(`${projectId}:${nameContext.emotionalCore}:${nameContext.emotionalHook}`),
+      count: 8,
+      exclude: dna.name ? [dna.name] : [],
+    })
+    setNameIdeas(batch)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- seed once per project open
+  }, [projectId, locked])
 
   function patch(field, value) {
     setDna((d) => ({ ...d, [field]: value }))
@@ -84,6 +133,86 @@ export default function IpCharacterBuilder({
     }
   }
 
+  function refreshNameIdeas(nextSeed = shuffleSeed) {
+    const batch = generateCharacterNames({
+      ...nameContext,
+      seed: nextSeed,
+      count: 8,
+      exclude: dna.name ? [dna.name] : [],
+    })
+    setNameIdeas(batch)
+    setShuffleSeed(nextSeed)
+    setStatus?.(
+      `Name ideas for “${batch.hook}” · ${batch.ideas.length} options (0 credits) — suggestions only`,
+    )
+  }
+
+  async function saveEmotionalCore() {
+    if (!projectId || !onBookContextSaved) {
+      refreshNameIdeas(shuffleSeed + 1)
+      return
+    }
+    setBusy(true)
+    setError('')
+    try {
+      await onBookContextSaved({ emotional_core: coreDraft.trim() })
+      setStatus('Emotional core saved — refreshing name ideas')
+      // Local refresh with latest draft (API project core updates via parent reload)
+      refreshNameIdeas(shuffleSeed + 3)
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function refreshNameIdeasFromApi(nextSeed = Date.now()) {
+    if (!projectId) {
+      refreshNameIdeas(nextSeed)
+      return
+    }
+    setBusy(true)
+    setError('')
+    try {
+      if (onBookContextSaved && coreDraft.trim() !== (bookContext?.emotional_core || '')) {
+        await onBookContextSaved({ emotional_core: coreDraft.trim() })
+      }
+      const res = await api(`/v1/projects/${projectId}/name-ideas`, {
+        method: 'POST',
+        body: {
+          seed: nextSeed,
+          count: 8,
+          exclude: dna.name ? [dna.name] : [],
+          emotionalCore: coreDraft.trim(),
+          emotionalHook: dna.emotionalHook,
+          definingTrait: dna.definingTrait,
+          culturalEnrichment: dna.culturalEnrichment,
+        },
+      })
+      setNameIdeas(res.ideas)
+      setShuffleSeed(nextSeed)
+      setStatus(
+        `Name ideas for “${res.ideas?.hook}” · ${res.ideas?.ideas?.length || 0} options (0 credits)`,
+      )
+    } catch {
+      refreshNameIdeas(nextSeed)
+      setError('')
+      setStatus('Name ideas (local generator)')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function hashLite(str) {
+    let h = 2166136261
+    const s = String(str || '')
+    for (let i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i)
+      h = Math.imul(h, 16777619)
+    }
+    return h >>> 0
+  }
+
   async function unlockDna() {
     if (!projectId) return
     if (
@@ -124,6 +253,89 @@ export default function IpCharacterBuilder({
         <p className="sf-warn-note">Lock DNA before Character Turbo can run.</p>
       )}
 
+      <div className="sf-name-context">
+        <h4 style={{ margin: '0 0 0.35rem', fontSize: '0.95rem' }}>
+          {CHARACTER_NAME_META.title}
+        </h4>
+        <p className="sf-muted" style={{ margin: '0 0 0.5rem' }}>
+          Book: <strong>{bookContext?.title || 'Untitled'}</strong>
+          {nameContext.emotionalCore
+            ? ` · core “${nameContext.emotionalCore}”`
+            : ' · set an emotional core so names can reflect the story'}
+        </p>
+        <div className="sf-field">
+          <label htmlFor="ip-book-core">Book emotional core (feeds name ideas)</label>
+          <input
+            id="ip-book-core"
+            value={coreDraft}
+            disabled={busy || locked}
+            onChange={(e) => setCoreDraft(e.target.value)}
+            placeholder="e.g. overcoming fear · belonging at school"
+          />
+        </div>
+        <div className="sf-btn-row">
+          <button
+            type="button"
+            className="sf-btn"
+            disabled={busy || locked}
+            onClick={() => saveEmotionalCore()}
+          >
+            Save core &amp; refresh names (0)
+          </button>
+          <button
+            type="button"
+            className="sf-btn sf-btn-primary"
+            disabled={busy || locked}
+            onClick={() => refreshNameIdeasFromApi(shuffleSeed + 1)}
+          >
+            Generate theme-aware names (0)
+          </button>
+          <button
+            type="button"
+            className="sf-btn"
+            disabled={busy || locked}
+            onClick={() => refreshNameIdeasFromApi(shuffleSeed + 17)}
+          >
+            Shuffle
+          </button>
+        </div>
+        {!nameContext.emotionalCore ? (
+          <p className="sf-warn-note">
+            Tip: add an emotional core (or cultural enrichment below) so ideas can relate to this
+            book — not only generic short names.
+          </p>
+        ) : null}
+        {nameIdeas?.ideas?.length ? (
+          <div className="sf-name-ideas" role="list" aria-label="Theme-aware name ideas">
+            {nameIdeas.ideas.map((idea) => (
+              <button
+                key={`${idea.name}-${idea.kind}`}
+                type="button"
+                className="sf-name-idea"
+                role="listitem"
+                disabled={busy || locked}
+                onClick={() => {
+                  patch('name', idea.name)
+                  setStatus(`Name set to ${idea.name} — ${idea.kind}`)
+                }}
+              >
+                <span className="sf-name-idea-top">
+                  <strong>{idea.name}</strong>
+                  <span className="sf-badge sf-badge-ok">{idea.kind}</span>
+                  <span className="sf-muted">
+                    {idea.syllables} syl · {idea.score}
+                  </span>
+                </span>
+                <span className="sf-name-idea-why">{idea.why}</span>
+              </button>
+            ))}
+            <p className="sf-warn-note" style={{ marginBottom: 0 }}>
+              {nameIdeas.disclaimer || CHARACTER_NAME_META.disclaimer}
+            </p>
+          </div>
+        ) : null}
+      </div>
+
       <fieldset disabled={locked || busy} className="sf-ip-fieldset">
         <div className="sf-field">
           <label htmlFor="ip-name">Name (1–2 syllables)</label>
@@ -137,7 +349,7 @@ export default function IpCharacterBuilder({
             Coach: {nameCoach.tips[0] || '—'}
             {nameCoach.syllables ? ` · ~${nameCoach.syllables} syllable(s) · score ${nameCoach.score}` : ''}
           </p>
-          <div className="sf-chip-row" role="list" aria-label="Name suggestions">
+          <div className="sf-chip-row" role="list" aria-label="Quick catalogue names">
             {IP_NAME_SUGGESTIONS.map((s) => (
               <button
                 key={s.name}

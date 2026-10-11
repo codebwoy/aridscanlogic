@@ -247,8 +247,15 @@ export const RECIPES = [
     sourceIds: ['S12'],
     niche: null,
     steps: [
-      { id: 'qb1', title: 'Create Character Turbo anchor', tool: 'character_turbo', promptId: 'pt_anchor_fullbody' },
-      { id: 'qb2', title: 'Write emotional core + short manuscript', tool: null, courseStep: 2 },
+      { id: 'qb1', title: 'Write emotional core + short manuscript', tool: null, courseStep: 2 },
+      {
+        id: 'qb1b',
+        title: 'Generate theme-aware character name from book core + lock IP DNA',
+        tool: 'character_name_ideas',
+        courseStep: 2,
+        sourceIds: ['S61'],
+      },
+      { id: 'qb2', title: 'Create Character Turbo anchor', tool: 'character_turbo', promptId: 'pt_anchor_fullbody' },
       { id: 'qb3', title: 'Generate pages in Editor Pro from anchor', tool: 'editor_pro', promptId: 'pt_scene_from_anchor' },
       { id: 'qb4', title: 'Layout in Canvas + export pages', tool: 'canvas', courseStep: 4 },
       {
@@ -613,6 +620,7 @@ export const COURSE_STEPS = [
     checklist: [
       'Set emotional core (required before outline)',
       'Fill Storytelling Compass (Craft tab) before page beats',
+      'Generate theme-aware character name ideas from emotional core + culture (IP Builder)',
       'Plan page turns — words and images as a duet',
       'Keep text per page minimal; aim for rhyme or rhythm',
       'Stay inside age word-count band (Craft → Age lengths)',
@@ -623,9 +631,10 @@ export const COURSE_STEPS = [
     id: 3,
     key: 'illustrate',
     title: 'Illustrate using AI',
-    sourceIds: ['S28', 'S40', 'S45', 'S47'],
+    sourceIds: ['S28', 'S40', 'S45', 'S47', 'S61'],
     checklist: [
       'Write Character DNA (Craft tab) — lock never-change traits',
+      'Generate theme-aware name ideas from emotional core + culture, then pick one',
       'Lock one art style for the whole book',
       'Create character in Character Turbo (full body, front, white background — default pose)',
       'Or Photo to Cartoon / kid-drawing polish first (guardian consent when required)',

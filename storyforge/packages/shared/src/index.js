@@ -95,6 +95,14 @@ export {
   ipCharacterPayload,
 } from './ip-character.js'
 export {
+  CHARACTER_NAME_META,
+  CULTURAL_NAME_BANK,
+  THEME_NAME_BANK,
+  generateCharacterNames,
+  hasSoftEnding,
+  characterNamesPayload,
+} from './character-names.js'
+export {
   PICTURE_BOOK_META,
   buildEscalatingBeatBriefs,
   defaultRefrainForHook,

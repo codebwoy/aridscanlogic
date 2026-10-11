@@ -10,7 +10,7 @@ export const IP_CHARACTER_META = {
   sourceIds: ['S58'],
   disclaimer:
     '⚠ Locking DNA makes characters recognisable and Merch-ready — it does not guarantee fame, TV deals, or merchandise demand. Series + distribution still matter.',
-  note: 'Design for a T-shirt silhouette first, then generate Character Turbo from the locked DNA.',
+  note: 'Design for a T-shirt silhouette first, then generate Character Turbo from the locked DNA. Use theme-aware name ideas to link the hero to your book’s emotional core.',
 }
 
 /** Signature colour tokens — keep simple for merch print. */
@@ -255,6 +255,12 @@ export function ipCharacterPayload() {
     emotionalHooks: IP_EMOTIONAL_HOOKS,
     merchChecks: MERCH_READY_CHECKS,
     nameSuggestions: IP_NAME_SUGGESTIONS,
+    nameGenerator: {
+      id: 'character_name_generator',
+      surface: 'ip_character',
+      sourceIds: ['S61'],
+      note: 'Theme-aware names from book emotional core + DNA — see characterNames payload / Studio IP Builder',
+    },
     empty: emptyIpCharacter(),
   }
 }

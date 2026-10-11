@@ -26,6 +26,8 @@ export const CREDIT_COSTS = {
   upscale_print: 2,
   consistency_rescore: 0,
   story_text: 0,
+  /** Theme-aware IP name ideas (local generator — 0 credits) */
+  character_name_ideas: 0,
   preflight: 0,
   /** Checklist score: print + continuity + copy + KDP Previewer sign-off */
   publication_readiness: 0,

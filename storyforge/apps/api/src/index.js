@@ -40,6 +40,8 @@ import {
   pictureBookPayload,
   publicationReadinessPayload,
   normalizePublicationSignoff,
+  generateCharacterNames,
+  characterNamesPayload,
 } from '@storyforge/shared'
 import { config, assertRuntimeSecrets } from './config.js'
 import { createMemoryStore } from './db/memoryStore.js'
@@ -236,6 +238,7 @@ const server = createServer(async (req, res) => {
         ipCharacter: ipCharacterPayload(),
         pictureBook: pictureBookPayload(),
         publicationReadiness: publicationReadinessPayload(),
+        characterNames: characterNamesPayload(),
       })
       return
     }
@@ -318,6 +321,7 @@ const server = createServer(async (req, res) => {
         tutorialsMeta: TUTORIALS_META,
         craft: craftLibraryPayload(),
         publicationReadiness: publicationReadinessPayload(),
+        characterNames: characterNamesPayload(),
         commercialUse: COMMERCIAL_USE_STATEMENT,
         tools: NAMED_TOOLS,
         config: cfg,
@@ -462,7 +466,44 @@ const server = createServer(async (req, res) => {
           ip_character: project.ip_character || emptyIpCharacter(),
           locked: Boolean(project.ip_character?.locked_at),
           catalogue: ipCharacterPayload(),
+          characterNames: characterNamesPayload(),
         })
+        return
+      }
+
+      if (rest === '/name-ideas' && req.method === 'POST') {
+        const project = await store.getProject(userId, id)
+        if (!project) return sendError(res, 404, 'Project not found')
+        let body = {}
+        try {
+          body = z
+            .object({
+              count: z.number().int().min(4).max(12).optional(),
+              seed: z.union([z.number(), z.string()]).optional(),
+              exclude: z.array(z.string().max(40)).max(40).optional(),
+              emotionalCore: z.string().max(500).optional(),
+              emotionalHook: z.string().max(80).optional(),
+              definingTrait: z.string().max(80).optional(),
+              culturalEnrichment: z.string().max(200).optional(),
+            })
+            .parse(await readJson(req))
+        } catch {
+          body = {}
+        }
+        const dna = project.ip_character || {}
+        const ideas = generateCharacterNames({
+          bookTitle: project.title,
+          emotionalCore: body.emotionalCore || project.emotional_core,
+          premise: project.premise,
+          refrain: project.refrain,
+          emotionalHook: body.emotionalHook || dna.emotionalHook || project.emotional_core,
+          definingTrait: body.definingTrait || dna.definingTrait,
+          culturalEnrichment: body.culturalEnrichment || dna.culturalEnrichment,
+          count: body.count,
+          seed: body.seed ?? Date.now(),
+          exclude: body.exclude,
+        })
+        sendJson(res, 200, { ideas, cost: 0 })
         return
       }
 

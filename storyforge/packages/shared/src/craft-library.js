@@ -145,8 +145,25 @@ export const SEVEN_DAY_PLAN = {
   sourceIds: ['S44'],
   days: [
     { day: 1, title: 'Market research', tasks: ['Scan Amazon age/category comps', 'Note pain points (bedtime, emotions, school)', 'Pick one niche + age band'] },
-    { day: 2, title: 'Story draft', tasks: ['Fill Storytelling Compass', 'Draft page beats for ~24–32 pages', 'Stay inside age word-count band'] },
-    { day: 3, title: 'Character + scenes', tasks: ['Write Character DNA', 'Pin Character Turbo / Photo-to-Cartoon anchor', 'Generate pages from anchor'] },
+    {
+      day: 2,
+      title: 'Story draft',
+      tasks: [
+        'Fill Storytelling Compass',
+        'Draft page beats for ~24–32 pages',
+        'Stay inside age word-count band',
+        'Generate theme-aware character name from emotional core',
+      ],
+    },
+    {
+      day: 3,
+      title: 'Character + scenes',
+      tasks: [
+        'Lock IP DNA with chosen name',
+        'Pin Character Turbo / Photo-to-Cartoon anchor',
+        'Generate pages from anchor',
+      ],
+    },
     {
       day: 4,
       title: 'Format + export',

@@ -10,7 +10,16 @@ export const NAMED_TOOLS = {
     jobType: 'character_turbo',
     sourceIds: ['S5'],
     description:
-      'Create the main character as a full-body, front-facing image on a white background. Requires locked IP Character DNA (merch-ready gate).',
+      'Create the main character as a full-body, front-facing image on a white background. Requires locked IP Character DNA (merch-ready gate). Use theme-aware name ideas before locking.',
+  },
+  character_name_ideas: {
+    id: 'character_name_ideas',
+    label: 'Theme-aware names',
+    jobType: null,
+    surface: 'ip_character',
+    sourceIds: ['S61'],
+    description:
+      'Generate short, shoutable names tied to book emotional core, cultural enrichment, and DNA trait — suggestions only, not trademark advice.',
   },
   editor_pro: {
     id: 'editor_pro',

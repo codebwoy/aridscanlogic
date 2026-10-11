@@ -59,7 +59,7 @@ Optional: `npm run dev:worker` with Redis. Real AI: set `STORYFORGE_IMAGE_PROVID
 - Desktop gate (client + API) + 20 trial credits (append-only ledger)
 - Character Turbo + pin anchor; Editor Pro from anchor; Story Scene Pro stub; Photo to Cartoon consent
 - **Bilingual mode** — selectable primary + secondary language pairs (ES/FR/IT/DE/EN + Twi/Igbo/Swahili/Arabic/…), per-page dual text, stacked / side-by-side / alternating layouts, L2 verified flag
-- **IP Character Builder** — merch-ready DNA gate (name suggestions + coach, one colour/trait/object, silhouette + Merch checks) must lock before Character Turbo
+- **IP Character Builder** — merch-ready DNA gate; theme-aware names auto-seed from book emotional core (+ culture/trait), editable core, generate/shuffle, name coach; one colour/trait/object + Merch checks must lock before Character Turbo
 - **Series DNA reuse**, escalating picture-book **beat seeding**, and **Merch PNG** export from pinned hero (manual Amazon Merch upload)
 - Print math preflight (blocks under-res); interior PDF via `pdf-lib`
 - **Publication readiness** — free score (print + continuity QC + copy lint + KDP Previewer sign-off); never claims 100% publish perfection; included in KDP ZIP as `publication-readiness.json`

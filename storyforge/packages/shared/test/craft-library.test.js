@@ -31,7 +31,7 @@ test('craft prompts and recipes are wired', () => {
   assert.ok(WORKFLOW_PLAYBOOKS.some((w) => w.id === 'wf_action_editor'))
 })
 
-test('traceability includes craft S39–S52 and readiness S60', () => {
+test('traceability includes craft S39–S52 and readiness S60–S61', () => {
   for (let n = 39; n <= 52; n++) {
     assert.ok(
       TRACEABILITY.some((t) => t.id === `S${n}` && t.status === 'done'),
@@ -41,5 +41,9 @@ test('traceability includes craft S39–S52 and readiness S60', () => {
   assert.ok(
     TRACEABILITY.some((t) => t.id === 'S60' && t.status === 'done'),
     'missing S60 publication readiness',
+  )
+  assert.ok(
+    TRACEABILITY.some((t) => t.id === 'S61' && t.status === 'done'),
+    'missing S61 theme-aware names',
   )
 })

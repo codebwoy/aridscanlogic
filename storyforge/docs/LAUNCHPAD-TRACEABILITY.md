@@ -64,6 +64,7 @@ Status after print-pipeline + fal catalogue completion.
 | S58 | IP Character Builder (merch DNA gate) | done | `ip-character.js` + Studio builder; `ip_dna_required` before Character Turbo |
 | S59 | Merch PNG + beats + series reuse | done | `export_merch_png`, `seed-beats`, series IP DNA, name suggestions |
 | S60 | Publication readiness score | done | Shared scorer + Studio Canvas/sidebar + Launchpad Craft + course/recipes + `/v1/specs` + ZIP `publication-readiness.json` + export confirm |
+| S61 | Theme-aware character names | done | Generator + auto-seed + book-core editor in IP Builder + `POST …/name-ideas` + recipes/course + Launchpad Craft |
 
 Public catalogues distilled: [Neolemon Tutorials](https://www.neolemon.com/tutorials/), [Guides](https://www.neolemon.com/guides/), [Blog](https://www.neolemon.com/blog). StoryForge is not affiliated — see `TUTORIALS_META` / `CRAFT_META.independenceNote`. Third-party pricing/legal pages are linked only, never imported as StoryForge policy.
 

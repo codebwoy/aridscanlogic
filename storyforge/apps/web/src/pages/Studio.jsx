@@ -669,8 +669,11 @@ export default function Studio({
               id="core"
               value={createForm.emotional_core}
               onChange={(e) => setCreateForm((f) => ({ ...f, emotional_core: e.target.value }))}
-              placeholder="e.g. belonging, courage"
+              placeholder="e.g. belonging, courage — fuels theme-aware names"
             />
+            <p className="sf-muted" style={{ margin: '0.25rem 0 0' }}>
+              Used later to generate character names that relate to this book.
+            </p>
           </div>
           <div className="sf-field">
             <label htmlFor="refrain">Refrain (optional)</label>
@@ -1017,10 +1020,27 @@ export default function Studio({
                 <IpCharacterBuilder
                   projectId={active.id}
                   initialDna={active.ip_character}
+                  bookContext={{
+                    title: active.title,
+                    emotional_core: active.emotional_core,
+                    premise: active.premise,
+                    refrain: active.refrain,
+                  }}
                   busy={busy}
                   setBusy={setBusy}
                   setError={setError}
                   setStatus={setStatus}
+                  onBookContextSaved={async (patch) => {
+                    const res = await api(`/v1/projects/${active.id}`, {
+                      method: 'PATCH',
+                      body: patch,
+                    })
+                    setProjects((list) =>
+                      list.map((p) => (p.id === res.project.id ? res.project : p)),
+                    )
+                    await onSelectProject(res.project.id)
+                    return res.project
+                  }}
                   onLocked={(dna) => {
                     if (dna?.name) setCharName(dna.name)
                   }}

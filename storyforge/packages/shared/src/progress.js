@@ -112,4 +112,10 @@ export const TRACEABILITY = [
     status: 'done',
     note: 'Publication readiness score (print + continuity + copy + human KDP Previewer sign-off)',
   },
+  {
+    id: 'S61',
+    area: 'IP Character',
+    status: 'done',
+    note: 'Theme-aware name generator (cultural + book-core + hybrid; toddler/Merch rules)',
+  },
 ]
