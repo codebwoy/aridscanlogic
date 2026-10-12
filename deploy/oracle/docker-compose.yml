@@ -1,0 +1,84 @@
+# Oracle Cloud Always Free — AuthorForge + StoryForge + Caddy (TLS)
+# Run from this directory on the VM: docker compose up -d --build
+# Fly configs (authorforge/fly.toml, storyforge/fly.toml) stay for later switch-back.
+
+services:
+  caddy:
+    image: caddy:2.9-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    env_file: .env
+    environment:
+      AUTHORFORGE_HOST: ${AUTHORFORGE_HOST}
+      STORYFORGE_HOST: ${STORYFORGE_HOST}
+      ACME_EMAIL: ${ACME_EMAIL:-}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - authorforge
+      - storyforge
+
+  authorforge:
+    build:
+      context: ../../authorforge
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      AUTHORFORGE_SERVE_STATIC: "1"
+      AUTHORFORGE_PERSIST: "1"
+      AUTHORFORGE_DATA_PATH: /data/state.json
+      AUTHORFORGE_PUBLIC_HOST: ${AUTHORFORGE_HOST}
+      AUTHORFORGE_WEB_ORIGIN: ${AUTHORFORGE_WEB_ORIGIN}
+      AUTHORFORGE_LLM_PROVIDER: ${AUTHORFORGE_LLM_PROVIDER:-anthropic}
+      AUTHORFORGE_SESSION_SECRET: ${AUTHORFORGE_SESSION_SECRET}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    volumes:
+      - authorforge_data:/data
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  storyforge:
+    build:
+      context: ../../storyforge
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      STORYFORGE_SERVE_STATIC: "1"
+      STORYFORGE_PERSIST: "1"
+      STORYFORGE_DATA_PATH: /data/state.json
+      STORYFORGE_PUBLIC_HOST: ${STORYFORGE_HOST}
+      STORYFORGE_WEB_ORIGIN: ${STORYFORGE_WEB_ORIGIN}
+      STORYFORGE_IMAGE_PROVIDER: ${STORYFORGE_IMAGE_PROVIDER:-mock}
+      STORYFORGE_SESSION_SECRET: ${STORYFORGE_SESSION_SECRET}
+      REPLICATE_API_TOKEN: ${REPLICATE_API_TOKEN:-}
+      FAL_KEY: ${FAL_KEY:-}
+    volumes:
+      - storyforge_data:/data
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  authorforge_data:
+  storyforge_data:
+  caddy_data:
+  caddy_config:

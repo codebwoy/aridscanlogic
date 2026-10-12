@@ -31,4 +31,4 @@ Human-readable security policy: `SECURITY.md`. StoryForge: `storyforge/SECURITY.
 
 **SEO / Pages:** `https://codebwoy.github.io/aridscanlogic` — deploy via `deploy-github-pages.yml` (peaceiris → `gh-pages`). Enable Pages from branch `gh-pages` in repo settings. See `DEPLOY.md`.
 
-**Hybrid studios (production):** AuthorForge + StoryForge Docker/Fly — `authorforge/docs/HYBRID_DEPLOY.md`. ScanLogic Vercel sets `VITE_AUTHORFORGE_URL` / `VITE_STORYFORGE_URL` only (no studio secrets in `VITE_*`). Prefer local mock/fake studios; do not wake `*.fly.dev` unless deploying or the user asked (see `20-hybrid-fly-cost.mdc`).
+**Hybrid studios (production):** AuthorForge + StoryForge — **Oracle active** (`deploy/oracle/`), Fly standby (`fly.toml` kept). Overview: `authorforge/docs/HYBRID_DEPLOY.md`. ScanLogic Vercel sets `VITE_AUTHORFORGE_URL` / `VITE_STORYFORGE_URL` only (no studio secrets in `VITE_*`). Prefer local mock/fake studios; do not wake `*.fly.dev` unless switching back to Fly or the user asked (see `20-hybrid-fly-cost.mdc`).

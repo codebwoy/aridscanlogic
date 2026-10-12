@@ -45,12 +45,14 @@ export const AMAZON_GUIDES = [
         bullets: {
           en: [
             'Read the 10 truths in the panel below — then open StoryForge for Book 1 and AuthorForge for the parent/coaching companion',
+            'Open “Publish wide + email list” next — so you never put all eggs in one Amazon basket',
             'Use Merch playbooks only after your character is pinned and brand-safe',
             'Pair with KDP requirements + Hard Topics for upload mechanics; this playbook is strategy, not the print calculator',
             'Every price, ISBN, tax, and school claim has a ⚠ — verify before you spend money or register',
           ],
           de: [
             'Lesen Sie die 10 Wahrheiten im Panel unten — dann StoryForge für Buch 1 und AuthorForge für Eltern-/Coaching-Begleiter',
+            'Als Nächstes „Wide publizieren + E-Mail-Liste“ öffnen — damit Sie nicht alle Eier in einen Amazon-Korb legen',
             'Merch-Playbooks erst nach gepinnter, markensicherer Figur',
             'Danach KDP-Anforderungen + Schwierigsthemen für Upload-Technik; dieses Playbook ist Strategie, kein Druckkosten-Rechner',
             'Jeder Preis-, ISBN-, Steuer- und Schul-Hinweis hat ⚠ — vor Ausgaben oder Anmeldung prüfen',
@@ -67,6 +69,728 @@ export const AMAZON_GUIDES = [
     ],
   },
   {
+    id: 'publish-wide-email',
+    title: {
+      en: 'Publish wide + email list — don’t put all eggs in one basket',
+      de: 'Wide publizieren + E-Mail-Liste — nicht alle Eier in einen Korb',
+    },
+    summary: {
+      en: 'Beginner insurance: publish wide (KDP non-Select + Draft2Digital / Tolino Media; KDP Print + BoD / IngramSpark) plus DACH platforms (Tolino, BoD, epubli, BookRix) with DE legal/admin rules (Impressum, Buchpreisbindung, SEPA, Steuernummer, .epub/.pdf, DNB Pflichtexemplare) and a lead-magnet email list. ⚠ Not Amazon Help; not legal/tax advice.',
+      de: 'Anfänger-Absicherung: wide publizieren (KDP ohne Select + Draft2Digital / Tolino Media; KDP Print + BoD / IngramSpark) plus DACH-Plattformen (Tolino, BoD, epubli, BookRix) mit DE-Recht/Admin (Impressum, Buchpreisbindung, SEPA, Steuernummer, .epub/.pdf, DNB-Pflichtexemplare) und Lead-Magnet-E-Mail-Liste. ⚠ Kein Amazon-Help; keine Rechts-/Steuerberatung.',
+    },
+    sections: [
+      {
+        heading: {
+          en: 'Why beginners must not put all eggs in one basket',
+          de: 'Warum Einsteiger:innen nicht alle Eier in einen Korb legen dürfen',
+        },
+        bullets: {
+          en: [
+            'When you rely only on Amazon KDP, your entire business depends on one company',
+            'If Amazon changes algorithms, adjusts royalty rates, or closes an account, your publishing income can vanish overnight',
+            'Two strategies fix this: (1) Publishing Wide across multiple platforms (2) Building an email list you own direct-to-consumer',
+            'Implement both into your setup before you treat Amazon as “the whole business”',
+          ],
+          de: [
+            'Wenn Sie nur auf Amazon KDP setzen, hängt Ihr ganzes Business von einer Firma ab',
+            'Wenn Amazon Algorithmen ändert, Royalties anpasst oder ein Konto schließt, kann Ihr Publishing-Einkommen über Nacht verschwinden',
+            'Zwei Strategien dagegen: (1) Wide über mehrere Plattformen (2) E-Mail-Liste, die Sie Direct-to-Consumer besitzen',
+            'Beide in Ihr Setup einbauen, bevor Sie Amazon als „das ganze Business“ behandeln',
+          ],
+        },
+        note: {
+          en: '⚠ Guide only — not tax, legal, or Amazon advice. Verify KDP Select, Expanded Distribution, D2D, IngramSpark, and ESP terms before you enroll or pay.',
+          de: '⚠ Nur Orientierung — keine Steuer-, Rechts- oder Amazon-Beratung. KDP Select, Expanded Distribution, D2D, IngramSpark und ESP-AGB vor Anmeldung oder Zahlung prüfen.',
+        },
+        links: [
+          { label: 'KDP home', url: 'https://kdp.amazon.com/' },
+          {
+            label: 'KDP Select',
+            url: 'https://kdp.amazon.com/en_US/help/topic/G200798990',
+          },
+        ],
+      },
+      {
+        heading: {
+          en: 'Strategy 1 — Publishing wide (protecting your business across platforms)',
+          de: 'Strategie 1 — Wide publizieren (Business über Plattformen absichern)',
+        },
+        bullets: {
+          en: [
+            'Goal: protect your business by distributing across multiple platforms — not Amazon alone',
+            'What it means: making your book available everywhere readers buy or read books, rather than giving Amazon 100% exclusivity',
+            'Why it matters: when you rely only on Amazon KDP, your entire business depends on one company',
+            'If Amazon changes its algorithms, adjusts royalty rates, or closes an account, your entire publishing income vanishes overnight',
+            'By publishing wide you build multiple income streams and maintain direct access to global audiences',
+            'How to set it up: (1a) ebooks via KDP non-Select + Draft2Digital or direct platform accounts (1b) print via KDP + IngramSpark',
+          ],
+          de: [
+            'Ziel: Business absichern, indem Sie über mehrere Plattformen distribuieren — nicht nur Amazon',
+            'Bedeutung: Ihr Buch überall verfügbar machen, wo Leser:innen kaufen oder lesen — statt Amazon 100 % Exklusivität zu geben',
+            'Warum: wenn Sie nur auf Amazon KDP setzen, hängt Ihr ganzes Business von einer Firma ab',
+            'Wenn Amazon Algorithmen ändert, Royalties anpasst oder ein Konto schließt, verschwindet Ihr gesamtes Publishing-Einkommen über Nacht',
+            'Wide baut mehrere Einkommensströme und erhält direkten Zugang zu globalen Audiences',
+            'Setup: (1a) E-Books über KDP ohne Select + Draft2Digital oder Direktkonten (1b) Print über KDP + IngramSpark',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: 'Strategy 1a — Ebooks: KDP + Draft2Digital (or direct platform accounts)',
+          de: 'Strategie 1a — E-Books: KDP + Draft2Digital (oder Direktkonten)',
+        },
+        bullets: {
+          en: [
+            'The non-exclusive choice: when publishing an ebook on Amazon KDP, do NOT enroll in KDP Select / Kindle Unlimited',
+            'KDP Select requires 90 days of absolute ebook exclusivity on Amazon',
+            'Standard KDP publishing remains non-exclusive, leaving you free to sell your ebook anywhere else',
+            'Using Draft2Digital (D2D): instead of manually creating accounts on dozens of small international sites, upload your ebook file (.epub) to Draft2Digital',
+            'D2D automatically distributes your ebook to Apple Books (huge market for iOS / Mac users)',
+            'Kobo (dominant reader platform in Canada, Europe, Australia, and Asia)',
+            'Barnes & Noble (Nook)',
+            'Google Play Books',
+            'Public library systems (e.g. OverDrive, Hoopla, Bibliotheca) — where libraries buy copies or pay per checkout',
+            'Or direct platform accounts: later you may also open Apple Books for Authors, Kobo Writing Life, and Google Play Books Publisher Center yourself — D2D is the beginner start so you are not blocked on day one',
+          ],
+          de: [
+            'Nicht-exklusive Wahl: beim E-Book auf Amazon KDP KDP Select / Kindle Unlimited NICHT einschreiben',
+            'KDP Select verlangt 90 Tage absolute E-Book-Exklusivität bei Amazon',
+            'Standard-KDP bleibt nicht-exklusiv — Sie dürfen Ihr E-Book überall sonst verkaufen',
+            'Draft2Digital (D2D): statt Dutzende kleine internationale Konten manuell anzulegen, E-Book-Datei (.epub) bei Draft2Digital hochladen',
+            'D2D distribuiert automatisch an Apple Books (großer Markt für iOS-/Mac-Nutzer:innen)',
+            'Kobo (dominante Reader-Plattform in Kanada, Europa, Australien und Asien)',
+            'Barnes & Noble (Nook)',
+            'Google Play Books',
+            'Öffentliche Bibliothekssysteme (z. B. OverDrive, Hoopla, Bibliotheca) — Bibliotheken kaufen Exemplare oder zahlen pro Ausleihe',
+            'Oder Direktkonten: später auch Apple Books for Authors, Kobo Writing Life und Google Play Books Publisher Center selbst — D2D ist der Einsteiger-Start, damit Sie am Tag eins nicht blockiert sind',
+          ],
+        },
+        links: [
+          { label: 'Draft2Digital', url: 'https://www.draft2digital.com/' },
+          {
+            label: 'KDP Select',
+            url: 'https://kdp.amazon.com/en_US/help/topic/G200798990',
+          },
+          { label: 'Apple Books for Authors', url: 'https://authors.apple.com/' },
+          { label: 'Kobo Writing Life', url: 'https://www.kobo.com/writinglife' },
+        ],
+        note: {
+          en: '⚠ Never upload a Select-enrolled ebook to D2D or other stores during the exclusive window — that can trigger account problems. Verify live D2D outlet list before publish.',
+          de: '⚠ Nie ein Select-eingeschriebenes E-Book während der Exklusivität bei D2D oder anderen Stores hochladen — das kann Kontoprobleme auslösen. Aktuelle D2D-Outlet-Liste vor Publish prüfen.',
+        },
+      },
+      {
+        heading: {
+          en: 'Strategy 1b — Print: Amazon KDP + IngramSpark',
+          de: 'Strategie 1b — Print: Amazon KDP + IngramSpark',
+        },
+        bullets: {
+          en: [
+            'Amazon KDP for Amazon sales: use Amazon KDP Print to manufacture and ship paperbacks/hardcovers sold directly on Amazon',
+            'Uncheck “Expanded Distribution” on KDP',
+            'IngramSpark for global & physical retailers: upload the exact same PDF interior and print cover files to IngramSpark',
+            'Ingram Content Group is the primary book distributor used by physical bookstores, independent shops, schools, and libraries worldwide',
+            'When bookstores or libraries look up your ISBN in their ordering catalog, Ingram handles fulfillment, enabling them to stock your physical book',
+            'Plan ISBN early: bookstore-friendly distribution often needs your own ISBN (see First-time publisher truths → ISBN & rights)',
+          ],
+          de: [
+            'Amazon KDP für Amazon-Verkäufe: Amazon KDP Print für Herstellung und Versand von Paperbacks/Hardcovern, die direkt auf Amazon verkauft werden',
+            '„Expanded Distribution“ bei KDP abwählen',
+            'IngramSpark für globale & physische Händler: exakt dieselben PDF-Innenteil- und Print-Cover-Dateien bei IngramSpark hochladen',
+            'Ingram Content Group ist der Haupt-Buchdistributor für physische Buchhandlungen, Independent Shops, Schulen und Bibliotheken weltweit',
+            'Wenn Buchhandlungen oder Bibliotheken Ihre ISBN im Bestellkatalog suchen, übernimmt Ingram die Erfüllung — so können sie Ihr physisches Buch führen',
+            'ISBN früh planen: buchhandelsfreundliche Distribution braucht oft eine eigene ISBN (siehe Wahrheiten für Erstautor:innen → ISBN & Rechte)',
+          ],
+        },
+        links: [
+          { label: 'IngramSpark', url: 'https://www.ingramspark.com/' },
+          { label: 'KDP', url: 'https://kdp.amazon.com/' },
+        ],
+        note: {
+          en: '⚠ Print file specs, setup fees, wholesale discounts, and returnability differ between KDP and IngramSpark — confirm current terms on both sites.',
+          de: '⚠ Print-Dateispecs, Setup-Gebühren, Großhandelsrabatte und Remission unterscheiden sich zwischen KDP und IngramSpark — aktuelle Konditionen auf beiden Seiten prüfen.',
+        },
+      },
+      {
+        heading: {
+          en: 'Strategy 2 — Email list (owning reader relationships direct-to-consumer)',
+          de: 'Strategie 2 — E-Mail-Liste (Leser:innen-Beziehung Direct-to-Consumer besitzen)',
+        },
+        bullets: {
+          en: [
+            'Goal: own your reader relationships direct-to-consumer — not only through rented storefronts',
+            'When a reader buys a book on Amazon, Apple, or Kobo, that platform keeps the reader’s email address and contact information',
+            'You do not know who bought your book',
+            'Building an email list means placing an invitation inside your book that offers the reader a free piece of bonus content (a “Lead Magnet”) in exchange for joining your mailing list',
+            'You then own a direct channel for launch day sales, series news, and Merch offers without renting Amazon’s algorithm',
+          ],
+          de: [
+            'Ziel: Leser:innen-Beziehungen Direct-to-Consumer besitzen — nicht nur über gemietete Storefronts',
+            'Wenn jemand ein Buch auf Amazon, Apple oder Kobo kauft, behält die Plattform E-Mail-Adresse und Kontaktdaten',
+            'Sie wissen nicht, wer Ihr Buch gekauft hat',
+            'E-Mail-Liste aufbauen heißt: Einladung im Buch mit gratis Bonus-Inhalt („Lead-Magnet“) im Tausch gegen Anmeldung zur Mailingliste',
+            'Dann besitzen Sie einen Direktkanal für Launch-Day-Sales, Serien-News und Merch ohne Amazons Algorithmus zu mieten',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: 'Strategy 2 — Step 1: Create a compelling lead magnet',
+          de: 'Strategie 2 — Schritt 1: Überzeugenden Lead-Magnet erstellen',
+        },
+        bullets: {
+          en: [
+            'A lead magnet is a free bonus designed specifically for someone who enjoyed your book',
+            'For Fiction / Children’s Books: free coloring pages / activity sheets based on the characters',
+            'For Fiction / Children’s Books: a bonus printable reward chart or bilingual vocabulary poster (strong fit for StoryForge bilingual series)',
+            'For Fiction / Children’s Books: a free companion short story or deleted prequel chapter',
+            'For Non-Fiction Books: a downloadable PDF cheat sheet, checklist, or template',
+            'For Non-Fiction Books: a resource directory or video tutorial extending a topic covered in the book (AuthorForge companions)',
+          ],
+          de: [
+            'Ein Lead-Magnet ist ein Gratis-Bonus speziell für jemanden, dem Ihr Buch gefallen hat',
+            'Für Fiction / Kinderbücher: kostenlose Malvorlagen / Activity-Sheets zu den Figuren',
+            'Für Fiction / Kinderbücher: druckbare Belohnungstabelle oder zweisprachiges Vokabel-Poster (stark für StoryForge-Zweisprach-Serien)',
+            'Für Fiction / Kinderbücher: kostenlose Begleit-Kurzgeschichte oder gestrichenes Prequel-Kapitel',
+            'Für Non-Fiction: herunterladbares PDF-Cheat-Sheet, Checkliste oder Vorlage',
+            'Für Non-Fiction: Ressourcenverzeichnis oder Video-Tutorial, das ein Buchthema vertieft (AuthorForge-Begleiter)',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: 'Strategy 2 — Step 2: Set up an ESP, landing page & welcome sequence',
+          de: 'Strategie 2 — Schritt 2: ESP, Landingpage & Welcome-Sequenz einrichten',
+        },
+        bullets: {
+          en: [
+            '1) Sign up for a free or low-cost Email Service Provider (ESP) such as MailerLite, ConvertKit (Kit), or Mailchimp',
+            '2) Create a simple landing page with a sign-up form (e.g. “Enter your email to download your free bonus activity pack!”)',
+            '3) Set up an automated welcome sequence: when someone enters their email, the platform instantly emails them a link to download the PDF',
+            'Host the PDF on your site, Drive/Dropbox link, or the ESP’s file feature — keep the URL stable so printed books do not break',
+            'Use a short vanity URL in the book (www.yourwebsite.com/bonus) that redirects to the real landing page',
+          ],
+          de: [
+            '1) Kostenlosen oder günstigen E-Mail-Service (ESP) wählen — z. B. MailerLite, ConvertKit (Kit) oder Mailchimp',
+            '2) Einfache Landingpage mit Anmeldeformular (z. B. „E-Mail eingeben und Gratis-Bonus-Activity-Pack laden!“)',
+            '3) Automatische Welcome-Sequenz: nach E-Mail-Eingabe sofort Link zum PDF-Download',
+            'PDF auf Ihrer Site, Drive/Dropbox oder ESP-Dateihosting — URL stabil halten, damit gedruckte Bücher nicht brechen',
+            'Kurze Vanity-URL im Buch (www.ihrewebsite.de/bonus), die zur echten Landingpage weiterleitet',
+          ],
+        },
+        links: [
+          { label: 'MailerLite', url: 'https://www.mailerlite.com/' },
+          { label: 'Kit (ConvertKit)', url: 'https://kit.com/' },
+          { label: 'Mailchimp', url: 'https://mailchimp.com/' },
+        ],
+        note: {
+          en: '⚠ ESP free tiers, GDPR consent wording, and DE Impressum rules change — use double opt-in where required and keep a privacy note on the form.',
+          de: '⚠ ESP-Free-Tiers, DSGVO-Einwilligungstexte und DE-Impressum ändern sich — Double-Opt-in wo nötig; Datenschutzhinweis am Formular.',
+        },
+      },
+      {
+        heading: {
+          en: 'Strategy 2 — Step 3: Embed the CTA inside your book (copy-paste)',
+          de: 'Strategie 2 — Schritt 3: CTA ins Buch einbetten (Kopiervorlage)',
+        },
+        bullets: {
+          en: [
+            'Place the offer in two high-visibility locations inside your book interior file',
+            '1) In the Front Matter (Before Chapter 1): FREE BONUS FOR READERS: Download your free printable activity kit at: www.yourwebsite.com/bonus',
+            '2) In the Back Matter (Right After the Final Page): Thank You for Reading! Get your exclusive bonus materials at www.yourwebsite.com/bonus. If you enjoyed this book, please leave an honest review on Amazon or Goodreads!',
+            'Replace www.yourwebsite.com/bonus with your real vanity URL that points to the ESP landing page',
+            'StoryForge / AuthorForge: add these pages before final PDF/EPUB export so every wide storefront carries the same list CTA',
+          ],
+          de: [
+            'Das Angebot an zwei hochsichtbaren Stellen im Buch-Innenteil platzieren',
+            '1) Im Front Matter (vor Kapitel 1): GRATIS-BONUS FÜR LESER:INNEN: Laden Sie Ihr druckbares Activity-Kit herunter unter: www.ihrewebsite.de/bonus',
+            '2) Im Back Matter (direkt nach der letzten Seite): Danke fürs Lesen! Exklusive Bonus-Materialien unter www.ihrewebsite.de/bonus. Wenn Ihnen das Buch gefallen hat, hinterlassen Sie bitte eine ehrliche Rezension auf Amazon oder Goodreads!',
+            'www.ihrewebsite.de/bonus durch Ihre echte Vanity-URL ersetzen, die zur ESP-Landingpage zeigt',
+            'StoryForge / AuthorForge: diese Seiten vor dem finalen PDF/EPUB-Export einfügen, damit jeder Wide-Storefront denselben Listen-CTA trägt',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: 'Sample landing page layout (copy structure)',
+          de: 'Beispiel-Landingpage-Layout (Kopierstruktur)',
+        },
+        bullets: {
+          en: [
+            'Headline: Free bonus for [Book Title] readers',
+            'Subhead: Enter your email to download the printable activity pack / checklist',
+            'Bullet proof of value: 3–5 concrete bonuses (pages, poster, cheat sheet)',
+            'Form fields: email (+ first name optional) + GDPR consent checkbox',
+            'Button: Send my free bonus',
+            'Trust line: No spam. Unsubscribe anytime. Privacy policy link',
+            'Footer: Impressum / contact (required for many DE sites)',
+          ],
+          de: [
+            'Headline: Gratis-Bonus für Leser:innen von [Buchtitel]',
+            'Subhead: E-Mail eingeben und druckbares Activity-Pack / Checkliste laden',
+            'Wert-Bullets: 3–5 konkrete Boni (Seiten, Poster, Cheat-Sheet)',
+            'Formular: E-Mail (+ optional Vorname) + DSGVO-Checkbox',
+            'Button: Bonus jetzt senden',
+            'Trust-Zeile: Kein Spam. Jederzeit abmelden. Link zur Datenschutzerklärung',
+            'Footer: Impressum / Kontakt (für viele DE-Sites Pflicht)',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: 'Sample welcome email template',
+          de: 'Beispiel-Welcome-E-Mail-Vorlage',
+        },
+        bullets: {
+          en: [
+            'Subject: Your free bonus for [Book Title] is here',
+            'Hi [First name / there], thank you for reading [Book Title] — here is your promised bonus.',
+            'Download link: [secure PDF URL]',
+            'What’s inside: [1–3 bullet list matching the landing page]',
+            'Soft CTA: When you finish the bonus, reply and tell me which character / tip helped most — I read every reply.',
+            'Review ask (optional, honest only): If the book helped, an honest review on Amazon or Goodreads helps other families find it.',
+            'Sign-off: [Your name] · [Series / imprint] · Unsubscribe link (required)',
+          ],
+          de: [
+            'Betreff: Ihr Gratis-Bonus zu [Buchtitel] ist da',
+            'Hallo [Vorname / dort], danke dass Sie [Buchtitel] lesen — hier ist Ihr versprochener Bonus.',
+            'Download-Link: [sichere PDF-URL]',
+            'Inhalt: [1–3 Bullets wie auf der Landingpage]',
+            'Sanfter CTA: Wenn der Bonus fertig ist, antworten Sie gerne welche Figur / welcher Tipp am meisten geholfen hat — ich lese jede Antwort.',
+            'Review-Bitte (optional, nur ehrlich): Wenn das Buch geholfen hat, hilft eine ehrliche Rezension auf Amazon oder Goodreads anderen Familien.',
+            'Gruß: [Ihr Name] · [Serie / Imprint] · Abmeldelink (Pflicht)',
+          ],
+        },
+        note: {
+          en: '⚠ Never incentivize reviews with free gifts in ways that break Amazon’s Customer Reviews policies — keep review asks voluntary and honest.',
+          de: '⚠ Reviews nie mit Geschenken so anreizen, dass Amazons Customer-Reviews-Regeln verletzt werden — Review-Bitten freiwillig und ehrlich halten.',
+        },
+      },
+      {
+        heading: {
+          en: 'Comparison summary — Amazon Exclusive (KDP Select) vs Publishing Wide + Email List',
+          de: 'Vergleich — Amazon Exclusive (KDP Select) vs Publishing Wide + E-Mail-Liste',
+        },
+        rows: [
+          {
+            label: { en: 'Platform risk', de: 'Plattform-Risiko' },
+            detail: {
+              en: 'Amazon Exclusive (KDP Select): High — one account termination stops all income. Publishing Wide + Email List: Low — income diversified across multiple platforms.',
+              de: 'Amazon Exclusive (KDP Select): Hoch — eine Kontokündigung stoppt alles Einkommen. Publishing Wide + E-Mail-Liste: Niedrig — Einkommen über mehrere Plattformen gestreut.',
+            },
+          },
+          {
+            label: { en: 'Audience control', de: 'Audience-Kontrolle' },
+            detail: {
+              en: 'Amazon Exclusive: Amazon owns all customer records and data. Publishing Wide + Email List: You own your subscriber list and can contact readers anytime.',
+              de: 'Amazon Exclusive: Amazon besitzt alle Kundendaten. Publishing Wide + E-Mail-Liste: Sie besitzen Ihre Abonnentenliste und erreichen Leser:innen jederzeit.',
+            },
+          },
+          {
+            label: { en: 'Market reach', de: 'Marktreichweite' },
+            detail: {
+              en: 'Amazon Exclusive: primarily Amazon Kindle ecosystems. Publishing Wide + Email List: Global (Apple, Kobo, Libraries, Bookstores, Direct Website).',
+              de: 'Amazon Exclusive: vor allem Amazon-Kindle-Ökosysteme. Publishing Wide + E-Mail-Liste: Global (Apple, Kobo, Bibliotheken, Buchhandel, eigene Website).',
+            },
+          },
+          {
+            label: { en: 'New book launches', de: 'Neue Buch-Launches' },
+            detail: {
+              en: 'Amazon Exclusive: reliant on Amazon’s internal algorithms. Publishing Wide + Email List: send one email to your reader list to drive instant day-one sales.',
+              de: 'Amazon Exclusive: abhängig von Amazons internen Algorithmen. Publishing Wide + E-Mail-Liste: eine E-Mail an die Leser:innen-Liste für sofortige Day-One-Sales.',
+            },
+          },
+        ],
+      },
+      {
+        heading: {
+          en: 'Strategy 1c — German / DACH self-publishing (independent of Amazon)',
+          de: 'Strategie 1c — Deutsches / DACH-Selfpublishing (unabhängig von Amazon)',
+        },
+        bullets: {
+          en: [
+            'Yes — Germany has strong domestic self-publishing platforms. German-speaking Europe (Germany, Austria, Switzerland — the DACH region) has a massive self-publishing ecosystem independent of Amazon',
+            'If you want readers who buy through local chains (Thalia, Hugendubel, Weltbild) or read on Tolino e-readers rather than Kindles, publish directly through these platforms',
+            'Keep KDP Select OFF if you also upload the same ebook here',
+          ],
+          de: [
+            'Ja — Deutschland hat starke heimische Selfpublishing-Plattformen. Der deutschsprachige Raum (DE, AT, CH — DACH) hat ein großes Selfpublishing-Ökosystem unabhängig von Amazon',
+            'Wenn Leser:innen über lokale Ketten (Thalia, Hugendubel, Weltbild) kaufen oder auf Tolino statt Kindle lesen, direkt über diese Plattformen publizieren',
+            'KDP Select AUS lassen, wenn Sie dasselbe E-Book auch hier hochladen',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: '1. Tolino Media (tolino-media.de)',
+          de: '1. Tolino Media (tolino-media.de)',
+        },
+        bullets: {
+          en: [
+            'The Tolino Alliance is the main rival to Amazon Kindle in Germany — backed by Germany’s largest traditional bookstore chains (Thalia, Hugendubel, Osiander, Weltbild) and telecommunications provider Deutsche Telekom',
+            'What it does: distributes your ebooks and audiobooks across major German bookstore chains, the Tolino e-reader ecosystem, and German public libraries',
+            'Ebook distribution: free upload; high royalty rates often cited up to ~87% of net sales depending on price (⚠ verify live rate card)',
+            'Key advantage: Tolino e-readers hold a massive share of the German e-reader market — places your book in front of readers who never use Amazon',
+          ],
+          de: [
+            'Die Tolino-Allianz ist der Hauptkonkurrent zu Amazon Kindle in DE — gestützt von großen Buchhandelsketten (Thalia, Hugendubel, Osiander, Weltbild) und Telekom',
+            'Was sie tut: distribuiert E-Books und Hörbücher über große DE-Buchhandelsketten, das Tolino-E-Reader-Ökosystem und deutsche öffentliche Bibliotheken',
+            'E-Book-Distribution: kostenloser Upload; hohe Royalties oft bis ca. 87 % vom Nettoverkauf je nach Preis genannt (⚠ Live-Tarif prüfen)',
+            'Vorteil: Tolino-E-Reader haben großen Anteil am DE-E-Reader-Markt — Ihr Buch vor Leser:innen, die nie Amazon nutzen',
+          ],
+        },
+        links: [{ label: 'Tolino Media', url: 'https://www.tolino-media.de/' }],
+      },
+      {
+        heading: {
+          en: '2. BoD – Books on Demand (bod.de)',
+          de: '2. BoD – Books on Demand (bod.de)',
+        },
+        bullets: {
+          en: [
+            'Headquartered in Hamburg — Europe’s pioneer and market leader in print-on-demand and digital self-publishing',
+            'What it does: publishes both print (paperback/hardcover) and ebooks',
+            'VLB & bookstore entry: BoD assigns your print book an ISBN and registers it in the VLB (Verzeichnis Lieferbarer Bücher — the official German catalog of available books)',
+            'Any local physical bookstore in Germany, Austria, or Switzerland can then order physical copies of your book',
+            'Cost: ebook publishing often free; print publication usually carries a small setup fee (around €19–€39 cited for cataloging and physical distribution — ⚠ verify live package prices)',
+          ],
+          de: [
+            'Sitz Hamburg — Europas Pionier und Marktführer bei Print-on-Demand und digitalem Selfpublishing',
+            'Was sie tut: Print (Paperback/Hardcover) und E-Books',
+            'VLB & Buchhandel: BoD vergibt eine ISBN und meldet im VLB (Verzeichnis Lieferbarer Bücher — offizieller DE-Katalog lieferbarer Bücher)',
+            'Jede lokale physische Buchhandlung in DE, AT oder CH kann dann physische Exemplare bestellen',
+            'Kosten: E-Book oft gratis; Print meist kleine Setup-Gebühr (oft ca. 19–39 € für Katalogisierung und physische Distribution genannt — ⚠ Live-Pakete prüfen)',
+          ],
+        },
+        links: [
+          { label: 'BoD', url: 'https://www.bod.de/' },
+          { label: 'MVB / VLB', url: 'https://www.mvb-online.de/' },
+        ],
+      },
+      {
+        heading: {
+          en: '3. epubli (epubli.de)',
+          de: '3. epubli (epubli.de)',
+        },
+        bullets: {
+          en: [
+            'Owned by the Holtzbrinck Publishing Group (one of Germany’s largest publishing conglomerates) — popular self-publishing platform for German and international authors; based in Berlin',
+            'What it does: handles both print-on-demand books and ebooks',
+            'Distribution: ebook across Tolino, Amazon, Apple Books, Google Play, and local German online shops; prints on demand and lists physical books in the VLB for physical store ordering',
+            'Cost: ebook publishing completely free (as commonly marketed); print setup starts with low pay-per-project options (⚠ verify live)',
+          ],
+          de: [
+            'Gehört zur Holtzbrinck Publishing Group (eines der größten DE-Verlagsunternehmen) — beliebte Selfpublishing-Plattform für DE- und internationale Autor:innen; Sitz Berlin',
+            'Was sie tut: Print-on-Demand und E-Books',
+            'Distribution: E-Book über Tolino, Amazon, Apple Books, Google Play und lokale DE-Online-Shops; Print-on-Demand und VLB-Listung für Bestellung im Laden',
+            'Kosten: E-Book-Publish oft komplett gratis vermarktet; Print-Setup mit günstigen Pay-per-Project-Optionen (⚠ live prüfen)',
+          ],
+        },
+        links: [{ label: 'epubli', url: 'https://www.epubli.de/' }],
+        note: {
+          en: '⚠ If epubli also pushes to Amazon, avoid double-listing the same ebook edition via KDP + epubli Amazon channel — choose one Amazon path per edition.',
+          de: '⚠ Wenn epubli auch zu Amazon liefert: dieselbe E-Book-Ausgabe nicht doppelt über KDP + epubli-Amazon-Kanal listen — einen Amazon-Pfad je Ausgabe wählen.',
+        },
+      },
+      {
+        heading: {
+          en: '4. BookRix (bookrix.de)',
+          de: '4. BookRix (bookrix.de)',
+        },
+        bullets: {
+          en: [
+            'Based in Munich — one of Germany’s oldest dedicated digital self-publishing platforms',
+            'What it does: specializes primarily in ebook distribution and community-building for indie authors',
+            'Distribution: upload once to distribute across Thalia, Hugendubel, Weltbild, Apple Books, Kobo, and Amazon',
+            'Cost: free setup; they take a small commission on ebook sales royalties (⚠ verify current share)',
+          ],
+          de: [
+            'Sitz München — eine der ältesten dedizierten digitalen Selfpublishing-Plattformen in DE',
+            'Was sie tut: vor allem E-Book-Distribution und Community für Indie-Autor:innen',
+            'Distribution: einmal hochladen → Thalia, Hugendubel, Weltbild, Apple Books, Kobo und Amazon',
+            'Kosten: Setup gratis; kleine Kommission auf E-Book-Royalties (⚠ aktuellen Anteil prüfen)',
+          ],
+        },
+        links: [{ label: 'BookRix', url: 'https://www.bookrix.de/' }],
+        note: {
+          en: '⚠ Same double-listing caution if BookRix distributes to Amazon while you also use KDP for that ebook.',
+          de: '⚠ Gleiche Doppel-Listing-Vorsicht, wenn BookRix zu Amazon liefert und Sie dasselbe E-Book auch über KDP listen.',
+        },
+      },
+      {
+        heading: {
+          en: 'Also useful: tredition + VLB layer',
+          de: 'Auch nützlich: tredition + VLB-Schicht',
+        },
+        bullets: {
+          en: [
+            'tredition (tredition.de): independent DE self-pub; print + ebook; bookstore options — check exclusivity before parallel KDP',
+            'VLB (Verzeichnis Lieferbarer Bücher): official German available-books catalog — bookstores order print via ISBN listed there (BoD / Tolino print / epubli / IngramSpark workflows often register you)',
+            'Libreka: major DE ebook wholesale/discovery layer — usually reached via distributors, not always a direct beginner upload UI',
+          ],
+          de: [
+            'tredition (tredition.de): unabhängiges DE-Selfpub; Print + E-Book; Buchhandelsoptionen — Exklusivität vor parallelem KDP prüfen',
+            'VLB (Verzeichnis Lieferbarer Bücher): offizieller DE-Katalog lieferbarer Bücher — Buchhandlungen bestellen Print über dort gelistete ISBN (BoD / Tolino-Print / epubli / IngramSpark melden oft an)',
+            'Libreka: große DE-E-Book-Wholesale-/Discovery-Schicht — meist über Distributoren, nicht immer direktes Einsteiger-Upload-UI',
+          ],
+        },
+        links: [
+          { label: 'tredition', url: 'https://tredition.de/' },
+          { label: 'MVB / VLB', url: 'https://www.mvb-online.de/' },
+        ],
+      },
+      {
+        heading: {
+          en: 'How these fit a wide publishing setup (DACH)',
+          de: 'So passen sie in ein Wide-Setup (DACH)',
+        },
+        bullets: {
+          en: [
+            'Maximum reach without KDP Select: Amazon KDP (non-exclusive) + Tolino Media OR Draft2Digital + BoD OR IngramSpark',
+            'Pro-tip for German regulations (Pressegesetz): DE-focused platforms or direct sales to German readers need an Impressum (legal publisher info page) in metadata / front matter — Tolino Media and similar often provide upload templates (⚠ not legal advice)',
+          ],
+          de: [
+            'Maximale Reichweite ohne KDP Select: Amazon KDP (nicht-exklusiv) + Tolino Media ODER Draft2Digital + BoD ODER IngramSpark',
+            'Pro-Tipp DE-Recht (Pressegesetz): DE-Plattformen oder Direktverkauf brauchen ein Impressum (rechtliche Verlagsangaben) in Metadaten / Front Matter — Tolino Media u. a. liefern oft Upload-Vorlagen (⚠ keine Rechtsberatung)',
+          ],
+        },
+        rows: [
+          {
+            label: { en: 'Amazon KDP (non-exclusive)', de: 'Amazon KDP (nicht-exklusiv)' },
+            detail: {
+              en: 'What it covers: Amazon.de. Key benefit in Germany: reaches Amazon Kindle and Prime readers.',
+              de: 'Abdeckung: Amazon.de. Vorteil in DE: erreicht Amazon-Kindle- und Prime-Leser:innen.',
+            },
+          },
+          {
+            label: { en: 'Tolino Media OR Draft2Digital', de: 'Tolino Media ODER Draft2Digital' },
+            detail: {
+              en: 'What it covers: Thalia, Hugendubel, Weltbild, Kobo, Apple. Key benefit: captures non-Amazon ebook readers across Germany.',
+              de: 'Abdeckung: Thalia, Hugendubel, Weltbild, Kobo, Apple. Vorteil: erreicht Nicht-Amazon-E-Book-Leser:innen in ganz DE.',
+            },
+          },
+          {
+            label: { en: 'BoD OR IngramSpark', de: 'BoD ODER IngramSpark' },
+            detail: {
+              en: 'What it covers: VLB catalog, German physical bookstores. Key benefit: allows local brick-and-mortar bookstores to order physical print copies.',
+              de: 'Abdeckung: VLB-Katalog, physische DE-Buchhandlungen. Vorteil: lokale Buchhandlungen können physische Print-Exemplare bestellen.',
+            },
+          },
+        ],
+        note: {
+          en: 'Pro-tip (German regulations): if you publish on German-focused platforms (Tolino Media, BoD, epubli, BookRix…) or direct-sell to German readers, ensure book metadata / front matter includes an Impressum (legal publisher info page) as required under German media law (Pressegesetz). Tolino Media and similar platforms often provide tools or templates for a compliant Impressum during upload — ⚠ verify current legal requirements with a qualified advisor.',
+          de: 'Pro-Tipp (DE-Recht): bei deutschen Plattformen (Tolino Media, BoD, epubli, BookRix…) oder Direktverkauf an DE-Leser:innen Impressum (rechtliche Verlagsangaben) in Metadaten / Front Matter — laut Presse-/Medienrecht. Tolino Media u. a. bieten oft Tools/Vorlagen beim Upload — ⚠ aktuelle Rechtslage mit Fachperson prüfen.',
+        },
+        links: [
+          { label: 'Tolino Media', url: 'https://www.tolino-media.de/' },
+          { label: 'BoD', url: 'https://www.bod.de/' },
+          { label: 'epubli', url: 'https://www.epubli.de/' },
+          { label: 'BookRix', url: 'https://www.bookrix.de/' },
+          { label: 'Draft2Digital', url: 'https://www.draft2digital.com/' },
+          { label: 'IngramSpark', url: 'https://www.ingramspark.com/' },
+        ],
+      },
+      {
+        heading: {
+          en: 'DACH requirements vs US/global platforms',
+          de: 'DACH-Anforderungen vs. US-/globale Plattformen',
+        },
+        bullets: {
+          en: [
+            'When expanding beyond Amazon to BoD, Tolino Media, epubli, and BookRix, requirements shift from typical US/global platforms',
+            'These platforms operate directly out of Germany and adhere strictly to German publishing laws, tax regulations, and commercial rules',
+            'Plan Impressum, Buchpreisbindung, SEPA banking, Steuernummer / Kleinunternehmer status, .epub/.pdf files, and DNB deposit copies before you upload',
+          ],
+          de: [
+            'Beim Expandieren jenseits Amazon zu BoD, Tolino Media, epubli und BookRix verschieben sich Anforderungen gegenüber typischen US-/globalen Plattformen',
+            'Diese Plattformen sitzen in DE und halten strikt deutsche Verlags-, Steuer- und Handelsregeln ein',
+            'Vor Upload planen: Impressum, Buchpreisbindung, SEPA-Banking, Steuernummer / Kleinunternehmer, .epub/.pdf-Dateien und DNB-Pflichtexemplare',
+          ],
+        },
+        note: {
+          en: '⚠ Not legal or tax advice — verify Pressegesetz, Buchpreisbindung, UStG § 19, and DNB deposit rules with a Steuerberater / Rechtsanwalt for your case.',
+          de: '⚠ Keine Rechts- oder Steuerberatung — Pressegesetz, Buchpreisbindung, UStG § 19 und DNB-Ablieferungspflicht mit Steuerberater/Rechtsanwalt für Ihren Fall prüfen.',
+        },
+      },
+      {
+        heading: {
+          en: '1. Mandatory legal: the Impressum (Pressegesetz)',
+          de: '1. Pflichtrechtlich: das Impressum (Pressegesetz)',
+        },
+        bullets: {
+          en: [
+            'Under German media law (Pressegesetz), every published book distributed or printed in Germany must include an Impressum (legal publisher page) listing a valid physical address',
+            'The challenge: if you publish independently without a publisher address, you are legally required to put your personal home address inside the book',
+            'BoD & Tolino Media fix: when you buy or use an ISBN provided by BoD or Tolino Media, they act as the publisher of record — their terms often allow you to list their company address in the interior, keeping your personal home address private (verify current terms)',
+            'Self-provided ISBN: if you use your own independent ISBN, you must provide your own physical business address or use a recognized German Impressum-Service (proxy address service)',
+          ],
+          de: [
+            'Nach deutschem Medienrecht (Pressegesetz) muss jedes in DE verbreitete/gedruckte Buch ein Impressum (rechtliche Verlagsseite) mit gültiger physischer Adresse enthalten',
+            'Herausforderung: ohne Verlagsadresse müssen Sie rechtlich oft Ihre private Wohnadresse ins Buch setzen',
+            'BoD & Tolino Media: bei ISBN von BoD/Tolino Media treten sie oft als Verleger auf — AGB erlauben häufig deren Firmenadresse im Innenteil, damit Ihre Privatadresse privat bleibt (aktuelle AGB prüfen)',
+            'Eigene ISBN: dann eigene physische Geschäftsadresse oder anerkannter deutscher Impressum-Service (Proxy-Adresse)',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: '2. Fixed book price law (Buchpreisbindung)',
+          de: '2. Buchpreisbindung',
+        },
+        bullets: {
+          en: [
+            'Germany enforces a strict law called Buchpreisbindung',
+            'The rule: you cannot set different retail prices for the exact same book format across different stores',
+            'What it means: if your ebook is priced at €4.99 on Amazon.de, it must also be €4.99 on Tolino, Thalia, Hugendubel, and Apple Books',
+            'Discounting your book on one platform while keeping it full price on another is illegal in the German market (⚠ confirm current scope for print vs ebook with a professional — rules can be nuanced)',
+          ],
+          de: [
+            'Deutschland hat die strenge Buchpreisbindung',
+            'Regel: für dasselbe Buchformat keinen unterschiedlichen Ladenpreis über Shops setzen',
+            'Bedeutung: E-Book zu 4,99 € auf Amazon.de muss auch 4,99 € auf Tolino, Thalia, Hugendubel und Apple Books sein',
+            'Rabatt auf einer Plattform bei Vollpreis auf einer anderen ist im DE-Markt unzulässig (⚠ aktuellen Umfang Print vs E-Book mit Fachperson prüfen — Regeln können nuanciert sein)',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: '3. Account & admin — identity, SEPA, tax',
+          de: '3. Konto & Admin — Identität, SEPA, Steuern',
+        },
+        bullets: {
+          en: [
+            'Valid passport / national ID for platform identity verification',
+            'SEPA bank account (IBAN): European platforms pay via direct SEPA bank transfers in EUR',
+            'German Steuernummer or USt-IdNr. as Freiberufler for own books (typically no Gewerbe — see Tax for DE publishers playbook); personal Steuer-ID alone is not enough',
+            'Kleinunternehmerregelung (§ 19 UStG): if you qualify, check the box that you do not charge VAT — the platform handles end-customer tax on net payouts (verify eligibility yearly)',
+            'International authors: non-German residents typically use Reverse Charge VAT by providing their country’s Tax Identification Number (TIN) or VAT ID',
+          ],
+          de: [
+            'Gültiger Reisepass / Personalausweis zur Identitätsprüfung',
+            'SEPA-Bankkonto (IBAN): europäische Plattformen zahlen per SEPA-Überweisung in EUR',
+            'Deutsche Steuernummer oder USt-IdNr. als Freiberufler für eigene Bücher (typisch kein Gewerbe — siehe Playbook Steuern für DE-Publisher); persönliche Steuer-ID allein reicht nicht',
+            'Kleinunternehmerregelung (§ 19 UStG): wenn qualifiziert, Häkchen „keine USt“ — Plattform handhabt Endkunden-Steuer auf Netto-Auszahlungen (jährlich prüfen)',
+            'Internationale Autor:innen: Nicht-DE-Resident:innen nutzen typisch Reverse Charge mit TIN oder USt-ID des Heimatlandes',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: '4. Technical files + deposit copies (Pflichtexemplare)',
+          de: '4. Technikdateien + Pflichtexemplare',
+        },
+        bullets: {
+          en: [
+            'Ebooks: standard reflowable .epub — they do not accept Amazon’s proprietary .kfx or .mobi files',
+            'Print (BoD & epubli): high-resolution print-ready .pdf interior (all fonts embedded)',
+            'Print cover: high-resolution .pdf for the full wrap (Front + Spine + Back) with precise bleed measurements',
+            'Deposit copies (Pflichtexemplare): by law, books published in Germany with an ISBN must be archived',
+            'Copies must be submitted to the Deutsche Nationalbibliothek (DNB) and your respective regional state library',
+            'When you publish via BoD or Tolino Media, they typically handle mandatory legal deposit copies and DNB cataloging on your behalf (verify current workflow)',
+          ],
+          de: [
+            'E-Books: standardmäßiges reflowable .epub — Amazons proprietäre .kfx- oder .mobi-Dateien werden nicht akzeptiert',
+            'Print (BoD & epubli): hochauflösendes druckfertiges .pdf-Innenteil (alle Schriften eingebettet)',
+            'Print-Cover: hochauflösendes .pdf für den ganzen Umschlag (Vorderseite + Rücken + Rückseite) mit präzisem Bleed',
+            'Pflichtexemplare: Bücher mit ISBN in DE müssen gesetzlich archiviert werden',
+            'Exemplare an die Deutsche Nationalbibliothek (DNB) und die jeweilige Landesbibliothek',
+            'Bei Publish über BoD oder Tolino Media übernehmen diese typisch Ablieferung und DNB-Katalogisierung (aktuellen Workflow prüfen)',
+          ],
+        },
+        links: [
+          { label: 'Deutsche Nationalbibliothek', url: 'https://www.dnb.de/' },
+          { label: 'BoD', url: 'https://www.bod.de/' },
+          { label: 'Tolino Media', url: 'https://www.tolino-media.de/' },
+        ],
+      },
+      {
+        heading: {
+          en: 'DACH get-started checklist (legal + admin + files)',
+          de: 'DACH-Start-Checkliste (Recht + Admin + Dateien)',
+        },
+        rows: [
+          {
+            label: { en: 'Legal contact', de: 'Rechtlicher Kontakt' },
+            detail: {
+              en: 'German Impressum page inside the book (supplied by BoD/Tolino publisher-of-record address, or your address / Impressum-Service)',
+              de: 'Deutsches Impressum im Buch (BoD/Tolino als Verleger-Adresse, oder Ihre Adresse / Impressum-Service)',
+            },
+          },
+          {
+            label: { en: 'Pricing', de: 'Preis' },
+            detail: {
+              en: 'Universal Euro price across platforms (Buchpreisbindung) — e.g. €4.99 everywhere for the same ebook format',
+              de: 'Einheitlicher Euro-Preis über Plattformen (Buchpreisbindung) — z. B. 4,99 € überall für dasselbe E-Book-Format',
+            },
+          },
+          {
+            label: { en: 'Banking', de: 'Banking' },
+            detail: {
+              en: 'IBAN bank account for direct SEPA Euro payouts',
+              de: 'IBAN für direkte SEPA-Euro-Auszahlungen',
+            },
+          },
+          {
+            label: { en: 'Tax info', de: 'Steuerdaten' },
+            detail: {
+              en: 'Tax ID (Steuernummer) or VAT status / Kleinunternehmer / Reverse Charge TIN',
+              de: 'Steuernummer oder USt-Status / Kleinunternehmer / Reverse-Charge-TIN',
+            },
+          },
+          {
+            label: { en: 'File types', de: 'Dateitypen' },
+            detail: {
+              en: '.epub for digital ebooks; .pdf for print-on-demand books (interior + wrap cover)',
+              de: '.epub für digitale E-Books; .pdf für Print-on-Demand (Innenteil + Umschlag)',
+            },
+          },
+        ],
+      },
+      {
+        heading: {
+          en: 'Beginner checklist — implement this week',
+          de: 'Anfänger-Checkliste — diese Woche umsetzen',
+        },
+        bullets: {
+          en: [
+            'Decide: ebook stays OFF KDP Select (unless you knowingly choose 90-day exclusivity)',
+            'Create Draft2Digital and/or Tolino Media account + prepare .epub (not .mobi/.kfx); publish wide after Amazon non-Select live',
+            'Optional DE ebook aggregator: BookRix or epubli — avoid double-listing the same ebook on Amazon via two uploaders',
+            'KDP Print on + Expanded Distribution OFF; open BoD and/or IngramSpark with matching print PDFs + ISBN / VLB plan',
+            'Impressum: use BoD/Tolino publisher-of-record address if their ISBN, else your business address or Impressum-Service',
+            'Set one EUR retail price for the same format across Amazon.de, Tolino, Thalia, Apple (Buchpreisbindung)',
+            'Confirm SEPA IBAN + Steuernummer / USt-IdNr. (Fragebogen as Freiberufler — Steuer-ID alone is not enough) / Kleinunternehmer or Reverse Charge TIN',
+            'Confirm BoD/Tolino will file DNB / Pflichtexemplare for your ISBN titles',
+            'Pick one lead magnet + ESP; insert front/back matter CTAs before final StoryForge / AuthorForge export',
+          ],
+          de: [
+            'Entscheiden: E-Book bleibt OHNE KDP Select (außer bewusst 90-Tage-Exklusivität)',
+            'Draft2Digital- und/oder Tolino-Media-Konto + .epub (nicht .mobi/.kfx); wide nach Amazon Non-Select live',
+            'Optional DE-E-Book-Aggregator: BookRix oder epubli — kein Doppel-Listing auf Amazon',
+            'KDP Print an + Expanded Distribution AUS; BoD und/oder IngramSpark mit Print-PDFs + ISBN-/VLB-Plan',
+            'Impressum: BoD/Tolino-Verlegeradresse bei deren ISBN, sonst Ihre Geschäftsadresse oder Impressum-Service',
+            'Einen EUR-Ladenpreis für dasselbe Format auf Amazon.de, Tolino, Thalia, Apple (Buchpreisbindung)',
+            'SEPA-IBAN + Steuernummer / USt-IdNr. (Fragebogen als Freiberufler — Steuer-ID allein reicht nicht) / Kleinunternehmer oder Reverse-Charge-TIN',
+            'Prüfen, dass BoD/Tolino DNB / Pflichtexemplare für Ihre ISBN-Titel übernehmen',
+            'Einen Lead-Magnet + ESP; Front-/Back-Matter-CTAs vor finalem StoryForge-/AuthorForge-Export',
+          ],
+        },
+        links: [
+          { label: 'Draft2Digital', url: 'https://www.draft2digital.com/' },
+          { label: 'IngramSpark', url: 'https://www.ingramspark.com/' },
+          { label: 'Tolino Media', url: 'https://www.tolino-media.de/' },
+          { label: 'BoD', url: 'https://www.bod.de/' },
+          { label: 'BookRix', url: 'https://www.bookrix.de/' },
+          { label: 'Deutsche Nationalbibliothek', url: 'https://www.dnb.de/' },
+          {
+            label: 'KDP Select',
+            url: 'https://kdp.amazon.com/en_US/help/topic/G200798990',
+          },
+        ],
+      },
+    ],
+  },
+  {
     id: 'kdp-start',
     defaultOpen: false,
     title: {
@@ -74,8 +798,8 @@ export const AMAZON_GUIDES = [
       de: 'KDP-Anforderungen — Start in Deutschland',
     },
     summary: {
-      en: 'Complete practical checklist to start Amazon KDP from Germany: account, tax (critical), book assets, and picture-book technical files. Pair with the KDP learning centre: Hard Topics (print math, AI disclosure, categories) + Jumpstart (official Amazon 6-step guide). Config tables below include ⚠ verification notes.',
-      de: 'Praktische Checkliste für Amazon KDP aus Deutschland: Konto, Steuern (kritisch), Buch-Assets und Bilderbuch-Technik. Dazu das KDP-Lernzentrum: Schwierigsthemen (Print-Mathe, KI-Disclosure, Kategorien) + Jumpstart (offizieller Amazon-6-Schritte-Guide). Tabellen unten mit ⚠ Prüfen-Hinweisen.',
+      en: 'Complete practical checklist to start Amazon KDP from Germany: account, don’t put all eggs in one basket (wide + email list), tax (critical), book assets (Select OFF / Expanded Distribution OFF / CTA pages), and picture-book technical files. Pair with Hard Topics + Jumpstart. Config tables below include ⚠ verification notes.',
+      de: 'Praktische Checkliste für Amazon KDP aus Deutschland: Konto, nicht alle Eier in einen Korb (Wide + E-Mail-Liste), Steuern (kritisch), Buch-Assets (Select AUS / Expanded Distribution AUS / CTA-Seiten) und Bilderbuch-Technik. Dazu Schwierigsthemen + Jumpstart. Tabellen unten mit ⚠ Prüfen-Hinweisen.',
     },
     sections: [
       {
@@ -129,6 +853,7 @@ export const AMAZON_GUIDES = [
             'German address + phone for identity verification',
             'Tax interview completed (see section 2 / Tax playbook)',
             'German bank IBAN for EUR royalty payments',
+            'Do not put all eggs in one basket from day one: keep ebooks OFF KDP Select unless you knowingly want 90-day exclusivity; uncheck Expanded Distribution on print and use IngramSpark + Draft2Digital + an email list (open Publish wide + email list playbook)',
           ],
           de: [
             'Amazon-Konto — bestehendes Amazon.de-Login funktioniert unter kdp.amazon.com',
@@ -136,6 +861,7 @@ export const AMAZON_GUIDES = [
             'Deutsche Adresse + Telefon zur Identitätsprüfung',
             'Steuerinterview abgeschlossen (siehe Abschnitt 2 / Steuer-Playbook)',
             'Deutsche IBAN für Royalty-Zahlungen in EUR',
+            'Nicht alle Eier in einen Korb ab Tag eins: E-Books OHNE KDP Select (außer Sie wollen bewusst 90-Tage-Exklusivität); Expanded Distribution bei Print abwählen und IngramSpark + Draft2Digital + E-Mail-Liste nutzen (Playbook „Wide publizieren + E-Mail-Liste“ öffnen)',
           ],
         },
         links: [{ label: 'KDP', url: 'https://kdp.amazon.com/' }],
@@ -203,6 +929,625 @@ export const AMAZON_GUIDES = [
           de: '⚠ Dateispezifikationen und KI-Disclosure ändern sich — vor Upload im KDP-Help prüfen.',
         },
       },
+      {
+        heading: {
+          en: '5. Five hidden operational pitfalls (before you publish)',
+          de: '5. Fünf versteckte Betriebsfallen (vor dem Publish)',
+        },
+        bullets: {
+          en: [
+            'After wide distribution, email list, and DE tax (Steuernummer vs Gewerbe), still master these non-obvious KDP realities',
+            'AI-assisted vs AI-generated disclosure, title/subtitle stuffing bans, forbidden backend keywords, free vs owned ISBN, bleed + 0.375″ margins',
+            'Full detail in the Hidden pitfalls playbook + KDP config panel below',
+          ],
+          de: [
+            'Nach Wide, E-Mail-Liste und DE-Steuer (Steuernummer vs Gewerbe) bleiben diese nicht offensichtlichen KDP-Realitäten',
+            'KI-assisted vs KI-generiert, Titel-/Untertitel-Stuffing-Verbote, verbotene Backend-Keywords, Free vs eigene ISBN, Bleed + 0,375″-Ränder',
+            'Volle Details im Playbook Versteckte Fallen + KDP-Config-Panel unten',
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: 'kdp-hidden-pitfalls',
+    title: {
+      en: 'Five hidden KDP pitfalls (before you publish)',
+      de: 'Fünf versteckte KDP-Fallen (vor dem Publish)',
+    },
+    summary: {
+      en: 'Beyond wide distribution, email lists, and DE tax (Steuernummer vs Gewerbe): AI-assisted vs AI-generated disclosure, title/subtitle stuffing bans, forbidden backend keywords, free vs owned ISBN, and bleed / 0.375″ margins. ⚠ Not Amazon Help; rules change — verify in KDP.',
+      de: 'Jenseits von Wide, E-Mail-Liste und DE-Steuer (Steuernummer vs Gewerbe): KI-assisted vs KI-generiert, Titel-/Untertitel-Stuffing-Verbote, verbotene Backend-Keywords, Free vs eigene ISBN, Bleed / 0,375″-Ränder. ⚠ Kein Amazon-Help; Regeln ändern sich — in KDP prüfen.',
+    },
+    sections: [
+      {
+        heading: {
+          en: 'Why these five matter',
+          de: 'Warum diese fünf zählen',
+        },
+        bullets: {
+          en: [
+            'You may already know publishing wide, building an email list, and German tax (Steuernummer vs Gewerbe)',
+            'These five critical, non-obvious operational realities still get beginners suspended, rejected, or stuck with the wrong ISBN imprint',
+          ],
+          de: [
+            'Wide publizieren, E-Mail-Liste und DE-Steuer (Steuernummer vs Gewerbe) kennen Sie vielleicht schon',
+            'Diese fünf kritischen, nicht offensichtlichen Betriebsrealitäten führen trotzdem zu Sperren, Ablehnungen oder falschem ISBN-Imprint',
+          ],
+        },
+        note: {
+          en: '⚠ Guide only — not legal advice. Confirm AI disclosure, metadata, ISBN, and print specs in current KDP Help.',
+          de: '⚠ Nur Orientierung — keine Rechtsberatung. KI-Disclosure, Metadaten, ISBN und Print-Specs im aktuellen KDP-Help prüfen.',
+        },
+      },
+      {
+        heading: {
+          en: '1. AI-Generated vs AI-Assisted (KDP disclosure)',
+          de: '1. KI-generiert vs KI-unterstützt (KDP-Disclosure)',
+        },
+        bullets: {
+          en: [
+            'AI-Assisted (no disclosure needed): you wrote the manuscript or drew the artwork yourself and used AI only for brainstorming, editing, proofreading, formatting, or outlines',
+            'AI-Generated (mandatory private disclosure): if an AI tool generated the actual text, cover images, interior illustrations, or translations — even if you heavily edited them afterward — you MUST check the AI-Generated declaration box in the KDP backend',
+            'Crucial: this disclosure is kept internally by Amazon and is never shown to buyers on the product page',
+            'Failing to declare AI-generated content can lead to account suspension or termination',
+          ],
+          de: [
+            'KI-unterstützt (keine Disclosure nötig): Sie haben Manuskript oder Kunst selbst gemacht; KI nur für Brainstorming, Editieren, Korrekturlesen, Formatieren oder Outlines',
+            'KI-generiert (Pflicht-Disclosure intern): wenn ein KI-Tool den eigentlichen Text, Cover-Bilder, Innenteil-Illustrationen oder Übersetzungen erzeugt hat — auch bei starker Nachbearbeitung — MÜSSEN Sie die KI-generiert-Checkbox im KDP-Backend setzen',
+            'Wichtig: diese Disclosure bleibt intern bei Amazon und wird Käufer:innen auf der Produktseite nie angezeigt',
+            'Unterlassene Angabe von KI-Inhalten kann zu Kontosperrung oder Kündigung führen',
+          ],
+        },
+        links: [
+          {
+            label: 'Content Guidelines (incl. AI)',
+            url: 'https://kdp.amazon.com/en_US/help/topic/G200672390',
+          },
+        ],
+      },
+      {
+        heading: {
+          en: '2. Title / subtitle keyword stuffing → automated bans',
+          de: '2. Titel-/Untertitel-Keyword-Stuffing → automatische Sperren',
+        },
+        bullets: {
+          en: [
+            'One of the most common reasons beginners get accounts terminated without warning is manipulating titles and subtitles',
+            'Rule: your book title and subtitle must match the exact text printed on your physical cover',
+            'What gets accounts blocked: promotional phrases or keyword-stuffed lists in the subtitle (e.g. “Children’s Book: Fun Animal Stories for Kids Ages 3-5 Best Seller Gift Idea”)',
+            'Safe practice: keep subtitles purely descriptive or stylistic (e.g. “A Bilingual German-Twi Story for Young Readers”)',
+            'Put all descriptive marketing search terms into KDP’s designated 7 backend keyword slots — not the title/subtitle fields',
+          ],
+          de: [
+            'Eine der häufigsten Gründe für unerwartete Kontosperren bei Einsteiger:innen: manipulierte Titel und Untertitel',
+            'Regel: Titel und Untertitel müssen exakt dem Text auf dem physischen Cover entsprechen',
+            'Sperren auslösen: Werbephrasen oder Keyword-Stuffing im Untertitel (z. B. „Kinderbuch: Lustige Tiergeschichten für Kinder 3–5 Best Seller Geschenkidee“)',
+            'Sicher: Untertitel rein beschreibend oder stilistisch (z. B. „Eine bilinguale Deutsch-Twi-Geschichte für junge Leser:innen“)',
+            'Alle Marketing-Suchbegriffe in die 7 Backend-Keyword-Slots — nicht in Titel/Untertitel',
+          ],
+        },
+        links: [
+          {
+            label: 'Book info rules (official)',
+            url: 'https://kdp.amazon.com/en_US/help/topic/G201097560',
+          },
+        ],
+      },
+      {
+        heading: {
+          en: '3. Forbidden backend keyword types',
+          de: '3. Verbotene Backend-Keyword-Typen',
+        },
+        bullets: {
+          en: [
+            'Inside KDP’s 7 backend keyword boxes, Amazon forbids certain term types — they trigger automated “misleading content” flags',
+            'Competitor / brand names: never “Disney”, “Peppa Pig”, or popular author names',
+            'Promotional / sales words: “Best Seller”, “Free”, “On Sale”, “Discount”',
+            'Quality claims: “High Quality”, “Top Rated”, “Award-Winning”',
+            'Format duplication: “Paperback”, “Book”, or “Print” (Amazon already knows the format)',
+          ],
+          de: [
+            'In den 7 Backend-Keyword-Feldern verbietet Amazon bestimmte Begriffstypen — automatische Flags für „irreführenden Inhalt“',
+            'Konkurrenz / Marken: nie „Disney“, „Peppa Pig“ oder bekannte Autorennamen',
+            'Werbe-/Verkaufswörter: „Best Seller“, „Free“, „On Sale“, „Discount“',
+            'Qualitätsclaims: „High Quality“, „Top Rated“, „Award-Winning“',
+            'Format-Duplikate: „Paperback“, „Book“ oder „Print“ (Amazon kennt das Format schon)',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: '4. Free vs owned ISBNs',
+          de: '4. Kostenlose vs. eigene ISBNs',
+        },
+        bullets: {
+          en: [
+            'An ISBN is the global barcode used to track books',
+            'Free KDP / platform ISBN: KDP, IngramSpark, and Tolino Media can assign a free ISBN',
+            'Catch: a free ISBN locks that format to that platform; publisher of record reads “Independently Published” or “Tolino Media” — you cannot reuse that free ISBN on other platforms',
+            'Owned ISBNs: buy via MVB / GeBü / ISBN-Agentur in Germany — you are listed as the official publisher of record worldwide',
+            'Best practice: start with free platform ISBNs (zero overhead); buy a batch of owned ISBNs when you establish a formal imprint or publish widely under your own company name',
+          ],
+          de: [
+            'Eine ISBN ist der globale Barcode zur Buchverfolgung',
+            'Kostenlose KDP-/Plattform-ISBN: KDP, IngramSpark und Tolino Media können eine Free-ISBN vergeben',
+            'Haken: Free-ISBN bindet dieses Format an die Plattform; Verleger lautet „Independently Published“ oder „Tolino Media“ — dieselbe Free-ISBN nicht auf anderen Plattformen nutzbar',
+            'Eigene ISBNs: über MVB / GeBü / ISBN-Agentur in DE kaufen — Sie stehen weltweit als Verleger',
+            'Best Practice: Start mit Free-Plattform-ISBNs (null Overhead); eigene ISBN-Pakete kaufen, wenn Sie ein formales Imprint aufbauen oder wide unter eigenem Firmennamen publizieren',
+          ],
+        },
+        links: [
+          {
+            label: 'KDP ISBN & imprint',
+            url: 'https://kdp.amazon.com/en_US/help/topic/G201354010',
+          },
+          { label: 'MVB / VLB', url: 'https://www.mvb-online.de/' },
+        ],
+      },
+      {
+        heading: {
+          en: '5. Quality guidelines — bleed & margin safety',
+          de: '5. Qualitätsrichtlinien — Bleed & Sicherheitsrand',
+        },
+        bullets: {
+          en: [
+            'Formatting errors cause a high percentage of print file rejections during book setup',
+            'No Bleed: for standard text/reading books where images do not touch the outer edge of the physical page',
+            'Bleed: mandatory for children’s picture books, coloring books, or illustrated titles where background colors or illustrations extend to the edge of the page',
+            'Margin safety zone: any text or critical illustration detail must stay at least 0.375 in (approx. 9.5 mm) from the page edge (and deeper toward the spine/gutter), or Amazon’s automated printer will reject the PDF',
+          ],
+          de: [
+            'Formatierungsfehler verursachen einen hohen Anteil der Print-Datei-Ablehnungen beim Setup',
+            'Kein Bleed: für normale Text-/Lesebücher, bei denen Bilder den äußeren Seitenrand nicht berühren',
+            'Bleed: Pflicht für Kinderbilderbücher, Malbücher oder illustrierte Titel, bei denen Hintergründe/Illustrationen bis zum Rand reichen',
+            'Sicherheitsrand: Text oder kritische Illustrationsdetails mindestens 0,375 in (ca. 9,5 mm) vom Seitenrand entfernt halten (zum Bund/Gutter noch tiefer) — sonst lehnt Amazons automatischer Drucker das PDF ab',
+          ],
+        },
+        links: [
+          {
+            label: 'Trim, bleed, margins (official)',
+            url: 'https://kdp.amazon.com/en_US/help/topic/G201834230',
+          },
+        ],
+      },
+      {
+        heading: {
+          en: 'Hidden pitfalls checklist',
+          de: 'Checkliste versteckte Fallen',
+        },
+        rows: [
+          {
+            label: { en: 'AI content', de: 'KI-Inhalt' },
+            detail: {
+              en: 'Declare AI-generated text/images in KDP; stays hidden from buyers but protects your account',
+              de: 'KI-generierten Text/Bilder in KDP angeben; bleibt vor Käufer:innen verborgen, schützt aber Ihr Konto',
+            },
+          },
+          {
+            label: { en: 'Book titles', de: 'Buchtitel' },
+            detail: {
+              en: 'Match cover text exactly; no promotional keywords in the subtitle field',
+              de: 'Cover-Text exakt matchen; keine Werbe-Keywords im Untertitel',
+            },
+          },
+          {
+            label: { en: 'Backend keywords', de: 'Backend-Keywords' },
+            detail: {
+              en: 'Avoid brand names, format descriptors, and promotional words (“Bestseller”)',
+              de: 'Keine Markennamen, Formatbegriffe und Werbewörter („Bestseller“)',
+            },
+          },
+          {
+            label: { en: 'ISBN ownership', de: 'ISBN-Eigentum' },
+            detail: {
+              en: 'Free ISBNs assign the platform as publisher; owned ISBNs assign your name/imprint',
+              de: 'Free-ISBNs setzen die Plattform als Verleger; eigene ISBNs Ihren Namen/Ihr Imprint',
+            },
+          },
+          {
+            label: { en: 'File specs', de: 'Dateispezifikationen' },
+            detail: {
+              en: 'Set Bleed correctly for illustrated books + keep 0.375″ / ~9.5 mm safety from edges',
+              de: 'Bleed für illustrierte Bücher korrekt setzen + 0,375″ / ca. 9,5 mm Sicherheitsabstand zum Rand',
+            },
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'kdp-account-termination',
+    title: {
+      en: 'KDP account termination — appeal, go wide, protect yourself',
+      de: 'KDP-Kontosperrung — Einspruch, Wide-Publish, Absicherung',
+    },
+    summary: {
+      en: 'When Amazon blocks or terminates a KDP account, it can feel catastrophic — especially when an author loses an entire catalog of 150 books at once. Whether you are helping that person or taking lessons as a beginner: exact step-by-step appeal (Plan of Action), what to do with the books if reinstatement fails (go wide), and how to protect yourself so this never happens. Includes a copy-ready POA template and Draft2Digital / IngramSpark setup steps. ⚠ Guide only — not legal advice; Amazon decisions are final on their side.',
+      de: 'Wenn Amazon ein KDP-Konto sperrt oder kündigt, fühlt sich das katastrophal an — besonders wenn ein:e Autor:in einen ganzen Katalog von 150 Büchern auf einmal verliert. Ob Sie dieser Person helfen oder als Einsteiger:in lernen: exakter Einspruchs-Plan (Plan of Action), was mit den Büchern passiert wenn die Reaktivierung scheitert (Wide), und Absicherung damit es nie passiert. Inkl. kopierfertiger POA-Vorlage und Draft2Digital-/IngramSpark-Setup. ⚠ Nur Orientierung — keine Rechtsberatung; Amazons Entscheidungen sind auf ihrer Seite final.',
+    },
+    sections: [
+      {
+        heading: {
+          en: 'Who this is for + critical first rule',
+          de: 'Für wen + kritische erste Regel',
+        },
+        bullets: {
+          en: [
+            'Use this if you are helping someone whose KDP account was terminated — or if you are a beginner taking lessons so it never happens to you',
+            'Once Amazon terminates an account: do not panic and do not try to create a new account',
+            'Amazon’s systems will flag and terminate any newly opened account tied to the same identity, payment details, or IP address — often making the situation permanent',
+            'Reply through the official termination notice with a structured, professional Plan of Action (POA) — not an emotional email',
+          ],
+          de: [
+            'Nutzen Sie dies, wenn Sie jemandem helfen, dessen KDP-Konto gekündigt wurde — oder als Einsteiger:in, um zu lernen, damit es Ihnen nie passiert',
+            'Sobald Amazon ein Konto kündigt: nicht panikartig handeln und kein neues Konto eröffnen',
+            'Amazons Systeme kennzeichnen und sperren jedes neu eröffnete Konto mit derselben Identität, denselben Zahlungsdaten oder derselben IP — oft wird die Lage dadurch endgültig',
+            'Über den offiziellen Kündigungshinweis mit einem strukturierten, professionellen Plan of Action (POA) antworten — keine emotionale E-Mail',
+          ],
+        },
+        note: {
+          en: '⚠ Not Amazon Help verbatim and not legal advice. Content Guidelines, account policies, and appeal channels change — verify on KDP Help and with a qualified IP / publishing attorney if stakes are high.',
+          de: '⚠ Kein Amazon-Help-Wortlaut und keine Rechtsberatung. Content Guidelines, Kontorichtlinien und Einspruchskanäle ändern sich — im KDP-Help prüfen und bei hohem Einsatz IP-/Verlagsanwalt:in hinzuziehen.',
+        },
+        links: [
+          { label: 'KDP home', url: 'https://kdp.amazon.com/' },
+          {
+            label: 'Content Guidelines',
+            url: 'https://kdp.amazon.com/en_US/help/topic/G200672390',
+          },
+          {
+            label: 'KDP Help',
+            url: 'https://kdp.amazon.com/help',
+          },
+        ],
+      },
+      {
+        heading: {
+          en: 'Part 1 — Step 1: Analyze the specific termination notice',
+          de: 'Teil 1 — Schritt 1: Spezifischen Kündigungshinweis analysieren',
+        },
+        bullets: {
+          en: [
+            'Read the termination email carefully to identify the core cause Amazon cites',
+            'Intellectual Property (IP) issues: using trademarked keywords, copyrighted images, or public-domain text without adding unique value',
+            'Low-content or “spam” publishing: publishing hundreds of AI-generated books, duplicate interiors, or misleading titles/subtitles aimed at manipulating search results',
+            'Multiple accounts: operating more than one KDP account without explicit permission',
+            'Customer review manipulation: swapping or incentivizing reviews',
+          ],
+          de: [
+            'Kündigungs-E-Mail genau lesen und die von Amazon genannte Kernursache identifizieren',
+            'Geistiges Eigentum (IP): markenrechtlich geschützte Keywords, urheberrechtlich geschützte Bilder oder Public-Domain-Text ohne eigenen Mehrwert',
+            'Low-Content- oder „Spam“-Publishing: hunderte KI-generierte Bücher, doppelte Innenteile oder irreführende Titel/Untertitel zur Suchmanipulation',
+            'Mehrere Konten: mehr als ein KDP-Konto ohne ausdrückliche Erlaubnis betreiben',
+            'Review-Manipulation: Reviews tauschen oder anreizen',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: 'Part 1 — Step 2: Write a Plan of Action (POA) appeal',
+          de: 'Teil 1 — Schritt 2: Plan of Action (POA) schreiben',
+        },
+        bullets: {
+          en: [
+            'Instead of an emotional email, reply directly to the termination notice with a structured, professional POA',
+            'Root cause analysis: admit the exact policy oversight without making excuses or blaming Amazon',
+            'Immediate corrective actions: explain what you have already done to fix it (e.g. removing unauthorized images, pulling conflicting metadata, securing proper copyright documentation)',
+            'Preventative steps: outline how your publishing workflow has changed so the mistake will never happen again',
+            'Documentation: attach original copyright licenses, rights transfer agreements, or source files proving you own the content',
+          ],
+          de: [
+            'Statt einer emotionalen E-Mail direkt auf den Kündigungshinweis mit einem strukturierten, professionellen POA antworten',
+            'Ursachenanalyse: den genauen Richtlinienverstoß eingestehen — ohne Ausreden und ohne Amazon die Schuld zu geben',
+            'Sofortmaßnahmen: erklären, was Sie bereits behoben haben (z. B. unautorisierte Bilder entfernt, widersprüchliche Metadaten zurückgezogen, Copyright-Nachweise gesichert)',
+            'Prävention: darlegen, wie sich Ihr Publishing-Workflow geändert hat, damit der Fehler nie wieder vorkommt',
+            'Dokumentation: Original-Copyright-Lizenzen, Rechteübertragungen oder Quelldateien anhängen, die Besitz belegen',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: 'Part 1 — POA template (copy, fill, send)',
+          de: 'Teil 1 — POA-Vorlage (kopieren, ausfüllen, senden)',
+        },
+        bullets: {
+          en: [
+            'Subject: Appeal / Plan of Action — KDP account [your KDP account email] — [ASIN or title list if cited]',
+            'Opening: Thank you for reviewing this Plan of Action. I take full responsibility for the policy issue identified in your notice dated [date].',
+            '1) Root cause: On [date/period], I [exact action]. This violated [policy name / Content Guidelines area Amazon cited] because [plain-language reason]. I am not disputing Amazon’s finding; I am correcting it.',
+            '2) Immediate corrective actions already taken: (a) [removed / unpublished titles or assets]; (b) [metadata / keyword / cover fixes]; (c) [licenses or rights docs gathered]; (d) [any other fix].',
+            '3) Preventative steps going forward: (a) [pre-publish IP + trademark checklist]; (b) [quality/volume limit — e.g. no mass low-content uploads]; (c) [single-account + review policy compliance]; (d) [who reviews each title before publish].',
+            '4) Documentation attached: [license PDFs], [rights transfers], [source files / invoices], [list of ASINs corrected].',
+            'Closing: I respectfully request reinstatement. I will comply fully with current KDP Terms and Content Guidelines. Sincerely, [legal name], [phone], [address].',
+          ],
+          de: [
+            'Betreff: Einspruch / Plan of Action — KDP-Konto [Ihre KDP-E-Mail] — [ASIN oder Titelliste falls genannt]',
+            'Einstieg: Danke für die Prüfung dieses Plan of Action. Ich übernehme volle Verantwortung für den in Ihrer Mitteilung vom [Datum] genannten Richtlinienverstoß.',
+            '1) Ursache: Am / Im [Datum/Zeitraum] habe ich [genaue Handlung]. Das verstieß gegen [Richtlinienname / Content-Guidelines-Bereich] weil [klare Begründung]. Ich bestreite Amazons Feststellung nicht; ich korrigiere sie.',
+            '2) Bereits ergriffene Sofortmaßnahmen: (a) [Titel/Assets entfernt oder unveröffentlicht]; (b) [Metadaten-/Keyword-/Cover-Korrekturen]; (c) [Lizenzen/Rechte-Docs gesammelt]; (d) [weitere Fixes].',
+            '3) Prävention ab sofort: (a) [IP- + Marken-Checkliste vor Publish]; (b) [Qualitäts-/Mengenlimit — z. B. kein Massen-Low-Content]; (c) [Ein-Konto- + Review-Richtlinientreue]; (d) [wer jeden Titel vor Publish prüft].',
+            '4) Anhang: [Lizenz-PDFs], [Rechteübertragungen], [Quelldateien/Rechnungen], [Liste korrigierter ASINs].',
+            'Schluss: Ich bitte höflich um Reaktivierung. Ich halte die aktuellen KDP-AGB und Content Guidelines vollständig ein. Mit freundlichen Grüßen, [Rechtsname], [Telefon], [Adresse].',
+          ],
+        },
+        rows: [
+          {
+            label: { en: 'POA block 1', de: 'POA-Block 1' },
+            detail: {
+              en: 'Root cause — what policy was missed and why (facts only)',
+              de: 'Ursache — welche Richtlinie verfehlt wurde und warum (nur Fakten)',
+            },
+          },
+          {
+            label: { en: 'POA block 2', de: 'POA-Block 2' },
+            detail: {
+              en: 'Corrective actions already taken on titles, files, and metadata',
+              de: 'Bereits ergriffene Korrekturen an Titeln, Dateien und Metadaten',
+            },
+          },
+          {
+            label: { en: 'POA block 3', de: 'POA-Block 3' },
+            detail: {
+              en: 'New workflow controls so it cannot happen again',
+              de: 'Neue Workflow-Kontrollen, damit es nicht wieder passiert',
+            },
+          },
+          {
+            label: { en: 'POA block 4', de: 'POA-Block 4' },
+            detail: {
+              en: 'Evidence pack — licenses, rights docs, source files',
+              de: 'Beweispaket — Lizenzen, Rechtsdokumente, Quelldateien',
+            },
+          },
+        ],
+        note: {
+          en: '⚠ Fill every bracket with your real facts. Never invent licenses or blame Amazon. Keep one consistent story across all replies.',
+          de: '⚠ Jede Klammer mit echten Fakten füllen. Keine Lizenzen erfinden und Amazon nicht beschuldigen. Eine konsistente Story über alle Antworten hinweg.',
+        },
+      },
+      {
+        heading: {
+          en: 'Part 1 — Step 3: Escalate if standard appeals fail',
+          de: 'Teil 1 — Schritt 3: Eskalation wenn Standard-Einsprüche scheitern',
+        },
+        bullets: {
+          en: [
+            'If standard email appeals receive automated rejections: send a formal, polite appeal email to Amazon’s executive customer support (historically often cited: jeff@amazon.com) outlining the case and attaching/referencing your POA — outcomes vary; never spam',
+            'Hire an intellectual property attorney specializing in Amazon reinstatements to draft a formal legal appeal or initiate mediation/arbitration as allowed by KDP’s Terms of Service',
+            'Keep every reply factual, short, and consistent with prior POA statements',
+          ],
+          de: [
+            'Wenn Standard-E-Mail-Einsprüche nur automatische Ablehnungen bringen: formelle, höfliche Eskalation an Amazons Executive Customer Support (historisch oft genannt: jeff@amazon.com) mit Fallkurzfassung und POA — Ergebnisse variieren; kein Spam',
+            'IP-Anwalt:in mit Fokus Amazon-Reaktivierung beauftragen — formellen rechtlichen Einspruch oder Mediation/Schiedsverfahren gemäß KDP-AGB',
+            'Jede Antwort faktisch, kurz und konsistent zu früheren POA-Aussagen halten',
+          ],
+        },
+        note: {
+          en: '⚠ Escalation emails and attorney paths are not guaranteed reinstatement. Do not invent facts or open shadow accounts while an appeal is open.',
+          de: '⚠ Eskalations-Mails und Anwaltspfade garantieren keine Reaktivierung. Keine Fakten erfinden und keine Schattenkonten eröffnen, solange ein Einspruch läuft.',
+        },
+      },
+      {
+        heading: {
+          en: 'Part 2 — What to do with the 150 books (going wide)',
+          de: 'Teil 2 — Was mit den 150 Büchern tun (Wide gehen)',
+        },
+        bullets: {
+          en: [
+            'If Amazon refuses to reinstate the account, the author still owns the copyright to their original books — unless the works were written specifically under an exclusive contract (e.g. KDP Select / Kindle Unlimited exclusivity for enrolled titles)',
+            'Verify current Select / KU exclusivity status before republishing the same ebook elsewhere',
+            'IngramSpark: the largest global print distributor — gets physical paperbacks into independent bookstores, libraries, Barnes & Noble online, and international retailers',
+            'Draft2Digital (D2D): an aggregator that distributes ebooks to Apple Books, Kobo, Barnes & Noble, Google Play, and digital public library systems',
+            'DACH (Germany/Austria/Switzerland): Tolino Media (Thalia/Hugendubel/Weltbild/Tolino + libraries), BoD (ISBN + VLB for any local bookstore), epubli, BookRix — keep Select OFF; add Impressum for DE editions',
+            'Payhip / Shopify / direct selling: sell ebooks and print-on-demand books directly to readers via a personal website — often cited as up to ~95% royalties after platform fees (⚠ fees change; verify current plans) without third-party marketplace account risk',
+            'Kobo Writing Life & Apple Books: publish directly on major non-Amazon digital readers',
+          ],
+          de: [
+            'Wenn Amazon die Reaktivierung verweigert, gehört das Urheberrecht an den Originalwerken weiterhin der Autorin / dem Autor — außer die Werke entstanden unter einem Exklusivvertrag (z. B. KDP Select / Kindle Unlimited für eingeschriebene Titel)',
+            'Aktuellen Select-/KU-Exklusivitätsstatus prüfen, bevor dasselbe E-Book woanders erscheint',
+            'IngramSpark: größter globaler Print-Distributor — bringt physische Paperbacks in unabhängige Buchhandlungen, Bibliotheken, Barnes & Noble online und internationale Händler',
+            'Draft2Digital (D2D): Aggregator, der E-Books an Apple Books, Kobo, Barnes & Noble, Google Play und digitale Bibliothekssysteme liefert',
+            'DACH (DE/AT/CH): Tolino Media (Thalia/Hugendubel/Weltbild/Tolino + Bibliotheken), BoD (ISBN + VLB für jede lokale Buchhandlung), epubli, BookRix — Select AUS; Impressum für DE-Ausgaben',
+            'Payhip / Shopify / Direktverkauf: E-Books und Print-on-Demand über die eigene Website — oft mit bis zu ca. 95 % Royalty nach Plattformgebühren genannt (⚠ Gebühren ändern sich; aktuelle Tarife prüfen), ohne Marketplace-Kontorisiko',
+            'Kobo Writing Life & Apple Books: direkt auf großen Nicht-Amazon-E-Readern publizieren',
+          ],
+        },
+        links: [
+          { label: 'IngramSpark', url: 'https://www.ingramspark.com/' },
+          { label: 'Draft2Digital', url: 'https://www.draft2digital.com/' },
+          { label: 'Tolino Media', url: 'https://www.tolino-media.de/' },
+          { label: 'BoD', url: 'https://www.bod.de/' },
+          { label: 'BookRix', url: 'https://www.bookrix.de/' },
+          { label: 'Payhip', url: 'https://payhip.com/' },
+          { label: 'Shopify', url: 'https://www.shopify.com/' },
+          { label: 'Kobo Writing Life', url: 'https://www.kobo.com/writinglife' },
+          { label: 'Apple Books for Authors', url: 'https://authors.apple.com/' },
+        ],
+        note: {
+          en: '⚠ Pair with Publish wide + email list (DACH section) and First-time publisher truths. Third-party fees, file specs, and exclusivity rules change — read current terms before upload.',
+          de: '⚠ Mit „Wide + E-Mail-Liste“ (DACH-Abschnitt) und Wahrheiten für Erstautor:innen kombinieren. Gebühren, Dateispecs und Exklusivität ändern sich — aktuelle AGB vor Upload lesen.',
+        },
+      },
+      {
+        heading: {
+          en: 'Part 2b — Setup: Draft2Digital (ebooks wide)',
+          de: 'Teil 2b — Setup: Draft2Digital (E-Books wide)',
+        },
+        bullets: {
+          en: [
+            '1) Create a Draft2Digital account at draft2digital.com and complete tax / payment details (W-8BEN or local forms as prompted)',
+            '2) Confirm each title is free of KDP Select / KU exclusivity (or wait until the exclusive period ends)',
+            '3) Prepare files: EPUB (preferred) or DOC/DOCX that D2D can convert; cover JPG/PNG at their current size minimums',
+            '4) Add a new book: title, subtitle, series, description, contributors, language, categories, price per store',
+            '5) Choose distribution outlets (Apple Books, Kobo, B&N, Google Play, libraries, etc.) — leave Amazon off if you still hope to return to KDP later, or follow D2D’s current Amazon options carefully',
+            '6) Upload interior + cover → review automated conversion → publish when the proof looks correct',
+            '7) After live: note store links, keep your own ISBN/metadata sheet, and never upload a Select-exclusive file elsewhere',
+          ],
+          de: [
+            '1) Draft2Digital-Konto unter draft2digital.com anlegen und Steuer-/Zahlungsdaten ausfüllen (W-8BEN oder lokale Formulare wie angezeigt)',
+            '2) Pro Titel prüfen: frei von KDP-Select-/KU-Exklusivität (oder Exklusivperiode abwarten)',
+            '3) Dateien vorbereiten: EPUB (bevorzugt) oder DOC/DOCX zur Konvertierung; Cover JPG/PNG nach aktuellen Mindestgrößen',
+            '4) Neues Buch anlegen: Titel, Untertitel, Serie, Beschreibung, Mitwirkende, Sprache, Kategorien, Preis je Store',
+            '5) Vertriebskanäle wählen (Apple Books, Kobo, B&N, Google Play, Bibliotheken usw.) — Amazon auslassen, wenn Sie später zu KDP zurückwollen, oder D2Ds aktuelle Amazon-Optionen genau prüfen',
+            '6) Innenteil + Cover hochladen → automatische Konvertierung prüfen → veröffentlichen wenn der Proof stimmt',
+            '7) Nach Live: Store-Links notieren, eigene ISBN-/Metadaten-Tabelle führen, nie eine Select-exklusive Datei woanders hochladen',
+          ],
+        },
+        links: [{ label: 'Draft2Digital', url: 'https://www.draft2digital.com/' }],
+        note: {
+          en: '⚠ UI labels and store list change — follow Draft2Digital’s live help for the exact clicks.',
+          de: '⚠ UI-Labels und Store-Liste ändern sich — aktuelle Draft2Digital-Hilfe für die genauen Klicks nutzen.',
+        },
+      },
+      {
+        heading: {
+          en: 'Part 2c — Setup: IngramSpark (print wide)',
+          de: 'Teil 2c — Setup: IngramSpark (Print wide)',
+        },
+        bullets: {
+          en: [
+            '1) Create an IngramSpark account and complete publisher / tax / banking setup',
+            '2) Decide ISBN strategy: use your own ISBN (often required for bookstore-friendly distribution) vs any free options Ingram currently offers — verify before you pay',
+            '3) Match trim size, page count, paper, and color to your print-ready PDF (bleed + margins per their current template)',
+            '4) Upload interior PDF + cover PDF (or use their cover template) → run their automated preflight and fix errors',
+            '5) Set wholesale discount, returnability, and territories carefully — bookstore terms differ from Amazon KDP Expanded Distribution',
+            '6) Enable distribution to desired channels (independent bookstores, libraries, B&N online, international) after titles pass review',
+            '7) Order a physical proof before large marketing spends; keep local backups of every print master',
+          ],
+          de: [
+            '1) IngramSpark-Konto anlegen und Verlag-/Steuer-/Bankdaten abschließen',
+            '2) ISBN-Strategie: eigene ISBN (oft nötig für buchhandelsfreundliche Distribution) vs. aktuelle Free-Optionen von Ingram — vor Zahlung prüfen',
+            '3) Trim, Seitenzahl, Papier und Farbe an Ihr druckfertiges PDF anpassen (Bleed + Ränder laut aktuellem Template)',
+            '4) Innenteil-PDF + Cover-PDF hochladen (oder deren Cover-Template) → automatischen Preflight laufen lassen und Fehler beheben',
+            '5) Großhandelsrabatt, Remissionsfähigkeit und Territorien sorgfältig setzen — Buchhandelskonditionen unterscheiden sich von KDP Expanded Distribution',
+            '6) Distribution zu gewünschten Kanälen freischalten (unabhängige Buchhandlungen, Bibliotheken, B&N online, international) nachdem Titel die Prüfung bestehen',
+            '7) Physischen Proof bestellen bevor große Marketing-Budgets fließen; lokale Backups jedes Print-Masters behalten',
+          ],
+        },
+        links: [{ label: 'IngramSpark', url: 'https://www.ingramspark.com/' }],
+        note: {
+          en: '⚠ Setup fees, ISBN rules, and wholesale defaults change — confirm on IngramSpark before you publish.',
+          de: '⚠ Setup-Gebühren, ISBN-Regeln und Wholesale-Defaults ändern sich — vor Publish auf IngramSpark bestätigen.',
+        },
+      },
+      {
+        heading: {
+          en: 'Part 3.1 — Quality over mass quantity',
+          de: 'Teil 3.1 — Qualität vor Masse',
+        },
+        bullets: {
+          en: [
+            'Accounts with 150+ thin, low-quality, or rapidly generated books are frequently flagged by Amazon’s automated algorithms for spam',
+            'Focus on publishing a few high-quality, fully original books rather than pumping out hundreds of generic titles',
+            'In this hub: prefer the StoryForge / AuthorForge niche ladder (one strong series + companion) over mass low-content catalogs',
+          ],
+          de: [
+            'Konten mit 150+ dünnen, minderwertigen oder hastig generierten Büchern werden häufig von Amazons automatischen Algorithmen als Spam geflaggt',
+            'Lieber wenige hochwertige, voll originale Bücher publizieren statt hunderte generischer Titel auszustoßen',
+            'In diesem Hub: StoryForge-/AuthorForge-Nischenleiter (eine starke Serie + Begleiter) statt Massen-Low-Content-Kataloge',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: 'Part 3.2 — Never depend 100% on Amazon (“Don’t build on rented land”)',
+          de: 'Teil 3.2 — Nie 100 % von Amazon abhängig (“Nicht auf gemietetem Land bauen”)',
+        },
+        bullets: {
+          en: [
+            'Amazon is a marketplace platform; they can modify their Terms of Service or disable accounts at will — if you rely only on KDP, your entire publishing income can vanish overnight',
+            'Don’t build on rented land: your long-term assets are your copyright, your files, your email list, and your direct storefront — not a single KDP login',
+            'Strategy 1 — Publishing wide: keep ebooks OFF KDP Select (90-day exclusivity); use Draft2Digital for Apple / Kobo / B&N / Google Play / libraries (OverDrive, Hoopla, Bibliotheca); use KDP Print for Amazon sales with Expanded Distribution unchecked; upload the same print PDFs to IngramSpark for bookstores, schools, and libraries',
+            'Strategy 2 — Email list: platforms keep buyer contact data — you do not know who bought; put a lead magnet CTA in front matter and back matter; ESP (MailerLite / Kit / Mailchimp) + landing page + automated welcome download',
+            'Comparison: Exclusive = high platform risk + Amazon owns audience; Wide + list = diversified income + you own the subscriber list + day-one launch emails',
+            'Full copy-paste CTAs, landing-page layout, and welcome-email template: open the Publish wide + email list playbook',
+          ],
+          de: [
+            'Amazon ist eine Marketplace-Plattform; sie können AGB ändern oder Konten jederzeit deaktivieren — wer nur auf KDP setzt, kann das gesamte Publishing-Einkommen über Nacht verlieren',
+            'Nicht auf gemietetem Land bauen: Langzeit-Assets sind Urheberrecht, Dateien, E-Mail-Liste und eigener Shop — nicht ein einzelnes KDP-Login',
+            'Strategie 1 — Wide: E-Books OHNE KDP Select (90-Tage-Exklusivität); Draft2Digital für Apple / Kobo / B&N / Google Play / Bibliotheken (OverDrive, Hoopla, Bibliotheca); KDP Print für Amazon-Verkäufe mit Expanded Distribution aus; dieselben Print-PDFs bei IngramSpark für Buchhandel, Schulen und Bibliotheken',
+            'Strategie 2 — E-Mail-Liste: Plattformen behalten Käufer-Kontaktdaten — Sie wissen nicht wer kaufte; Lead-Magnet-CTA in Front- und Back-Matter; ESP (MailerLite / Kit / Mailchimp) + Landingpage + automatischer Welcome-Download',
+            'Vergleich: Exclusive = hohes Plattformrisiko + Amazon besitzt die Audience; Wide + Liste = gestreutes Einkommen + Sie besitzen die Abonnentenliste + Day-One-Launch-Mails',
+            'Vollständige Kopier-CTAs, Landingpage-Layout und Welcome-Mail-Vorlage: Playbook „Wide publizieren + E-Mail-Liste“ öffnen',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: 'Part 3.3 — Strict copyright & trademark audits',
+          de: 'Teil 3.3 — Strenge Copyright- & Marken-Audits',
+        },
+        bullets: {
+          en: [
+            'Design assets: always keep full commercial licensing records for every stock image, font, and illustration used on covers and interiors',
+            'Keywords / titles: never use trademarked brand names (e.g. Disney, Lego, Barbie) or other authors’ names in your title, subtitle, or backend keywords',
+            'Public-domain text still needs unique value (new commentary, design, curation) — thin reprints are a common termination trigger',
+          ],
+          de: [
+            'Design-Assets: immer vollständige kommerzielle Lizenznachweise für jedes Stockbild, jede Schrift und Illustration auf Cover und Innenteil behalten',
+            'Keywords / Titel: nie markenrechtlich geschützte Markennamen (z. B. Disney, Lego, Barbie) oder fremde Autorennamen in Titel, Untertitel oder Backend-Keywords',
+            'Public-Domain-Text braucht trotzdem eigenen Mehrwert (Kommentar, Design, Kuratierung) — dünne Nachdrucke sind ein häufiger Kündigungs-Trigger',
+          ],
+        },
+        links: [
+          {
+            label: 'Content Guidelines',
+            url: 'https://kdp.amazon.com/en_US/help/topic/G200672390',
+          },
+        ],
+      },
+      {
+        heading: {
+          en: 'Part 3.4 — Back up everything',
+          de: 'Teil 3.4 — Alles sichern',
+        },
+        bullets: {
+          en: [
+            'Always keep local copies on your own hard drive and a separate cloud backup',
+            'Raw manuscripts (.docx)',
+            'Final formatted interiors (.pdf / .epub)',
+            'High-resolution cover source files',
+            'Copyright documentation, licenses, and rights transfers',
+          ],
+          de: [
+            'Immer lokale Kopien auf der eigenen Festplatte und ein separates Cloud-Backup behalten',
+            'Rohe Manuskripte (.docx)',
+            'Final formatierte Innenteile (.pdf / .epub)',
+            'Hochauflösende Cover-Quelldateien',
+            'Copyright-Dokumentation, Lizenzen und Rechteübertragungen',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: 'Suggested next steps',
+          de: 'Empfohlene nächste Schritte',
+        },
+        bullets: {
+          en: [
+            'If appealing now: fill the POA template above, attach evidence, and reply to the termination notice only',
+            'If going wide: follow Part 2b (Draft2Digital) for ebooks and/or Part 2c (IngramSpark) for print',
+            'Re-read KDP Content Guidelines + Hard Topics (AI disclosure, metadata honesty) before any future upload',
+            'Open First-time publisher truths for email-list + distribution planning',
+          ],
+          de: [
+            'Bei Einspruch jetzt: POA-Vorlage oben ausfüllen, Belege anhängen, nur auf den Kündigungshinweis antworten',
+            'Bei Wide: Teil 2b (Draft2Digital) für E-Books und/oder Teil 2c (IngramSpark) für Print',
+            'KDP Content Guidelines + Schwierigsthemen (KI-Disclosure, ehrliche Metadaten) vor jedem künftigen Upload erneut lesen',
+            'Playbook „Wahrheiten für Erstautor:innen“ für E-Mail-Liste + Distributionsplanung öffnen',
+          ],
+        },
+        links: [
+          {
+            label: 'Content Guidelines',
+            url: 'https://kdp.amazon.com/en_US/help/topic/G200672390',
+          },
+          { label: 'KDP Jumpstart', url: 'https://kdp.amazon.com/en_US/help/topic/G202187740' },
+          { label: 'Draft2Digital', url: 'https://www.draft2digital.com/' },
+          { label: 'IngramSpark', url: 'https://www.ingramspark.com/' },
+        ],
+      },
     ],
   },
   {
@@ -212,22 +1557,137 @@ export const AMAZON_GUIDES = [
       de: 'Steuern für DE-Publisher (KDP / Merch)',
     },
     summary: {
-      en: 'Deep dive: W-8BEN interview, US–DE treaty claims (⚠), Einkommensteuer, Kleinunternehmer / VAT. Not tax advice — Steuerberater required for your case. Detail tables also live in the KDP requirements playbook.',
-      de: 'Deep Dive: W-8BEN-Interview, US–DE-Abkommens-Claims (⚠), ESt, Kleinunternehmer / USt. Keine Steuerberatung — Steuerberater für Ihren Fall. Detailtabellen auch im KDP-Anforderungs-Playbook.',
+      en: 'Deep dive: Freiberufler vs Gewerbe, Steuer-ID vs Steuernummer vs USt-IdNr., Fragebogen zur steuerlichen Erfassung, Kleinunternehmer § 19, W-8BEN / treaty (⚠). Not tax advice — Steuerberater required. Detail also in KDP requirements panel.',
+      de: 'Deep Dive: Freiberufler vs Gewerbe, Steuer-ID vs Steuernummer vs USt-IdNr., Fragebogen zur steuerlichen Erfassung, Kleinunternehmer § 19, W-8BEN / Abkommen (⚠). Keine Steuerberatung — Steuerberater nötig. Detail auch im KDP-Anforderungs-Panel.',
     },
     sections: [
+      {
+        heading: {
+          en: 'Freiberufler vs Gewerbe — do you need a trade registration?',
+          de: 'Freiberufler vs Gewerbe — brauchen Sie eine Gewerbeanmeldung?',
+        },
+        bullets: {
+          en: [
+            'In Germany you do NOT need to register a trade business (Gewerbe) just to publish your own books',
+            'Your personal Tax ID (Steuer-ID / Identifikationsnummer) alone is NOT sufficient if you earn self-publishing royalties — the Finanzamt expects you to declare self-employed author income',
+            'Under § 18 EStG, writing and self-publishing your own original literary works is typically classified as a freelance artistic/literary activity (freie freiberufliche Tätigkeit)',
+            'No Gewerbeanmeldung with the Gewerbeamt as long as you publish your own books via distributor platforms (Amazon KDP, Tolino Media, BoD, Draft2Digital) and earn royalties (Tantiemen) / self-employment income as an author',
+            'It can become a Gewerbe if you buy printed copies in bulk and sell them via your own e-commerce shop, sell physical merchandise (t-shirts, mugs), or run a commercial publishing house for other authors',
+          ],
+          de: [
+            'In DE brauchen Sie KEINE Gewerbeanmeldung nur zum Veröffentlichen eigener Bücher',
+            'Die persönliche Steuer-ID (Identifikationsnummer) allein reicht NICHT, wenn Sie Selfpublishing-Royalties verdienen — das Finanzamt erwartet die Erklärung selbstständiger Autoreneinkünfte',
+            'Nach § 18 EStG gilt das Schreiben und Selfpublishing eigener literarischer Werke typisch als freie freiberufliche Tätigkeit',
+            'Keine Gewerbeanmeldung beim Gewerbeamt, solange Sie eigene Bücher über Distributoren (Amazon KDP, Tolino Media, BoD, Draft2Digital) veröffentlichen und Tantiemen / selbstständige Autoreneinkünfte erzielen',
+            'Gewerbe kann entstehen, wenn Sie gedruckte Exemplare in Mengen kaufen und über eigenen Online-Shop verkaufen, physische Merch-Artikel (T-Shirts, Tassen) verkaufen oder ein Verlagsgewerbe für andere Autor:innen betreiben',
+          ],
+        },
+        note: {
+          en: '⚠ Not tax or legal advice — classification (Freiberufler vs Gewerbe) depends on your exact activities; confirm with a Steuerberater / Finanzamt.',
+          de: '⚠ Keine Steuer-/Rechtsberatung — Freiberufler vs Gewerbe hängt von Ihren konkreten Tätigkeiten ab; mit Steuerberater / Finanzamt klären.',
+        },
+      },
+      {
+        heading: {
+          en: '1. Three German tax numbers authors mix up',
+          de: '1. Drei deutsche Steuernummern, die Autor:innen verwechseln',
+        },
+        bullets: {
+          en: [
+            'A) Personal Tax ID (Steuer-ID / Identifikationsnummer): 11 digits (e.g. 12 345 678 901) — lifelong ID every resident receives',
+            'Steuer-ID is NOT enough to publish legally as a self-employed author: KDP may accept it at signup, but the Finanzamt still requires you to declare self-employed income',
+            'B) Self-employed / freelance tax number (Steuernummer): 10–11 digits with slashes (e.g. 15/123/45678) — issued by your local Finanzamt for freelance revenue',
+            'How to get a Steuernummer: register your freelance writing with the Finanzamt via Fragebogen zur steuerlichen Erfassung (ELSTER or tax software such as Accountable / Sorted)',
+            'C) VAT ID (Umsatzsteuer-ID / USt-IdNr.): starts with DE + 9 digits (e.g. DE123456789)',
+            'Why USt-IdNr. matters: platforms like Amazon KDP (Luxembourg), Draft2Digital (US), and Apple Books pay across EU borders — a VAT ID supports EU Reverse Charge royalty payouts and can reduce unnecessary withholding friction; request it free on the Fragebogen',
+          ],
+          de: [
+            'A) Persönliche Steuer-ID (Identifikationsnummer): 11 Ziffern (z. B. 12 345 678 901) — lebenslange ID jeder/s Resident:in',
+            'Steuer-ID reicht NICHT als alleinige Grundlage für selbstständige Autorentätigkeit: KDP akzeptiert sie ggf. bei Anmeldung, aber das Finanzamt verlangt die Erklärung selbstständiger Einkünfte',
+            'B) Steuernummer für Selbstständige / Freiberufler: 10–11 Ziffern mit Schrägstrichen (z. B. 15/123/45678) — vom zuständigen Finanzamt für freiberufliche Einnahmen',
+            'Steuernummer erhalten: freiberufliche Autorentätigkeit per Fragebogen zur steuerlichen Erfassung melden (ELSTER oder Steuersoftware wie Accountable / Sorted)',
+            'C) Umsatzsteuer-ID (USt-IdNr.): beginnt mit DE + 9 Ziffern (z. B. DE123456789)',
+            'Warum USt-IdNr. zählt: Plattformen wie Amazon KDP (Luxemburg), Draft2Digital (US) und Apple Books zahlen grenzüberschreitend — USt-IdNr. stützt EU-Reverse-Charge bei Royalties und kann Quellensteuer-Reibung verringern; kostenlos im Fragebogen beantragen',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: '2. Step-by-step — notify the Finanzamt',
+          de: '2. Schritt für Schritt — Finanzamt informieren',
+        },
+        bullets: {
+          en: [
+            '1) Submit the Fragebogen zur steuerlichen Erfassung via ELSTER or a simplified tax-registration tool',
+            'State your activity as “Freiberufliche Autorin / Freiberuflicher Autor” (Freelance Author) and indicate estimated first-year income',
+            '2) Select Kleinunternehmerregelung (§ 19 UStG) if eligible — older notes often cite under ~€22,000 first-year self-employed revenue (⚠ thresholds change; verify current UStG / Finanzamt figures)',
+            'Kleinunternehmer means you typically do not charge VAT on sales and avoid complex monthly VAT returns (confirm current rules)',
+            '3) Within about 2–4 weeks your Finanzamt usually posts your official Steuernummer and Umsatzsteuer-ID (USt-IdNr.)',
+            '4) Update publishing platforms: enter Steuernummer and/or USt-IdNr. in profile settings on Amazon KDP, Tolino Media, BoD, and Draft2Digital',
+          ],
+          de: [
+            '1) Fragebogen zur steuerlichen Erfassung über ELSTER oder vereinfachtes Anmelde-Tool einreichen',
+            'Tätigkeit als „Freiberufliche Autorin / Freiberuflicher Autor“ angeben und geschätztes Einkommen im ersten Jahr eintragen',
+            '2) Kleinunternehmerregelung (§ 19 UStG) wählen, wenn berechtigt — ältere Notizen nennen oft unter ca. 22.000 € Umsatz im ersten Jahr (⚠ Schwellen ändern sich; aktuelle UStG-/Finanzamt-Zahlen prüfen)',
+            'Kleinunternehmer: typisch keine USt auf Verkäufe und keine komplexen monatlichen USt-Voranmeldungen (aktuelle Regeln prüfen)',
+            '3) Innerhalb von ca. 2–4 Wochen schickt das Finanzamt meist Steuernummer und Umsatzsteuer-ID (USt-IdNr.) per Post',
+            '4) Plattformen aktualisieren: Steuernummer und/oder USt-IdNr. in den Profilen von Amazon KDP, Tolino Media, BoD und Draft2Digital eintragen',
+          ],
+        },
+        links: [
+          { label: 'ELSTER', url: 'https://www.elster.de/' },
+          { label: 'BzSt', url: 'https://www.bzst.de/' },
+          { label: 'KDP', url: 'https://kdp.amazon.com/' },
+        ],
+      },
+      {
+        heading: {
+          en: 'Author tax registration checklist',
+          de: 'Checkliste Steueranmeldung Autor:in',
+        },
+        rows: [
+          {
+            label: { en: 'Gewerbe registration?', de: 'Gewerbeanmeldung?' },
+            detail: {
+              en: 'Not needed — author / self-publisher of own works is typically freiberuflich (§ 18 EStG)',
+              de: 'Nicht nötig — Autor:in / Selfpublisher eigener Werke typisch freiberuflich (§ 18 EStG)',
+            },
+          },
+          {
+            label: { en: 'Personal Steuer-ID only?', de: 'Nur persönliche Steuer-ID?' },
+            detail: {
+              en: 'Not enough — register freelance author activity with the Finanzamt',
+              de: 'Nicht genug — freiberufliche Autorentätigkeit beim Finanzamt anmelden',
+            },
+          },
+          {
+            label: { en: 'Required tax number', de: 'Erforderliche Steuernummer' },
+            detail: {
+              en: 'Steuernummer from your local Finanzamt after Fragebogen zur steuerlichen Erfassung',
+              de: 'Steuernummer vom lokalen Finanzamt nach Fragebogen zur steuerlichen Erfassung',
+            },
+          },
+          {
+            label: { en: 'Recommended tax ID', de: 'Empfohlene Steuer-ID' },
+            detail: {
+              en: 'Umsatzsteuer-ID (USt-IdNr.) — helps B2B cross-border royalties (e.g. KDP Luxembourg) under EU Reverse Charge',
+              de: 'Umsatzsteuer-ID (USt-IdNr.) — hilft bei B2B-grenzüberschreitenden Royalties (z. B. KDP Luxemburg) unter EU-Reverse-Charge',
+            },
+          },
+        ],
+      },
       {
         heading: { en: 'Inside KDP / Merch', de: 'In KDP / Merch' },
         bullets: {
           en: [
             'Complete W-8BEN (individual) or W-8BEN-E (entity) in the Amazon tax interview — typically online only',
-            'Have your German Steueridentifikationsnummer ready (BzSt / registration docs)',
+            'Have your German Steueridentifikationsnummer ready (BzSt / registration docs) — and your Steuernummer / USt-IdNr. once issued',
             'Default US withholding is often described as 30%; treaty relief may reduce it — only the rate Amazon shows after your interview is authoritative',
             'Complete tax setup in each programme that pays you (KDP and Merch separately if prompted)',
           ],
           de: [
             'W-8BEN (Privat) oder W-8BEN-E (Firma) im Amazon-Steuerinterview — meist nur online',
-            'Deutsche Steueridentifikationsnummer bereithalten (BzSt / Meldeunterlagen)',
+            'Deutsche Steueridentifikationsnummer bereithalten (BzSt / Meldeunterlagen) — und Steuernummer / USt-IdNr., sobald erteilt',
             'US-Quellensteuer wird oft mit 30 % Default beschrieben; Abkommen kann senken — maßgeblich ist Amazons Satz nach dem Interview',
             'Steuer-Setup in jedem auszahlenden Programm abschließen (KDP und Merch ggf. getrennt)',
           ],
@@ -727,17 +2187,25 @@ export const AMAZON_GUIDES = [
         bullets: {
           en: [
             'Phase 1: German — parents, schools, libraries + Tolino/Libreka domestic reach',
+            'Upload beyond Amazon: Tolino Media, BoD, epubli, tredition (see Language & market panel + Publish wide playbook) — keep KDP Select OFF',
             'Phase 2: English editions (same art, new text) on .com / .co.uk after DE traction',
             'Phase 3: bilingual — EN/FR/ES/TR/AR↔DE have Amazon.de catalogue proof; African-language↔DE often empty (first-mover or unproven)',
             'Heritage-language pairs: validate in diaspora Facebook/WhatsApp groups before print; keywords in both languages',
           ],
           de: [
             'Phase 1: Deutsch — Eltern, Schulen, Bibliotheken + Tolino/Libreka Inland',
+            'Upload jenseits Amazon: Tolino Media, BoD, epubli, tredition (siehe Panel Sprache & Markt + Wide-Playbook) — KDP Select AUS',
             'Phase 2: EN-Ausgaben (gleiche Kunst, neuer Text) auf .com / .co.uk nach DE-Traktion',
             'Phase 3: bilingual — EN/FR/ES/TR/AR↔DE mit Amazon.de-Katalog-Belegen; afrikanische Sprachen↔DE oft leer (First-Mover oder unbewiesen)',
             'Heritage-Language-Paare: in Diaspora-Facebook-/WhatsApp-Gruppen validieren vor Print; Keywords in beiden Sprachen',
           ],
         },
+        links: [
+          { label: 'Tolino Media', url: 'https://www.tolino-media.de/' },
+          { label: 'BoD', url: 'https://www.bod.de/' },
+          { label: 'epubli', url: 'https://www.epubli.de/' },
+          { label: 'tredition', url: 'https://tredition.de/' },
+        ],
         note: {
           en: '⚠ PublishDrive growth % can reflect a smaller German indie base. Verify Börsenverein / PublishDrive / live KDP calculator / Amazon.de bilingual search before citing. Full bilingual kids module: Amazon Hub → Language & market.',
           de: '⚠ PublishDrive-Wachstums-% können eine kleinere DE-Indie-Basis widerspiegeln. Börsenverein / PublishDrive / Live-KDP-Rechner / Amazon.de-Bilingual-Suche prüfen. Volles Bilingual-Kids-Modul: Amazon Hub → Sprache & Markt.',

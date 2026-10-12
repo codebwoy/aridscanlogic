@@ -37,14 +37,17 @@ Red **github-pages** entries from June 2026 (*"Add SEO, structured data…"*) ar
 
 ## Hybrid studios (AuthorForge + StoryForge) — not Vercel serverless
 
-Long book/image jobs cannot run reliably inside Vercel’s 60s functions. Deploy each studio as its **own Fly/Railway container** (API + SPA), then point ScanLogic at them:
+Long book/image jobs cannot run reliably inside Vercel’s 60s functions. Deploy studios as containers (API + SPA), then point ScanLogic at them.
 
-| Client env (Vercel Production) | Points to |
+**Active path: Oracle Cloud** — [deploy/oracle/README.md](./deploy/oracle/README.md).  
+**Standby: Fly.io** — `fly.toml` kept for later Pay-as-You-Go switch. Overview: [authorforge/docs/HYBRID_DEPLOY.md](./authorforge/docs/HYBRID_DEPLOY.md).
+
+| Client env (Vercel Production) | Points to (Oracle active) |
 |---|---|
-| `VITE_AUTHORFORGE_URL` | `https://scanlogic-authorforge.fly.dev` (or your host) |
-| `VITE_STORYFORGE_URL` | `https://scanlogic-storyforge.fly.dev` (or your host) |
+| `VITE_AUTHORFORGE_URL` | `https://<AUTHORFORGE_HOST>` (your OCI DNS) |
+| `VITE_STORYFORGE_URL` | `https://<STORYFORGE_HOST>` (your OCI DNS) |
 
-Full steps, secrets, and `fly deploy`: **[authorforge/docs/HYBRID_DEPLOY.md](./authorforge/docs/HYBRID_DEPLOY.md)**.
+To switch back to Fly later, set those to `https://scanlogic-authorforge.fly.dev` / `https://scanlogic-storyforge.fly.dev` and redeploy ScanLogic.
 
 Amazon Hub on production ScanLogic opens those URLs (desktop ≥1024px) after `/health` probe succeeds.
 

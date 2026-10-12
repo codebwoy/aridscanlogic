@@ -108,7 +108,7 @@ Market-data providers, royalty calculator, Stripe live checkout, Redis-required 
 
 ## Production (hybrid)
 
-Deploy API + SPA as one Fly/Railway container; point ScanLogic `VITE_STORYFORGE_URL` at that host.  
+Deploy API + SPA as one container (**Oracle active**: `deploy/oracle/`; Fly standby). Point ScanLogic `VITE_STORYFORGE_URL` at that host.
 See [authorforge/docs/HYBRID_DEPLOY.md](../authorforge/docs/HYBRID_DEPLOY.md).
 
 ```bash

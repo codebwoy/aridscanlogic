@@ -14,12 +14,15 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV STORYFORGE_SERVE_STATIC=1
 ENV STORYFORGE_WEB_DIST=/app/apps/web/dist
+ENV STORYFORGE_PERSIST=1
+ENV STORYFORGE_DATA_PATH=/data/state.json
 COPY --from=build /app/package.json /app/package-lock.json* ./
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/packages ./packages
 COPY --from=build /app/apps ./apps
+RUN mkdir -p /data
 EXPOSE 8080
 ENV PORT=8080
 ENV STORYFORGE_API_PORT=8080
-USER node
+# Run as root so Oracle/Fly volume mounts at /data are writable
 CMD ["node", "apps/api/src/index.js"]

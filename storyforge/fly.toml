@@ -1,4 +1,5 @@
 # fly launch --config fly.toml  (from storyforge/)
+# Standby host — active path is Oracle: ../deploy/oracle/
 # Docs: authorforge/docs/HYBRID_DEPLOY.md (shared hybrid pattern)
 #
 # Stateful in-memory + local .data — keep exactly ONE machine:

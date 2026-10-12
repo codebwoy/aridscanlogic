@@ -6,11 +6,14 @@ alwaysApply: true
 
 # Hybrid Fly cost rail (AuthorForge + StoryForge)
 
-ScanLogic stays on Vercel. Studios on Fly use **auto-stop** machines. Every cold hit to
-`*.fly.dev` (page load, `/health`, deploy smoke) can **start a machine** and burn trial
-(7 days **or** 2h runtime) / pay-as-you-go credits.
+ScanLogic stays on Vercel. **Active studio path is Oracle** (`deploy/oracle/`). Fly
+(`fly.toml`) is **standby** for a later Pay-as-You-Go switch — keep configs; do not delete.
 
-Treat Fly runtime like API keys: **default deny** unnecessary use.
+When Fly is used, machines **auto-stop**. Every cold hit to `*.fly.dev` (page load,
+`/health`, deploy smoke) can **start a machine** and burn trial (7 days **or** 2h
+runtime) / pay-as-you-go credits.
+
+Treat Fly runtime like API keys: **default deny** unnecessary use while Oracle is active.
 
 ## Non-negotiables
 
@@ -45,5 +48,5 @@ Treat Fly runtime like API keys: **default deny** unnecessary use.
 
 ## Related
 
-- `18-storyforge.mdc`, `19-authorforge.mdc`, `authorforge/docs/HYBRID_DEPLOY.md`
+- `18-storyforge.mdc`, `19-authorforge.mdc`, `authorforge/docs/HYBRID_DEPLOY.md`, `deploy/oracle/README.md`
 - Launch probes: `src/lib/authorforge/launch.js`, `src/lib/storyforge/launch.js`

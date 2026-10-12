@@ -71,8 +71,8 @@ ANTHROPIC_API_KEY=sk-ant-...   # may match ScanLogic’s key — never VITE_*
 
 ## Production (hybrid)
 
-One Docker/Fly container serves API + SPA. ScanLogic Vercel sets `VITE_AUTHORFORGE_URL`.  
-Full guide: [docs/HYBRID_DEPLOY.md](./docs/HYBRID_DEPLOY.md).
+One Docker container serves API + SPA. **Oracle active** (`deploy/oracle/`); Fly `fly.toml` kept as standby.
+ScanLogic Vercel sets `VITE_AUTHORFORGE_URL`. Full guide: [docs/HYBRID_DEPLOY.md](./docs/HYBRID_DEPLOY.md).
 
 ```bash
 fly secrets set AUTHORFORGE_SESSION_SECRET=... ANTHROPIC_API_KEY=... AUTHORFORGE_PUBLIC_HOST=...

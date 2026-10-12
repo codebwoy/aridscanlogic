@@ -1,0 +1,13 @@
+{
+	email {$ACME_EMAIL}
+}
+
+{$AUTHORFORGE_HOST} {
+	encode gzip
+	reverse_proxy authorforge:8080
+}
+
+{$STORYFORGE_HOST} {
+	encode gzip
+	reverse_proxy storyforge:8080
+}

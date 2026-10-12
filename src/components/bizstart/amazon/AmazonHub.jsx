@@ -26,6 +26,8 @@ import {
   Target,
   Languages,
   Compass,
+  Share2,
+  AlertTriangle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { programmesByPriority } from '@/lib/bizstart/amazon/programmes'
@@ -69,7 +71,10 @@ const ICONS = {
 
 const GUIDE_ICONS = {
   'publisher-truths': Compass,
+  'publish-wide-email': Share2,
   'kdp-start': BookOpen,
+  'kdp-hidden-pitfalls': AlertTriangle,
+  'kdp-account-termination': ShieldAlert,
   'tax-de': Receipt,
   'kdp-resources': GraduationCap,
   inspiration: Lightbulb,
@@ -360,7 +365,11 @@ export default function AmazonHub({ lang = 'en', onBack }) {
                     <p className="text-[11px] leading-relaxed text-slate-400">
                       {amazonT(lang, 'kdpDeepHint')}
                     </p>
-                    <KdpConfigPanel lang={lang} onOpenStoryforge={onOpenStoryforge} />
+                    <KdpConfigPanel
+                      lang={lang}
+                      onOpenStoryforge={onOpenStoryforge}
+                      onOpenPlaybook={openPlaybook}
+                    />
                   </>
                 ) : null}
                 {guide.id === 'kdp-resources' ? (

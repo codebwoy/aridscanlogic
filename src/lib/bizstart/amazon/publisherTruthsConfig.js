@@ -95,11 +95,33 @@ export const PUBLISHER_TRUTHS_CONFIG = {
             de: 'E-Book-Distribution zu Apple Books, Kobo, B&N u. a.',
           },
         },
+        {
+          platform: 'Tolino Media',
+          adds: {
+            en: 'DE ebook shops (Thalia, Hugendubel, Weltbild / Tolino) — keep KDP Select off',
+            de: 'DE-E-Book-Shops (Thalia, Hugendubel, Weltbild / Tolino) — KDP Select aus',
+          },
+        },
+        {
+          platform: 'BoD',
+          adds: {
+            en: 'DE/AT/CH print + ebook into bookstores (Libri) — compare paid packages',
+            de: 'DE/AT/CH Print + E-Book in den Buchhandel (Libri) — bezahlte Pakete vergleichen',
+          },
+        },
+        {
+          platform: 'epubli / BookRix / tredition',
+          adds: {
+            en: 'DE self-pub ebook/print alternatives (verify fees, Amazon double-list risk, exclusivity)',
+            de: 'DE-Selfpub E-Book/Print-Alternativen (Gebühren, Amazon-Doppel-Listing, Exklusivität prüfen)',
+          },
+        },
       ],
       note: {
-        en: '⚠ Third-party platforms have their own fees, exclusivity rules, and quality checks — read current terms before committing.',
-        de: '⚠ Drittanbieter haben eigene Gebühren, Exklusivitätsregeln und Qualitätschecks — aktuelle AGB prüfen.',
+        en: '⚠ Third-party platforms have their own fees, exclusivity rules, and quality checks — read current terms before committing. Open the Publish wide + email list playbook for DACH detail (Tolino/BoD/epubli/BookRix, VLB, Impressum, no KDP Select).',
+        de: '⚠ Drittanbieter haben eigene Gebühren, Exklusivitätsregeln und Qualitätschecks — aktuelle AGB prüfen. Playbook „Wide publizieren + E-Mail-Liste“ für DACH-Details (Tolino/BoD/epubli/BookRix, VLB, Impressum, kein KDP Select).',
       },
+      hubGuideId: 'publish-wide-email',
       links: [
         { label: 'KDP', url: 'https://kdp.amazon.com/' },
         { label: 'IngramSpark', url: 'https://www.ingramspark.com/' },
@@ -107,6 +129,11 @@ export const PUBLISHER_TRUTHS_CONFIG = {
         { label: 'Gumroad', url: 'https://gumroad.com/' },
         { label: 'Payhip', url: 'https://payhip.com/' },
         { label: 'Draft2Digital', url: 'https://www.draft2digital.com/' },
+        { label: 'Tolino Media', url: 'https://www.tolino-media.de/' },
+        { label: 'BoD', url: 'https://www.bod.de/' },
+        { label: 'epubli', url: 'https://www.epubli.de/' },
+        { label: 'BookRix', url: 'https://www.bookrix.de/' },
+        { label: 'tredition', url: 'https://tredition.de/' },
       ],
     },
     {
@@ -118,13 +145,17 @@ export const PUBLISHER_TRUTHS_CONFIG = {
       },
       bullets: {
         en: [
-          'Free KDP ISBN is convenient but ties that edition’s imprint path to Amazon — fine for many first titles; buy your own via German channels (MVB / VLB) if you need bookshop independence',
+          'Free KDP / IngramSpark / Tolino ISBN locks that format to the platform — imprint shows Independently Published or Tolino Media; you cannot reuse that free ISBN elsewhere',
+          'Owned ISBNs via MVB / GeBü / ISBN-Agentur (DE) list you as publisher of record worldwide — buy a batch when you need a formal imprint',
+          'Best practice: start free (zero overhead); buy owned ISBNs when publishing wide under your own company name',
           'Copyright in Germany arises automatically on creation — still keep dated files and contracts',
           'If you plan Merch / series branding, consider trademark research for character name / title early (DPMA) — before you publish widely',
           'Do ISBN / brand decisions before upload, not after a messy launch',
         ],
         de: [
-          'Kostenlose KDP-ISBN ist bequem, bindet den Imprint-Pfad dieser Ausgabe an Amazon — oft okay für Ersttitel; eigene ISBN über DE-Kanäle (MVB / VLB) wenn Buchhandels-Unabhängigkeit nötig',
+          'Free-ISBN von KDP / IngramSpark / Tolino bindet dieses Format an die Plattform — Imprint zeigt Independently Published oder Tolino Media; Free-ISBN nicht woanders wiederverwenden',
+          'Eigene ISBNs über MVB / GeBü / ISBN-Agentur (DE) listen Sie weltweit als Verleger — Paket kaufen, wenn formales Imprint nötig',
+          'Best Practice: Start Free (null Overhead); eigene ISBNs wenn wide unter eigenem Firmennamen',
           'Urheberrecht entsteht in DE mit der Schöpfung — trotzdem datierte Dateien und Verträge behalten',
           'Bei Merch / Serienmarke früh Markenrecherche zu Figurenname / Titel (DPMA) — bevor Sie breit launchen',
           'ISBN-/Marken-Entscheidungen vor dem Upload, nicht nach chaotischem Launch',
@@ -275,25 +306,29 @@ export const PUBLISHER_TRUTHS_CONFIG = {
       },
       bullets: {
         en: [
-          'Book income in Germany usually means registering with your Finanzamt — many authors use Freiberufler status (confirm for your case)',
-          'Check Kleinunternehmerregelung eligibility against current Umsatz thresholds',
+          'No Gewerbe needed to publish your own books via KDP / Tolino / BoD / Draft2Digital — typically Freiberufler under § 18 EStG (confirm your case)',
+          'Personal Steuer-ID alone is NOT enough — register with Finanzamt via Fragebogen zur steuerlichen Erfassung to get a Steuernummer',
+          'Request USt-IdNr. on the same Fragebogen for EU Reverse Charge royalties (e.g. KDP Luxembourg)',
+          'Check Kleinunternehmerregelung (§ 19 UStG) against current Umsatz thresholds (older notes ~€22k — verify)',
           'Complete KDP tax interview (W-8BEN / W-8BEN-E) before meaningful payouts',
           'Use BizStart / Tax Vault in ScanLogic for registration orientation — then confirm with a Steuerberater',
         ],
         de: [
-          'Bucheinnahmen in DE bedeuten meist Meldung beim Finanzamt — viele Autor:innen als Freiberufler (für Ihren Fall prüfen)',
-          'Kleinunternehmerregelung anhand aktueller Umsatzschwellen prüfen',
+          'Kein Gewerbe nötig zum Veröffentlichen eigener Bücher über KDP / Tolino / BoD / Draft2Digital — typisch Freiberufler nach § 18 EStG (Fall prüfen)',
+          'Persönliche Steuer-ID allein reicht NICHT — per Fragebogen zur steuerlichen Erfassung Steuernummer beim Finanzamt holen',
+          'USt-IdNr. im selben Fragebogen beantragen für EU-Reverse-Charge-Royalties (z. B. KDP Luxemburg)',
+          'Kleinunternehmerregelung (§ 19 UStG) anhand aktueller Umsatzschwellen prüfen (ältere Notizen ~22k € — verifizieren)',
           'KDP-Steuerinterview (W-8BEN / W-8BEN-E) vor nennenswerten Auszahlungen',
           'BizStart / Tax Vault in ScanLogic zur Orientierung — dann Steuerberater bestätigen lassen',
         ],
       },
       note: {
-        en: '⚠ Tax status is personal — this is not Steuerberatung. Sort registration before your first sale when possible.',
-        de: '⚠ Steuerstatus ist individuell — keine Steuerberatung. Anmeldung möglichst vor dem ersten Verkauf klären.',
+        en: '⚠ Tax status is personal — this is not Steuerberatung. Sort Freiberufler registration before your first sale when possible. Gewerbe may apply for merch / bulk direct sales / publishing others.',
+        de: '⚠ Steuerstatus ist individuell — keine Steuerberatung. Freiberufler-Anmeldung möglichst vor dem ersten Verkauf. Gewerbe möglich bei Merch / Mengen-Direktverkauf / Verlag für andere.',
       },
       appHooks: {
-        en: 'Open the Amazon Hub tax playbook below (Tax in Germany) and BizStart for registration orientation.',
-        de: 'Öffnen Sie unten das Steuer-Playbook im Amazon Hub und BizStart zur Anmelde-Orientierung.',
+        en: 'Open the Amazon Hub tax playbook (Tax for DE publishers) and BizStart for registration orientation.',
+        de: 'Öffnen Sie das Amazon-Hub-Steuer-Playbook (Steuern für DE-Publisher) und BizStart zur Anmelde-Orientierung.',
       },
       hubGuideId: 'tax-de',
     },

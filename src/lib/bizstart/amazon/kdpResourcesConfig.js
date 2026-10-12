@@ -394,8 +394,15 @@ export const KDP_RESOURCES_CONFIG = {
     {
       label: { en: 'Marketing', de: 'Marketing' },
       detail: {
-        en: 'Launch checklist, author platform, email list — Amazon Ads only after a proven product',
-        de: 'Launch-Checkliste, Autorenplattform, E-Mail-Liste — Amazon Ads erst nach bewährtem Produkt',
+        en: 'Launch checklist, author platform, lead-magnet email list (don’t put all eggs in one basket) — Amazon Ads only after a proven product',
+        de: 'Launch-Checkliste, Autorenplattform, Lead-Magnet-E-Mail-Liste (nicht alle Eier in einen Korb) — Amazon Ads erst nach bewährtem Produkt',
+      },
+    },
+    {
+      label: { en: 'Distribution beyond KDP', de: 'Distribution jenseits KDP' },
+      detail: {
+        en: 'Ebook OFF Select + Tolino Media OR Draft2Digital; print Expanded Distribution OFF + BoD OR IngramSpark (VLB); optional BookRix/epubli; Impressum for DE — open Publish wide playbook',
+        de: 'E-Book OHNE Select + Tolino Media ODER Draft2Digital; Print Expanded Distribution AUS + BoD ODER IngramSpark (VLB); optional BookRix/epubli; Impressum für DE — Wide-Playbook öffnen',
       },
     },
     {
@@ -410,8 +417,8 @@ export const KDP_RESOURCES_CONFIG = {
     {
       days: { en: 'Days 1–7', de: 'Tag 1–7' },
       detail: {
-        en: 'Hard Topics (print math + AI disclosure + categories) + Jumpstart §§1–3 + Content Guidelines; start Reedsy Self-Publishing 101',
-        de: 'Schwierigsthemen (Print-Mathe + KI-Disclosure + Kategorien) + Jumpstart §§1–3 + Content Guidelines; Reedsy Self-Publishing 101 starten',
+        en: 'Hard Topics (print math + AI disclosure + categories + Select OFF default) + Hidden pitfalls (AI vs assisted, title stuffing, forbidden keywords, free vs owned ISBN, bleed/0.375″) + Jumpstart §§1–3 + Content Guidelines; open Publish wide + email list; start Reedsy Self-Publishing 101',
+        de: 'Schwierigsthemen (Print-Mathe + KI-Disclosure + Kategorien + Select-Default AUS) + Versteckte Fallen (KI vs assisted, Titel-Stuffing, verbotene Keywords, Free vs eigene ISBN, Bleed/0,375″) + Jumpstart §§1–3 + Content Guidelines; Wide + E-Mail-Liste öffnen; Reedsy Self-Publishing 101 starten',
       },
     },
     {
@@ -431,8 +438,8 @@ export const KDP_RESOURCES_CONFIG = {
     {
       days: { en: 'Days 22–30', de: 'Tag 22–30' },
       detail: {
-        en: 'Print-ready sample: cover, interior, copyright page, metadata. Upload only after content guidelines check. Use StoryForge (desktop) for consistent art + preflight.',
-        de: 'Druckfertiges Sample: Cover, Innenteil, Impressum/Copyright, Metadaten. Upload erst nach Content-Guidelines. StoryForge (Desktop) für konsistente Kunst + Preflight.',
+        en: 'Print-ready sample: cover, interior (with front/back matter lead-magnet CTAs), copyright page, metadata. Select OFF + Expanded Distribution OFF. Upload after Content Guidelines. StoryForge (desktop) for art + preflight; open D2D + IngramSpark.',
+        de: 'Druckfertiges Sample: Cover, Innenteil (mit Front-/Back-Matter Lead-Magnet-CTAs), Impressum/Copyright, Metadaten. Select AUS + Expanded Distribution AUS. Upload nach Content Guidelines. StoryForge (Desktop) für Kunst + Preflight; D2D + IngramSpark öffnen.',
       },
     },
   ],
