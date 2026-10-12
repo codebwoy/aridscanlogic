@@ -28,6 +28,12 @@ import {
   Compass,
   Share2,
   AlertTriangle,
+  Trophy,
+  Cloud,
+  RefreshCw,
+  Wrench,
+  Building2,
+  Network,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { programmesByPriority } from '@/lib/bizstart/amazon/programmes'
@@ -52,6 +58,8 @@ import KdpResourcesPanel from '@/components/bizstart/amazon/KdpResourcesPanel'
 import InspirationPanel from '@/components/bizstart/amazon/InspirationPanel'
 import PublishWhatPanel from '@/components/bizstart/amazon/PublishWhatPanel'
 import GermanFirstPanel from '@/components/bizstart/amazon/GermanFirstPanel'
+import PlanToWinPanel from '@/components/bizstart/amazon/PlanToWinPanel'
+import AltEcosystemsPanel from '@/components/bizstart/amazon/AltEcosystemsPanel'
 import NicheResearchPanel from '@/components/bizstart/amazon/NicheResearchPanel'
 import BilingualStoryPanel from '@/components/bizstart/amazon/BilingualStoryPanel'
 import HeritageTranslatorPanel from '@/components/bizstart/amazon/HeritageTranslatorPanel'
@@ -65,12 +73,18 @@ const ICONS = {
   handmade: Hand,
   influencer: Megaphone,
   fba_fbm: Store,
+  aws_marketplace: Cloud,
+  renewed: RefreshCw,
+  amazon_custom: Wrench,
+  amazon_business: Building2,
   vella: Layers,
   video_direct: Clapperboard,
 }
 
 const GUIDE_ICONS = {
   'publisher-truths': Compass,
+  'kdp-plan-to-win': Trophy,
+  'amazon-alt-ecosystems': Network,
   'publish-wide-email': Share2,
   'kdp-start': BookOpen,
   'kdp-hidden-pitfalls': AlertTriangle,
@@ -355,6 +369,28 @@ export default function AmazonHub({ lang = 'en', onBack }) {
                       onOpenAuthorforge={onOpenAuthorforge}
                       onOpenPlaybook={openPlaybook}
                     />
+                  </>
+                ) : null}
+                {guide.id === 'kdp-plan-to-win' ? (
+                  <>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      {amazonT(lang, 'planToWinTitle')}
+                    </p>
+                    <p className="text-[11px] leading-relaxed text-slate-400">
+                      {amazonT(lang, 'planToWinHint')}
+                    </p>
+                    <PlanToWinPanel lang={lang} onOpenPlaybook={openPlaybook} />
+                  </>
+                ) : null}
+                {guide.id === 'amazon-alt-ecosystems' ? (
+                  <>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      {amazonT(lang, 'altEcoTitle')}
+                    </p>
+                    <p className="text-[11px] leading-relaxed text-slate-400">
+                      {amazonT(lang, 'altEcoHint')}
+                    </p>
+                    <AltEcosystemsPanel lang={lang} onOpenPlaybook={openPlaybook} />
                   </>
                 ) : null}
                 {guide.id === 'kdp-start' ? (
@@ -710,14 +746,33 @@ export default function AmazonHub({ lang = 'en', onBack }) {
                   <p className="text-xs leading-relaxed text-slate-300">
                     {amazonT(lang, 'merchProgrammeExtra')}
                   </p>
-                  <button
-                    type="button"
-                    onClick={openMerchPlaybook}
-                    className="mt-2 flex min-h-[44px] w-full items-center justify-center rounded-xl bg-brand-600 px-3 text-xs font-semibold text-white sm:w-auto"
-                  >
-                    {amazonT(lang, 'merchDeepTitle')}
-                  </button>
+                  <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                    <button
+                      type="button"
+                      onClick={openMerchPlaybook}
+                      className="flex min-h-[44px] w-full items-center justify-center rounded-xl bg-brand-600 px-3 text-xs font-semibold text-white sm:w-auto"
+                    >
+                      {amazonT(lang, 'merchDeepTitle')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openPlaybook('amazon-alt-ecosystems')}
+                      className="flex min-h-[44px] w-full items-center justify-center rounded-xl border border-brand-500/40 bg-brand-950/40 px-3 text-xs font-semibold text-brand-100 sm:w-auto"
+                    >
+                      {amazonT(lang, 'altEcoOpenPlaybook')}
+                    </button>
+                  </div>
                 </div>
+              ) : null}
+
+              {p.deepGuideId === 'amazon-alt-ecosystems' ? (
+                <button
+                  type="button"
+                  onClick={() => openPlaybook('amazon-alt-ecosystems')}
+                  className="flex min-h-[44px] w-full items-center justify-center rounded-xl border border-brand-500/40 bg-brand-950/40 px-3 text-xs font-semibold text-brand-100 sm:w-auto"
+                >
+                  {amazonT(lang, 'altEcoOpenPlaybook')}
+                </button>
               ) : null}
 
               <div className="flex flex-wrap gap-2 pt-1">

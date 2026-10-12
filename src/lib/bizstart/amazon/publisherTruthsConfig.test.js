@@ -449,6 +449,111 @@ test('publish-wide-email playbook covers wide + email list for beginners', () =>
   }
 })
 
+test('kdp-plan-to-win covers five pillars + execution matrix 100%', async () => {
+  const guide = AMAZON_GUIDES.find((g) => g.id === 'kdp-plan-to-win')
+  assert.ok(guide, 'missing kdp-plan-to-win guide')
+  assert.ok(guide.sections.length >= 6)
+  const text = guide.sections
+    .flatMap((s) => [
+      s.heading.en,
+      ...(s.bullets?.en || []),
+      ...(s.rows || []).flatMap((r) => [r.label.en, r.detail.en]),
+      s.note?.en || '',
+    ])
+    .join(' ')
+  for (const need of [
+    'Niche Selection',
+    'Product Superiority',
+    'Metadata/SEO',
+    'Launch Dynamics',
+    'Monetization & Brand Expansion',
+    'Broad Category + Specific Audience + Clear Outcome',
+    'Cookbook for Air Fryers',
+    'Air Fryer Cookbook for Seniors',
+    '100,000',
+    '1,000–2,000',
+    '3-star',
+    '100×100',
+    'Thumbnail-first',
+    'top 10 bestsellers',
+    'A+ Content',
+    '10%–20%',
+    '7 backend keyword',
+    'bilingual children german twi bedtime activity',
+    'Bestseller',
+    'cheap',
+    'BISAC',
+    '#1 Best Seller',
+    'Honeymoon Period',
+    'Soft Launch',
+    '5–15',
+    'ARC',
+    'Exact Match',
+    'Product Targeting',
+    '20–30',
+    'ACoS',
+    'Customers who bought this also bought',
+    'read-through',
+    'Draft2Digital',
+    'IngramSpark',
+    'Tolino Media',
+    'BoD',
+    '100+ low-effort',
+    '5–10 high-quality',
+    'direct-to-reader mailing list',
+    'keyword stuffing',
+    'lead magnet',
+    'Advance Reader Copy',
+  ]) {
+    assert.match(
+      text,
+      new RegExp(need.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'),
+      `plan-to-win missing: ${need}`,
+    )
+  }
+  const planCfg = (await import('./kdpPlanToWinConfig.js')).KDP_PLAN_TO_WIN_CONFIG
+  const kdpCfg = (await import('./kdpConfig.js')).KDP_CONFIG
+  assert.equal(planCfg.pillars.length, 5)
+  assert.equal(planCfg.executionMatrix.length, 4)
+  assert.equal(planCfg.hubGuideId, 'kdp-plan-to-win')
+  const cfgText = [
+    planCfg.chain.en,
+    ...planCfg.pillars.flatMap((p) => p.bullets.en),
+    ...planCfg.executionMatrix.flatMap((r) => [r.metric.en, r.weak.en, r.winning.en]),
+  ].join(' ')
+  assert.match(cfgText, /Honeymoon Period/)
+  assert.match(cfgText, /ACoS/)
+  assert.match(cfgText, /keyword stuffing/i)
+  assert.match(cfgText, /Advance Reader Copy/)
+  assert.match(cfgText, /lead magnet/i)
+  assert.ok(cfgText.includes('100,000'), 'plan config missing BSR 100,000')
+  assert.match(kdpCfg.startThisWeek.en.join(' '), /Plan to Win/)
+  assert.ok(kdpCfg.planToWin)
+  assert.equal(kdpCfg.planToWin.hubGuideId, 'kdp-plan-to-win')
+  const compact = [
+    kdpCfg.planToWin.chain.en,
+    ...kdpCfg.planToWin.pillars.en,
+    ...kdpCfg.planToWin.matrix.flatMap((r) => [r.metric.en, r.winning.en]),
+  ].join(' ')
+  for (const need of [
+    'Niche Selection',
+    '100,000',
+    'keyword stuffing',
+    'A+ Content',
+    'Honeymoon',
+    'Exact Match',
+    'lead magnets',
+    'Draft2Digital',
+    '5–10 high-quality',
+  ]) {
+    assert.match(
+      compact,
+      new RegExp(need.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'),
+      `kdpConfig.planToWin missing: ${need}`,
+    )
+  }
+})
+
 test('kdp-hidden-pitfalls playbook covers five operational realities 100%', () => {
   const guide = AMAZON_GUIDES.find((g) => g.id === 'kdp-hidden-pitfalls')
   assert.ok(guide, 'missing kdp-hidden-pitfalls guide')
@@ -495,6 +600,258 @@ test('kdp-hidden-pitfalls playbook covers five operational realities 100%', () =
       `hidden-pitfalls missing: ${need}`,
     )
   }
+})
+
+test('amazon-alt-ecosystems covers five platforms + matrix 100%', async () => {
+  const guide = AMAZON_GUIDES.find((g) => g.id === 'amazon-alt-ecosystems')
+  assert.ok(guide, 'missing amazon-alt-ecosystems guide')
+  assert.ok(guide.sections.length >= 10)
+  const text = guide.sections
+    .flatMap((s) => [
+      s.heading.en,
+      ...(s.bullets?.en || []),
+      ...(s.rows || []).flatMap((r) => [r.label.en, r.detail.en]),
+      s.note?.en || '',
+    ])
+    .join(' ')
+  for (const need of [
+    'AWS Marketplace',
+    'Amazon Renewed',
+    'Merch on Demand',
+    'Amazon Custom',
+    'Amazon Business',
+    'SaaS',
+    'B2C',
+    'B2B',
+    'AWS handles customer billing',
+    'pre-approved company cloud budgets',
+    'You Host the Software',
+    'x-amzn-marketplace-token',
+    'ResolveCustomer',
+    'Fulfillment/Onboarding Landing Page',
+    'Next.js',
+    'Supabase',
+    'Row Level Security',
+    '@aws-sdk/client-marketplace-metering',
+    '@aws-sdk/client-marketplace-entitlement',
+    'Amazon Simple Queue Service (SQS)',
+    'SNS',
+    'Cursor IDE',
+    '.cursor/rules',
+    '/api/aws/onboard',
+    'CustomerIdentifier',
+    'AWS Marketplace Management Portal',
+    'AMMP',
+    'Create SaaS Product',
+    'Flat Monthly Rate',
+    'Per-User Contract',
+    'Pay-As-You-Go Usage',
+    '/api/aws/fulfill',
+    '3%',
+    '20%',
+    'BatchMeterUsage',
+    'Enterprise Budgets',
+    'Zero Logistics / Zero Returns',
+    'invite-only',
+    '$50,000',
+    '$100,000',
+    '2.5M',
+    'Buy Box Advantage',
+    '70%–80% of retail value',
+    'refurbishing, repair, or sourcing pipeline',
+    'Tier System',
+    'Zero Production Cost',
+    'High Scale',
+    'multi-thousand-product catalog',
+    '30–40%',
+    'Creator',
+    'Plus',
+    'Premium',
+    '1 Jun 2026',
+    '15% - 25% (Royalty)',
+    'Defeats Chinese Manufacturers & Automated Bots',
+    'No Amazon Returns',
+    'gift',
+    'Quantity Discounts',
+    'Business-Only Pricing',
+    'Tax-Exemption',
+    'High Average Order Value',
+    '50 to 500',
+    'Repeat Automated Orders',
+    '1 Oct 2025',
+    '8 million',
+    '$1,000',
+    '80% - 95%',
+    '40% - 60%',
+    '35% - 50%',
+    '25% - 40%',
+    'Entry Barrier',
+    'Competition Level',
+    'Profit Margins',
+    'Key Skill Required',
+    'StoryForge',
+    'Developer / AI tool builder',
+  ]) {
+    assert.match(
+      text,
+      new RegExp(need.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'),
+      `alt-ecosystems guide missing: ${need}`,
+    )
+  }
+
+  const { AMAZON_ALT_ECOSYSTEMS_CONFIG } = await import('./amazonAltEcosystemsConfig.js')
+  const cfg = AMAZON_ALT_ECOSYSTEMS_CONFIG
+  assert.equal(cfg.hubGuideId, 'amazon-alt-ecosystems')
+  assert.equal(cfg.ecosystems.length, 5)
+  assert.equal(cfg.comparisonMatrix.length, 6)
+  assert.ok((cfg.pickPath.en || []).length >= 5)
+  assert.ok((cfg.relatedHubGuides || []).some((g) => g.id === 'merch-ops'))
+  assert.ok((cfg.relatedHubGuides || []).some((g) => g.id === 'kdp-plan-to-win'))
+
+  const aws = cfg.ecosystems.find((e) => e.id === 'aws_marketplace')
+  assert.ok(aws?.businessModelShift && aws?.howItWorks && aws?.techStackCore && aws?.techStackAws)
+  assert.ok(aws?.cursorIde && aws?.resolveCustomerOutline)
+
+  const cfgText = [
+    cfg.intro.en,
+    ...cfg.ecosystems.flatMap((e) => [
+      e.name.en,
+      e.tagline.en,
+      ...(e.businessModelShift?.en || []),
+      ...(e.whatYouSell.en || []),
+      ...(e.whyLowCompetition.en || []),
+      ...(e.potential.en || []),
+      ...(e.howItWorks?.en || []),
+      ...(e.techStackCore?.en || []),
+      ...(e.techStackAws?.en || []),
+      ...(e.cursorIde?.en || []),
+      ...(e.resolveCustomerOutline?.en || []),
+      ...(e.howToEnter.en || []),
+      ...(e.suitsYouIf.en || []),
+      e.marginNote.en,
+    ]),
+    ...cfg.comparisonMatrix.flatMap((r) => [
+      r.opportunity.en,
+      r.barrier.en,
+      r.margins.en,
+      r.skill.en,
+    ]),
+    ...(cfg.pickPath.en || []),
+    cfg.matrixFootnote.en,
+  ].join(' ')
+
+  for (const need of [
+    'AWS Marketplace',
+    'B2C',
+    'B2B',
+    'AWS handles customer billing',
+    'You Host the Software',
+    'x-amzn-marketplace-token',
+    'ResolveCustomer',
+    'Supabase',
+    '@aws-sdk/client-marketplace-metering',
+    'SQS',
+    'SNS',
+    'Cursor IDE',
+    'CustomerIdentifier',
+    'AMMP',
+    'Create SaaS Product',
+    'Flat Monthly Rate',
+    'Pay-As-You-Go Usage',
+    '/api/aws/fulfill',
+    'Enterprise Budgets',
+    'Zero Logistics / Zero Returns',
+    'invite-only',
+    '$50,000',
+    '$100,000',
+    '70%–80% of retail value',
+    'Tier System',
+    'Zero Production Cost',
+    'High Scale',
+    '15% - 25% (Royalty)',
+    'Defeats Chinese Manufacturers & Automated Bots',
+    'No Amazon Returns',
+    'Repeat Automated Orders',
+    'Quantity Discounts',
+    'Tax-Exemption',
+    '8 million',
+    '80% - 95%',
+    'StoryForge',
+  ]) {
+    assert.match(
+      cfgText,
+      new RegExp(need.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'),
+      `alt-ecosystems config missing: ${need}`,
+    )
+  }
+
+  const { AMAZON_PROGRAMMES } = await import('./programmes.js')
+  for (const id of ['aws_marketplace', 'renewed', 'amazon_custom', 'amazon_business', 'fba_fbm']) {
+    const prog = AMAZON_PROGRAMMES.find((p) => p.id === id)
+    assert.ok(prog, `missing programme ${id}`)
+    assert.equal(prog.deepGuideId, 'amazon-alt-ecosystems')
+  }
+  assert.match(
+    AMAZON_PROGRAMMES.find((p) => p.id === 'merch').howAccess.en,
+    /Under-explored ecosystems/,
+  )
+
+  const { KDP_CONFIG } = await import('./kdpConfig.js')
+  assert.ok(KDP_CONFIG.altEcosystems)
+  assert.equal(KDP_CONFIG.altEcosystems.hubGuideId, 'amazon-alt-ecosystems')
+  assert.match(KDP_CONFIG.startThisWeek.en.join(' '), /Under-explored Amazon ecosystems/)
+  const compact = [
+    KDP_CONFIG.altEcosystems.intro.en,
+    ...KDP_CONFIG.altEcosystems.lanes.en,
+    ...KDP_CONFIG.altEcosystems.matrix.flatMap((r) => [r.opportunity.en, r.margins.en, r.skill.en]),
+    KDP_CONFIG.altEcosystems.pickPath.en,
+  ].join(' ')
+  for (const need of [
+    'B2C→B2B',
+    'AWS handles customer billing',
+    'You Host the Software',
+    'x-amzn-marketplace-token',
+    'ResolveCustomer',
+    'Supabase',
+    '@aws-sdk/client-marketplace-metering',
+    'SQS/SNS',
+    'Cursor IDE',
+    'AMMP',
+    'Create SaaS Product',
+    'Pay-As-You-Go',
+    'Enterprise Budgets',
+    'Zero Logistics / Zero Returns',
+    'invite-only',
+    '$50,000 to $100,000',
+    '70%–80% of retail value',
+    'Tier System',
+    'Zero Production Cost',
+    'High Scale',
+    '15% - 25% (Royalty)',
+    'Defeats Chinese Manufacturers & Automated Bots',
+    'No Amazon Returns',
+    'Repeat Automated Orders',
+    '80% - 95%',
+  ]) {
+    assert.match(
+      compact,
+      new RegExp(need.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'),
+      `kdpConfig.altEcosystems missing: ${need}`,
+    )
+  }
+
+  const planCfg = (await import('./kdpPlanToWinConfig.js')).KDP_PLAN_TO_WIN_CONFIG
+  assert.ok(planCfg.relatedHubGuides.some((g) => g.id === 'amazon-alt-ecosystems'))
+
+  const ecoTruth = PUBLISHER_TRUTHS_CONFIG.truths.find((t) => t.id === 'ecosystem')
+  assert.equal(ecoTruth?.hubGuideId, 'amazon-alt-ecosystems')
+  assert.match(ecoTruth.bullets.en.join(' '), /under-explored Amazon ecosystems/i)
+
+  const merchGuide = AMAZON_GUIDES.find((g) => g.id === 'merch-ops')
+  assert.match(
+    merchGuide.sections.flatMap((s) => s.bullets?.en || []).join(' '),
+    /Under-explored Amazon ecosystems/,
+  )
 })
 
 test('KDP config embeds hidden pitfalls 100%', async () => {

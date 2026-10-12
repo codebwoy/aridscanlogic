@@ -34,6 +34,7 @@ export const PUBLISHER_TRUTHS_CONFIG = {
           'Merchandise → Merch by Amazon (same character art)',
           'Speaking / coaching → book as credibility',
           'Website + email list → your most valuable long-term asset',
+          'Later: under-explored Amazon ecosystems (AWS Marketplace, Custom, Business, Renewed) when skills/capital match — not only KDP/FBA',
         ],
         de: [
           'Buchserie → wiederkehrender Umsatz',
@@ -41,12 +42,14 @@ export const PUBLISHER_TRUTHS_CONFIG = {
           'Merchandise → Merch by Amazon (gleiche Figuren-Kunst)',
           'Vorträge / Coaching → Buch als Glaubwürdigkeit',
           'Website + E-Mail-Liste → wertvollstes Langzeit-Asset',
+          'Später: unterschätzte Amazon-Ökosysteme (AWS Marketplace, Custom, Business, Renewed), wenn Skills/Kapital passen — nicht nur KDP/FBA',
         ],
       },
       appHooks: {
-        en: 'Use the niche ladder above: StoryForge for kids’ series + activity; AuthorForge for parenting / coaching companions; Merch playbooks after the character exists.',
-        de: 'Nutzen Sie die Nischen-Leiter oben: StoryForge für Kinderbuchserie + Activity; AuthorForge für Eltern-/Coaching-Begleiter; Merch-Playbooks nach der Figur.',
+        en: 'Use the niche ladder above: StoryForge for kids’ series + activity; AuthorForge for parenting / coaching companions; Merch playbooks after the character exists. Open Under-explored ecosystems when comparing AWS / Custom / Business / Renewed.',
+        de: 'Nutzen Sie die Nischen-Leiter oben: StoryForge für Kinderbuchserie + Activity; AuthorForge für Eltern-/Coaching-Begleiter; Merch-Playbooks nach der Figur. Unterschätzte Ökosysteme öffnen, wenn Sie AWS / Custom / Business / Renewed vergleichen.',
       },
+      hubGuideId: 'amazon-alt-ecosystems',
     },
     {
       id: 'distribution',

@@ -417,8 +417,8 @@ export const KDP_RESOURCES_CONFIG = {
     {
       days: { en: 'Days 1–7', de: 'Tag 1–7' },
       detail: {
-        en: 'Hard Topics (print math + AI disclosure + categories + Select OFF default) + Hidden pitfalls (AI vs assisted, title stuffing, forbidden keywords, free vs owned ISBN, bleed/0.375″) + Jumpstart §§1–3 + Content Guidelines; open Publish wide + email list; start Reedsy Self-Publishing 101',
-        de: 'Schwierigsthemen (Print-Mathe + KI-Disclosure + Kategorien + Select-Default AUS) + Versteckte Fallen (KI vs assisted, Titel-Stuffing, verbotene Keywords, Free vs eigene ISBN, Bleed/0,375″) + Jumpstart §§1–3 + Content Guidelines; Wide + E-Mail-Liste öffnen; Reedsy Self-Publishing 101 starten',
+        en: 'Plan to Win (Niche → Product → SEO → Launch → Brand) + Hard Topics + Hidden pitfalls + Jumpstart §§1–3 + Content Guidelines; open Publish wide + email list; start Reedsy Self-Publishing 101',
+        de: 'Plan to Win (Nische → Produkt → SEO → Launch → Marke) + Schwierigsthemen + Versteckte Fallen + Jumpstart §§1–3 + Content Guidelines; Wide + E-Mail-Liste öffnen; Reedsy Self-Publishing 101 starten',
       },
     },
     {

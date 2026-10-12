@@ -92,8 +92,8 @@ export const AMAZON_PROGRAMMES = [
       ],
     },
     howAccess: {
-      en: 'merch.amazon.com — application + approval (waitlist). Apply early; approval can take weeks. See Playbooks → Merch full guide for tiers, 4500×5400 PNG specs, and pricing examples (⚠ verify).',
-      de: 'merch.amazon.com — Bewerbung + Freigabe (Warteliste). Früh bewerben; Freigabe kann Wochen dauern. Playbooks → Merch-Vollguide: Tiers, 4500×5400-PNG-Specs und Preisbeispiele (⚠ prüfen).',
+      en: 'merch.amazon.com — application + approval (waitlist). Apply early; approval can take weeks. See Playbooks → Merch full guide for tiers, 4500×5400 PNG specs, and pricing examples (⚠ verify). Compare vs AWS / Custom / Business / Renewed in Under-explored ecosystems.',
+      de: 'merch.amazon.com — Bewerbung + Freigabe (Warteliste). Früh bewerben; Freigabe kann Wochen dauern. Playbooks → Merch-Vollguide: Tiers, 4500×5400-PNG-Specs und Preisbeispiele (⚠ prüfen). Vergleich vs AWS / Custom / Business / Renewed in Unterschätzte Ökosysteme.',
     },
     links: [{ label: 'Merch on Demand', url: 'https://merch.amazon.com/' }],
     actionableDe: true,
@@ -263,8 +263,8 @@ export const AMAZON_PROGRAMMES = [
       ],
     },
     howAccess: {
-      en: 'sellercentral.amazon.de — seller account; choose FBA or FBM per SKU.',
-      de: 'sellercentral.amazon.de — Verkäuferkonto; FBA oder FBM je SKU wählen.',
+      en: 'sellercentral.amazon.de — seller account; choose FBA or FBM per SKU. See Playbooks → Under-explored ecosystems for Business / Custom / Renewed overlays.',
+      de: 'sellercentral.amazon.de — Verkäuferkonto; FBA oder FBM je SKU. Playbooks → Unterschätzte Ökosysteme für Business / Custom / Renewed.',
     },
     links: [
       {
@@ -277,6 +277,141 @@ export const AMAZON_PROGRAMMES = [
       },
     ],
     actionableDe: true,
+    deepGuideId: 'amazon-alt-ecosystems',
+  },
+  {
+    id: 'aws_marketplace',
+    priority: PRIORITY.later,
+    startupCost: { en: 'Time + AWS usage', de: 'Zeit + AWS-Nutzung' },
+    effort: { en: 'Very high', de: 'Sehr hoch' },
+    relevance: { en: 'B2B SaaS / AI tools', de: 'B2B-SaaS / KI-Tools' },
+    name: { en: 'AWS Marketplace (SaaS / APIs / AI)', de: 'AWS Marketplace (SaaS / APIs / KI)' },
+    what: {
+      en: 'Sell SaaS, APIs, datasets, or AI agents to businesses via AWS billing — ~3% SaaS public listing fee (verify AWS docs).',
+      de: 'SaaS, APIs, Datasets oder KI-Agents an Unternehmen über AWS-Billing verkaufen — ca. 3 % SaaS-Listing-Fee (AWS-Docs prüfen).',
+    },
+    why: {
+      en: [
+        'Enterprise cloud budgets; no physical inventory or retail returns',
+        'Far less competition than consumer FBA/KDP',
+        'Requires software packaging + Marketplace entitlement/metering',
+      ],
+      de: [
+        'Enterprise-Cloud-Budgets; kein physisches Lager, keine Retail-Returns',
+        'Deutlich weniger Konkurrenz als Consumer-FBA/KDP',
+        'Braucht Software-Packaging + Marketplace-Entitlement/Metering',
+      ],
+    },
+    howAccess: {
+      en: 'AMMP seller registration → build SaaS in Cursor (ResolveCustomer + Supabase on /api/aws/fulfill) → Create SaaS Product (Flat Monthly / Per-User / Pay-As-You-Go) → sandbox → live. Full how-it-works + tech stack + Cursor rules in Playbooks → Under-explored Amazon ecosystems.',
+      de: 'AMMP-Seller-Registrierung → SaaS in Cursor (ResolveCustomer + Supabase auf /api/aws/fulfill) → Create SaaS Product (Flat Monthly / Per-User / Pay-As-You-Go) → Sandbox → Live. How-it-works + Tech-Stack + Cursor-Rules in Playbooks → Unterschätzte Amazon-Ökosysteme.',
+    },
+    links: [
+      {
+        label: 'AWS Marketplace sellers',
+        url: 'https://docs.aws.amazon.com/marketplace/latest/userguide/user-guide-for-sellers.html',
+      },
+    ],
+    actionableDe: true,
+    deepGuideId: 'amazon-alt-ecosystems',
+  },
+  {
+    id: 'renewed',
+    priority: PRIORITY.monitor,
+    startupCost: { en: 'High ($50k+ invoices US)', de: 'Hoch (US oft ≥50k $-Rechnungen)' },
+    effort: { en: 'Very high', de: 'Sehr hoch' },
+    relevance: { en: 'Refurb / repair ops', de: 'Refurb / Reparatur-Ops' },
+    name: { en: 'Amazon Renewed', de: 'Amazon Renewed' },
+    what: {
+      en: 'Invite-quality marketplace for certified refurbished electronics & tools — separate Renewed buy box; US often needs ≥$50k refurbished invoices / 90 days.',
+      de: 'Qualitäts-Marktplatz für zertifiziert generalüberholte Elektronik & Tools — eigene Renewed-Buy-Box; US oft ≥50k $-Refurbished-Rechnungen / 90 Tage.',
+    },
+    why: {
+      en: [
+        'Gatekept entry → much lower competition than open FBA',
+        'Must price ~≥5% under New featured offer for featured eligibility',
+        'Verify whether your home marketplace (amazon.de) offers Renewed before investing',
+      ],
+      de: [
+        'Zugangskontrolle → deutlich weniger Konkurrenz als offenes FBA',
+        'Für Featured typisch ≥ ca. 5 % unter Neu-Featured-Offer',
+        'Vor Investition prüfen, ob Ihr Heimatmarktplatz (amazon.de) Renewed anbietet',
+      ],
+    },
+    howAccess: {
+      en: 'Professional Seller Central → apply via Renewed programme page with invoices + sample photos. Details in Under-explored ecosystems playbook.',
+      de: 'Professional Seller Central → über Renewed-Programmseite mit Rechnungen + Sample-Fotos bewerben. Details im Playbook Unterschätzte Ökosysteme.',
+    },
+    links: [{ label: 'Amazon Renewed (US)', url: 'https://sell.amazon.com/programs/renewed' }],
+    actionableDe: false,
+    deepGuideId: 'amazon-alt-ecosystems',
+  },
+  {
+    id: 'amazon_custom',
+    priority: PRIORITY.later,
+    startupCost: { en: 'Medium (tools + Pro fee)', de: 'Mittel (Tools + Pro-Gebühr)' },
+    effort: { en: 'Medium–High', de: 'Mittel–Hoch' },
+    relevance: { en: 'Personalized gifts / MFN', de: 'Personalisierte Geschenke / MFN' },
+    name: { en: 'Amazon Custom', de: 'Amazon Custom' },
+    what: {
+      en: 'On-demand personalization (engraving, monogram, print, embroidery) on Seller Central listings — typically merchant-fulfilled made-to-order.',
+      de: 'On-Demand-Personalisierung (Gravur, Monogramm, Print, Stickerei) auf Seller-Central-Listings — typisch merchant-fulfilled Made-to-Order.',
+    },
+    why: {
+      en: [
+        'Harder for overseas PL bots to copy fast local customization',
+        'Custom goods generally not returnable for preference changes (damage/defect still refundable within 30 days — verify)',
+        'Gift niches (weddings, corporate) support stronger margins',
+      ],
+      de: [
+        'Overseas-PL-Bots können schnelle lokale Personalisierung schwer kopieren',
+        'Custom typisch nicht rückgabefähig bei Geschmack (Schaden/Defekt weiter erstattungsfähig in 30 Tagen — prüfen)',
+        'Geschenk-Nischen (Hochzeit, Corporate) stützen stärkere Margen',
+      ],
+    },
+    howAccess: {
+      en: 'Professional Seller → register Amazon Custom in Seller Central (approvals often ~1 hour). Full guide in Under-explored ecosystems.',
+      de: 'Professional Seller → Amazon Custom in Seller Central registrieren (Freigaben oft ca. 1 Stunde). Vollguide in Unterschätzte Ökosysteme.',
+    },
+    links: [{ label: 'Amazon Custom', url: 'https://sell.amazon.com/programs/custom' }],
+    actionableDe: true,
+    deepGuideId: 'amazon-alt-ecosystems',
+  },
+  {
+    id: 'amazon_business',
+    priority: PRIORITY.alongside,
+    startupCost: { en: 'Inventory for bulk', de: 'Lager für Bulk' },
+    effort: { en: 'Medium', de: 'Mittel' },
+    relevance: { en: 'B2B AOV uplift', de: 'B2B-AOV-Upside' },
+    name: { en: 'Amazon Business (B2B pricing)', de: 'Amazon Business (B2B-Pricing)' },
+    what: {
+      en: 'Layer business-only prices and quantity discounts (up to 5 tiers) so orgs buy your ASINs in bulk — higher AOV than retail singles.',
+      de: 'Business-only-Preise und Mengenrabatte (bis 5 Tiers) legen, damit Orgs Ihre ASINs in Bulk kaufen — höheres AOV als Retail-Einzel.',
+    },
+    why: {
+      en: [
+        'Most sellers ignore business pricing columns',
+        'From Oct 2025: reduced referral fees on qualifying bulk orders with ≥~3% business discount (portion above ~$1k — verify)',
+        'Works as an overlay on existing FBA/FBM inventory',
+      ],
+      de: [
+        'Die meisten Seller ignorieren Business-Preis-Spalten',
+        'Ab Okt 2025: reduzierte Referral Fees bei qualifizierenden Bulk-Orders mit ≥ ca. 3 % Business-Rabatt (Anteil über ca. 1k $ — prüfen)',
+        'Funktioniert als Overlay auf bestehendem FBA/FBM-Lager',
+      ],
+    },
+    howAccess: {
+      en: 'Professional seller → Manage Inventory / Automate Pricing → business price + quantity discounts. Playbooks → Under-explored ecosystems.',
+      de: 'Professional Seller → Manage Inventory / Automate Pricing → Business-Preis + Mengenrabatte. Playbooks → Unterschätzte Ökosysteme.',
+    },
+    links: [
+      {
+        label: 'Amazon Business (sellers)',
+        url: 'https://sell.amazon.com/programs/amazon-business',
+      },
+    ],
+    actionableDe: true,
+    deepGuideId: 'amazon-alt-ecosystems',
   },
   {
     id: 'vella',

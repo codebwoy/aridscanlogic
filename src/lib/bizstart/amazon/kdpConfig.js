@@ -456,6 +456,124 @@ export const KDP_CONFIG = {
       { label: 'BzSt', url: 'https://www.bzst.de/' },
     ],
   },
+  /** Compact Plan to Win chain — full pillars in kdp-plan-to-win playbook / PlanToWinPanel. */
+  planToWin: {
+    hubGuideId: 'kdp-plan-to-win',
+    chain: {
+      en: 'Niche Selection → Product Superiority → Metadata/SEO → Launch Dynamics → Monetization & Brand Expansion',
+      de: 'Nischenwahl → Produktüberlegenheit → Metadaten/SEO → Launch-Dynamik → Monetarisierung & Markenausbau',
+    },
+    intro: {
+      en: 'Optimize every link — great keywords with a weak cover still underperform. Fiction, Non-Fiction, Low/Medium Content.',
+      de: 'Jedes Glied optimieren — starke Keywords mit schwachem Cover underperformen trotzdem. Fiction, Non-Fiction, Low/Medium Content.',
+    },
+    pillars: {
+      en: [
+        '1 Niche: Broad Category + Specific Audience + Clear Outcome — not “Cookbook for Air Fryers”; winning “Air Fryer Cookbook for Seniors…” — BSR under 100,000; under 1,000–2,000 comps; mine 3-star weaknesses',
+        '2 Product: Thumbnail-first ~100×100; genre-match top 10; title = physical cover; no keyword stuffing; A+ Content for ~10%–20% conversion lift',
+        '3 SEO: fill all 7 backend keyword slots with longtails (e.g. bilingual children german twi bedtime activity); never cheap/Bestseller brands; narrow BISAC for #1 Best Seller badge',
+        '4 Launch: Honeymoon Period Soft Launch (5–15 Advance Reader Copy / ARC reviews) → Exact Match + Product Targeting on 20–30 comps (ACoS under break-even) → Flywheel “Customers who bought this also bought…”',
+        '5 Brand: series read-through (Book 1 magnet, Books 2–5); lead magnets; publish wide (Draft2Digital, IngramSpark, Tolino Media, BoD)',
+      ],
+      de: [
+        '1 Nische: Breite Kategorie + Zielgruppe + Ergebnis — nicht „Kochbuch für Heißluftfritteusen“; Gewinner „Heißluftfritteusen-Kochbuch für Senioren…“ — BSR unter 100.000; unter 1.000–2.000 Comps; 3-Sterne-Schwächen',
+        '2 Produkt: Thumbnail-first ca. 100×100; Genre-Match Top 10; Titel = physisches Cover; kein Keyword Stuffing; A+ Content für ca. 10–20 % Conversion-Lift',
+        '3 SEO: alle 7 Backend-Keyword-Slots mit Longtails füllen; nie cheap/Bestseller/Marken; enge BISAC für #1 Best Seller-Badge',
+        '4 Launch: Honeymoon Period Soft Launch (5–15 Advance Reader Copy / ARC-Reviews) → Exact Match + Product Targeting auf 20–30 Comps (ACoS unter Break-even) → Flywheel „Kunden, die dies kauften…“',
+        '5 Marke: Serien-Read-through (Buch 1 Magnet, Bücher 2–5); Lead-Magnete; Wide (Draft2Digital, IngramSpark, Tolino Media, BoD)',
+      ],
+    },
+    matrix: [
+      {
+        metric: { en: 'Catalog focus', de: 'Katalog-Fokus' },
+        winning: {
+          en: '5–10 high-quality titles — not 100+ low-effort',
+          de: '5–10 hochwertige Titel — nicht 100+ Low-Effort',
+        },
+      },
+      {
+        metric: { en: 'Niche', de: 'Nische' },
+        winning: {
+          en: 'Long-tail sub-niches with proven buyers',
+          de: 'Longtail-Subnischen mit bewährten Käufer:innen',
+        },
+      },
+      {
+        metric: { en: 'Marketing', de: 'Marketing' },
+        winning: {
+          en: 'PPC + ARC + email list — not luck/random social',
+          de: 'PPC + ARC + E-Mail-Liste — nicht Glück/Social',
+        },
+      },
+      {
+        metric: { en: 'Risk', de: 'Risiko' },
+        winning: {
+          en: 'Wide + direct-to-reader mailing list — not 100% KDP',
+          de: 'Wide + Direct-to-Reader-Liste — nicht 100 % KDP',
+        },
+      },
+    ],
+  },
+  /** Compact under-explored Amazon ecosystems — full cards in amazon-alt-ecosystems playbook. */
+  altEcosystems: {
+    hubGuideId: 'amazon-alt-ecosystems',
+    intro: {
+      en: 'Beyond KDP / FBA: five less-saturated Amazon lanes — AWS Marketplace, Renewed, Merch, Custom, Business. Pick by skills + capital, not hype.',
+      de: 'Jenseits von KDP / FBA: fünf weniger gesättigte Amazon-Spuren — AWS Marketplace, Renewed, Merch, Custom, Business. Nach Skills + Kapital wählen, nicht nach Hype.',
+    },
+    lanes: {
+      en: [
+        '1 AWS Marketplace: B2C→B2B SaaS/AI — AWS handles customer billing; Enterprise Budgets; Zero Logistics / Zero Returns; You Host the Software; x-amzn-marketplace-token → ResolveCustomer; stack React/Next + Supabase + @aws-sdk/client-marketplace-metering + SQS/SNS; Cursor IDE + AMMP Create SaaS Product (Flat Monthly / Per-User / Pay-As-You-Go); fee ~3%; Margins 80% - 95%*',
+        '2 Amazon Renewed: invite-only refurbished — invoices $50,000 to $100,000 (US often ≥$50k/90d), Buy Box Advantage, resell at 70%–80% of retail value — Skill: Sourcing / Repair / Operations — Margins 40% - 60%*',
+        '3 Merch on Demand: Tier System (Tier 10+), ~30–40% acceptance ⚠, Zero Production Cost, High Scale multi-thousand-product catalog — 15% - 25% (Royalty)* — Skill: Niche Graphic Design / SEO',
+        '4 Amazon Custom: Defeats Chinese Manufacturers & Automated Bots; No Amazon Returns (preference); gift margins 35% - 50%* — Skill: Personalization / Laser Engraving / POD',
+        '5 Amazon Business: Quantity Discounts + Business-Only Pricing + Tax-Exemption; High AOV 50 to 500 units; Repeat Automated Orders — Margins 25% - 40%*',
+      ],
+      de: [
+        '1 AWS Marketplace: B2C→B2B SaaS/KI — AWS handles customer billing; Enterprise Budgets; Zero Logistics / Zero Returns; You Host the Software; x-amzn-marketplace-token → ResolveCustomer; Stack React/Next + Supabase + @aws-sdk/client-marketplace-metering + SQS/SNS; Cursor IDE + AMMP Create SaaS Product (Flat Monthly / Per-User / Pay-As-You-Go); Fee ca. 3 %; Margen 80% - 95%*',
+        '2 Amazon Renewed: invite-only Refurbished — Rechnungen $50,000 to $100,000 (US oft ≥50k $/90d), Buy Box Advantage, Verkauf bei 70%–80% of retail value — Skill: Sourcing / Reparatur / Ops — Margen 40% - 60%*',
+        '3 Merch on Demand: Tier System (Tier 10+), ca. 30–40 % Annahme ⚠, Zero Production Cost, High Scale multi-thousand-product catalog — 15% - 25% (Royalty)* — Skill: Nischen-Grafikdesign / SEO',
+        '4 Amazon Custom: Defeats Chinese Manufacturers & Automated Bots; No Amazon Returns (Geschmack); Geschenk-Margen 35% - 50%* — Skill: Personalisierung / Laser / POD',
+        '5 Amazon Business: Quantity Discounts + Business-Only Pricing + Tax-Exemption; High AOV 50 to 500 units; Repeat Automated Orders — Margen 25% - 40%*',
+      ],
+    },
+    matrix: [
+      {
+        opportunity: { en: 'AWS Marketplace', de: 'AWS Marketplace' },
+        margins: { en: '80% - 95%*', de: '80% - 95%*' },
+        skill: { en: 'Software / Cloud', de: 'Software / Cloud' },
+      },
+      {
+        opportunity: { en: 'Renewed', de: 'Renewed' },
+        margins: { en: '40% - 60%*', de: '40% - 60%*' },
+        skill: { en: 'Repair / ops', de: 'Reparatur / Ops' },
+      },
+      {
+        opportunity: { en: 'Custom', de: 'Custom' },
+        margins: { en: '35% - 50%*', de: '35% - 50%*' },
+        skill: { en: 'Personalization', de: 'Personalisierung' },
+      },
+      {
+        opportunity: { en: 'Business B2B', de: 'Business B2B' },
+        margins: { en: '25% - 40%*', de: '25% - 40%*' },
+        skill: { en: 'Bulk pricing', de: 'Bulk-Pricing' },
+      },
+      {
+        opportunity: { en: 'Merch', de: 'Merch' },
+        margins: { en: '15% - 25% (Royalty)*', de: '15% - 25% (Royalty)*' },
+        skill: { en: 'Design / SEO', de: 'Design / SEO' },
+      },
+      {
+        opportunity: { en: 'KDP / FBA (ref.)', de: 'KDP / FBA (Ref.)' },
+        margins: { en: '15% - 30%*', de: '15% - 30%*' },
+        skill: { en: 'Ads / competition', de: 'Ads / Konkurrenz' },
+      },
+    ],
+    pickPath: {
+      en: 'Art/books → Merch+KDP · Maker → Custom · Inventory → Business · Repair capital → Renewed · Developer → AWS',
+      de: 'Kunst/Bücher → Merch+KDP · Maker → Custom · Lager → Business · Reparatur-Kapital → Renewed · Developer → AWS',
+    },
+  },
   /** Five non-obvious KDP operational pitfalls (AI, titles, keywords, ISBN, bleed). */
   hiddenPitfalls: {
     hubGuideId: 'kdp-hidden-pitfalls',
@@ -801,11 +919,13 @@ export const KDP_CONFIG = {
       'Prepare .epub (not .mobi) + print .pdf; confirm DNB Pflichtexemplare via BoD/Tolino',
       'Draft one lead magnet + ESP landing page (MailerLite / Kit / Mailchimp)',
       'Insert front-matter + back-matter bonus CTAs before final StoryForge / AuthorForge export',
+      'Open Plan to Win: Niche (BSR <100k + long-tail) → Product (thumbnail + A+) → SEO (7 keywords + narrow BISAC) → Launch (ARC + Exact Match PPC) → Brand (series + wide + email)',
       'Declare AI-generated text/cover/interior honestly (hidden from buyers); keep title/subtitle matching the cover — no Best Seller stuffing',
       'Fill 7 backend keywords without Disney/Peppa/Free/Paperback; choose free vs owned ISBN (MVB/GeBü) deliberately',
       'Set Bleed for illustrated books; keep critical art/text ≥ 0.375″ (~9.5 mm) from edges',
       'Open StoryForge Launchpad course (desktop) for format + manuscript steps',
       'Apply to Merch in parallel (see Merch full guide) — merch can trigger Gewerbe; ask Steuerberater',
+      'Open Under-explored Amazon ecosystems: compare AWS Marketplace, Renewed, Merch, Custom, Business — pick the lane that fits your skills/capital (not only KDP/FBA)',
     ],
     de: [
       'KDP anlegen / anmelden und Steuerinterview starten',
@@ -816,11 +936,13 @@ export const KDP_CONFIG = {
       '.epub (nicht .mobi) + Print-.pdf; DNB-Pflichtexemplare über BoD/Tolino bestätigen',
       'Einen Lead-Magnet + ESP-Landingpage (MailerLite / Kit / Mailchimp)',
       'Front- + Back-Matter-Bonus-CTAs vor finalem StoryForge-/AuthorForge-Export einfügen',
+      'Plan to Win öffnen: Nische (BSR <100k + Longtail) → Produkt (Thumbnail + A+) → SEO (7 Keywords + enge BISAC) → Launch (ARC + Exact-Match-PPC) → Marke (Serie + Wide + E-Mail)',
       'KI-generierten Text/Cover/Innenteil ehrlich angeben (vor Käufer:innen verborgen); Titel/Untertitel = Cover — kein Best-Seller-Stuffing',
       '7 Backend-Keywords ohne Disney/Peppa/Free/Paperback; Free vs eigene ISBN (MVB/GeBü) bewusst wählen',
       'Bleed für illustrierte Bücher; kritische Kunst/Text ≥ 0,375″ (ca. 9,5 mm) vom Rand',
       'StoryForge-Launchpad-Kurs (Desktop) für Format + Manuskript öffnen',
       'Merch parallel beantragen (siehe Merch-Vollguide) — Merch kann Gewerbe auslösen; Steuerberater fragen',
+      'Unterschätzte Amazon-Ökosysteme öffnen: AWS Marketplace, Renewed, Merch, Custom, Business vergleichen — Spur nach Skills/Kapital wählen (nicht nur KDP/FBA)',
     ],
   },
 }

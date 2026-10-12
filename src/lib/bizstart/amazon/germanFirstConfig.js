@@ -388,11 +388,13 @@ export const GERMAN_FIRST_CONFIG = {
         '§ 18 EStG: writing + self-publishing your own original literary works is typically Freiberufler (freie freiberufliche Tätigkeit)',
         'No Gewerbeanmeldung while you publish own books via KDP, Tolino Media, BoD, Draft2Digital and earn Tantiemen',
         'Can become Gewerbe for bulk print + own e-commerce, merch (t-shirts, mugs), or publishing other authors',
+        'Also ask Steuerberater before Amazon Custom / Business / Renewed / AWS Marketplace — see Hub Under-explored ecosystems playbook',
       ],
       de: [
         '§ 18 EStG: Schreiben + Selfpublishing eigener Werke typisch Freiberufler (freie freiberufliche Tätigkeit)',
         'Keine Gewerbeanmeldung, solange eigene Bücher über KDP, Tolino Media, BoD, Draft2Digital und Tantiemen',
         'Gewerbe möglich bei Mengen-Print + eigenem Online-Shop, Merch (T-Shirts, Tassen) oder Verlag für andere',
+        'Auch vor Amazon Custom / Business / Renewed / AWS Marketplace Steuerberater fragen — Hub-Playbook Unterschätzte Ökosysteme',
       ],
     },
     taxNumbers: {

@@ -376,6 +376,102 @@ export default function KdpConfigPanel({ lang = 'en', onOpenStoryforge, onOpenPl
         </div>
       </ConfigBlock>
 
+      {cfg.planToWin ? (
+        <ConfigBlock title={amazonT(lang, 'kdpPlanToWinTitle')}>
+          <p className="text-xs font-medium leading-relaxed text-brand-100">{L(cfg.planToWin.chain)}</p>
+          <p className="mt-1.5 text-xs leading-relaxed text-slate-300">{L(cfg.planToWin.intro)}</p>
+          <ul className="mt-2 list-disc space-y-1 pl-4 text-xs leading-relaxed text-slate-300">
+            {(cfg.planToWin.pillars[lang] || cfg.planToWin.pillars.en).map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+          <div className="mt-2 mb-2 overflow-x-auto rounded-lg border border-slate-800/80">
+            <table className="w-max min-w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-slate-800 bg-slate-900/60 text-slate-400">
+                  <th className="whitespace-nowrap px-2.5 py-2 font-semibold">
+                    {amazonT(lang, 'planToWinMetric')}
+                  </th>
+                  <th className="whitespace-nowrap px-2.5 py-2 font-semibold">
+                    {amazonT(lang, 'planToWinWinning')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {cfg.planToWin.matrix.map((row) => (
+                  <tr key={row.metric.en} className="border-b border-slate-800/80 last:border-0">
+                    <td className="whitespace-nowrap px-2.5 py-2 font-medium text-slate-200">
+                      {L(row.metric)}
+                    </td>
+                    <td className="max-w-[18rem] px-2.5 py-2 text-slate-400">{L(row.winning)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {onOpenPlaybook && cfg.planToWin.hubGuideId ? (
+            <button
+              type="button"
+              onClick={() => onOpenPlaybook(cfg.planToWin.hubGuideId)}
+              className="inline-flex min-h-[44px] items-center rounded-lg border border-brand-500/40 bg-brand-500/10 px-3 py-2 text-xs font-medium text-brand-100"
+            >
+              {amazonT(lang, 'kdpPlanToWinOpen')}
+            </button>
+          ) : null}
+        </ConfigBlock>
+      ) : null}
+
+      {cfg.altEcosystems ? (
+        <ConfigBlock title={amazonT(lang, 'kdpAltEcoTitle')}>
+          <p className="text-xs leading-relaxed text-slate-300">{L(cfg.altEcosystems.intro)}</p>
+          <ul className="mt-2 list-disc space-y-1 pl-4 text-xs leading-relaxed text-slate-300">
+            {(cfg.altEcosystems.lanes[lang] || cfg.altEcosystems.lanes.en).map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+          <div className="mt-3 overflow-x-auto rounded-lg border border-slate-800/80">
+            <table className="w-max min-w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-slate-800 bg-slate-900/60 text-slate-400">
+                  <th className="whitespace-nowrap px-2.5 py-2 font-semibold">
+                    {amazonT(lang, 'altEcoColOpportunity')}
+                  </th>
+                  <th className="whitespace-nowrap px-2.5 py-2 font-semibold">
+                    {amazonT(lang, 'altEcoColMargins')}
+                  </th>
+                  <th className="whitespace-nowrap px-2.5 py-2 font-semibold">
+                    {amazonT(lang, 'altEcoColSkill')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {cfg.altEcosystems.matrix.map((row) => (
+                  <tr key={row.opportunity.en} className="border-b border-slate-800/80 last:border-0">
+                    <td className="whitespace-nowrap px-2.5 py-2 font-medium text-slate-200">
+                      {L(row.opportunity)}
+                    </td>
+                    <td className="whitespace-nowrap px-2.5 py-2 text-slate-300">{L(row.margins)}</td>
+                    <td className="max-w-[12rem] px-2.5 py-2 text-slate-400">{L(row.skill)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-2 text-xs font-medium leading-relaxed text-brand-100">
+            {L(cfg.altEcosystems.pickPath)}
+          </p>
+          {onOpenPlaybook && cfg.altEcosystems.hubGuideId ? (
+            <button
+              type="button"
+              onClick={() => onOpenPlaybook(cfg.altEcosystems.hubGuideId)}
+              className="mt-2 inline-flex min-h-[44px] items-center rounded-lg border border-brand-500/40 bg-brand-500/10 px-3 py-2 text-xs font-medium text-brand-100"
+            >
+              {amazonT(lang, 'kdpAltEcoOpen')}
+            </button>
+          ) : null}
+        </ConfigBlock>
+      ) : null}
+
       {cfg.hiddenPitfalls ? (
         <ConfigBlock title={amazonT(lang, 'kdpPitfallsTitle')}>
           <p className="text-xs leading-relaxed text-slate-300">{L(cfg.hiddenPitfalls.intro)}</p>

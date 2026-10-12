@@ -48,6 +48,8 @@ export const AMAZON_GUIDES = [
             'Open “Publish wide + email list” next — so you never put all eggs in one Amazon basket',
             'Use Merch playbooks only after your character is pinned and brand-safe',
             'Pair with KDP requirements + Hard Topics for upload mechanics; this playbook is strategy, not the print calculator',
+            'Open “Plan to Win” for the five-pillar execution chain: Niche → Product → Metadata/SEO → Launch → Brand expansion',
+            'When comparing lanes beyond KDP/FBA, open “Under-explored Amazon ecosystems” (AWS Marketplace, Renewed, Merch, Custom, Business)',
             'Every price, ISBN, tax, and school claim has a ⚠ — verify before you spend money or register',
           ],
           de: [
@@ -55,6 +57,8 @@ export const AMAZON_GUIDES = [
             'Als Nächstes „Wide publizieren + E-Mail-Liste“ öffnen — damit Sie nicht alle Eier in einen Amazon-Korb legen',
             'Merch-Playbooks erst nach gepinnter, markensicherer Figur',
             'Danach KDP-Anforderungen + Schwierigsthemen für Upload-Technik; dieses Playbook ist Strategie, kein Druckkosten-Rechner',
+            '„Plan to Win“ öffnen für die Fünf-Säulen-Kette: Nische → Produkt → Metadaten/SEO → Launch → Marke',
+            'Beim Vergleich jenseits KDP/FBA „Unterschätzte Amazon-Ökosysteme“ öffnen (AWS Marketplace, Renewed, Merch, Custom, Business)',
             'Jeder Preis-, ISBN-, Steuer- und Schul-Hinweis hat ⚠ — vor Ausgaben oder Anmeldung prüfen',
           ],
         },
@@ -65,6 +69,605 @@ export const AMAZON_GUIDES = [
             url: 'https://kdp.amazon.com/en_US/help/topic/G202187740',
           },
         ],
+      },
+    ],
+  },
+  {
+    id: 'kdp-plan-to-win',
+    defaultOpen: false,
+    title: {
+      en: 'Plan to Win — five-pillar KDP execution chain',
+      de: 'Plan to Win — Fünf-Säulen-KDP-Ausführungskette',
+    },
+    summary: {
+      en: 'Repeatable end-to-end framework: Niche Selection → Product Superiority → Metadata/SEO → Launch Dynamics → Monetization & Brand Expansion. Micro-targeting, thumbnail covers, A+, 7 keywords, honeymoon PPC, series + wide + email. ⚠ Not Amazon Help.',
+      de: 'Wiederholbares End-to-End-Framework: Nischenwahl → Produktüberlegenheit → Metadaten/SEO → Launch-Dynamik → Monetarisierung & Marke. Micro-Targeting, Thumbnail-Cover, A+, 7 Keywords, Honeymoon-PPC, Serie + Wide + E-Mail. ⚠ Kein Amazon-Help.',
+    },
+    sections: [
+      {
+        heading: {
+          en: 'The execution chain',
+          de: 'Die Ausführungskette',
+        },
+        bullets: {
+          en: [
+            'Winning on Amazon KDP requires a repeatable, end-to-end framework across Fiction, Non-Fiction, and Low/Medium Content',
+            'Chain: Niche Selection → Product Superiority → Metadata/SEO → Launch Dynamics → Monetization & Brand Expansion',
+            'If one link fails (e.g. great keywords but a weak cover), the book will underperform — optimize every link',
+            'Full pillar detail + master execution matrix live in the panel below',
+          ],
+          de: [
+            'Gewinnen auf Amazon KDP braucht ein wiederholbares End-to-End-Framework für Fiction, Non-Fiction und Low/Medium Content',
+            'Kette: Nischenwahl → Produktüberlegenheit → Metadaten/SEO → Launch-Dynamik → Monetarisierung & Markenausbau',
+            'Scheitert ein Glied (z. B. starke Keywords, schwaches Cover), underperformt das Buch — jedes Glied optimieren',
+            'Volle Säulen-Details + Master-Ausführungsmatrix im Panel unten',
+          ],
+        },
+        note: {
+          en: '⚠ BSR cutoffs, ACoS targets, and A+ conversion lift claims are directional — verify live. Never buy fake reviews.',
+          de: '⚠ BSR-Grenzen, ACoS-Ziele und A+-Conversion-Lift sind Richtungswerte — live prüfen. Keine Fake-Reviews kaufen.',
+        },
+      },
+      {
+        heading: {
+          en: '1. Strategic niche validation (micro-targeting)',
+          de: '1. Strategische Nischen-Validierung (Micro-Targeting)',
+        },
+        bullets: {
+          en: [
+            'Most publishers fail before writing a word because they publish in overly broad, saturated categories',
+            'Niche equation: Broad Category + Specific Audience + Clear Outcome',
+            'Bad: “Cookbook for Air Fryers”',
+            'Winning: “Air Fryer Cookbook for Seniors (Large Print, Low-Sodium, 5-Ingredients or Less)”',
+            'Validation checkpoint: top 3–5 organically ranking books have Best Sellers Rank (BSR) under 100,000 (proving demand)',
+            'Fewer than 1,000–2,000 total competing results for that long-tail search phrase',
+            'Identify weakness in current top sellers (outdated covers, poor interior formatting, recurring reader complaints in 3-star reviews)',
+          ],
+          de: [
+            'Die meisten Publisher scheitern vor dem ersten Wort — zu breite, gesättigte Kategorien',
+            'Nischen-Gleichung: Breite Kategorie + spezifische Zielgruppe + klares Ergebnis',
+            'Schlecht: „Kochbuch für Heißluftfritteusen“',
+            'Gewinner: „Heißluftfritteusen-Kochbuch für Senioren (Großdruck, natriumarm, max. 5 Zutaten)“',
+            'Validierung: Top 3–5 organisch rankende Bücher haben Best Sellers Rank (BSR) unter 100.000 (Nachfrage)',
+            'Unter 1.000–2.000 Gesamttreffern für diese Longtail-Suchphrase',
+            'Schwächen der Topseller: veraltete Cover, schwache Formatierung, wiederkehrende Kritik in 3-Sterne-Reviews',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: '2. Product superiority (the conversion engine)',
+          de: '2. Produktüberlegenheit (Conversion-Motor)',
+        },
+        bullets: {
+          en: [
+            'Once a reader finds your listing, cover, title, and A+ Content determine whether they click and buy',
+            'Thumbnail-first design: cover must stand out at 100×100 pixels on a mobile screen — high-contrast typography and clear focal points',
+            'Genre match: look at the top 10 bestsellers in your sub-niche; match expected visual tropes (color scheme, font choices) while keeping a premium feel',
+            'Title: punchy, memorable, and strictly matching your physical cover',
+            'Subtitle: clear value proposition addressing exact audience and outcome — avoid keyword stuffing list words that trigger account flags',
+            'Amazon A+ Content (from your KDP Dashboard): interior preview images, feature comparison tables, and brand storytelling visuals — often cited to lift conversion rates by 10%–20% (verify eligibility)',
+          ],
+          de: [
+            'Wenn Leser:innen Ihr Listing finden, entscheiden Cover, Titel und A+ Content über Klick und Kauf',
+            'Thumbnail-first: Cover muss bei 100×100 Pixeln auf Mobile auffallen — hoher Kontrast und klarer Fokus',
+            'Genre-Match: Top-10-Bestseller in der Sub-Nische; visuelle Tropes (Farbe, Fonts) treffen, premium bleiben',
+            'Titel: knackig, einprägsam, exakt wie auf dem physischen Cover',
+            'Untertitel: klare Value Proposition für Zielgruppe und Ergebnis — kein Keyword Stuffing mit Account-Flags',
+            'Amazon A+ Content (KDP-Dashboard): Innenteil-Previews, Vergleichstabellen, Brand-Story — oft mit 10–20 % Conversion-Lift genannt (Berechtigung prüfen)',
+          ],
+        },
+        links: [
+          {
+            label: 'A+ Content (Help)',
+            url: 'https://kdp.amazon.com/en_US/help/topic/G201173080',
+          },
+        ],
+      },
+      {
+        heading: {
+          en: '3. Metadata & Amazon algorithm SEO',
+          de: '3. Metadaten & Amazon-Algorithmus-SEO',
+        },
+        bullets: {
+          en: [
+            'Amazon KDP is an e-commerce search engine — win by aligning metadata with search intent',
+            '7 backend keyword slots: fill every slot with non-repetitive, long-tail phrases (e.g. “bilingual children german twi bedtime activity” instead of single words like “book”)',
+            'Never include brand names, price promises (“cheap”), or claims like “Bestseller”',
+            'Category dominance: use specific, narrow BISAC categories rather than broad top-level categories',
+            'Being ranked #1 in a small sub-category earns the “#1 Best Seller” badge, which dramatically boosts organic click-through rates',
+          ],
+          de: [
+            'Amazon KDP ist eine E-Commerce-Suchmaschine — Metadaten an Suchabsicht ausrichten',
+            '7 Backend-Keyword-Slots: jeden Slot mit nicht-wiederholenden Longtails füllen (z. B. „bilingual children german twi bedtime activity“ statt Einzelwörter wie „book“)',
+            'Nie Markennamen, Preisversprechen („cheap“) oder Claims wie „Bestseller“',
+            'Kategorie-Dominanz: spezifische, enge BISAC-Kategorien statt breiter Top-Level-Kategorien',
+            'Platz #1 in einer kleinen Subkategorie bringt das „#1 Best Seller“-Badge und steigert organische CTR stark',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: '4. Launch dynamics & ad engine',
+          de: '4. Launch-Dynamik & Ad-Engine',
+        },
+        bullets: {
+          en: [
+            'Amazon’s algorithm grants new titles a temporary “Honeymoon Period” visibility boost — maximize sales velocity during this window',
+            'Phase 1 Soft Launch (social proof base): secure 5–15 verified reviews immediately via Advance Reader Copy (ARC) team, email newsletter subscribers, or book review platforms (target often cited as 5–10 to start)',
+            'Phase 2 Ad Acceleration: do not run broad campaigns initially — Exact Match sponsored keyword ads on proven search terms and Product Targeting Ads on 20–30 direct competitor book listings (comp titles)',
+            'Aim for an ACoS (Advertising Cost of Sales) under your break-even royalty margin',
+            'Phase 3 Flywheel (algorithm takeover): organic sales velocity paired with ad conversions pushes your title into Amazon’s internal recommendation engine (“Customers who bought this also bought…”)',
+          ],
+          de: [
+            'Amazons Algorithmus gibt neuen Titeln eine temporäre „Honeymoon Period“-Sichtbarkeit — Sales-Velocity in diesem Fenster maximieren',
+            'Phase 1 Soft Launch (Social Proof): 5–15 verifizierte Reviews sofort über Advance Reader Copy (ARC)-Team, E-Mail-Abonnent:innen oder Review-Plattformen (Start oft mit Ziel 5–10)',
+            'Phase 2 Ad Acceleration: zuerst keine Broad-Kampagnen — Exact-Match Sponsored Keyword Ads auf bewährte Suchbegriffe und Product-Targeting-Ads auf 20–30 direkte Konkurrenz-Listings (Comp-Titel)',
+            'ACoS (Advertising Cost of Sales) unter Ihrer Break-even-Royalty-Marge anstreben',
+            'Phase 3 Flywheel (Algorithmus-Übernahme): organische Sales-Velocity + Ad-Conversions → Amazons Empfehlungs-Engine („Kunden, die dies kauften, kauften auch…“)',
+          ],
+        },
+        rows: [
+          {
+            label: { en: 'Phase 1: Soft Launch', de: 'Phase 1: Soft Launch' },
+            detail: {
+              en: 'Target 5–10 reviews (up to 5–15 via ARC / list)',
+              de: 'Ziel 5–10 Reviews (bis 5–15 via ARC / Liste)',
+            },
+          },
+          {
+            label: { en: 'Phase 2: Ad Acceleration', de: 'Phase 2: Ad Acceleration' },
+            detail: {
+              en: 'Exact Match PPC + Product Targeting on 20–30 comps; ACoS under break-even',
+              de: 'Exact-Match-PPC + Product Targeting auf 20–30 Comps; ACoS unter Break-even',
+            },
+          },
+          {
+            label: { en: 'Phase 3: Flywheel', de: 'Phase 3: Flywheel' },
+            detail: {
+              en: 'Organic rank scaling + “also bought” recommendations',
+              de: 'Organisches Ranking + „Auch gekauft“-Empfehlungen',
+            },
+          },
+        ],
+        links: [
+          { label: 'Amazon Advertising', url: 'https://advertising.amazon.com/' },
+        ],
+      },
+      {
+        heading: {
+          en: '5. Brand expansion & off-Amazon ownership',
+          de: '5. Markenausbau & Ownership jenseits Amazon',
+        },
+        bullets: {
+          en: [
+            'Relying solely on Amazon algorithm changes or single standalone titles creates fragile revenue',
+            'Series/catalog: in fiction, write interconnected series — Book 1 as reader magnet or low-friction entry; Books 2–5 drive high-margin read-through revenue',
+            'In non-fiction / low-content, build a cohesive brand imprint across a specific niche (e.g. a multi-volume activity series)',
+            'Own the reader relationship (lead magnets): place a high-value lead magnet bonus download (printable activity kit, bonus chapter, resource guide) at the front and back of your interior — convert Amazon shoppers into direct email subscribers',
+            'Publish wide: once a title is established on Amazon, distribute via Draft2Digital, IngramSpark, Tolino Media, BoD to diversify income beyond a single platform',
+          ],
+          de: [
+            'Nur Amazon-Algorithmus oder einzelne Standalone-Titel erzeugen fragile Einnahmen',
+            'Serie/Katalog: in Fiction verbundene Serien — Buch 1 als Magnet / Low-Friction-Einstieg; Bücher 2–5 mit hoher Read-through-Marge',
+            'In Non-Fiction / Low-Content: kohärentes Brand-Imprint in einer Nische (z. B. mehrbändige Activity-Serie)',
+            'Reader-Beziehung besitzen (Lead-Magnete): hochwertigen Lead-Magnet-Bonus (druckbares Activity-Kit, Bonuskapitel, Resource Guide) in Front- und Back-Matter — Amazon-Shopper zu direkten E-Mail-Abonnent:innen machen',
+            'Wide publizieren: wenn der Titel auf Amazon etabliert ist, über Draft2Digital, IngramSpark, Tolino Media, BoD diversifizieren',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: 'Master execution matrix',
+          de: 'Master-Ausführungsmatrix',
+        },
+        rows: [
+          {
+            label: { en: 'Catalog focus', de: 'Katalog-Fokus' },
+            detail: {
+              en: 'Weak: mass-producing 100+ low-effort titles → Winning: deep focus on 5–10 high-quality, high-converting titles',
+              de: 'Schwach: 100+ Low-Effort-Titel → Gewinner: tiefer Fokus auf 5–10 hochwertige, stark konvertierende Titel',
+            },
+          },
+          {
+            label: { en: 'Niche selection', de: 'Nischenwahl' },
+            detail: {
+              en: 'Weak: chasing high-volume, hyper-competitive keywords → Winning: owning long-tail, low-competition sub-niches with proven buyers',
+              de: 'Schwach: High-Volume-Keywords jagen → Gewinner: Longtail-Subnischen mit geringer Konkurrenz und bewährten Käufer:innen',
+            },
+          },
+          {
+            label: { en: 'Marketing', de: 'Marketing' },
+            detail: {
+              en: 'Weak: luck or random social posts → Winning: strategic Amazon PPC, ARC review teams, and email list captures',
+              de: 'Schwach: Glück oder zufällige Social-Posts → Gewinner: strategische Amazon-PPC, ARC-Teams und E-Mail-Captures',
+            },
+          },
+          {
+            label: { en: 'Risk management', de: 'Risikomanagement' },
+            detail: {
+              en: 'Weak: 100% dependent on Amazon KDP → Winning: multi-platform publishing wide + direct-to-reader mailing list',
+              de: 'Schwach: 100 % abhängig von Amazon KDP → Gewinner: Multi-Plattform wide + Direct-to-Reader-Mailingliste',
+            },
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'amazon-alt-ecosystems',
+    defaultOpen: false,
+    title: {
+      en: 'Under-explored Amazon ecosystems — beyond KDP & retail FBA',
+      de: 'Unterschätzte Amazon-Ökosysteme — jenseits von KDP & Retail-FBA',
+    },
+    summary: {
+      en: 'Five specialized Amazon paths with higher skill/capital barriers and often less seller competition than KDP or standard FBA: AWS Marketplace (full SaaS/AI how-it-works, tech stack, Cursor IDE, AMMP action plan), Renewed, Merch on Demand, Amazon Custom, Amazon Business. Comparison matrix + who-it-suits. ⚠ Not Amazon/AWS advice; margins directional.',
+      de: 'Fünf spezialisierte Amazon-Pfade mit höheren Skill-/Kapital-Hürden und oft weniger Seller-Konkurrenz als KDP oder Standard-FBA: AWS Marketplace (volles SaaS/KI How-it-works, Tech-Stack, Cursor IDE, AMMP-Action-Plan), Renewed, Merch on Demand, Amazon Custom, Amazon Business. Vergleichsmatrix + Wer-passt. ⚠ Keine Amazon/AWS-Beratung; Margen Richtwerte.',
+    },
+    sections: [
+      {
+        heading: {
+          en: 'How to use this playbook',
+          de: 'So nutzen Sie dieses Playbook',
+        },
+        bullets: {
+          en: [
+            'KDP and standard FBA/FBM still attract millions of sellers — these ecosystems trade saturation for specialized knowledge, enterprise buyers, approval gates, or capital',
+            'Read each ecosystem card in the panel: what you sell, why competition is low, potential, how to enter, suits you / not ideal, capital, effort',
+            'Use the master comparison matrix + pick-your-path list to choose one lane that matches your skills',
+            'Most DE children’s publishers still start KDP + Merch; add Custom / Business / Renewed / AWS only when capital or ops match',
+            'Every fee, tier, invoice threshold, and margin % has ⚠ — verify on official portals before investing',
+          ],
+          de: [
+            'KDP und Standard-FBA/FBM ziehen weiter Millionen Seller an — diese Ökosysteme tauschen Sättigung gegen Spezialwissen, Enterprise-Käufer, Freigaben oder Kapital',
+            'Jede Ökosystem-Karte im Panel lesen: Was verkaufen, warum wenig Konkurrenz, Potenzial, Einstieg, passt / passt nicht, Kapital, Aufwand',
+            'Master-Vergleichsmatrix + Pfad-Liste nutzen, um eine Spur zu wählen, die zu Ihren Skills passt',
+            'Die meisten DE-Kinderbuch-Publisher starten weiter mit KDP + Merch; Custom / Business / Renewed / AWS nur bei passendem Kapital oder Ops',
+            'Jede Fee, jeder Tier, jede Rechnungs-Schwelle und jede %-Marge hat ⚠ — vor Investition offizielle Portale prüfen',
+          ],
+        },
+        note: {
+          en: '⚠ Not affiliated with Amazon or AWS. Margin columns are directional owner/third-party ranges — not guarantees.',
+          de: '⚠ Nicht mit Amazon oder AWS verbunden. Margen-Spalten sind Richtwerte — keine Garantie.',
+        },
+      },
+      {
+        heading: {
+          en: '1. AWS Marketplace (SaaS, APIs, data, AI agents)',
+          de: '1. AWS Marketplace (SaaS, APIs, Daten, KI-Agents)',
+        },
+        bullets: {
+          en: [
+            'Selling a SaaS or AI Solution on the AWS Marketplace shifts B2C (retail shoppers) → B2B (companies and software teams)',
+            'Instead of handling payments yourself, AWS handles customer billing; buyers use pre-approved company cloud budgets; AWS routes payouts to your bank',
+            'Sell SaaS, pay-as-you-go APIs, AMI/containers, ML models, datasets (Data Exchange), or Bedrock-based AI agents',
+            'Competition is low because most Amazon sellers only know retail/KDP — packaging software + entitlement/metering is a different skill set',
+            'Enterprise Budgets + Zero Logistics / Zero Returns — no physical inventory or retail-style returns warehouse',
+            'Official public listing fees (software/data): SaaS ~3%, AMI/container/ML ~20%, Data Exchange ~3% of TCV; private offers tier by contract size (e.g. 3% under $1M) — verify AWS docs',
+            'Directional software gross after listing fee often cited 80% - 95% if infra is efficient — ⚠ support + AWS usage eat margin',
+            'Full how-it-works, tech stack, Cursor IDE, and 4-step action plan live in the panel below + sections 1a–1d',
+          ],
+          de: [
+            'SaaS oder KI im AWS Marketplace: Shift von B2C (Retail-Shopper) → B2B (Unternehmen und Software-Teams)',
+            'Statt selbst zu kassieren: AWS handles customer billing; Käufer:innen nutzen freigegebene Firmen-Cloud-Budgets; AWS zahlt auf Ihr Bankkonto aus',
+            'SaaS, Pay-as-you-go-APIs, AMI/Container, ML-Modelle, Datasets (Data Exchange) oder Bedrock-basierte KI-Agents',
+            'Wenig Konkurrenz: die meisten Amazon-Seller kennen nur Retail/KDP — Software + Entitlement/Metering ist ein anderes Skillset',
+            'Enterprise Budgets + Zero Logistics / Zero Returns — kein physisches Lager, kein Retail-Return-Warehouse',
+            'Offizielle öffentliche Listing-Fees (Software/Daten): SaaS ca. 3 %, AMI/Container/ML ca. 20 %, Data Exchange ca. 3 % vom TCV; Private Offers gestaffelt (z. B. 3 % unter 1 Mio $) — AWS-Docs prüfen',
+            'Richt-Bruttomarge Software nach Listing-Fee oft 80% - 95 %, wenn Infra effizient — ⚠ Support + AWS-Nutzung fressen Marge',
+            'Volles How-it-works, Tech-Stack, Cursor IDE und 4-Schritt-Action-Plan im Panel unten + Abschnitte 1a–1d',
+          ],
+        },
+        links: [
+          {
+            label: 'AWS Marketplace sellers',
+            url: 'https://docs.aws.amazon.com/marketplace/latest/userguide/user-guide-for-sellers.html',
+          },
+          {
+            label: 'Listing fees',
+            url: 'https://docs.aws.amazon.com/marketplace/latest/userguide/listing-fees.html',
+          },
+        ],
+      },
+      {
+        heading: {
+          en: '1a. How AWS Marketplace (SaaS/AI) works',
+          de: '1a. So funktioniert AWS Marketplace (SaaS/KI)',
+        },
+        bullets: {
+          en: [
+            'You are not handing over your full source code to Amazon',
+            'You Host the Software: core application (Next.js, Node.js, Python, Supabase, etc.) runs on cloud infrastructure (AWS, Vercel, Fly.io, or your own servers)',
+            'AWS Handles the Paywall: enterprise customer subscribes → AWS redirects to your Fulfillment/Onboarding Landing Page with secure token x-amzn-marketplace-token',
+            'Your App Calls the AWS API: exchange the token with the AWS Marketplace SDK (ResolveCustomer) to identify who subscribed and what tier/contract they bought',
+          ],
+          de: [
+            'Sie übergeben Amazon nicht Ihren vollständigen Quellcode',
+            'You Host the Software: Kern-App (Next.js, Node.js, Python, Supabase usw.) auf Cloud-Infra (AWS, Vercel, Fly.io oder eigene Server)',
+            'AWS Handles the Paywall: Enterprise-Abo → Redirect zur Fulfillment/Onboarding Landing Page mit Secure Token x-amzn-marketplace-token',
+            'Your App Calls the AWS API: Token mit AWS Marketplace SDK (ResolveCustomer) lösen — wer hat abonniert, welches Tier/Contract',
+          ],
+        },
+        links: [
+          {
+            label: 'SaaS product integration',
+            url: 'https://docs.aws.amazon.com/marketplace/latest/userguide/saas-product-integration.html',
+          },
+        ],
+      },
+      {
+        heading: {
+          en: '1b. Recommended tech stack',
+          de: '1b. Empfohlener Tech-Stack',
+        },
+        bullets: {
+          en: [
+            'You do not need a radically different stack from full-stack web apps — your existing toolkit fits',
+            'Core — Frontend: React, Next.js, or SvelteKit',
+            'Core — Backend: Node.js, Python (FastAPI/Express), or serverless API routes',
+            'Core — Database & Auth: Supabase (PostgreSQL, Row Level Security, Auth) or PostgreSQL',
+            'Core — Hosting: Vercel, Fly.io, or AWS (ECS / App Runner / Lambda)',
+            'AWS-specific — AWS SDK v3: @aws-sdk/client-marketplace-metering and @aws-sdk/client-marketplace-entitlement',
+            'AWS-specific — Amazon Simple Queue Service (SQS) & SNS for cancel / upgrade / payment-failure events',
+            'Usage metering: BatchMeterUsage alongside ResolveCustomer / entitlement checks',
+          ],
+          de: [
+            'Kein radikal anderer Stack als Full-Stack-Web-Apps — Ihr bestehendes Toolkit passt',
+            'Core — Frontend: React, Next.js oder SvelteKit',
+            'Core — Backend: Node.js, Python (FastAPI/Express) oder serverless API-Routes',
+            'Core — Database & Auth: Supabase (PostgreSQL, Row Level Security, Auth) oder PostgreSQL',
+            'Core — Hosting: Vercel, Fly.io oder AWS (ECS / App Runner / Lambda)',
+            'AWS-spezifisch — AWS SDK v3: @aws-sdk/client-marketplace-metering und @aws-sdk/client-marketplace-entitlement',
+            'AWS-spezifisch — Amazon Simple Queue Service (SQS) & SNS für Cancel / Upgrade / Zahlungsausfall',
+            'Usage-Metering: BatchMeterUsage neben ResolveCustomer / Entitlement-Checks',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: '1c. Using Cursor IDE for AWS Marketplace apps',
+          de: '1c. Cursor IDE für AWS-Marketplace-Apps',
+        },
+        bullets: {
+          en: [
+            'Yes, Cursor IDE is well-suited for building AWS Marketplace apps — TypeScript, React, Node.js, backend configuration = standard full-stack development',
+            'Configure Cursor Rules (.cursorrules or .cursor/rules) so the AI understands your AWS Marketplace integration logic',
+            'Example rule: “This project is an AWS Marketplace SaaS application. Always handle incoming POST requests on /api/aws/onboard by parsing the x-amzn-marketplace-token, calling ResolveCustomer via the AWS SDK v3, storing the returned CustomerIdentifier in Supabase, and mapping it to the user profile.”',
+            'Prompt engineering: “Write a Node.js API route that accepts the AWS Marketplace token, resolves it using @aws-sdk/client-marketplace-metering, and registers the subscriber inside my Supabase database.”',
+            'Suggested next steps: keep a ready Node.js/TypeScript ResolveCustomer → Supabase snippet; keep a Marketplace-tailored .cursor/rules file',
+          ],
+          de: [
+            'Ja — Cursor IDE eignet sich gut für AWS-Marketplace-Apps — TypeScript, React, Node.js, Backend-Config = Standard-Full-Stack',
+            'Cursor Rules (.cursorrules oder .cursor/rules) setzen, damit die KI Ihre AWS-Marketplace-Integrationslogik kennt',
+            'Beispiel-Regel: „This project is an AWS Marketplace SaaS application. Always handle incoming POST requests on /api/aws/onboard by parsing the x-amzn-marketplace-token, calling ResolveCustomer via the AWS SDK v3, storing the returned CustomerIdentifier in Supabase, and mapping it to the user profile.“',
+            'Prompt: „Write a Node.js API route that accepts the AWS Marketplace token, resolves it using @aws-sdk/client-marketplace-metering, and registers the subscriber inside my Supabase database.“',
+            'Nächste Schritte: fertiges Node.js/TypeScript ResolveCustomer → Supabase-Snippet; Marketplace-.cursor/rules-Datei',
+          ],
+        },
+      },
+      {
+        heading: {
+          en: '1d. Step-by-step action plan to get started',
+          de: '1d. Schritt-für-Schritt-Action-Plan',
+        },
+        bullets: {
+          en: [
+            'Step 1 — Define Your B2B Software Idea: shop management / Shopware tools, bulk e-commerce SEO generators, document/data processors, translation pipelines, AI API gateways / workflow managers for SMBs',
+            'Step 2 — Register as an AWS Marketplace Seller: AWS Marketplace Management Portal (AMMP) → seller profile → bank details for direct deposit payouts',
+            'Step 3 — Build the SaaS App in Cursor IDE: frontend + backend + DB; add onboarding Route /api/aws/fulfill — POST token → ResolveCustomer → workspace in Supabase → dashboard login',
+            'Step 4 — Submit Your Listing on AWS: Create SaaS Product → Flat Monthly Rate, Per-User Contract, or Pay-As-You-Go Usage (metered) → Fulfillment URL (e.g. https://your-app.com/api/aws/fulfill) → sandbox test → submit for review → go live',
+            '⚠ Educational outline — verify AMMP fields, tokens, and SDK APIs in current AWS docs before shipping',
+          ],
+          de: [
+            'Schritt 1 — B2B-Software-Idee: Shop-Management / Shopware-Tools, Bulk-E-Commerce-SEO, Doc/Daten-Prozessoren, Übersetzungs-Pipelines, KI-API-Gateways / Workflow-Manager für KMUs',
+            'Schritt 2 — Als AWS-Marketplace-Seller registrieren: AWS Marketplace Management Portal (AMMP) → Seller-Profil → Bankdaten für Direct Deposit',
+            'Schritt 3 — SaaS in Cursor IDE bauen: Frontend + Backend + DB; Onboarding-Route /api/aws/fulfill — POST-Token → ResolveCustomer → Workspace in Supabase → Dashboard-Login',
+            'Schritt 4 — Listing einreichen: Create SaaS Product → Flat Monthly Rate, Per-User Contract oder Pay-As-You-Go Usage (metered) → Fulfillment URL (z. B. https://your-app.com/api/aws/fulfill) → Sandbox → Review → Live',
+            '⚠ Bildungs-Outline — AMMP-Felder, Tokens und SDK-APIs vor Shipping in aktuellen AWS-Docs prüfen',
+          ],
+        },
+        links: [
+          {
+            label: 'SaaS guidelines',
+            url: 'https://docs.aws.amazon.com/marketplace/latest/userguide/saas-guidelines.html',
+          },
+        ],
+      },
+      {
+        heading: {
+          en: '2. Amazon Renewed (certified refurbished)',
+          de: '2. Amazon Renewed (zertifiziert generalüberholt)',
+        },
+        bullets: {
+          en: [
+            'Sell professionally inspected, repaired, cleaned, tested, and repackaged electronics, tools, appliances — separate Renewed buy-box lane next to New',
+            'Invite-only / application-gated: US sell.amazon.com cites itemized invoices ≥ $50,000 (owner briefs often $50,000 to $100,000) qualifying refurbished purchases in prior 90 days (180 days Home/Tools/Kitchen/Lawn & Garden); Apple CE often $2.5M / 90 days — UK often £20,000 / 90 days (verify marketplace)',
+            'You must operate a refurbishing, repair, or sourcing pipeline — not dropshipping cheap new goods',
+            'Existing sellers often need ODR ≤ 0.8% trailing 90 days; approval typically within ~10 days; sample packaging photos + warranty capability',
+            'Buy Box Advantage: Renewed products get a separate high-converting buy box alongside brand-new retail items; must typically price ≥ ~5% below the New featured offer',
+            'Massive Profit Margins (directional): buy broken/open-box cheap, repair, and resell them at 70%–80% of retail value — net after repair often ~40% - 60% — ⚠ verify every deal',
+            'Suits: technicians with capital + repair/sourcing pipeline. Not ideal: DE creators with book/Merch capital only — verify amazon.de Renewed availability',
+          ],
+          de: [
+            'Professionell geprüfte, reparierte, gereinigte, getestete, neu verpackte Elektronik, Tools, Geräte verkaufen — eigene Renewed-Buy-Box neben Neu',
+            'Invite-only / bewerbungspflichtig: US sell.amazon.com nennt Rechnungen ≥ 50.000 $ (Owner-Briefs oft $50,000 to $100,000) in 90 Tagen (180 Tage Home/Tools/Kitchen/Garten); Apple oft 2,5 Mio $ — UK oft 20.000 £ (Marktplatz prüfen)',
+            'Refurbishing-/Reparatur-/Sourcing-Pipeline nötig — kein Dropshipping billiger Neuware',
+            'Bestehende Seller oft ODR ≤ 0,8 % trailing 90 Tage; Freigabe typisch ca. 10 Tage; Sample-Fotos + Garantiefähigkeit',
+            'Buy Box Advantage: eigene hochkonvertierende Buy Box neben Neu; typisch ≥ ca. 5 % unter Neu-Featured-Offer',
+            'Massive Profit Margins (Richtwert): günstig kaufen, reparieren, bei 70%–80% of retail value verkaufen — Netto oft 40% - 60% — ⚠ jeden Deal prüfen',
+            'Passt: Techniker:innen mit Kapital + Reparatur-/Sourcing-Pipeline. Nicht ideal: DE-Creator nur mit Buch-/Merch-Kapital — amazon.de-Verfügbarkeit prüfen',
+          ],
+        },
+        links: [
+          { label: 'Amazon Renewed (US)', url: 'https://sell.amazon.com/programs/renewed' },
+        ],
+      },
+      {
+        heading: {
+          en: '3. Amazon Merch on Demand (niche apparel & prints)',
+          de: '3. Amazon Merch on Demand (Nischen-Apparel & Prints)',
+        },
+        bullets: {
+          en: [
+            'Zero Production Cost: Amazon manufactures, packages, ships, and handles CS for every item — you simply earn a royalty on Amazon’s primary catalog',
+            'Application gate + Tier System: start Tier 10 (10 live designs), then Tier 25 / 100 / 500 / 1,000+ with real sales — blocks spam catalogs; third-party acceptance often cited ~30–40% (⚠ not official)',
+            'US royalties from 1 Jun 2026: Creator / Plus / Premium by non-organic traffic — Plus ~15%+ external (+ often ≥10 US units/mo), Premium ~35%; Plus ≈ 2× Creator, Premium ≈ 2.16× Creator',
+            'Example cited for ~$19.99 US tee: ~$2.44 Creator / ~$4.88 Plus / ~$5.27 Premium — historical / Plus-group often 15% - 25% (Royalty) of list (⚠ verify dashboard; DE may differ)',
+            'High Scale: once you tier up (e.g. Tier 1,000+), operate a multi-thousand-product catalog with passive royalties and no inventory risk',
+            'Best DE kids-publisher fit: reuse StoryForge character art next to the book brand; open Hub Merch full guide for 4500×5400 PNG specs',
+            'Suits: illustrators with €0 inventory. Not ideal: anyone who needs bulk wholesale margins',
+          ],
+          de: [
+            'Zero Production Cost: Amazon produziert, verpackt, versendet und macht CS — Sie verdienen nur Royalty im primären Amazon-Katalog',
+            'Bewerbungs-Gate + Tier System: Start Tier 10 (10 Live-Designs), dann Tier 25 / 100 / 500 / 1.000+ mit echten Sales — blockiert Spam; Drittanbieter-Annahme oft ca. 30–40 % (⚠ nicht offiziell)',
+            'US-Royalties ab 1. Jun 2026: Creator / Plus / Premium nach Non-Organic-Traffic — Plus ca. 15 %+ External (+ oft ≥10 US-Units/Mo), Premium ca. 35 %; Plus ≈ 2× Creator, Premium ≈ 2,16× Creator',
+            'Beispiel ca. 19,99 $-US-Tee: ca. 2,44 $ Creator / 4,88 $ Plus / 5,27 $ Premium — historisch / Plus oft 15% - 25% (Royalty) vom Listenpreis (⚠ Dashboard; DE kann abweichen)',
+            'High Scale: nach Tier-Up (z. B. Tier 1.000+) multi-thousand-product catalog mit passiven Royalties ohne Lagerrisiko',
+            'Beste DE-Kinderbuch-Passung: StoryForge-Figurenkunst neben der Buchmarke; Hub-Merch-Vollguide für 4500×5400-PNG-Specs',
+            'Passt: Illustrator:innen mit 0 € Lager. Nicht ideal: wer Bulk-Wholesale-Margen braucht',
+          ],
+        },
+        links: [
+          { label: 'Merch on Demand', url: 'https://merch.amazon.com/' },
+        ],
+      },
+      {
+        heading: {
+          en: '4. Amazon Custom (customizable & personalized)',
+          de: '4. Amazon Custom (anpassbar & personalisiert)',
+        },
+        bullets: {
+          en: [
+            'Seller Central addon for engraving, monogramming, custom print, embroidery — shoppers configure text/image on the listing; you fulfill made-to-order (typically MFN)',
+            'Requires Professional selling plan (Handmade can waive monthly fee); Custom registration — approvals often emailed within ~1 hour',
+            'Defeats Chinese Manufacturers & Automated Bots: standard private-label is heavily targeted by overseas / Chinese manufacturers; custom needs local, fast fulfillment',
+            'No Amazon Returns (preference): custom products generally not returnable for preference changes; may still be refunded/replaced within 30 days if damaged, defective, or materially different — SFP/FBA Prime rules can override (⚠ read live policy)',
+            'High margins from emotional/gift purchases (weddings, anniversaries, corporate gifts) combined with low return rates — directional ~35% - 50%',
+            'Suits: makers with laser/embroidery and short lead times. Not ideal: zero-touch POD only (use Merch)',
+          ],
+          de: [
+            'Seller-Central-Addon für Gravur, Monogramm, Custom-Print, Stickerei — Käufer:innen konfigurieren Text/Bild am Listing; Sie fulfillment Made-to-Order (typisch MFN)',
+            'Braucht Professional Selling Plan (Handmade kann Monatsgebühr erlassen); Custom-Registrierung — Freigaben oft innerhalb ca. 1 Stunde',
+            'Defeats Chinese Manufacturers & Automated Bots: Standard-Private-Label wird stark von Overseas-/chinesischen Herstellern angegriffen; Custom braucht lokale, schnelle Fulfillment',
+            'No Amazon Returns (Geschmack): Custom typisch nicht rückgabefähig bei Geschmackswechsel; Erstattung/Ersatz innerhalb 30 Tagen bei Schaden/Defekt möglich — SFP/FBA-Prime kann überschreiben (⚠ Live-Policy)',
+            'Hohe Margen durch Emotions-/Geschenkkäufe (Hochzeit, Jubiläum, Corporate Gifts) bei niedrigen Returns — Richtwert ca. 35% - 50%',
+            'Passt: Maker mit Laser/Stick und kurzen Lead Times. Nicht ideal: nur Zero-Touch-POD (lieber Merch)',
+          ],
+        },
+        links: [
+          { label: 'Amazon Custom', url: 'https://sell.amazon.com/programs/custom' },
+        ],
+      },
+      {
+        heading: {
+          en: '5. Amazon Business (B2B bulk sourcing)',
+          de: '5. Amazon Business (B2B-Bulk)',
+        },
+        bullets: {
+          en: [
+            'Same catalog, different buyers: orgs, schools, clinics, procurement — layer Business-Only Pricing + Quantity Discounts (up to 5 tiers) on existing ASINs',
+            'Most sellers optimize only consumer keywords; requires Quantity Discounts, Business-Only Pricing, and Tax-Exemption certificates (ATEP / VCS where available)',
+            'High Average Order Value (AOV): instead of 1 unit for $20, a single B2B order frequently spans 50 to 500 units to one corporate address',
+            'Repeat Automated Orders: corporate clients set up recurring / scheduled purchase schedules — predictable monthly revenue',
+            'From 1 Oct 2025: reduced referral fees on qualifying bulk Business orders when business price or quantity discount ≥ ~3% under standard; typically on the portion of a single-ASIN order above ~$1,000 (verify Seller Central)',
+            'Amazon marketing cites “8 million+” business customers worldwide — ⚠ marketing figure',
+            'Suits: inventory sellers (FBA/FBM) with packable SKUs. Not ideal: digital-only KDP/Merch with no physical stock',
+            'Directional net margins often cited 25% - 40% — ⚠ referral fees dominate',
+          ],
+          de: [
+            'Gleicher Katalog, andere Käufer: Orgs, Schulen, Kliniken, Beschaffung — Business-Only Pricing + Quantity Discounts (bis 5 Tiers) auf bestehende ASINs',
+            'Die meisten Seller optimieren nur Consumer-Keywords; braucht Quantity Discounts, Business-Only Pricing und Tax-Exemption-Zertifikate (ATEP / VCS wo verfügbar)',
+            'High Average Order Value (AOV): statt 1 Einheit für 20 $ oft 50 to 500 units an eine Corporate-Adresse',
+            'Repeat Automated Orders: Corporate-Kunden richten recurring / geplante Kaufpläne ein — planbarer Monatsumsatz',
+            'Ab 1. Okt 2025: reduzierte Referral Fees bei qualifizierenden Bulk-Business-Orders, wenn Business-Preis/Mengenrabatt ≥ ca. 3 % unter Standard; typisch auf den Anteil einer Single-ASIN-Order über ca. 1.000 $ (Seller Central prüfen)',
+            'Amazon-Marketing nennt „8 Millionen+“ Business-Kunden weltweit — ⚠ Marketingzahl',
+            'Passt: Lager-Seller (FBA/FBM) mit packbaren SKUs. Nicht ideal: nur digitales KDP/Merch ohne physisches Lager',
+            'Richt-Nettomargen oft 25% - 40% — ⚠ Referral Fees dominieren',
+          ],
+        },
+        links: [
+          {
+            label: 'Amazon Business (sellers)',
+            url: 'https://sell.amazon.com/programs/amazon-business',
+          },
+        ],
+      },
+      {
+        heading: {
+          en: 'Master comparison matrix (directional)',
+          de: 'Master-Vergleichsmatrix (Richtwerte)',
+        },
+        rows: [
+          {
+            label: { en: 'AWS Marketplace (SaaS/AI)', de: 'AWS Marketplace (SaaS/KI)' },
+            detail: {
+              en: 'Entry Barrier High · Competition Level Extremely Low · Profit Margins 80% - 95%* · Key Skill Required: Software Dev / API / Cloud Infra',
+              de: 'Entry Barrier Hoch · Competition Level Extrem niedrig · Profit Margins 80% - 95%* · Key Skill Required: Software Dev / API / Cloud Infra',
+            },
+          },
+          {
+            label: { en: 'Amazon Renewed', de: 'Amazon Renewed' },
+            detail: {
+              en: 'Entry Barrier High (Financial) · Competition Level Very Low · Profit Margins 40% - 60%* · Key Skill Required: Sourcing / Repair / Operations',
+              de: 'Entry Barrier Hoch (Kapital) · Competition Level Sehr niedrig · Profit Margins 40% - 60%* · Key Skill Required: Sourcing / Reparatur / Ops',
+            },
+          },
+          {
+            label: { en: 'Amazon Custom', de: 'Amazon Custom' },
+            detail: {
+              en: 'Entry Barrier Medium · Competition Level Low · Profit Margins 35% - 50%* · Key Skill Required: Personalization / Laser Engraving / POD',
+              de: 'Entry Barrier Mittel · Competition Level Niedrig · Profit Margins 35% - 50%* · Key Skill Required: Personalisierung / Laser / POD',
+            },
+          },
+          {
+            label: { en: 'Amazon Business (B2B)', de: 'Amazon Business (B2B)' },
+            detail: {
+              en: 'Entry Barrier Medium · Competition Level Low to Medium · Profit Margins 25% - 40%* · Key Skill Required: Bulk Sourcing / B2B Pricing Strategy',
+              de: 'Entry Barrier Mittel · Competition Level Niedrig bis mittel · Profit Margins 25% - 40%* · Key Skill Required: Bulk-Sourcing / B2B-Pricing',
+            },
+          },
+          {
+            label: { en: 'Merch on Demand', de: 'Merch on Demand' },
+            detail: {
+              en: 'Entry Barrier High (Approval) · Competition Level Low at High Tiers · Profit Margins 15% - 25% (Royalty)* · Key Skill Required: Niche Graphic Design / SEO',
+              de: 'Entry Barrier Hoch (Freigabe) · Competition Level Niedrig auf hohen Tiers · Profit Margins 15% - 25% (Royalty)* · Key Skill Required: Nischen-Grafikdesign / SEO',
+            },
+          },
+          {
+            label: { en: 'Standard KDP / FBA (ref.)', de: 'Standard KDP / FBA (Ref.)' },
+            detail: {
+              en: 'Entry Barrier Low · Competition Level Hyper-Saturated · Profit Margins 15% - 30%* · Key Skill Required: Heavy Ad Spend / Competition',
+              de: 'Entry Barrier Niedrig · Competition Level Hyper-gesättigt · Profit Margins 15% - 30%* · Key Skill Required: Starke Ads / Konkurrenz',
+            },
+          },
+        ],
+        note: {
+          en: '*Profit Margins are directional for comparison only — fees, COGS, ads, and returns decide real net. US Merch Creator can run ~12% organic-only.',
+          de: '*Profit Margins sind Richtwerte zum Vergleich — Fees, COGS, Ads und Returns entscheiden das echte Netto. US-Merch Creator kann bei rein organisch ca. 12 % liegen.',
+        },
+      },
+      {
+        heading: {
+          en: 'Pick your path (DE founder cheat-sheet)',
+          de: 'Pfad wählen (DE-Gründer:innen-Cheat-Sheet)',
+        },
+        bullets: {
+          en: [
+            'Creator with art/books, €0 inventory → Merch (+ keep KDP)',
+            'Maker with laser/embroidery shop → Amazon Custom',
+            'Inventory seller wanting larger orders → Amazon Business pricing',
+            'Technician with capital + repair line → Amazon Renewed (check DE availability)',
+            'Developer / AI tool builder → AWS Marketplace',
+          ],
+          de: [
+            'Creator mit Kunst/Büchern, 0 € Lager → Merch (+ KDP behalten)',
+            'Maker mit Laser-/Stick-Shop → Amazon Custom',
+            'Lager-Seller mit größeren Orders → Amazon Business Pricing',
+            'Techniker:in mit Kapital + Reparaturlinie → Amazon Renewed (DE-Verfügbarkeit prüfen)',
+            'Developer / KI-Tool-Builder → AWS Marketplace',
+          ],
+        },
       },
     ],
   },
@@ -2254,15 +2857,17 @@ export const AMAZON_GUIDES = [
         bullets: {
           en: [
             'Upload artwork → choose products (tees, hoodies, totes, cases…) → set price',
-            'Amazon prints, packs, and ships each order — zero inventory, zero shipping ops',
-            'You receive a royalty per sale (list price minus Amazon base cost)',
+            'Amazon prints, packs, and ships each order — zero inventory, zero shipping ops (Zero Production Cost)',
+            'You receive a royalty per sale (list price minus Amazon base cost) — often cited 15% - 25% (Royalty) historically / Plus group',
             'KDP link: the same children’s characters become Merch designs — book → matching tee is a classic brand extension',
+            'Compare Merch vs AWS / Renewed / Custom / Business in Playbooks → Under-explored Amazon ecosystems before you over-invest in one lane',
           ],
           de: [
             'Design hochladen → Produkte wählen (Tees, Hoodies, Taschen…) → Preis setzen',
-            'Amazon druckt, verpackt und versendet — kein Lager, kein Versandaufwand',
-            'Royalty je Verkauf (Listenpreis minus Amazon-Basiskosten)',
+            'Amazon druckt, verpackt und versendet — kein Lager, kein Versandaufwand (Zero Production Cost)',
+            'Royalty je Verkauf (Listenpreis minus Amazon-Basiskosten) — historisch / Plus oft 15% - 25% (Royalty)',
             'KDP-Link: dieselben Kinderbuch-Figuren werden Merch-Motive — Buch → passendes Shirt ist Marken-Extension',
+            'Merch vs AWS / Renewed / Custom / Business in Playbooks → Unterschätzte Amazon-Ökosysteme vergleichen, bevor Sie eine Spur überinvestieren',
           ],
         },
       },
