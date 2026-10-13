@@ -11,7 +11,7 @@ const TABS = [
   { id: 'disclosure', label: 'Disclosure Helper' },
   { id: 'books', label: 'Books & Guides' },
   { id: 'admin', label: 'Admin config' },
-  { id: 'trace', label: 'S1–S52' },
+  { id: 'trace', label: 'S1–S74' },
 ]
 
 export default function Launchpad({ activeProject, onRefreshProject, setStatus, setError }) {
@@ -555,6 +555,12 @@ export default function Launchpad({ activeProject, onRefreshProject, setStatus, 
                     <li key={b}>{b}</li>
                   ))}
                 </ul>
+                <h4>{craft.seriesWorkflow?.title}</h4>
+                <ul>
+                  {(craft.seriesWorkflow?.bullets || []).map((b) => (
+                    <li key={b}>{b}</li>
+                  ))}
+                </ul>
               </div>
             </div>
 
@@ -898,7 +904,7 @@ export default function Launchpad({ activeProject, onRefreshProject, setStatus, 
 
         {tab === 'trace' ? (
           <div className="sf-card">
-            <h2 style={{ marginTop: 0 }}>Traceability S1–S61</h2>
+            <h2 style={{ marginTop: 0 }}>Traceability S1–S74</h2>
             <div className="sf-table-wrap">
               <table className="sf-table">
                 <thead>

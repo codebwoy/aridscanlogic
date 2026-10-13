@@ -9,11 +9,12 @@
 
 import { coverWrapLayout } from './print-math.js'
 import { BOOK_FORMATS } from './launchpad-seed.js'
+import { validateIsbn13, ISBN_BARCODE_META } from './isbn-barcode.js'
 
 export const COVER_STUDIO_META = {
   id: 'cover_studio',
   title: 'Cover Studio',
-  sourceIds: ['S68', 'S42', 'S54'],
+  sourceIds: ['S68', 'S42', 'S54', 'S71', 'S72'],
   kdpHelpUrl: 'https://kdp.amazon.com/en_US/help/topic/G201953020',
   kdpCalculatorNote:
     'Always re-check final wrap size in the live Amazon KDP cover calculator / template generator before upload.',
@@ -94,6 +95,31 @@ export function buildCoverArtPrompt({
   ].join(' ')
 }
 
+/**
+ * Back-cover art — soft supporting scene; keep barcode reserve clear (lower-right ~2"×1.2").
+ * Blurb text is overlaid in the wrap PDF — do not bake text into the image.
+ */
+export function buildBackCoverArtPrompt({
+  characterName = 'Hero',
+  emotionalCore = 'courage',
+  artStyle = 'children’s picture book illustration',
+  premise = '',
+} = {}) {
+  const name = String(characterName || 'Hero').trim() || 'Hero'
+  const core = String(emotionalCore || 'courage').trim()
+  const premiseBit = premise ? ` Story mood: ${String(premise).slice(0, 120)}.` : ''
+  return [
+    `Professional children’s picture book BACK COVER illustration featuring ${name}.`,
+    'Soft atmospheric scene or quiet supporting moment — not as loud as the front cover.',
+    `Emotional tone: ${core}.${premiseBit}`,
+    `Art style: ${artStyle}, warm friendly, high quality, age 3–8.`,
+    'CRITICAL: leave the LOWER-RIGHT area mostly empty and plain (barcode reserve ~2×1.2 inches) — no important art, no text, no logos.',
+    'Leave the UPPER half relatively calm for a back-cover blurb overlay.',
+    'No text, no logos, no watermark, no signature baked into the image.',
+    'Match the approved character identity from the pinned Character Turbo anchor.',
+  ].join(' ')
+}
+
 export function emptyCoverStudioState() {
   return {
     layout_id: 'hero_centered',
@@ -104,7 +130,11 @@ export function emptyCoverStudioState() {
     front_art_url: null,
     back_art_url: null,
     generated_at: null,
+    back_generated_at: null,
     prompt: '',
+    back_prompt: '',
+    isbn: '',
+    embed_isbn_barcode: false,
     canva_handoff_acknowledged: false,
   }
 }
@@ -123,7 +153,13 @@ export function normalizeCoverStudioState(raw) {
     front_art_url: raw.front_art_url || null,
     back_art_url: raw.back_art_url || null,
     generated_at: raw.generated_at || null,
+    back_generated_at: raw.back_generated_at || null,
     prompt: String(raw.prompt || '').slice(0, 2000),
+    back_prompt: String(raw.back_prompt || '').slice(0, 2000),
+    isbn: String(raw.isbn || '')
+      .replace(/[^0-9Xx-]/g, '')
+      .slice(0, 20),
+    embed_isbn_barcode: Boolean(raw.embed_isbn_barcode),
     canva_handoff_acknowledged: Boolean(raw.canva_handoff_acknowledged),
   }
 }
@@ -139,12 +175,19 @@ export function assessCoverStudio(project, coverState) {
   const state = normalizeCoverStudioState(coverState || project?.cover_studio)
   const format = BOOK_FORMATS.find((f) => f.id === project?.format_id) || BOOK_FORMATS.find((f) => f.id === 'picture')
   const hasFront = Boolean(state.front_art_url || project?.pinned_anchor?.heroUrl)
+  const hasBack = Boolean(state.back_art_url)
   const issues = []
   if (!project?.pinned_anchor?.heroUrl) {
     issues.push({ severity: 'block', message: 'Pin Character Turbo before generating cover art' })
   }
   if (!hasFront) {
-    issues.push({ severity: 'warn', message: 'No front cover art yet — Generate cover art or use pinned hero' })
+    issues.push({ severity: 'warn', message: 'No front cover art yet — Generate front art or use pinned hero' })
+  }
+  if (!hasBack) {
+    issues.push({
+      severity: 'warn',
+      message: 'No back cover art yet — Generate back art (barcode-safe) for a complete wrap',
+    })
   }
   if (!layout.spineTextAllowed) {
     issues.push({
@@ -152,11 +195,21 @@ export function assessCoverStudio(project, coverState) {
       message: `Spine text omitted (${pageCount} pages < ${layout.spineTextMinPages}) — KDP rule`,
     })
   }
+  if (state.embed_isbn_barcode) {
+    const check = validateIsbn13(state.isbn)
+    if (!check.ok) {
+      issues.push({
+        severity: 'block',
+        message: check.error || 'Embed ISBN barcode is on — enter a valid ISBN-13',
+      })
+    }
+  }
   return {
     layout,
     state,
     format,
     hasFront,
+    hasBack,
     issues,
     checklist: COVER_KDP_CHECKLIST,
     presets: COVER_LAYOUT_PRESETS,
@@ -183,5 +236,6 @@ export function coverStudioPayload() {
     finishes: COVER_FINISH_OPTIONS,
     checklist: COVER_KDP_CHECKLIST,
     empty: emptyCoverStudioState(),
+    isbnBarcode: ISBN_BARCODE_META,
   }
 }

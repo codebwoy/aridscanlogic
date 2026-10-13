@@ -46,6 +46,7 @@ import ComplianceChecklist from '../components/ComplianceChecklist.jsx'
 import ListingDescriptionBuilder from '../components/ListingDescriptionBuilder.jsx'
 import ListingMetadataBuilder from '../components/ListingMetadataBuilder.jsx'
 import CoverStudio from '../components/CoverStudio.jsx'
+import SeriesManager from '../components/SeriesManager.jsx'
 
 const STEPS = ['story', 'characters', 'scenes', 'layout', 'preflight', 'export']
 
@@ -165,7 +166,12 @@ export default function Studio({
     if (syncedBrief) setSceneBrief(syncedBrief)
   }, [active?.id, pageIndex, syncedPrimary, syncedSecondary, syncedBrief, syncedBubble])
 
-  const pagesWithArt = (active?.pages || []).filter((p) => p?.asset?.url).length
+  const pagesWithArt = (active?.pages || []).filter(
+    (p) => p?.asset?.url || p?.asset?.remoteUrl,
+  ).length
+  const pagesWithColoring = (active?.pages || []).filter(
+    (p) => p?.coloring_asset?.url || p?.coloring_asset?.remoteUrl,
+  ).length
   const illustrateCost = active
     ? resolveJobCost('illustrate_all_pages', {
         pageCount: active.page_count,
@@ -182,6 +188,20 @@ export default function Studio({
     : 0
   const upscaleAllCost = active
     ? resolveJobCost('upscale_all_pages', { pagesWithArt })
+    : 0
+  const coloringCost = active
+    ? resolveJobCost('coloring_all_pages', {
+        pagesWithArt,
+        pagesWithColoring,
+        skipExisting: false,
+      })
+    : 0
+  const coloringSkipCost = active
+    ? resolveJobCost('coloring_all_pages', {
+        pagesWithArt,
+        pagesWithColoring,
+        skipExisting: true,
+      })
     : 0
 
   const estimate = estimateBookCredits({ pages: createForm.page_count, characters: 1 })
@@ -368,10 +388,17 @@ export default function Studio({
   async function runJob(type, inputs = {}, { skipConfirm = false } = {}) {
     if (!active && type !== 'character_turbo') return
     const cost =
-      type === 'illustrate_all_pages' || type === 'upscale_all_pages'
+      type === 'illustrate_all_pages' ||
+      type === 'upscale_all_pages' ||
+      type === 'coloring_all_pages'
         ? resolveJobCost(type, {
             pageCount: active?.page_count,
-            pagesWithArt: (active?.pages || []).filter((p) => p?.asset?.url).length,
+            pagesWithArt: (active?.pages || []).filter(
+              (p) => p?.asset?.url || p?.asset?.remoteUrl,
+            ).length,
+            pagesWithColoring: (active?.pages || []).filter(
+              (p) => p?.coloring_asset?.url || p?.coloring_asset?.remoteUrl,
+            ).length,
             skipExisting: Boolean(inputs.skipExisting),
           })
         : (CREDIT_COSTS[type] ?? 0)
@@ -535,7 +562,17 @@ export default function Studio({
           trim_id: active.trim_id,
           page_count: active.page_count,
           paper_type: active.paper_type || 'white',
-          blurb: active.premise || active.emotional_core || '',
+          blurb:
+            active?.listing_description?.plain ||
+            active.premise ||
+            active.emotional_core ||
+            '',
+          author: active?.cover_studio?.author || undefined,
+          subtitle: active?.cover_studio?.subtitle || undefined,
+          isbn: active?.cover_studio?.isbn || undefined,
+          embed_isbn_barcode: Boolean(active?.cover_studio?.embed_isbn_barcode),
+          frontImageUrl: active?.cover_studio?.front_art_url || undefined,
+          backImageUrl: active?.cover_studio?.back_art_url || undefined,
         },
       })
       setSession((s) => (s ? { ...s, credits: pack.balance } : s))
@@ -1060,6 +1097,7 @@ export default function Studio({
                   >
                     {p.page_index + 1}
                     {p.consistencyBadge ? ` · ${p.consistencyBadge}` : ''}
+                    {p.coloring_asset?.url || p.coloring_asset?.remoteUrl ? ' · C' : ''}
                   </button>
                 ))}
               </div>
@@ -1073,6 +1111,20 @@ export default function Studio({
               pageText={canvasText}
               speechBubble={speechBubble}
             />
+            {currentPage?.coloring_asset?.url || currentPage?.coloring_asset?.remoteUrl ? (
+              <div className="sf-card sf-coloring-preview">
+                <h4 style={{ margin: '0 0 0.35rem' }}>Coloring line-art (this page)</h4>
+                <img
+                  src={
+                    currentPage.coloring_asset.url || currentPage.coloring_asset.remoteUrl
+                  }
+                  alt={`Coloring page ${pageIndex + 1}`}
+                />
+                <p className="sf-muted" style={{ margin: '0.35rem 0 0' }}>
+                  Derived from approved color art · filmstrip marks pages with · C
+                </p>
+              </div>
+            ) : null}
 
             <div className="sf-card">
               <h3 style={{ marginTop: 0, fontFamily: 'var(--sf-font-display)' }}>
@@ -1080,8 +1132,9 @@ export default function Studio({
               </h3>
               <p className="sf-muted" style={{ marginTop: 0 }}>
                 After Character Turbo is pinned: draft every page line → illustrate all pages from
-                the anchor → upscale → Finish pack. Edit text before Amazon upload. Live art quality
-                needs Replicate/fal — mock mode proves the pipeline.
+                the anchor → optional Derive coloring pages → upscale → Cover Studio (front + back)
+                → Finish pack. Edit text before Amazon upload. Live art quality needs Replicate/fal —
+                mock mode proves the pipeline.
               </p>
               <div className="sf-btn-row">
                 <button
@@ -1156,6 +1209,66 @@ export default function Studio({
                 </button>
                 <button
                   type="button"
+                  className="sf-btn sf-btn-primary"
+                  disabled={busy || !active || !active?.pinned_anchor?.heroUrl || pagesWithArt === 0}
+                  onClick={() => {
+                    if (
+                      !window.confirm(
+                        `Derive coloring pages from ${pagesWithArt} color page(s) for ${coloringCost} credit(s)?`,
+                      )
+                    )
+                      return
+                    runJob(
+                      'coloring_all_pages',
+                      { skipExisting: false },
+                      { skipConfirm: true },
+                    )
+                  }}
+                  title={NAMED_TOOLS.coloring_pages?.description}
+                >
+                  Derive coloring pages ({coloringCost})
+                </button>
+                <button
+                  type="button"
+                  className="sf-btn"
+                  disabled={
+                    busy ||
+                    !active ||
+                    !active?.pinned_anchor?.heroUrl ||
+                    pagesWithArt === 0 ||
+                    coloringSkipCost === 0
+                  }
+                  onClick={() => {
+                    if (
+                      !window.confirm(
+                        `Fill missing coloring pages only for ${coloringSkipCost} credit(s)?`,
+                      )
+                    )
+                      return
+                    runJob(
+                      'coloring_all_pages',
+                      { skipExisting: true },
+                      { skipConfirm: true },
+                    )
+                  }}
+                >
+                  Fill missing coloring ({coloringSkipCost})
+                </button>
+                <button
+                  type="button"
+                  className="sf-btn"
+                  disabled={busy || !active || pagesWithColoring === 0}
+                  onClick={() =>
+                    runJob('export_coloring_pdf', {
+                      trim_id: active.trim_id,
+                      page_count: active.page_count,
+                    })
+                  }
+                >
+                  Export coloring PDF ({CREDIT_COSTS.export_coloring_pdf})
+                </button>
+                <button
+                  type="button"
                   className="sf-btn"
                   disabled={busy || !active}
                   onClick={() => setToolTab('canvas')}
@@ -1163,6 +1276,10 @@ export default function Studio({
                   Finish pack → Canvas
                 </button>
               </div>
+              <p className="sf-muted" style={{ marginTop: '0.5rem' }}>
+                Coloring pages: line-art from approved color art ({pagesWithColoring}/{pagesWithArt}{' '}
+                ready). Publish as a separate B&amp;W activity book — disclose honestly on KDP.
+              </p>
             </div>
 
             <div className="sf-card">
@@ -1248,6 +1365,7 @@ export default function Studio({
             'variation_editors',
             'scene_to_video',
             'canvas',
+            'series_manager',
           ].map((id) => (
             <button
               key={id}
@@ -1546,6 +1664,26 @@ export default function Studio({
           </div>
         ) : null}
 
+        {toolTab === 'series_manager' ? (
+          <SeriesManager
+            project={active}
+            busy={busy}
+            setBusy={setBusy}
+            setError={setError}
+            setStatus={setStatus}
+            refreshKey={`${projects.length}:${active?.id}:${active?.ip_character?.seriesId || ''}`}
+            onProjectUpdated={(project) => {
+              setProjects((list) => list.map((p) => (p.id === project.id ? project : p)))
+              onSelectProject(project.id)
+            }}
+            onOpenProject={async (projectId) => {
+              await onSelectProject(projectId)
+              setToolTab('character_turbo')
+              setStatus('Opened series book — lock or reuse IP DNA as needed')
+            }}
+          />
+        ) : null}
+
         {toolTab === 'canvas' ? (
           <div className="sf-card">
             <h3 style={{ marginTop: 0 }}>{NAMED_TOOLS.canvas.label}</h3>
@@ -1810,12 +1948,37 @@ export default function Studio({
                     trim_id: active.trim_id,
                     page_count: active.page_count,
                     paper_type: active.paper_type || 'white',
-                    blurb: active.premise || active.emotional_core || '',
+                    blurb:
+                      active?.listing_description?.plain ||
+                      active.premise ||
+                      active.emotional_core ||
+                      '',
+                    author: active?.cover_studio?.author || undefined,
+                    subtitle: active?.cover_studio?.subtitle || undefined,
+                    title_placement: active?.cover_studio?.title_placement || undefined,
+                    frontImageUrl: active?.cover_studio?.front_art_url || undefined,
+                    backImageUrl: active?.cover_studio?.back_art_url || undefined,
+                    isbn: active?.cover_studio?.isbn || undefined,
+                    embed_isbn_barcode: Boolean(active?.cover_studio?.embed_isbn_barcode),
                   })
                 }
               >
                 <FileOutput size={16} aria-hidden /> Export cover wrap (
                 {CREDIT_COSTS.export_cover_pdf})
+              </button>
+              <button
+                type="button"
+                className="sf-btn"
+                disabled={busy || !active || pagesWithColoring === 0}
+                onClick={() =>
+                  runJob('export_coloring_pdf', {
+                    trim_id: active.trim_id,
+                    page_count: active.page_count,
+                  })
+                }
+              >
+                <FileOutput size={16} aria-hidden /> Export coloring PDF (
+                {CREDIT_COSTS.export_coloring_pdf})
               </button>
               <button
                 type="button"
@@ -1826,7 +1989,16 @@ export default function Studio({
                     trim_id: active.trim_id,
                     page_count: active.page_count,
                     paper_type: active.paper_type || 'white',
-                    blurb: active.premise || active.emotional_core || '',
+                    blurb:
+                      active?.listing_description?.plain ||
+                      active.premise ||
+                      active.emotional_core ||
+                      '',
+                    author: active?.cover_studio?.author || undefined,
+                    isbn: active?.cover_studio?.isbn || undefined,
+                    embed_isbn_barcode: Boolean(active?.cover_studio?.embed_isbn_barcode),
+                    frontImageUrl: active?.cover_studio?.front_art_url || undefined,
+                    backImageUrl: active?.cover_studio?.back_art_url || undefined,
                   })
                 }
               >

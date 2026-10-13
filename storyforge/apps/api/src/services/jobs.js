@@ -21,9 +21,12 @@ import {
   defaultRefrainForHook,
   MANUSCRIPT_META,
   buildCoverArtPrompt,
+  buildBackCoverArtPrompt,
   normalizeCoverStudioState,
   COVER_STUDIO_META,
   COVER_KDP_CHECKLIST,
+  buildColoringPagePrompt,
+  COLORING_PAGES_META,
 } from '@storyforge/shared'
 import { sha256Hex } from '../security/crypto.js'
 import { config } from '../config.js'
@@ -93,10 +96,16 @@ export async function submitJob(store, { userId, type, projectId, inputs }) {
 
   const project = projectId ? await store.getProject(userId, projectId) : null
   const safeInputs = { ...(inputs || {}) }
-  const pagesWithArt = (project?.pages || []).filter((p) => p?.asset?.url).length
+  const pagesWithArt = (project?.pages || []).filter(
+    (p) => p?.asset?.url || p?.asset?.remoteUrl,
+  ).length
+  const pagesWithColoring = (project?.pages || []).filter(
+    (p) => p?.coloring_asset?.url || p?.coloring_asset?.remoteUrl,
+  ).length
   const cost = resolveJobCost(type, {
     pageCount: project?.page_count || safeInputs.pageCount || 32,
     pagesWithArt,
+    pagesWithColoring,
     skipExisting: Boolean(safeInputs.skipExisting),
   })
   if (cost === null) throw fail(400, 'unknown_job', `Unknown job type: ${type}`)
@@ -176,7 +185,9 @@ export async function submitJob(store, { userId, type, projectId, inputs }) {
     VIDEO_TYPES.has(type) ||
     type === 'illustrate_all_pages' ||
     type === 'upscale_all_pages' ||
-    type === 'generate_cover_art'
+    type === 'generate_cover_art' ||
+    type === 'generate_back_cover_art' ||
+    type === 'coloring_all_pages'
   ) {
     if (!projectId || !project) {
       throw fail(400, 'anchor_required', 'projectId required — scenes must start from a pinned anchor')
@@ -185,27 +196,39 @@ export async function submitJob(store, { userId, type, projectId, inputs }) {
       (SCENE_TYPES.has(type) ||
         VIDEO_TYPES.has(type) ||
         type === 'illustrate_all_pages' ||
-        type === 'generate_cover_art') &&
+        type === 'generate_cover_art' ||
+        type === 'generate_back_cover_art' ||
+        type === 'coloring_all_pages') &&
       (!project.pinned_anchor_asset_id || !project.pinned_anchor)
     ) {
       throw fail(
         400,
         'anchor_required',
-        type === 'generate_cover_art'
+        type === 'generate_cover_art' || type === 'generate_back_cover_art'
           ? 'Pin a Character Turbo anchor before Cover Studio art'
-          : 'Pin a Character Turbo anchor before Editor Pro scenes',
+          : type === 'coloring_all_pages'
+            ? 'Pin a Character Turbo anchor before coloring pages'
+            : 'Pin a Character Turbo anchor before Editor Pro scenes',
       )
     }
     if (
       SCENE_TYPES.has(type) ||
       VIDEO_TYPES.has(type) ||
       type === 'illustrate_all_pages' ||
-      type === 'generate_cover_art'
+      type === 'generate_cover_art' ||
+      type === 'generate_back_cover_art' ||
+      type === 'coloring_all_pages'
     ) {
       safeInputs.fromAnchor = true
       safeInputs.pinnedAnchorAssetId = project.pinned_anchor_asset_id
       safeInputs.anchorEmbedding = project.pinned_anchor?.embedding
       safeInputs.characterName = project.pinned_anchor?.name || safeInputs.characterName
+    }
+  }
+
+  if (type === 'coloring_all_pages' || type === 'export_coloring_pdf') {
+    if (!projectId || !project) {
+      throw fail(400, 'project_required', 'projectId required for coloring export')
     }
   }
 
@@ -447,6 +470,138 @@ async function runGenerationJob(store, data) {
         meta: COVER_STUDIO_META,
         note: 'Title-safe front art saved. Overlay title/author in Export cover wrap — do not bake text into the image.',
       }
+    } else if (type === 'generate_back_cover_art') {
+      const refreshed = projectId ? await store.getProject(userId, projectId) : project
+      if (!refreshed?.pinned_anchor) {
+        throw fail(400, 'anchor_required', 'Pin a Character Turbo anchor before Cover Studio')
+      }
+      const prev = normalizeCoverStudioState(refreshed.cover_studio)
+      const name =
+        refreshed.ip_character?.name ||
+        refreshed.pinned_anchor?.name ||
+        inputs?.characterName ||
+        'Hero'
+      const wrap = coverWrapLayout(
+        refreshed.trim_id || 'sq_85',
+        refreshed.page_count || 32,
+        refreshed.paper_type || 'white',
+      )
+      const prompt = buildBackCoverArtPrompt({
+        characterName: name,
+        emotionalCore: refreshed.emotional_core || 'courage',
+        artStyle: refreshed.style_preset || 'children’s picture book illustration',
+        premise: refreshed.premise || '',
+      })
+      const scene = await provider.generateScene({
+        ...inputs,
+        brief: prompt,
+        sceneBrief: prompt,
+        characterName: name,
+        pinnedAnchorAssetId: refreshed.pinned_anchor_asset_id,
+        anchorEmbedding: refreshed.pinned_anchor?.embedding,
+        anchorImageUrl: refreshed.pinned_anchor.heroUrl,
+        heroUrl: refreshed.pinned_anchor.heroUrl,
+        quality: 'final',
+        targetWidth: wrap.panelW,
+        targetHeight: wrap.heightPx,
+        editor: 'generate_back_cover_art',
+        fromAnchor: true,
+      })
+      const backUrl = scene.assets?.[0]?.url || scene.assets?.[0]?.remoteUrl || null
+      if (!backUrl) {
+        throw fail(500, 'cover_art_failed', 'Back cover art generation returned no image')
+      }
+      const cover_studio = normalizeCoverStudioState({
+        ...prev,
+        author: inputs?.author ?? prev.author,
+        subtitle: inputs?.subtitle ?? prev.subtitle,
+        back_art_url: backUrl,
+        back_generated_at: new Date().toISOString(),
+        back_prompt: prompt,
+      })
+      await store.updateProject(userId, projectId, {
+        cover_studio,
+        progress_step: 'layout',
+      })
+      outputs = {
+        type,
+        cover_studio,
+        assets: scene.assets,
+        consistencyBadge: scene.consistencyBadge,
+        wrap: {
+          widthPx: wrap.widthPx,
+          heightPx: wrap.heightPx,
+          barcode: wrap.barcode,
+          note: wrap.note,
+        },
+        checklist: COVER_KDP_CHECKLIST,
+        meta: COVER_STUDIO_META,
+        note: 'Barcode-safe back art saved. Blurb overlays in Export cover wrap — keep lower-right clear.',
+      }
+    } else if (type === 'coloring_all_pages') {
+      const refreshed = projectId ? await store.getProject(userId, projectId) : project
+      if (!refreshed?.pinned_anchor) {
+        throw fail(400, 'anchor_required', 'Pin a Character Turbo anchor before coloring pages')
+      }
+      const print = requiredBleedPixels(refreshed.trim_id || 'sq_85')
+      const skipExisting = Boolean(inputs?.skipExisting)
+      const name =
+        refreshed.pinned_anchor.name || refreshed.ip_character?.name || inputs?.characterName || 'Hero'
+      const results = []
+      const n = refreshed.page_count || refreshed.pages?.length || 0
+      for (let i = 0; i < n; i++) {
+        const page = refreshed.pages?.[i] || {}
+        const sourceUrl = page?.asset?.remoteUrl || page?.asset?.url || null
+        if (!sourceUrl) {
+          results.push({ pageIndex: i, skipped: true, reason: 'no_color_art' })
+          continue
+        }
+        if (skipExisting && (page?.coloring_asset?.url || page?.coloring_asset?.remoteUrl)) {
+          results.push({ pageIndex: i, skipped: true, reason: 'has_coloring' })
+          continue
+        }
+        const prompt = buildColoringPagePrompt({
+          characterName: name,
+          pageBrief: page.illustration_brief || '',
+          pageIndex: i,
+        })
+        const scene = await provider.generateScene({
+          ...inputs,
+          brief: prompt,
+          sceneBrief: prompt,
+          characterName: name,
+          pinnedAnchorAssetId: refreshed.pinned_anchor_asset_id,
+          anchorEmbedding: refreshed.pinned_anchor.embedding,
+          // Page still is the img2img source so composition stays consistent
+          anchorImageUrl: sourceUrl,
+          heroUrl: sourceUrl,
+          quality: 'final',
+          targetWidth: print.widthPx,
+          targetHeight: print.heightPx,
+          editor: 'coloring_all_pages',
+          strength: 0.55,
+          pageIndex: i,
+        })
+        const coloringAsset = scene.assets?.[0] || null
+        await store.setPage(userId, projectId, i, {
+          coloring_asset: coloringAsset,
+          status: page.status || 'generated',
+        })
+        results.push({
+          pageIndex: i,
+          assetId: coloringAsset?.assetId || null,
+          consistencyBadge: scene.consistencyBadge,
+        })
+      }
+      outputs = {
+        type,
+        generated: results.filter((r) => !r.skipped).length,
+        skipped: results.filter((r) => r.skipped).length,
+        results,
+        meta: COLORING_PAGES_META,
+        note: 'Coloring line-art saved per page. Export coloring PDF for a B&W activity companion — disclose honestly on KDP.',
+      }
+      await store.updateProject(userId, projectId, { progress_step: 'layout' })
     } else if (type === 'story_text') {
       const refreshed = projectId ? await store.getProject(userId, projectId) : project
       if (!refreshed) throw fail(400, 'project_required', 'Project required')
@@ -814,6 +969,11 @@ async function runExportJob(store, data) {
         frontImageUrl,
         backImageUrl,
         titlePlacement: inputs?.title_placement || cover.title_placement || 'top',
+        isbn: inputs?.isbn || cover.isbn || '',
+        embedIsbnBarcode:
+          inputs?.embed_isbn_barcode !== undefined
+            ? Boolean(inputs.embed_isbn_barcode)
+            : Boolean(cover.embed_isbn_barcode),
         showGuides: Boolean(inputs?.showGuides),
       })
       const pdf = attachSignedDownload(pdfRaw, { userId })
@@ -846,6 +1006,58 @@ async function runExportJob(store, data) {
             'AI disclosure if applicable',
             'Interior PDF via export_interior_pdf',
           ],
+        },
+      })
+      if (projectId) await store.updateProject(userId, projectId, { progress_step: 'export' })
+      return
+    }
+
+    // Coloring companion PDF — uses coloring_asset per page (not the color story interiors)
+    if (type === 'export_coloring_pdf') {
+      const includeText = Boolean(inputs?.includeText)
+      const pages = (project?.pages || []).map((p) => ({
+        ...p,
+        asset: p.coloring_asset || null,
+        // Pure coloring books: no story text by default (opt-in via includeText)
+        text_content: includeText ? p.text_content || '' : '',
+        text_secondary: '',
+        speech_bubble: '',
+      }))
+      const withColoring = pages.filter((p) => p.asset?.url || p.asset?.remoteUrl).length
+      if (!withColoring) {
+        throw fail(
+          400,
+          'coloring_required',
+          'Derive coloring pages first (coloring_all_pages) before exporting the coloring PDF',
+        )
+      }
+      const pdfRaw = await buildInteriorPdf({
+        title: `${project?.title || 'StoryForge'} — Coloring Pages`,
+        trimId,
+        pages,
+        pageCount,
+        showGuides: false,
+        showChrome: false,
+        language: project?.language || 'de',
+        secondaryLanguage: null,
+        bilingualLayout: 'stacked',
+      })
+      // Retitle filename for coloring companion
+      pdfRaw.filename = String(pdfRaw.filename || 'interior.pdf').replace(
+        /\.pdf$/i,
+        '-coloring.pdf',
+      )
+      pdfRaw.kind = 'coloring_pdf'
+      const pdf = attachSignedDownload(pdfRaw, { userId })
+      await store.updateJob(jobId, {
+        status: 'completed',
+        outputs: {
+          type,
+          pdf,
+          coloringPages: withColoring,
+          meta: COLORING_PAGES_META,
+          note: 'B&W coloring companion — disclose black-and-white interiors honestly on KDP if you publish this as a separate listing.',
+          independenceDisclaimer: PUBLISHING_SPECS.disclaimers.notAffiliated,
         },
       })
       if (projectId) await store.updateProject(userId, projectId, { progress_step: 'export' })
@@ -958,6 +1170,11 @@ async function runExportJob(store, data) {
           null,
         backImageUrl: inputs?.backImageUrl || coverState.back_art_url || null,
         titlePlacement: inputs?.title_placement || coverState.title_placement || 'top',
+        isbn: inputs?.isbn || coverState.isbn || '',
+        embedIsbnBarcode:
+          inputs?.embed_isbn_barcode !== undefined
+            ? Boolean(inputs.embed_isbn_barcode)
+            : Boolean(coverState.embed_isbn_barcode),
         showGuides: false,
       })
 
@@ -998,6 +1215,7 @@ async function runExportJob(store, data) {
         '10. Keep rights contracts offline forever — StoryForge attach is a record only',
         '11. Paste listing-description.txt (or HTML) into the Amazon KDP book description — edit first; never invent reviews',
         '12. Paste listing-metadata.txt keywords (≤7) + subtitle into KDP; verify category ideas in the Amazon picker',
+        '13. Optional: coloring-pages PDF in this ZIP is a B&W activity companion — publish separately and disclose B&W interiors',
         '',
         PUBLISHING_SPECS.disclaimers.notAffiliated,
       ].join('\n')
@@ -1012,6 +1230,36 @@ async function runExportJob(store, data) {
         (listingMeta && String(listingMeta.plain || '').trim()) ||
         '(No listing metadata saved yet — use Studio → Canvas → KDP metadata builder.)'
 
+      const coloringPageCount = (project?.pages || []).filter(
+        (p) => p?.coloring_asset?.url || p?.coloring_asset?.remoteUrl,
+      ).length
+      let coloringRaw = null
+      if (coloringPageCount > 0) {
+        const coloringPages = (project?.pages || []).map((p) => ({
+          ...p,
+          asset: p.coloring_asset || null,
+          text_content: '',
+          text_secondary: '',
+          speech_bubble: '',
+        }))
+        coloringRaw = await buildInteriorPdf({
+          title: `${title} — Coloring Pages`,
+          trimId,
+          pages: coloringPages,
+          pageCount,
+          showGuides: false,
+          showChrome: false,
+          language: project?.language || 'de',
+          secondaryLanguage: null,
+          bilingualLayout: 'stacked',
+        })
+        coloringRaw.filename = String(coloringRaw.filename || 'interior.pdf').replace(
+          /\.pdf$/i,
+          '-coloring.pdf',
+        )
+        coloringRaw.kind = 'coloring_pdf'
+      }
+
       const zipBytes = buildZip([
         {
           name: interiorRaw.filename,
@@ -1023,6 +1271,15 @@ async function runExportJob(store, data) {
           data: coverRaw.bytes || dataUrlToBuffer(coverRaw.dataUrl),
           compress: false,
         },
+        ...(coloringRaw
+          ? [
+              {
+                name: coloringRaw.filename,
+                data: coloringRaw.bytes || dataUrlToBuffer(coloringRaw.dataUrl),
+                compress: false,
+              },
+            ]
+          : []),
         {
           name: 'preflight.json',
           data: JSON.stringify(
@@ -1095,6 +1352,7 @@ async function runExportJob(store, data) {
               files: [
                 interiorRaw.filename,
                 coverRaw.filename,
+                ...(coloringRaw ? [coloringRaw.filename] : []),
                 'preflight.json',
                 'publication-readiness.json',
                 'compliance.json',
@@ -1115,6 +1373,9 @@ async function runExportJob(store, data) {
                   (String(listingMeta.subtitle || '').trim() ||
                     (listingMeta.keywords || []).some((k) => String(k || '').trim())),
               ),
+              hasColoringPages: coloringPageCount > 0,
+              coloringPageCount,
+              hasBackCoverArt: Boolean(coverState.back_art_url),
               independenceDisclaimer: PUBLISHING_SPECS.disclaimers.notAffiliated,
             },
             null,

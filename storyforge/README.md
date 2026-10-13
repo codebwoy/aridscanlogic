@@ -34,7 +34,7 @@ Amazon Hub → **Open StoryForge**.
 3. Canvas → 2.5× upscale (optional) → **Finish pack** (interior + cover wrap)  
 4. Low credits? Studio sidebar → **+100 local credits**
 
-Projects/credits persist in `storyforge/.data/` (disable with `STORYFORGE_PERSIST=0`).
+Projects/credits persist in `storyforge/.data/` (disable with `STORYFORGE_PERSIST=0`). Set `DATABASE_URL` for optional Postgres JSONB cloud persistence (schema auto-applied; falls back to memory if PG is unreachable).
 
 ```bash
 cd storyforge
@@ -62,6 +62,9 @@ Optional: `npm run dev:worker` with Redis. Real AI: set `STORYFORGE_IMAGE_PROVID
 - **Digital flipbook** export (`export_flipbook`) — HTML ZIP for online sharing (separate from KDP print pack)
 - Speech bubbles on Canvas; cover wrap PDF with title band typography
 - **KDP compliance checklist** (ISBN plan, trademark self-check, rights-doc attach, AI disclosure, one account, no manipulation) — hard gate before Finish pack
+- **Cover Studio** — title-safe front + barcode-safe back art, optional **ISBN EAN-13** on wrap (persists on project; Finish pack / Canvas export use it), BACK|SPINE|FRONT PDF
+- **Series manager** (Studio tab) — assign `seriesId`, catalog books, find/reuse locked DNA
+- **Postgres** — optional `DATABASE_URL` JSONB cloud store (S73); else `.data/` / memory
 - **5-part KDP description builder** (hook / story promise / SEL / real review only / CTA) from project facts — Canvas + Finish pack text/HTML
 - **Bilingual mode** — selectable primary + secondary language pairs (ES/FR/IT/DE/EN + Twi/Igbo/Swahili/Arabic/…), per-page dual text, stacked / side-by-side / alternating layouts, L2 verified flag
 - **IP Character Builder** — merch-ready DNA gate; theme-aware names auto-seed from book emotional core (+ culture/trait), editable core, generate/shuffle, name coach; one colour/trait/object + Merch checks must lock before Character Turbo
@@ -103,9 +106,10 @@ Studio → **Canvas**:
 Always verify in the Amazon KDP Previewer before upload.
 
 - Single PDF: **BACK | SPINE | FRONT** at KDP wrap size from `coverWrapLayout` (trim + bleed + spine)
-- Front art from pinned Character Turbo hero (or page 1 asset)
+- Cover Studio: `generate_cover_art` (front, title-safe) + `generate_back_cover_art` (barcode-safe)
 - Barcode reserve box on the back; spine text only when page count ≥ 80
 - Job: `export_cover_pdf` (3 credits) — always re-check in the Amazon KDP cover calculator / Previewer
+- Coloring companion: `coloring_all_pages` → `export_coloring_pdf` (B&W line-art; also included in Finish pack when present)
 
 ## Part B / Phase 2 — not built
 

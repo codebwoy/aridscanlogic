@@ -116,17 +116,31 @@ export const ART_STYLE_GUIDE = {
 export const COVER_DESIGN_RULES = {
   id: 'cover_design',
   title: 'Children’s book cover that sells',
-  sourceIds: ['S42', 'S68'],
+  sourceIds: ['S42', 'S68', 'S71', 'S72'],
   bullets: [
     'Covers drive click decisions — plan cover after the character is locked, not before DNA exists.',
     'Serve a dual audience: fun for kids, professional and age-appropriate for parents.',
     'One strong focal point (usually the hero) beats cluttered scenes at thumbnail size.',
     'Warm / bright palettes read “kids”; keep title type large and readable on mobile.',
     'Series: keep visual identity consistent across covers so browsers recognize your brand.',
-    'Generate cover art from the pinned anchor; leave title-safe space (no text baked into the image).',
-    'Use Cover Studio (Canvas): layout mood → generate_cover_art → typography overlay → KDP wrap PDF (BACK|SPINE|FRONT).',
+    'Generate front + barcode-safe back art from the pinned anchor; leave title-safe space (no text baked into the image).',
+    'Use Cover Studio (Canvas): layout mood → front/back art → optional ISBN EAN-13 embed → KDP wrap PDF (BACK|SPINE|FRONT).',
+    'Only embed your own ISBN-13 barcode when you own the number (e.g. MVB); otherwise leave the reserve empty for KDP.',
   ],
   note: 'Third-party “57% / 80% / 35%” stats are marketing anecdotes — treat as motivation, not verified research. Verify wrap size in Amazon KDP cover calculator (G201953020).',
+}
+
+export const SERIES_WORKFLOW = {
+  id: 'series_manager_workflow',
+  title: 'Series manager — reuse DNA across books',
+  sourceIds: ['S74', 'S59'],
+  bullets: [
+    'Pick one stable Series id (e.g. kofi-adventures) and save it on every book in the line.',
+    'Lock IP Character DNA on book 1, then use Studio → Series manager → Find locked heroes to copy DNA into the next title.',
+    'Pin Character Turbo on each book after reuse so scenes stay on-model.',
+    'Keep cover layout moods / palette family consistent so the catalog reads as one brand.',
+    'Series manager is a studio catalog — not Amazon Series Page automation.',
+  ],
 }
 
 export const AGE_WORD_COUNTS = {
@@ -270,10 +284,11 @@ export const CAMERA_AND_BODY_TIPS = {
 export const COLORING_PAGE_WORKFLOW = {
   id: 'coloring_from_scenes',
   title: 'Coloring pages from story art',
-  sourceIds: ['S50'],
+  sourceIds: ['S50', 'S70'],
   bullets: [
     'Finish the color story pages first from the pinned anchor.',
     'Derive line-art / coloring versions from approved pages (do not invent a new inconsistent character).',
+    'Use Studio → Derive coloring pages (coloring_all_pages), then Export coloring PDF.',
     'Export clean black line on white for print; be honest in the listing about B&W vs color interiors.',
     'Optional path: Amazon Hub low/medium-content playbooks for listing A+ and categories.',
   ],
@@ -445,6 +460,7 @@ export function craftLibraryPayload() {
     characterDesignPrinciples: CHARACTER_DESIGN_PRINCIPLES,
     cameraBodyAge: CAMERA_AND_BODY_TIPS,
     coloringWorkflow: COLORING_PAGE_WORKFLOW,
+    seriesWorkflow: SERIES_WORKFLOW,
     kdpEarningsRealism: KDP_EARNINGS_REALISM,
     editorVariationPlaybooks: EDITOR_VARIATION_PLAYBOOKS,
     editorVariationPresets: EDITOR_VARIATION_PRESETS,

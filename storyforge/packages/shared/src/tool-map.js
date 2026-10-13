@@ -154,9 +154,27 @@ export const NAMED_TOOLS = {
     label: 'Cover Studio',
     jobType: 'generate_cover_art',
     surface: 'canvas',
-    sourceIds: ['S68', 'S54', 'S42'],
+    sourceIds: ['S68', 'S54', 'S42', 'S71', 'S72'],
     description:
-      'Professional KDP paperback cover: title-safe front art from Character Turbo, typography overlay, BACK|SPINE|FRONT wrap PDF with barcode reserve (Amazon G201953020).',
+      'Professional KDP paperback cover: title-safe front + barcode-safe back art from Character Turbo, typography overlay, optional ISBN EAN-13 barcode, BACK|SPINE|FRONT wrap PDF (Amazon G201953020).',
+  },
+  coloring_pages: {
+    id: 'coloring_pages',
+    label: 'Coloring pages',
+    jobType: 'coloring_all_pages',
+    surface: 'studio',
+    sourceIds: ['S70', 'S50'],
+    description:
+      'Derive clean black-line coloring pages from approved color story art (same character), then export a coloring PDF.',
+  },
+  series_manager: {
+    id: 'series_manager',
+    label: 'Series manager',
+    jobType: null,
+    surface: 'studio',
+    sourceIds: ['S74', 'S59'],
+    description:
+      'Group picture books by IP Character seriesId, track progress, and reuse locked DNA across titles.',
   },
   scene_to_video: {
     id: 'scene_to_video',

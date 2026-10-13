@@ -46,15 +46,18 @@ import {
   normalizeListingMetadata,
   coverStudioPayload,
   normalizeCoverStudioState,
+  coloringPagesPayload,
   normalizePublicationSignoff,
   generateCharacterNames,
   characterNamesPayload,
+  isbnBarcodePayload,
+  seriesPayload,
   STORYFORGE_PRODUCT,
   STORYFORGE_NICHES,
   STORYFORGE_MARKET_DISCLAIMER,
 } from '@storyforge/shared'
 import { config, assertRuntimeSecrets } from './config.js'
-import { createMemoryStore } from './db/memoryStore.js'
+import { createStore } from './db/createStore.js'
 import { initQueue } from './queue/queues.js'
 import { rateLimit } from './security/rateLimit.js'
 import { issueDesktopSession } from './security/desktopSession.js'
@@ -74,7 +77,7 @@ import { resolveExportArtifact, verifyExportToken } from './services/exportStore
 import { resolveWebDist, tryServeStatic } from './static.js'
 
 assertRuntimeSecrets()
-const store = createMemoryStore()
+const store = await createStore()
 wireLocalJobHandlers(store)
 await initQueue()
 const webDist = config.serveStatic ? resolveWebDist() : null
@@ -175,7 +178,11 @@ const projectBody = z.object({
       front_art_url: z.string().max(5_000_000).optional().nullable(),
       back_art_url: z.string().max(5_000_000).optional().nullable(),
       generated_at: z.string().max(64).optional().nullable(),
+      back_generated_at: z.string().max(64).optional().nullable(),
       prompt: z.string().max(2000).optional(),
+      back_prompt: z.string().max(2000).optional(),
+      isbn: z.string().max(20).optional(),
+      embed_isbn_barcode: z.boolean().optional(),
       canva_handoff_acknowledged: z.boolean().optional(),
     })
     .optional()
@@ -264,6 +271,16 @@ const server = createServer(async (req, res) => {
 
   try {
     if (path === '/health' && req.method === 'GET') {
+      let persistence = store.persistence?.driver
+        ? { driver: store.persistence.driver }
+        : { driver: store.persistPath ? 'file' : 'memory' }
+      if (typeof store.persistence?.health === 'function') {
+        try {
+          persistence = { ...persistence, ...(await store.persistence.health()) }
+        } catch (err) {
+          persistence = { ...persistence, ok: false, error: err.message }
+        }
+      }
       sendJson(res, 200, {
         ok: true,
         service: 'storyforge-api',
@@ -271,6 +288,7 @@ const server = createServer(async (req, res) => {
         specsLastVerified: PUBLISHING_SPECS.lastVerified,
         image: providerStatus(),
         hybrid: Boolean(webDist),
+        persistence,
       })
       return
     }
@@ -305,7 +323,10 @@ const server = createServer(async (req, res) => {
         listingDescription: listingDescriptionPayload(),
         listingMetadata: listingMetadataPayload(),
         coverStudio: coverStudioPayload(),
+        coloringPages: coloringPagesPayload(),
         characterNames: characterNamesPayload(),
+        isbnBarcode: isbnBarcodePayload(),
+        seriesManager: seriesPayload(),
         product_positioning: {
           product: STORYFORGE_PRODUCT,
           market_disclaimer: STORYFORGE_MARKET_DISCLAIMER,
@@ -404,7 +425,10 @@ const server = createServer(async (req, res) => {
         listingDescription: listingDescriptionPayload(),
         listingMetadata: listingMetadataPayload(),
         coverStudio: coverStudioPayload(),
+        coloringPages: coloringPagesPayload(),
         characterNames: characterNamesPayload(),
+        isbnBarcode: isbnBarcodePayload(),
+        seriesManager: seriesPayload(),
         commercialUse: COMMERCIAL_USE_STATEMENT,
         tools: NAMED_TOOLS,
         config: cfg,
@@ -428,6 +452,9 @@ const server = createServer(async (req, res) => {
         trialCredits: config.trialCredits,
         image: providerStatus(),
         persistPath: store.persistPath || null,
+        persistence: store.persistence?.driver
+          ? { driver: store.persistence.driver }
+          : { driver: store.persistPath ? 'file' : 'memory' },
         operational: true,
       })
       return
@@ -469,6 +496,12 @@ const server = createServer(async (req, res) => {
 
     if (path === '/v1/projects' && req.method === 'GET') {
       sendJson(res, 200, { projects: await store.listProjects(userId) })
+      return
+    }
+
+    if (path === '/v1/series' && req.method === 'GET') {
+      const catalog = await store.listSeries(userId)
+      sendJson(res, 200, catalog)
       return
     }
 

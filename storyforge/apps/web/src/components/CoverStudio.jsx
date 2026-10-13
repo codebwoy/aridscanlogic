@@ -6,9 +6,12 @@ import {
   COVER_LAYOUT_PRESETS,
   COVER_STUDIO_META,
   CREDIT_COSTS,
+  ISBN_BARCODE_META,
   NAMED_TOOLS,
   assessCoverStudio,
+  formatIsbnDisplay,
   normalizeCoverStudioState,
+  validateIsbn13,
 } from '@storyforge/shared'
 
 /**
@@ -28,11 +31,25 @@ export default function CoverStudio({
 
   useEffect(() => {
     setDraft(normalizeCoverStudioState(project?.cover_studio))
-  }, [project?.id, project?.cover_studio?.generated_at, project?.cover_studio?.front_art_url])
+  }, [
+    project?.id,
+    project?.cover_studio?.generated_at,
+    project?.cover_studio?.back_generated_at,
+    project?.cover_studio?.front_art_url,
+    project?.cover_studio?.back_art_url,
+    project?.cover_studio?.isbn,
+    project?.cover_studio?.embed_isbn_barcode,
+    project?.cover_studio?.author,
+    project?.cover_studio?.subtitle,
+    project?.cover_studio?.layout_id,
+    project?.cover_studio?.finish,
+  ])
 
   const assessment = assessCoverStudio(project, draft)
+  const isbnCheck = validateIsbn13(draft.isbn)
   const hasAnchor = Boolean(project?.pinned_anchor?.heroUrl)
   const frontPreview = draft.front_art_url || project?.pinned_anchor?.heroUrl || null
+  const backPreview = draft.back_art_url || null
 
   function patch(partial) {
     setDraft((d) => normalizeCoverStudioState({ ...d, ...partial }))
@@ -68,16 +85,41 @@ export default function CoverStudio({
       const next = normalizeCoverStudioState(res.job.outputs?.cover_studio || draft)
       setDraft(next)
       setStatus(
-        `Cover art generated (${CREDIT_COSTS.generate_cover_art} credits) — export wrap PDF next`,
+        `Front cover art generated (${CREDIT_COSTS.generate_cover_art} credits)`,
       )
     } catch (e) {
       setError(e.message || 'Cover art failed')
     }
   }
 
+  async function generateBackArt() {
+    if (!project?.id || !runJob) return
+    setError('')
+    try {
+      await onSaved?.(normalizeCoverStudioState(draft))
+      const res = await runJob('generate_back_cover_art', {
+        author: draft.author,
+        subtitle: draft.subtitle,
+        finish: draft.finish,
+      })
+      if (!res?.job) return
+      const next = normalizeCoverStudioState(res.job.outputs?.cover_studio || draft)
+      setDraft(next)
+      setStatus(
+        `Back cover art generated (${CREDIT_COSTS.generate_back_cover_art} credits) — barcode reserve kept clear`,
+      )
+    } catch (e) {
+      setError(e.message || 'Back cover art failed')
+    }
+  }
+
   async function exportWrap() {
     if (!runJob) return
     setError('')
+    if (draft.embed_isbn_barcode && !isbnCheck.ok) {
+      setError(isbnCheck.error || 'Enter a valid ISBN-13 before embedding the barcode')
+      return
+    }
     try {
       await onSaved?.(normalizeCoverStudioState(draft))
       const res = await runJob('export_cover_pdf', {
@@ -88,10 +130,18 @@ export default function CoverStudio({
         subtitle: draft.subtitle,
         title_placement: draft.title_placement,
         frontImageUrl: draft.front_art_url || undefined,
+        backImageUrl: draft.back_art_url || undefined,
         blurb: project?.listing_description?.plain || project?.premise || '',
+        isbn: draft.isbn || undefined,
+        embed_isbn_barcode: Boolean(draft.embed_isbn_barcode),
       })
       if (!res?.job) return
-      setStatus('Cover wrap PDF ready — verify in Amazon KDP cover calculator before upload')
+      const embedded = res.job.outputs?.pdf?.barcodeEmbedded || res.job.outputs?.barcodeEmbedded
+      setStatus(
+        embedded
+          ? `Cover wrap PDF ready with ISBN barcode (${formatIsbnDisplay(draft.isbn)}) — verify in KDP calculator`
+          : 'Cover wrap PDF ready — barcode reserve left empty for KDP; verify in Amazon cover calculator',
+      )
     } catch (e) {
       setError(e.message || 'Cover export failed')
     }
@@ -117,11 +167,24 @@ export default function CoverStudio({
 
       <div className="sf-cover-studio-grid">
         <div className="sf-cover-studio-preview">
+          <p className="sf-muted" style={{ marginBottom: '0.35rem' }}>
+            Front
+          </p>
           {frontPreview ? (
             <img src={frontPreview} alt="Front cover preview" />
           ) : (
             <div className="sf-cover-studio-placeholder">
-              Pin Character Turbo, then Generate cover art
+              Pin Character Turbo, then Generate front art
+            </div>
+          )}
+          <p className="sf-muted" style={{ margin: '0.75rem 0 0.35rem' }}>
+            Back
+          </p>
+          {backPreview ? (
+            <img src={backPreview} alt="Back cover preview" />
+          ) : (
+            <div className="sf-cover-studio-placeholder">
+              Generate back art (barcode-safe lower-right)
             </div>
           )}
           <p className="sf-muted">
@@ -195,6 +258,40 @@ export default function CoverStudio({
             </select>
           </label>
 
+          <fieldset className="sf-cover-isbn">
+            <legend>{ISBN_BARCODE_META.title}</legend>
+            <label>
+              ISBN-13 (or ISBN-10)
+              <input
+                type="text"
+                inputMode="numeric"
+                value={draft.isbn}
+                disabled={busy}
+                maxLength={20}
+                onChange={(e) => patch({ isbn: e.target.value })}
+                placeholder="978-3-16-148410-0"
+                aria-invalid={draft.isbn && !isbnCheck.ok ? 'true' : undefined}
+              />
+            </label>
+            {draft.isbn ? (
+              <p className="sf-muted" data-isbn-ok={isbnCheck.ok ? '1' : '0'}>
+                {isbnCheck.ok
+                  ? `Valid: ${formatIsbnDisplay(isbnCheck.isbn)}`
+                  : isbnCheck.error || 'Invalid ISBN'}
+              </p>
+            ) : null}
+            <label className="sf-check-row">
+              <input
+                type="checkbox"
+                checked={Boolean(draft.embed_isbn_barcode)}
+                disabled={busy}
+                onChange={(e) => patch({ embed_isbn_barcode: e.target.checked })}
+              />
+              <span>Embed EAN-13 barcode in wrap reserve (only with your own ISBN)</span>
+            </label>
+            <p className="sf-muted">{ISBN_BARCODE_META.disclaimer}</p>
+          </fieldset>
+
           <div className="sf-btn-row">
             <button type="button" className="sf-btn" disabled={busy || !project} onClick={saveSettings}>
               <Save size={16} aria-hidden /> Save
@@ -206,8 +303,18 @@ export default function CoverStudio({
               onClick={generateArt}
               title={hasAnchor ? undefined : 'Pin Character Turbo first'}
             >
-              <ImagePlus size={16} aria-hidden /> Generate cover art (
+              <ImagePlus size={16} aria-hidden /> Front art (
               {CREDIT_COSTS.generate_cover_art})
+            </button>
+            <button
+              type="button"
+              className="sf-btn sf-btn-primary"
+              disabled={busy || !hasAnchor}
+              onClick={generateBackArt}
+              title={hasAnchor ? undefined : 'Pin Character Turbo first'}
+            >
+              <ImagePlus size={16} aria-hidden /> Back art (
+              {CREDIT_COSTS.generate_back_cover_art})
             </button>
             <button
               type="button"

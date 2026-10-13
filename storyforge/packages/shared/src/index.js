@@ -138,11 +138,35 @@ export {
   COVER_FINISH_OPTIONS,
   COVER_KDP_CHECKLIST,
   buildCoverArtPrompt,
+  buildBackCoverArtPrompt,
   emptyCoverStudioState,
   normalizeCoverStudioState,
   assessCoverStudio,
   coverStudioPayload,
 } from './cover-studio.js'
+export {
+  COLORING_PAGES_META,
+  buildColoringPagePrompt,
+  countPagesWithArt,
+  countPagesWithColoring,
+  assessColoringPages,
+  coloringPagesPayload,
+} from './coloring-pages.js'
+export {
+  ISBN_BARCODE_META,
+  normalizeIsbn,
+  isbn10To13,
+  ean13CheckDigit,
+  validateIsbn13,
+  encodeEan13Modules,
+  formatIsbnDisplay,
+  isbnBarcodePayload,
+} from './isbn-barcode.js'
+export {
+  SERIES_META,
+  buildSeriesCatalog,
+  seriesPayload,
+} from './series.js'
 export {
   LISTING_METADATA_META,
   CATEGORY_SUGGESTIONS,

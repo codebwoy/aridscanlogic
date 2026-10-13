@@ -168,4 +168,35 @@ export const TRACEABILITY = [
     note:
       'KDP listing metadata builder: subtitle, age range, ≤7 keywords, category guidance + ZIP export',
   },
+  {
+    id: 'S70',
+    area: 'Coloring',
+    status: 'done',
+    note:
+      'coloring_all_pages + export_coloring_pdf — line-art from approved story pages for activity companions',
+  },
+  {
+    id: 'S71',
+    area: 'Cover Studio',
+    status: 'done',
+    note: 'generate_back_cover_art — barcode-safe back panel art for KDP wrap PDF',
+  },
+  {
+    id: 'S72',
+    area: 'Cover Studio',
+    status: 'done',
+    note: 'Optional EAN-13 ISBN barcode drawn into cover wrap barcode reserve',
+  },
+  {
+    id: 'S73',
+    area: 'Persistence',
+    status: 'done',
+    note: 'Postgres cloud store when DATABASE_URL set (JSONB projects) — falls back to local memory JSON',
+  },
+  {
+    id: 'S74',
+    area: 'Series',
+    status: 'done',
+    note: 'Series manager: list series by IP seriesId, books progress, reuse locked DNA',
+  },
 ]

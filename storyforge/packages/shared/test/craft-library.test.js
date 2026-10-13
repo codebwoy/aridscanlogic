@@ -28,7 +28,11 @@ test('craft prompts and recipes are wired', () => {
   }
   assert.ok(RECIPES.some((r) => r.id === 'recipe_seven_day_launch'))
   assert.ok(RECIPES.some((r) => r.id === 'recipe_coloring_from_story'))
+  assert.ok(RECIPES.some((r) => r.id === 'recipe_series_dna'))
   assert.ok(WORKFLOW_PLAYBOOKS.some((w) => w.id === 'wf_action_editor'))
+  const craft = craftLibraryPayload()
+  assert.ok(craft.seriesWorkflow?.bullets?.length >= 4)
+  assert.ok(craft.coverDesign?.sourceIds?.includes('S72'))
 })
 
 test('traceability includes craft S39–S52 and readiness S60–S63', () => {
@@ -38,7 +42,7 @@ test('traceability includes craft S39–S52 and readiness S60–S63', () => {
       `missing S${n}`,
     )
   }
-  for (const id of ['S60', 'S61', 'S62', 'S63']) {
+  for (const id of ['S60', 'S61', 'S62', 'S63', 'S72', 'S73', 'S74']) {
     assert.ok(
       TRACEABILITY.some((t) => t.id === id && t.status === 'done'),
       `missing ${id}`,

@@ -49,6 +49,27 @@ describe('cover studio', () => {
 
   it('traceability S68 + tool map', () => {
     assert.ok(TRACEABILITY.some((t) => t.id === 'S68' && t.status === 'done'))
+    assert.ok(TRACEABILITY.some((t) => t.id === 'S72' && t.status === 'done'))
+    assert.ok(TRACEABILITY.some((t) => t.id === 'S73' && t.status === 'done'))
+    assert.ok(TRACEABILITY.some((t) => t.id === 'S74' && t.status === 'done'))
     assert.equal(NAMED_TOOLS.cover_studio?.jobType, 'generate_cover_art')
+    assert.equal(NAMED_TOOLS.series_manager?.id, 'series_manager')
+  })
+
+  it('blocks embed when ISBN invalid', () => {
+    const a = assessCoverStudio(
+      { trim_id: 'sq_85', page_count: 32, pinned_anchor: { heroUrl: 'x' } },
+      { embed_isbn_barcode: true, isbn: '123' },
+    )
+    assert.ok(a.issues.some((i) => i.severity === 'block' && /ISBN/i.test(i.message)))
+  })
+
+  it('normalizes isbn + embed flags', () => {
+    const s = normalizeCoverStudioState({
+      isbn: '978-3-16-148410-0',
+      embed_isbn_barcode: true,
+    })
+    assert.equal(s.isbn, '978-3-16-148410-0')
+    assert.equal(s.embed_isbn_barcode, true)
   })
 })

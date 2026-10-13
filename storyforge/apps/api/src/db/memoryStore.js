@@ -7,6 +7,20 @@ import {
   createDebouncedSaver,
 } from './persist.js'
 
+function hydrateMaps(
+  loaded,
+  { users, ledger, projects, jobs, configOverrides, disclosureByProject, photoConsents },
+) {
+  if (!loaded || typeof loaded !== 'object') return
+  for (const u of loaded.users || []) users.set(u.id, u)
+  for (const e of loaded.ledger || []) ledger.push(e)
+  for (const p of loaded.projects || []) projects.set(p.id, p)
+  for (const j of loaded.jobs || []) jobs.set(j.id, j)
+  for (const [k, v] of loaded.configOverrides || []) configOverrides.set(k, v)
+  for (const [k, v] of loaded.disclosures || []) disclosureByProject.set(k, v)
+  for (const [k, v] of loaded.photoConsents || []) photoConsents.set(k, v)
+}
+
 /** Dev / fallback store when DATABASE_URL is unset. Persists locally for operational use. */
 export function createMemoryStore(options = {}) {
   const envPersist = process.env.STORYFORGE_PERSIST
@@ -21,7 +35,8 @@ export function createMemoryStore(options = {}) {
   const persistEnabled =
     !explicitlyOff &&
     !process.env.NODE_TEST_CONTEXT &&
-    (explicitlyOn || !config.isProd)
+    (explicitlyOn || !config.isProd) &&
+    typeof options.scheduleSave !== 'function'
   const persistPath = resolveDataPath(options.persistPath || process.env.STORYFORGE_DATA_PATH)
   const users = new Map()
   const ledger = []
@@ -49,20 +64,35 @@ export function createMemoryStore(options = {}) {
     }
   }
 
-  const scheduleSave = persistEnabled
-    ? createDebouncedSaver(persistPath, snapshot)
-    : () => {}
+  const scheduleSave =
+    typeof options.scheduleSave === 'function'
+      ? () => options.scheduleSave(snapshot)
+      : persistEnabled
+        ? createDebouncedSaver(persistPath, snapshot)
+        : () => {}
 
-  if (persistEnabled) {
+  if (options.initialState) {
+    hydrateMaps(options.initialState, {
+      users,
+      ledger,
+      projects,
+      jobs,
+      configOverrides,
+      disclosureByProject,
+      photoConsents,
+    })
+  } else if (persistEnabled) {
     const loaded = loadPersistedState(persistPath)
     if (loaded) {
-      for (const u of loaded.users || []) users.set(u.id, u)
-      for (const e of loaded.ledger || []) ledger.push(e)
-      for (const p of loaded.projects || []) projects.set(p.id, p)
-      for (const j of loaded.jobs || []) jobs.set(j.id, j)
-      for (const [k, v] of loaded.configOverrides || []) configOverrides.set(k, v)
-      for (const [k, v] of loaded.disclosures || []) disclosureByProject.set(k, v)
-      for (const [k, v] of loaded.photoConsents || []) photoConsents.set(k, v)
+      hydrateMaps(loaded, {
+        users,
+        ledger,
+        projects,
+        jobs,
+        configOverrides,
+        disclosureByProject,
+        photoConsents,
+      })
       console.info(
         `[storyforge] restored local state (${users.size} users, ${projects.size} projects) from ${persistPath}`
       )
@@ -224,6 +254,7 @@ export function createMemoryStore(options = {}) {
           pinned_anchor_asset_id: p.pinned_anchor_asset_id,
           format_id: p.format_id,
           ip_locked: Boolean(p.ip_character?.locked_at),
+          series_id: p.ip_character?.seriesId || null,
           updated_at: p.updated_at,
           created_at: p.created_at,
         }))
@@ -304,6 +335,21 @@ export function createMemoryStore(options = {}) {
           updated_at: p.updated_at,
         }))
         .sort((a, b) => String(b.updated_at).localeCompare(String(a.updated_at)))
+    },
+
+    /** All projects for a user (full records) — used by Series Manager. */
+    async listProjectsFull(userId) {
+      return [...projects.values()]
+        .filter((p) => p.user_id === userId)
+        .sort((a, b) => String(b.updated_at).localeCompare(String(a.updated_at)))
+    },
+
+    async listSeries(userId) {
+      const { buildSeriesCatalog } = await import('@storyforge/shared')
+      const full = [...projects.values()]
+        .filter((p) => p.user_id === userId)
+        .sort((a, b) => String(b.updated_at).localeCompare(String(a.updated_at)))
+      return buildSeriesCatalog(full)
     },
 
     async seedPageBeats(userId, projectId, beats) {

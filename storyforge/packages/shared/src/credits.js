@@ -37,6 +37,8 @@ export const CREDIT_COSTS = {
    * Typography + wrap PDF still via export_cover_pdf.
    */
   generate_cover_art: 5,
+  /** Back-cover art from pinned Character Turbo (barcode-safe) */
+  generate_back_cover_art: 4,
   /**
    * Batch illustrate every page from pinned anchor + briefs.
    * Charged dynamically: pages × editor_pro (see resolveJobCost).
@@ -44,6 +46,15 @@ export const CREDIT_COSTS = {
   illustrate_all_pages: 0,
   /** Batch 2.5× print upscale for pages with art — dynamic × upscale_print */
   upscale_all_pages: 0,
+  /**
+   * Derive line-art coloring pages from approved color art.
+   * Charged dynamically: pagesWithArt × coloring_page (see resolveJobCost).
+   */
+  coloring_all_pages: 0,
+  /** Per-page coloring derivation cost used by coloring_all_pages */
+  coloring_page: 3,
+  /** Interior PDF of coloring line-art pages */
+  export_coloring_pdf: 2,
   /** Theme-aware IP name ideas (local generator — 0 credits) */
   character_name_ideas: 0,
   preflight: 0,
@@ -75,8 +86,11 @@ export function costFor(action) {
   return CREDIT_COSTS[action]
 }
 
-/** Dynamic credit cost for batch jobs (illustrate / upscale all pages). */
-export function resolveJobCost(type, { pageCount = 32, pagesWithArt = 0, skipExisting = false } = {}) {
+/** Dynamic credit cost for batch jobs (illustrate / upscale / coloring). */
+export function resolveJobCost(
+  type,
+  { pageCount = 32, pagesWithArt = 0, pagesWithColoring = 0, skipExisting = false } = {},
+) {
   if (type === 'illustrate_all_pages') {
     const n = Math.max(1, Number(pageCount) || 32)
     const skip = skipExisting ? Math.min(n, Math.max(0, Number(pagesWithArt) || 0)) : 0
@@ -84,6 +98,11 @@ export function resolveJobCost(type, { pageCount = 32, pagesWithArt = 0, skipExi
   }
   if (type === 'upscale_all_pages') {
     return Math.max(0, Number(pagesWithArt) || 0) * CREDIT_COSTS.upscale_print
+  }
+  if (type === 'coloring_all_pages') {
+    const art = Math.max(0, Number(pagesWithArt) || 0)
+    const already = skipExisting ? Math.min(art, Math.max(0, Number(pagesWithColoring) || 0)) : 0
+    return Math.max(0, art - already) * CREDIT_COSTS.coloring_page
   }
   return costFor(type)
 }

@@ -5,6 +5,9 @@ import {
   PUBLISHING_SPECS,
   resolvePageTextLines,
   languageLabel,
+  validateIsbn13,
+  encodeEan13Modules,
+  formatIsbnDisplay,
 } from '@storyforge/shared'
 
 /**
@@ -185,6 +188,8 @@ export async function buildCoverWrapPdf({
   frontImageUrl = null,
   backImageUrl = null,
   titlePlacement = 'top',
+  isbn = '',
+  embedIsbnBarcode = false,
   showGuides = false,
 }) {
   const layout = coverWrapLayout(trimId, pageCount, paperTypeId)
@@ -352,13 +357,51 @@ export async function buildCoverWrapPdf({
     borderColor: mute,
     borderWidth: 0.75,
   })
-  page.drawText('Barcode reserve (KDP)', {
-    x: bc.xIn * pts + 6,
-    y: bc.yIn * pts + bc.heightIn * pts * 0.45,
-    size: 8,
-    font,
-    color: mute,
-  })
+  const isbnCheck = embedIsbnBarcode ? validateIsbn13(isbn) : { ok: false }
+  let barcodeEmbedded = false
+  if (isbnCheck.ok) {
+    try {
+      const { modules, isbn: cleanIsbn } = encodeEan13Modules(isbnCheck.isbn)
+      const padX = 6
+      const padY = 10
+      const labelH = 12
+      const barAreaW = bc.widthIn * pts - padX * 2
+      const barAreaH = bc.heightIn * pts - padY * 2 - labelH
+      const moduleW = barAreaW / modules.length
+      const barX0 = bc.xIn * pts + padX
+      const barY0 = bc.yIn * pts + padY + labelH
+      for (let i = 0; i < modules.length; i++) {
+        if (!modules[i]) continue
+        page.drawRectangle({
+          x: barX0 + i * moduleW,
+          y: barY0,
+          width: Math.max(moduleW, 0.4),
+          height: barAreaH,
+          color: ink(0, 0, 0),
+        })
+      }
+      page.drawText(formatIsbnDisplay(cleanIsbn), {
+        x: bc.xIn * pts + padX,
+        y: bc.yIn * pts + 4,
+        size: 8,
+        font,
+        color: ink(0.08, 0.08, 0.08),
+        maxWidth: bc.widthIn * pts - padX * 2,
+      })
+      barcodeEmbedded = true
+    } catch {
+      barcodeEmbedded = false
+    }
+  }
+  if (!barcodeEmbedded) {
+    page.drawText('Barcode reserve (KDP)', {
+      x: bc.xIn * pts + 6,
+      y: bc.yIn * pts + bc.heightIn * pts * 0.45,
+      size: 8,
+      font,
+      color: mute,
+    })
+  }
 
   if (layout.spineTextAllowed && spineW > 10) {
     const spineLabel = frontTitle.slice(0, 40)
@@ -417,6 +460,8 @@ export async function buildCoverWrapPdf({
       dpi: layout.dpi,
       note: layout.note,
     },
+    barcodeEmbedded,
+    isbn: barcodeEmbedded ? isbnCheck.isbn : null,
     specsLastVerified: PUBLISHING_SPECS.lastVerified,
     independenceDisclaimer: PUBLISHING_SPECS.disclaimers.notAffiliated,
   }
