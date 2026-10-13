@@ -44,6 +44,7 @@ import IpCharacterBuilder from '../components/IpCharacterBuilder.jsx'
 import VariationEditors from '../components/VariationEditors.jsx'
 import ComplianceChecklist from '../components/ComplianceChecklist.jsx'
 import ListingDescriptionBuilder from '../components/ListingDescriptionBuilder.jsx'
+import CoverStudio from '../components/CoverStudio.jsx'
 
 const STEPS = ['story', 'characters', 'scenes', 'layout', 'preflight', 'export']
 
@@ -1707,6 +1708,25 @@ export default function Studio({
                   }}
                 />
 
+                <CoverStudio
+                  project={active}
+                  busy={busy}
+                  setBusy={setBusy}
+                  setError={setError}
+                  setStatus={setStatus}
+                  runJob={runJob}
+                  onSaved={async (cover_studio) => {
+                    const res = await api(`/v1/projects/${active.id}`, {
+                      method: 'PATCH',
+                      body: { cover_studio },
+                    })
+                    setProjects((list) =>
+                      list.map((p) => (p.id === res.project.id ? res.project : p)),
+                    )
+                    await onSelectProject(res.project.id)
+                  }}
+                />
+
                 <div className="sf-btn-row">
                   <button
                     type="button"
@@ -1835,10 +1855,11 @@ export default function Studio({
             </div>
             <ModelSelect role="upscale" label="fal upscale model" value={falModels.upscale} />
             <p className="sf-muted">
-              Print pipeline: readiness score → 2.5× upscale → interior PDF + cover wrap → signed ZIP
-              (preflight + publication-readiness.json + checklist + manuscript). Merch PNG = pinned
-              hero on Merch canvas. Digital flipbook = HTML ZIP for online sharing (not KDP print).
-              Always re-check print files in the Amazon KDP Previewer — no tool certifies 100%
+              Print pipeline: Cover Studio (title-safe art + wrap PDF) → readiness score → 2.5×
+              upscale → interior PDF + cover wrap → signed ZIP (preflight +
+              publication-readiness.json + checklist + manuscript). Merch PNG = pinned hero on Merch
+              canvas. Digital flipbook = HTML ZIP for online sharing (not KDP print). Always re-check
+              wrap size in the Amazon KDP cover calculator and Previewer — no tool certifies 100%
               publication perfection.
             </p>
           </div>

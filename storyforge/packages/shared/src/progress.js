@@ -154,4 +154,11 @@ export const TRACEABILITY = [
     status: 'done',
     note: '5-part KDP book description builder (hook / promise / SEL / real social proof / CTA)',
   },
+  {
+    id: 'S68',
+    area: 'Cover Studio',
+    status: 'done',
+    note:
+      'Professional cover: generate_cover_art (title-safe, pinned anchor) + layout presets + KDP wrap checklist (G201953020) + export_cover_pdf',
+  },
 ]

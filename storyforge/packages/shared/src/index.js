@@ -133,6 +133,17 @@ export {
   listingDescriptionPayload,
 } from './listing-description.js'
 export {
+  COVER_STUDIO_META,
+  COVER_LAYOUT_PRESETS,
+  COVER_FINISH_OPTIONS,
+  COVER_KDP_CHECKLIST,
+  buildCoverArtPrompt,
+  emptyCoverStudioState,
+  normalizeCoverStudioState,
+  assessCoverStudio,
+  coverStudioPayload,
+} from './cover-studio.js'
+export {
   KDP_COMPLIANCE_META,
   COMPLIANCE_LINKS,
   ISBN_CHOICES,

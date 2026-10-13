@@ -116,7 +116,7 @@ export const ART_STYLE_GUIDE = {
 export const COVER_DESIGN_RULES = {
   id: 'cover_design',
   title: 'Children’s book cover that sells',
-  sourceIds: ['S42'],
+  sourceIds: ['S42', 'S68'],
   bullets: [
     'Covers drive click decisions — plan cover after the character is locked, not before DNA exists.',
     'Serve a dual audience: fun for kids, professional and age-appropriate for parents.',
@@ -124,8 +124,9 @@ export const COVER_DESIGN_RULES = {
     'Warm / bright palettes read “kids”; keep title type large and readable on mobile.',
     'Series: keep visual identity consistent across covers so browsers recognize your brand.',
     'Generate cover art from the pinned anchor; leave title-safe space (no text baked into the image).',
+    'Use Cover Studio (Canvas): layout mood → generate_cover_art → typography overlay → KDP wrap PDF (BACK|SPINE|FRONT).',
   ],
-  note: 'Third-party “57% / 80% / 35%” stats are marketing anecdotes — treat as motivation, not verified research.',
+  note: 'Third-party “57% / 80% / 35%” stats are marketing anecdotes — treat as motivation, not verified research. Verify wrap size in Amazon KDP cover calculator (G201953020).',
 }
 
 export const AGE_WORD_COUNTS = {

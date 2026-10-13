@@ -201,6 +201,26 @@ export function assessPublicationReadiness(project, opts = {}) {
 
   printScore = clamp01(printScore)
 
+  // Cover Studio (soft — wrap PDF can still use pinned hero as fallback)
+  const hasCoverArt = Boolean(
+    project?.cover_studio?.front_art_url || project?.pinned_anchor?.heroUrl,
+  )
+  if (!hasCoverArt) {
+    warnings.push({
+      gate: 'print',
+      severity: 'warn',
+      message:
+        'No cover art yet — open Cover Studio (Canvas), generate title-safe art, then Export cover wrap',
+    })
+  } else if (!project?.cover_studio?.front_art_url && project?.pinned_anchor?.heroUrl) {
+    warnings.push({
+      gate: 'print',
+      severity: 'warn',
+      message:
+        'Using Character Turbo hero as cover fallback — generate Cover Studio art for a professional title-safe front',
+    })
+  }
+
   // ── Continuity gate ─────────────────────────────────────────────────────
   const pinned = Boolean(project?.pinned_anchor?.heroUrl || project?.pinned_anchor_asset_id)
   const ipLocked = Boolean(project?.ip_character?.locked_at)

@@ -63,7 +63,11 @@ export async function buildFlipbookZip({ project, userId, includeCover = true } 
   const files = []
 
   if (includeCover) {
-    const coverUrl = project?.pinned_anchor?.heroUrl || pages[0]?.asset?.url || null
+    const coverUrl =
+      project?.cover_studio?.front_art_url ||
+      project?.pinned_anchor?.heroUrl ||
+      pages[0]?.asset?.url ||
+      null
     const coverBuf = (await resolveImageBuffer(coverUrl)) || placeholderPngNote()
     const coverName = 'assets/cover.png'
     files.push({ name: coverName, data: coverBuf, compress: false })

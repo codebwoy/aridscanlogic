@@ -42,6 +42,8 @@ import {
   kdpCompliancePayload,
   listingDescriptionPayload,
   normalizeListingDescription,
+  coverStudioPayload,
+  normalizeCoverStudioState,
   normalizePublicationSignoff,
   generateCharacterNames,
   characterNamesPayload,
@@ -133,6 +135,21 @@ const projectBody = z.object({
       review_quote: z.string().max(500).optional(),
       language: z.enum(['en', 'de']).optional(),
       updated_at: z.string().max(64).optional().nullable(),
+    })
+    .optional()
+    .nullable(),
+  cover_studio: z
+    .object({
+      layout_id: z.string().max(32).optional(),
+      finish: z.enum(['glossy', 'matte']).optional(),
+      title_placement: z.enum(['top', 'bottom']).optional(),
+      author: z.string().max(120).optional(),
+      subtitle: z.string().max(160).optional(),
+      front_art_url: z.string().max(5_000_000).optional().nullable(),
+      back_art_url: z.string().max(5_000_000).optional().nullable(),
+      generated_at: z.string().max(64).optional().nullable(),
+      prompt: z.string().max(2000).optional(),
+      canva_handoff_acknowledged: z.boolean().optional(),
     })
     .optional()
     .nullable(),
@@ -259,6 +276,7 @@ const server = createServer(async (req, res) => {
         publicationReadiness: publicationReadinessPayload(),
         kdpCompliance: kdpCompliancePayload(),
         listingDescription: listingDescriptionPayload(),
+        coverStudio: coverStudioPayload(),
         characterNames: characterNamesPayload(),
         product_positioning: {
           product: STORYFORGE_PRODUCT,
@@ -356,6 +374,7 @@ const server = createServer(async (req, res) => {
         publicationReadiness: publicationReadinessPayload(),
         kdpCompliance: kdpCompliancePayload(),
         listingDescription: listingDescriptionPayload(),
+        coverStudio: coverStudioPayload(),
         characterNames: characterNamesPayload(),
         commercialUse: COMMERCIAL_USE_STATEMENT,
         tools: NAMED_TOOLS,
@@ -485,6 +504,12 @@ const server = createServer(async (req, res) => {
             ...normalizeListingDescription(body.listing_description),
             updated_at: new Date().toISOString(),
           }
+        }
+        if (body.cover_studio) {
+          body.cover_studio = normalizeCoverStudioState({
+            ...normalizeCoverStudioState(existing.cover_studio),
+            ...body.cover_studio,
+          })
         }
         const project = await store.updateProject(userId, id, body)
         if (!project) return sendError(res, 404, 'Project not found')

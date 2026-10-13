@@ -140,6 +140,15 @@ export const NAMED_TOOLS = {
     description:
       'Build a 5-part Amazon book description (hook, story promise, SEL benefit, real review only, CTA) from your project facts.',
   },
+  cover_studio: {
+    id: 'cover_studio',
+    label: 'Cover Studio',
+    jobType: 'generate_cover_art',
+    surface: 'canvas',
+    sourceIds: ['S68', 'S54', 'S42'],
+    description:
+      'Professional KDP paperback cover: title-safe front art from Character Turbo, typography overlay, BACK|SPINE|FRONT wrap PDF with barcode reserve (Amazon G201953020).',
+  },
   scene_to_video: {
     id: 'scene_to_video',
     label: 'Scene → Video',

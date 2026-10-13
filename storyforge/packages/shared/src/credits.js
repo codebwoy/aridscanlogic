@@ -31,6 +31,11 @@ export const CREDIT_COSTS = {
   /** 5-part KDP listing description from project facts (0 credits) */
   listing_description: 0,
   /**
+   * Title-safe front cover art from pinned Character Turbo (Replicate/fal).
+   * Typography + wrap PDF still via export_cover_pdf.
+   */
+  generate_cover_art: 5,
+  /**
    * Batch illustrate every page from pinned anchor + briefs.
    * Charged dynamically: pages × editor_pro (see resolveJobCost).
    */
@@ -91,15 +96,16 @@ export function estimateBookCredits({
   const bible = characters * CREDIT_COSTS.character_bible_final
   const draftScenes = Math.round(pages * draftRatio) * CREDIT_COSTS.scene_draft
   const finalScenes = Math.round(pages * (1 - draftRatio)) * CREDIT_COSTS.scene_final
+  const coverArt = includeCover ? CREDIT_COSTS.generate_cover_art : 0
   const exportCost =
     CREDIT_COSTS.export_interior_pdf +
     (includeCover ? CREDIT_COSTS.export_cover_pdf : 0) +
     CREDIT_COSTS.export_source_zip
-  const total = bible + draftScenes + finalScenes + exportCost
+  const total = bible + draftScenes + finalScenes + coverArt + exportCost
   return {
     pages,
     characters,
-    breakdown: { bible, draftScenes, finalScenes, exportCost },
+    breakdown: { bible, draftScenes, finalScenes, coverArt, exportCost },
     total,
     note: 'Estimate only — regenerations and editor passes add cost.',
   }

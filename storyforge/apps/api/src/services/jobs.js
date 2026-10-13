@@ -20,6 +20,10 @@ import {
   buildEscalatingBeatBriefs,
   defaultRefrainForHook,
   MANUSCRIPT_META,
+  buildCoverArtPrompt,
+  normalizeCoverStudioState,
+  COVER_STUDIO_META,
+  COVER_KDP_CHECKLIST,
 } from '@storyforge/shared'
 import { sha256Hex } from '../security/crypto.js'
 import { config } from '../config.js'
@@ -171,18 +175,33 @@ export async function submitJob(store, { userId, type, projectId, inputs }) {
     SCENE_TYPES.has(type) ||
     VIDEO_TYPES.has(type) ||
     type === 'illustrate_all_pages' ||
-    type === 'upscale_all_pages'
+    type === 'upscale_all_pages' ||
+    type === 'generate_cover_art'
   ) {
     if (!projectId || !project) {
       throw fail(400, 'anchor_required', 'projectId required — scenes must start from a pinned anchor')
     }
     if (
-      (SCENE_TYPES.has(type) || VIDEO_TYPES.has(type) || type === 'illustrate_all_pages') &&
+      (SCENE_TYPES.has(type) ||
+        VIDEO_TYPES.has(type) ||
+        type === 'illustrate_all_pages' ||
+        type === 'generate_cover_art') &&
       (!project.pinned_anchor_asset_id || !project.pinned_anchor)
     ) {
-      throw fail(400, 'anchor_required', 'Pin a Character Turbo anchor before Editor Pro scenes')
+      throw fail(
+        400,
+        'anchor_required',
+        type === 'generate_cover_art'
+          ? 'Pin a Character Turbo anchor before Cover Studio art'
+          : 'Pin a Character Turbo anchor before Editor Pro scenes',
+      )
     }
-    if (SCENE_TYPES.has(type) || VIDEO_TYPES.has(type) || type === 'illustrate_all_pages') {
+    if (
+      SCENE_TYPES.has(type) ||
+      VIDEO_TYPES.has(type) ||
+      type === 'illustrate_all_pages' ||
+      type === 'generate_cover_art'
+    ) {
       safeInputs.fromAnchor = true
       safeInputs.pinnedAnchorAssetId = project.pinned_anchor_asset_id
       safeInputs.anchorEmbedding = project.pinned_anchor?.embedding
@@ -350,6 +369,83 @@ async function runGenerationJob(store, data) {
           asset: outputs.assets[0],
           status: 'upscaled',
         })
+      }
+    } else if (type === 'generate_cover_art') {
+      const refreshed = projectId ? await store.getProject(userId, projectId) : project
+      if (!refreshed?.pinned_anchor) {
+        throw fail(400, 'anchor_required', 'Pin a Character Turbo anchor before Cover Studio')
+      }
+      const prev = normalizeCoverStudioState(refreshed.cover_studio)
+      const layoutId = inputs?.layout_id || prev.layout_id || 'hero_centered'
+      const name =
+        refreshed.ip_character?.name ||
+        refreshed.pinned_anchor?.name ||
+        inputs?.characterName ||
+        'Hero'
+      const wrap = coverWrapLayout(
+        refreshed.trim_id || 'sq_85',
+        refreshed.page_count || 32,
+        refreshed.paper_type || 'white',
+      )
+      const prompt = buildCoverArtPrompt({
+        characterName: name,
+        emotionalCore: refreshed.emotional_core || 'courage',
+        layoutId,
+        artStyle: refreshed.style_preset || 'children’s picture book illustration',
+        premise: refreshed.premise || '',
+      })
+      const scene = await provider.generateScene({
+        ...inputs,
+        brief: prompt,
+        sceneBrief: prompt,
+        characterName: name,
+        pinnedAnchorAssetId: refreshed.pinned_anchor_asset_id,
+        anchorEmbedding: refreshed.pinned_anchor?.embedding,
+        anchorImageUrl: refreshed.pinned_anchor.heroUrl,
+        heroUrl: refreshed.pinned_anchor.heroUrl,
+        quality: 'final',
+        targetWidth: wrap.panelW,
+        targetHeight: wrap.heightPx,
+        editor: 'generate_cover_art',
+        fromAnchor: true,
+      })
+      const frontUrl = scene.assets?.[0]?.url || scene.assets?.[0]?.remoteUrl || null
+      if (!frontUrl) {
+        throw fail(500, 'cover_art_failed', 'Cover art generation returned no image')
+      }
+      const cover_studio = normalizeCoverStudioState({
+        ...prev,
+        layout_id: layoutId,
+        author: inputs?.author ?? prev.author,
+        subtitle: inputs?.subtitle ?? prev.subtitle,
+        title_placement: inputs?.title_placement || prev.title_placement,
+        finish: inputs?.finish || prev.finish,
+        front_art_url: frontUrl,
+        generated_at: new Date().toISOString(),
+        prompt,
+      })
+      await store.updateProject(userId, projectId, {
+        cover_studio,
+        progress_step: 'layout',
+      })
+      outputs = {
+        type,
+        cover_studio,
+        assets: scene.assets,
+        consistencyBadge: scene.consistencyBadge,
+        wrap: {
+          widthPx: wrap.widthPx,
+          heightPx: wrap.heightPx,
+          widthIn: wrap.widthIn,
+          heightIn: wrap.heightIn,
+          spineIn: wrap.spineIn,
+          spineTextAllowed: wrap.spineTextAllowed,
+          barcode: wrap.barcode,
+          note: wrap.note,
+        },
+        checklist: COVER_KDP_CHECKLIST,
+        meta: COVER_STUDIO_META,
+        note: 'Title-safe front art saved. Overlay title/author in Export cover wrap — do not bake text into the image.',
       }
     } else if (type === 'story_text') {
       const refreshed = projectId ? await store.getProject(userId, projectId) : project
@@ -693,21 +789,31 @@ async function runExportJob(store, data) {
 
     // Cover wrap — finish-flow export (does not require every interior page to pass DPI preflight)
     if (type === 'export_cover_pdf') {
+      const cover = normalizeCoverStudioState(project?.cover_studio)
+      const listingPlain = String(project?.listing_description?.plain || '').trim()
       const frontImageUrl =
         inputs?.frontImageUrl ||
+        cover.front_art_url ||
         project?.pinned_anchor?.heroUrl ||
         project?.pages?.[0]?.asset?.url ||
         null
-      const backImageUrl = inputs?.backImageUrl || null
+      const backImageUrl = inputs?.backImageUrl || cover.back_art_url || null
       const pdfRaw = await buildCoverWrapPdf({
         title: project?.title || inputs?.title || 'StoryForge Book',
-        author: inputs?.author || project?.meta?.author || '',
-        blurb: inputs?.blurb || project?.premise || project?.emotional_core || '',
+        author: inputs?.author || cover.author || project?.meta?.author || '',
+        subtitle: inputs?.subtitle || cover.subtitle || '',
+        blurb:
+          inputs?.blurb ||
+          listingPlain.slice(0, 700) ||
+          project?.premise ||
+          project?.emotional_core ||
+          '',
         trimId,
         pageCount,
         paperTypeId,
         frontImageUrl,
         backImageUrl,
+        titlePlacement: inputs?.title_placement || cover.title_placement || 'top',
         showGuides: Boolean(inputs?.showGuides),
       })
       const pdf = attachSignedDownload(pdfRaw, { userId })
@@ -726,12 +832,17 @@ async function runExportJob(store, data) {
             barcode: wrapLayout.barcode,
             note: wrapLayout.note,
           },
+          coverStudio: cover,
+          checklist: COVER_KDP_CHECKLIST,
           specsLastVerified: PUBLISHING_SPECS.lastVerified,
           independenceDisclaimer: PUBLISHING_SPECS.disclaimers.notAffiliated,
+          kdpHelpUrl: COVER_STUDIO_META.kdpHelpUrl,
           uploadChecklist: [
-            'Cover wrap PDF (this file) — upload as paperback cover',
-            'Still run Amazon KDP cover calculator / Previewer',
-            'Keep barcode reserve clear',
+            'Cover wrap PDF (this file) — upload as paperback cover in KDP',
+            'Re-check size in Amazon KDP cover calculator (G201953020)',
+            'Keep barcode reserve clear unless you supply your own barcode',
+            'Title/author on cover must match KDP title setup',
+            'Choose glossy or matte finish in KDP Print Options',
             'AI disclosure if applicable',
             'Interior PDF via export_interior_pdf',
           ],
@@ -824,19 +935,29 @@ async function runExportJob(store, data) {
         secondaryLanguage: project?.secondary_language || null,
         bilingualLayout: project?.bilingual_layout || 'stacked',
       })
+      const coverState = normalizeCoverStudioState(project?.cover_studio)
+      const listingPlainZip = String(project?.listing_description?.plain || '').trim()
       const coverRaw = await buildCoverWrapPdf({
         title,
-        author: inputs?.author || project?.meta?.author || '',
-        blurb: inputs?.blurb || project?.premise || project?.emotional_core || '',
+        author: inputs?.author || coverState.author || project?.meta?.author || '',
+        subtitle: inputs?.subtitle || coverState.subtitle || '',
+        blurb:
+          inputs?.blurb ||
+          listingPlainZip.slice(0, 700) ||
+          project?.premise ||
+          project?.emotional_core ||
+          '',
         trimId,
         pageCount,
         paperTypeId,
         frontImageUrl:
           inputs?.frontImageUrl ||
+          coverState.front_art_url ||
           project?.pinned_anchor?.heroUrl ||
           project?.pages?.[0]?.asset?.url ||
           null,
-        backImageUrl: inputs?.backImageUrl || null,
+        backImageUrl: inputs?.backImageUrl || coverState.back_art_url || null,
+        titlePlacement: inputs?.title_placement || coverState.title_placement || 'top',
         showGuides: false,
       })
 

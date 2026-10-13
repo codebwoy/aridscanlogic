@@ -177,12 +177,14 @@ export async function buildInteriorPdf({
 export async function buildCoverWrapPdf({
   title = 'StoryForge Book',
   author = '',
+  subtitle = '',
   blurb = '',
   trimId = 'sq_85',
   pageCount = 32,
   paperTypeId = 'white',
   frontImageUrl = null,
   backImageUrl = null,
+  titlePlacement = 'top',
   showGuides = false,
 }) {
   const layout = coverWrapLayout(trimId, pageCount, paperTypeId)
@@ -267,39 +269,58 @@ export async function buildCoverWrapPdf({
   }
 
   const frontTitle = String(title).slice(0, 80)
+  const frontSubtitle = String(subtitle || '').trim().slice(0, 80)
+  const placeTop = titlePlacement !== 'bottom'
   // Title band — readable kids-book cover type (PDF overlay; art stays title-safe)
-  const titleBandH = Math.min(72, frontLive.h * 0.18)
+  const titleBandH = Math.min(
+    frontSubtitle ? 88 : 72,
+    frontLive.h * (frontSubtitle ? 0.22 : 0.18),
+  )
+  const titleBandY = placeTop
+    ? frontLive.y + frontLive.h - titleBandH - 10
+    : frontLive.y + 42
   page.drawRectangle({
     x: frontLive.x + 10,
-    y: frontLive.y + frontLive.h - titleBandH - 10,
+    y: titleBandY,
     width: frontLive.w - 20,
     height: titleBandH,
     color: rgb(1, 1, 1),
-    opacity: 0.88,
+    opacity: 0.9,
     borderColor: ink(0.12, 0.18, 0.16),
     borderWidth: 0.8,
   })
   const titleSize = frontTitle.length > 36 ? 14 : frontTitle.length > 22 ? 18 : 22
   page.drawText(frontTitle, {
     x: frontLive.x + 22,
-    y: frontLive.y + frontLive.h - titleBandH + titleBandH * 0.38,
+    y: titleBandY + titleBandH - (frontSubtitle ? 28 : titleBandH * 0.42),
     size: titleSize,
     font: bold,
     color: ink(0.08, 0.12, 0.11),
     maxWidth: frontLive.w - 44,
   })
+  if (frontSubtitle) {
+    page.drawText(frontSubtitle, {
+      x: frontLive.x + 22,
+      y: titleBandY + 14,
+      size: 11,
+      font,
+      color: mute,
+      maxWidth: frontLive.w - 44,
+    })
+  }
+  const authorBandY = placeTop ? frontLive.y + 14 : frontLive.y + frontLive.h - 38
   if (author) {
     page.drawRectangle({
       x: frontLive.x + 10,
-      y: frontLive.y + 14,
+      y: authorBandY,
       width: frontLive.w - 20,
       height: 28,
       color: rgb(1, 1, 1),
-      opacity: 0.82,
+      opacity: 0.85,
     })
     page.drawText(String(author).slice(0, 60), {
       x: frontLive.x + 22,
-      y: frontLive.y + 22,
+      y: authorBandY + 8,
       size: 12,
       font,
       color: mute,
@@ -500,11 +521,17 @@ async function tryEmbedIllustration(pdf, assetUrl) {
   try {
     if (assetUrl.startsWith('data:image/png')) {
       const b64 = assetUrl.split(',')[1]
-      return pdf.embedPng(Buffer.from(b64, 'base64'))
+      if (!b64) return null
+      const buf = Buffer.from(b64, 'base64')
+      if (!buf.length) return null
+      return pdf.embedPng(buf)
     }
     if (assetUrl.startsWith('data:image/jpeg') || assetUrl.startsWith('data:image/jpg')) {
       const b64 = assetUrl.split(',')[1]
-      return pdf.embedJpg(Buffer.from(b64, 'base64'))
+      if (!b64) return null
+      const buf = Buffer.from(b64, 'base64')
+      if (!buf.length) return null
+      return pdf.embedJpg(buf)
     }
     if (assetUrl.startsWith('data:image/webp') || assetUrl.startsWith('data:image/svg')) {
       return null
