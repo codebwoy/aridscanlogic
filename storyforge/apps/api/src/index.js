@@ -186,6 +186,7 @@ const configPatchBody = z.object({
 const pageBody = z.object({
   text_content: z.string().max(4000).optional(),
   text_secondary: z.string().max(4000).optional(),
+  speech_bubble: z.string().max(500).optional(),
   illustration_brief: z.string().max(2000).optional(),
 })
 
@@ -672,7 +673,6 @@ const server = createServer(async (req, res) => {
 
     if (path === '/v1/jobs' && req.method === 'POST') {
       const body = jobBody.parse(await readJson(req))
-      const cost = costFor(body.type)
       try {
         const job = await submitJob(store, {
           userId,
@@ -682,7 +682,7 @@ const server = createServer(async (req, res) => {
         })
         sendJson(res, 202, {
           job,
-          charged: cost,
+          charged: job.cost_credits ?? costFor(body.type) ?? 0,
           balance: await store.getBalance(userId),
         })
       } catch (e) {

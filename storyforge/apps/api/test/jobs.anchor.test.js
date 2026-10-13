@@ -107,5 +107,15 @@ describe('anchor-required jobs', () => {
       inputs: { brief: 'Luna waves' },
     })
     assert.equal(scene.inputs.fromAnchor, true)
+
+    const outfit = await submitJob(store, {
+      userId: user.id,
+      type: 'editor_outfit',
+      projectId: project.id,
+      inputs: { brief: 'wearing cozy pajamas', pageIndex: 0 },
+    })
+    assert.equal(outfit.inputs.fromAnchor, true)
+    const outfitDone = await waitForJob(store, user.id, outfit.id)
+    assert.equal(outfitDone.status, 'completed', outfitDone.error)
   })
 })

@@ -10,6 +10,7 @@ import {
   Sparkles,
   Wand2,
   ZoomIn,
+  Layers,
 } from 'lucide-react'
 import {
   CREDIT_COSTS,
@@ -18,6 +19,7 @@ import {
   PUBLISHING_SPECS,
   FAL_DEFAULTS,
   estimateBookCredits,
+  resolveJobCost,
   STORY_LANGUAGES,
   LANGUAGE_PAIR_PRESETS,
   BILINGUAL_LAYOUTS,
@@ -38,6 +40,7 @@ import { api } from '../lib/api.js'
 import { runAndWait } from '../lib/jobs.js'
 import PageCanvas from '../components/PageCanvas.jsx'
 import IpCharacterBuilder from '../components/IpCharacterBuilder.jsx'
+import VariationEditors from '../components/VariationEditors.jsx'
 
 const STEPS = ['story', 'characters', 'scenes', 'layout', 'preflight', 'export']
 
@@ -66,6 +69,7 @@ export default function Studio({
   )
   const [pageText, setPageText] = useState('')
   const [pageTextSecondary, setPageTextSecondary] = useState('')
+  const [speechBubble, setSpeechBubble] = useState('')
   const [lastOutputs, setLastOutputs] = useState(null)
   const [consent, setConsent] = useState(false)
   const [createForm, setCreateForm] = useState({
@@ -148,11 +152,32 @@ export default function Studio({
   const syncedPrimary = active?.pages?.[pageIndex]?.text_content || ''
   const syncedSecondary = active?.pages?.[pageIndex]?.text_secondary || ''
   const syncedBrief = active?.pages?.[pageIndex]?.illustration_brief || ''
+  const syncedBubble = active?.pages?.[pageIndex]?.speech_bubble || ''
   useEffect(() => {
     setPageText(syncedPrimary)
     setPageTextSecondary(syncedSecondary)
+    setSpeechBubble(syncedBubble)
     if (syncedBrief) setSceneBrief(syncedBrief)
-  }, [active?.id, pageIndex, syncedPrimary, syncedSecondary, syncedBrief])
+  }, [active?.id, pageIndex, syncedPrimary, syncedSecondary, syncedBrief, syncedBubble])
+
+  const pagesWithArt = (active?.pages || []).filter((p) => p?.asset?.url).length
+  const illustrateCost = active
+    ? resolveJobCost('illustrate_all_pages', {
+        pageCount: active.page_count,
+        pagesWithArt,
+        skipExisting: false,
+      })
+    : 0
+  const illustrateSkipCost = active
+    ? resolveJobCost('illustrate_all_pages', {
+        pageCount: active.page_count,
+        pagesWithArt,
+        skipExisting: true,
+      })
+    : 0
+  const upscaleAllCost = active
+    ? resolveJobCost('upscale_all_pages', { pagesWithArt })
+    : 0
 
   const estimate = estimateBookCredits({ pages: createForm.page_count, characters: 1 })
   const step = active?.progress_step || 'story'
@@ -337,7 +362,14 @@ export default function Studio({
 
   async function runJob(type, inputs = {}, { skipConfirm = false } = {}) {
     if (!active && type !== 'character_turbo') return
-    const cost = CREDIT_COSTS[type] ?? 0
+    const cost =
+      type === 'illustrate_all_pages' || type === 'upscale_all_pages'
+        ? resolveJobCost(type, {
+            pageCount: active?.page_count,
+            pagesWithArt: (active?.pages || []).filter((p) => p?.asset?.url).length,
+            skipExisting: Boolean(inputs.skipExisting),
+          })
+        : (CREDIT_COSTS[type] ?? 0)
     if (cost > 0 && !skipConfirm) {
       const isExport = type.startsWith('export_')
       const ok = isExport
@@ -544,6 +576,7 @@ export default function Studio({
         body: {
           text_content: pageText,
           text_secondary: pageTextSecondary,
+          speech_bubble: speechBubble,
           illustration_brief: sceneBrief,
         },
       })
@@ -991,7 +1024,99 @@ export default function Studio({
               previewUrl={heroPreview}
               pageLabel={`Page ${pageIndex + 1}`}
               pageText={canvasText}
+              speechBubble={speechBubble}
             />
+
+            <div className="sf-card">
+              <h3 style={{ marginTop: 0, fontFamily: 'var(--sf-font-display)' }}>
+                Full book (0 → KDP)
+              </h3>
+              <p className="sf-muted" style={{ marginTop: 0 }}>
+                After Character Turbo is pinned: draft every page line → illustrate all pages from
+                the anchor → upscale → Finish pack. Edit text before Amazon upload. Live art quality
+                needs Replicate/fal — mock mode proves the pipeline.
+              </p>
+              <div className="sf-btn-row">
+                <button
+                  type="button"
+                  className="sf-btn sf-btn-primary"
+                  disabled={busy || !active}
+                  onClick={() =>
+                    runJob('story_text', {
+                      speechBubbles: true,
+                      overwriteText: true,
+                      overwriteBriefs: true,
+                    })
+                  }
+                >
+                  Write manuscript (0)
+                </button>
+                <button
+                  type="button"
+                  className="sf-btn sf-btn-primary"
+                  disabled={busy || !active || !active?.pinned_anchor?.heroUrl}
+                  onClick={() => {
+                    if (
+                      !window.confirm(
+                        `Illustrate all ${active.page_count} pages for ${illustrateCost} credit(s)? Uses pinned Character Turbo + page briefs.`,
+                      )
+                    )
+                      return
+                    runJob(
+                      'illustrate_all_pages',
+                      { skipExisting: false },
+                      { skipConfirm: true },
+                    )
+                  }}
+                >
+                  Illustrate all pages ({illustrateCost})
+                </button>
+                <button
+                  type="button"
+                  className="sf-btn"
+                  disabled={busy || !active || !active?.pinned_anchor?.heroUrl}
+                  onClick={() => {
+                    if (
+                      !window.confirm(
+                        `Illustrate missing pages only for ${illustrateSkipCost} credit(s)?`,
+                      )
+                    )
+                      return
+                    runJob(
+                      'illustrate_all_pages',
+                      { skipExisting: true },
+                      { skipConfirm: true },
+                    )
+                  }}
+                >
+                  Fill missing art ({illustrateSkipCost})
+                </button>
+                <button
+                  type="button"
+                  className="sf-btn"
+                  disabled={busy || !active || pagesWithArt === 0}
+                  onClick={() => {
+                    if (
+                      !window.confirm(
+                        `Upscale ${pagesWithArt} page(s) for print (${upscaleAllCost} credits)?`,
+                      )
+                    )
+                      return
+                    runJob('upscale_all_pages', {}, { skipConfirm: true })
+                  }}
+                >
+                  Upscale all art ({upscaleAllCost})
+                </button>
+                <button
+                  type="button"
+                  className="sf-btn"
+                  disabled={busy || !active}
+                  onClick={() => setToolTab('canvas')}
+                >
+                  Finish pack → Canvas
+                </button>
+              </div>
+            </div>
 
             <div className="sf-card">
               <div className="sf-field">
@@ -1022,6 +1147,15 @@ export default function Studio({
                   />
                 </div>
               ) : null}
+              <div className="sf-field">
+                <label htmlFor="speechbubble">Speech bubble (optional)</label>
+                <input
+                  id="speechbubble"
+                  value={speechBubble}
+                  onChange={(e) => setSpeechBubble(e.target.value)}
+                  placeholder="“I can try!”"
+                />
+              </div>
               <div className="sf-btn-row">
                 <button type="button" className="sf-btn" disabled={busy} onClick={savePageText}>
                   Save page text
@@ -1051,8 +1185,8 @@ export default function Studio({
                 </button>
               </div>
               <p className="sf-muted" style={{ marginBottom: 0 }}>
-                Beats follow a meet → escalate → resolve arc (picture-book blueprint). Write final
-                bilingual lines yourself; briefs guide Editor Pro scenes.
+                Use <strong>Write manuscript</strong> for a full draft, then edit lines. Beats +
+                Illustrate all pages generate art from the pinned anchor.
               </p>
             </div>
           </>
@@ -1061,7 +1195,13 @@ export default function Studio({
 
       <aside className="sf-tools">
         <div className="sf-tabs" role="tablist">
-          {['character_turbo', 'editor_pro', 'scene_to_video', 'canvas'].map((id) => (
+          {[
+            'character_turbo',
+            'editor_pro',
+            'variation_editors',
+            'scene_to_video',
+            'canvas',
+          ].map((id) => (
             <button
               key={id}
               type="button"
@@ -1219,6 +1359,17 @@ export default function Studio({
           <div className="sf-card">
             <h3 style={{ marginTop: 0 }}>{NAMED_TOOLS.editor_pro.label}</h3>
             <p className="sf-muted">{NAMED_TOOLS.editor_pro.description}</p>
+            <p className="sf-muted" style={{ marginTop: 0 }}>
+              For pose / face / clothes / place only, use the{' '}
+              <button
+                type="button"
+                className="sf-linkish"
+                onClick={() => setToolTab('variation_editors')}
+              >
+                Editors
+              </button>{' '}
+              tab.
+            </p>
             <ModelSelect role="img2img" label="fal Editor img2img model" value={falModels.img2img} />
             <div className="sf-field">
               <label htmlFor="brief">Scene brief</label>
@@ -1265,6 +1416,20 @@ export default function Studio({
               </p>
             ) : null}
           </div>
+        ) : null}
+
+        {toolTab === 'variation_editors' ? (
+          <VariationEditors
+            busy={busy}
+            disabled={!active || !active?.pinned_anchor?.heroUrl}
+            pageIndex={pageIndex}
+            characterName={charName}
+            sceneBrief={sceneBrief}
+            setSceneBrief={setSceneBrief}
+            onRun={(type, inputs) => runJob(type, inputs)}
+            ModelSelect={ModelSelect}
+            falImg2img={falModels.img2img}
+          />
         ) : null}
 
         {toolTab === 'scene_to_video' ? (
@@ -1573,13 +1738,28 @@ export default function Studio({
                 <FileOutput size={16} aria-hidden /> Merch PNG (
                 {CREDIT_COSTS.export_merch_png})
               </button>
+              <button
+                type="button"
+                className="sf-btn sf-btn-primary"
+                disabled={busy || !active}
+                onClick={() =>
+                  runJob('export_flipbook', {
+                    includeCover: true,
+                  })
+                }
+                title={NAMED_TOOLS.export_flipbook.description}
+              >
+                <Layers size={16} aria-hidden /> Digital flipbook (
+                {CREDIT_COSTS.export_flipbook})
+              </button>
             </div>
             <ModelSelect role="upscale" label="fal upscale model" value={falModels.upscale} />
             <p className="sf-muted">
               Print pipeline: readiness score → 2.5× upscale → interior PDF + cover wrap → signed ZIP
               (preflight + publication-readiness.json + checklist + manuscript). Merch PNG = pinned
-              hero on Merch canvas. Always re-check in the Amazon KDP Previewer — no tool certifies
-              100% publication perfection.
+              hero on Merch canvas. Digital flipbook = HTML ZIP for online sharing (not KDP print).
+              Always re-check print files in the Amazon KDP Previewer — no tool certifies 100%
+              publication perfection.
             </p>
           </div>
         ) : null}

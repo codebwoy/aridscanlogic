@@ -89,6 +89,7 @@ export function createMemoryStore(options = {}) {
       page_index: i,
       text_content: '',
       text_secondary: '',
+      speech_bubble: '',
       illustration_brief: '',
       status: 'empty',
       layers: [],

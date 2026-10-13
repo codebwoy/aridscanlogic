@@ -64,22 +64,72 @@ export const NAMED_TOOLS = {
     id: 'editor_action',
     label: 'Action Editor',
     jobType: 'editor_action',
-    sourceIds: ['S52', 'S6'],
-    description: 'Change pose/action from a pinned anchor without rewriting character identity.',
+    sourceIds: ['S52', 'S62', 'S6'],
+    description:
+      'Change pose/action from a pinned anchor without rewriting character identity (face, hair, outfit stay locked).',
   },
   editor_expression: {
     id: 'editor_expression',
     label: 'Expression Editor',
     jobType: 'editor_expression',
-    sourceIds: ['S46', 'S52'],
+    sourceIds: ['S46', 'S52', 'S62'],
     description: 'Change facial emotion while locking hair, outfit, and face proportions.',
+  },
+  editor_outfit: {
+    id: 'editor_outfit',
+    label: 'Outfit Editor',
+    jobType: 'editor_outfit',
+    sourceIds: ['S52', 'S62'],
+    description:
+      'Change what the character is wearing (pajamas, school clothes, adventure gear) while keeping face and body identity.',
   },
   editor_background: {
     id: 'editor_background',
-    label: 'Background / outfit Editor',
+    label: 'Background Editor',
     jobType: 'editor_background',
-    sourceIds: ['S52', 'S6'],
-    description: 'Story-motivated outfit or place changes; prefer restarting from the anchor for new settings.',
+    sourceIds: ['S52', 'S62', 'S6'],
+    description:
+      'Place the same character into a new environment; prefer restarting from the pinned anchor for new settings.',
+  },
+  variation_editors: {
+    id: 'variation_editors',
+    label: 'Editors',
+    jobType: null,
+    surface: 'studio',
+    sourceIds: ['S52', 'S62'],
+    description:
+      'Action, Expression, Outfit, and Background editors — each changes one axis while identity stays locked to the pinned Character Turbo anchor.',
+  },
+  export_flipbook: {
+    id: 'export_flipbook',
+    label: 'Digital flipbook',
+    jobType: 'export_flipbook',
+    sourceIds: ['S63'],
+    description:
+      'Shareable HTML flipbook ZIP (page turns + story text) for online sharing — not a KDP print file.',
+  },
+  story_text: {
+    id: 'story_text',
+    label: 'Write manuscript',
+    jobType: 'story_text',
+    sourceIds: ['S64'],
+    description:
+      'Draft short picture-book lines for every page from emotional core + character (0 credits). Edit before KDP.',
+  },
+  illustrate_all_pages: {
+    id: 'illustrate_all_pages',
+    label: 'Illustrate all pages',
+    jobType: 'illustrate_all_pages',
+    sourceIds: ['S65'],
+    description:
+      'Generate every page scene from the pinned Character Turbo anchor and per-page briefs (batch).',
+  },
+  upscale_all_pages: {
+    id: 'upscale_all_pages',
+    label: 'Upscale all pages',
+    jobType: 'upscale_all_pages',
+    sourceIds: ['S65'],
+    description: 'Run 2.5× / KDP bleed upscale on every page that already has art.',
   },
   scene_to_video: {
     id: 'scene_to_video',

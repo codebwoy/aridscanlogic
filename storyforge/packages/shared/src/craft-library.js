@@ -291,39 +291,94 @@ export const KDP_EARNINGS_REALISM = {
   note: '⚠ Third-party blog income figures are not StoryForge guarantees. Cross-check Amazon KDP Help.',
 }
 
+/** Preset chips for Studio Action / Expression / Outfit / Background editors. */
+export const EDITOR_VARIATION_PRESETS = {
+  editor_action: [
+    { id: 'wave', label: 'Waving', brief: 'standing and waving hello cheerfully' },
+    { id: 'run', label: 'Running', brief: 'running joyfully with arms out' },
+    { id: 'jump', label: 'Jumping', brief: 'jumping in the air with excitement' },
+    { id: 'sit', label: 'Sitting', brief: 'sitting calmly on the ground' },
+    { id: 'reach', label: 'Reaching', brief: 'reaching up toward something wonderful' },
+    { id: 'hug', label: 'Hugging', brief: 'giving a warm friendly hug' },
+    { id: 'dance', label: 'Dancing', brief: 'dancing with happy energy' },
+    { id: 'sleep', label: 'Sleeping', brief: 'lying down sleeping peacefully' },
+  ],
+  editor_expression: [
+    { id: 'happy', label: 'Happy', brief: 'happy smiling face, bright eyes' },
+    { id: 'sad', label: 'Sad', brief: 'gentle sad expression, soft eyes' },
+    { id: 'surprised', label: 'Surprised', brief: 'surprised wide eyes and open mouth' },
+    { id: 'excited', label: 'Excited', brief: 'excited sparkling eyes and big smile' },
+    { id: 'worried', label: 'Worried', brief: 'worried brows, uncertain mouth' },
+    { id: 'brave', label: 'Brave', brief: 'brave determined expression' },
+    { id: 'curious', label: 'Curious', brief: 'curious tilted head, interested eyes' },
+    { id: 'sleepy', label: 'Sleepy', brief: 'sleepy half-closed eyes, soft smile' },
+  ],
+  editor_outfit: [
+    { id: 'pajamas', label: 'Pajamas', brief: 'wearing cozy bedtime pajamas' },
+    { id: 'school', label: 'School clothes', brief: 'wearing neat school clothes' },
+    { id: 'adventure', label: 'Adventure gear', brief: 'wearing adventure outdoor clothes and boots' },
+    { id: 'rain', label: 'Raincoat', brief: 'wearing a bright raincoat and boots' },
+    { id: 'party', label: 'Party outfit', brief: 'wearing a festive party outfit' },
+    { id: 'winter', label: 'Winter coat', brief: 'wearing a warm winter coat and scarf' },
+  ],
+  editor_background: [
+    { id: 'bedroom', label: 'Bedroom', brief: 'in a cozy child bedroom at bedtime' },
+    { id: 'park', label: 'Park', brief: 'in a sunny playground park' },
+    { id: 'forest', label: 'Forest', brief: 'in a magical friendly forest clearing' },
+    { id: 'schoolyard', label: 'Schoolyard', brief: 'in a cheerful schoolyard' },
+    { id: 'beach', label: 'Beach', brief: 'on a bright sandy beach by the sea' },
+    { id: 'city', label: 'City street', brief: 'on a friendly city sidewalk' },
+  ],
+}
+
 export const EDITOR_VARIATION_PLAYBOOKS = [
   {
     id: 'wf_action_editor',
     title: 'Action / pose variations',
     tool: 'editor_action',
-    sourceIds: ['S52'],
+    sourceIds: ['S52', 'S62'],
     bullets: [
       'Always start from the pinned anchor or an approved page of the same character.',
       'Change one verb phrase at a time (walking, sitting, jumping) while locking outfit and face.',
       'Prefer full-body visibility for picture-book clarity unless the beat needs a close-up.',
     ],
+    presets: EDITOR_VARIATION_PRESETS.editor_action,
   },
   {
     id: 'wf_expression_editor',
     title: 'Expression variations',
     tool: 'editor_expression',
-    sourceIds: ['S46', 'S52'],
+    sourceIds: ['S46', 'S52', 'S62'],
     bullets: [
       'Keep hairstyle and outfit fixed; change eyes / mouth / brows only.',
       'Map expressions to your emotional beat sheet before mass-generating.',
       'Primary emotions for big turns; micro-expressions for quiet pages.',
     ],
+    presets: EDITOR_VARIATION_PRESETS.editor_expression,
   },
   {
-    id: 'wf_outfit_background',
-    title: 'Outfit & background changes',
-    tool: 'editor_background',
-    sourceIds: ['S52'],
+    id: 'wf_outfit_editor',
+    title: 'Outfit changes',
+    tool: 'editor_outfit',
+    sourceIds: ['S52', 'S62'],
     bullets: [
       'Outfit changes should be story-motivated (pajamas → school clothes) and noted in DNA “allowed to change”.',
+      'Keep face, hair, and body proportions locked — only clothing changes.',
+      'Restart from the pinned anchor when a new outfit must stay consistent across many pages.',
+    ],
+    presets: EDITOR_VARIATION_PRESETS.editor_outfit,
+  },
+  {
+    id: 'wf_background_editor',
+    title: 'Background / place changes',
+    tool: 'editor_background',
+    sourceIds: ['S52', 'S62'],
+    bullets: [
       'New place = restart from the anchor when possible so old rooms do not ghost in.',
+      'Keep character identity locked; describe the environment only.',
       'Backgrounds first in Canvas, then character layers, then text.',
     ],
+    presets: EDITOR_VARIATION_PRESETS.editor_background,
   },
 ]
 
@@ -391,6 +446,7 @@ export function craftLibraryPayload() {
     coloringWorkflow: COLORING_PAGE_WORKFLOW,
     kdpEarningsRealism: KDP_EARNINGS_REALISM,
     editorVariationPlaybooks: EDITOR_VARIATION_PLAYBOOKS,
+    editorVariationPresets: EDITOR_VARIATION_PRESETS,
     externalLearningIndex: EXTERNAL_LEARNING_INDEX,
   }
 }

@@ -29,12 +29,14 @@ export function scenePrompt(input) {
     : ''
   const editHint =
     input.editor === 'editor_expression'
-      ? 'same outfit and face proportions, change facial expression only'
+      ? 'same outfit, hair, and face proportions — change facial expression only'
       : input.editor === 'editor_action'
-        ? 'same character identity, change pose/action'
-        : input.editor === 'editor_background'
-          ? 'same character identity, change outfit or setting as described'
-          : 'same character identity as the reference hero'
+        ? 'same face, hair, and outfit — change pose and action only'
+        : input.editor === 'editor_outfit'
+          ? 'same face, hair, body, and proportions — change clothing / outfit only; keep plain or matching background simple'
+          : input.editor === 'editor_background'
+            ? 'same character face, hair, outfit, and pose identity — change environment / background setting only'
+            : 'same character identity as the reference hero'
   return [
     `Children's book scene: ${name}${second} ${brief}.`,
     editHint,

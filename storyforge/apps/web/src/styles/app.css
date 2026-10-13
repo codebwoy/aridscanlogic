@@ -598,6 +598,57 @@ textarea.sf-input {
   border-color: hsl(var(--sf-primary));
 }
 
+.sf-chip-active {
+  border-color: hsl(var(--sf-primary));
+  background: hsl(var(--sf-primary) / 0.14);
+  font-weight: 600;
+}
+
+.sf-tabs-compact {
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.sf-tabs-compact button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  padding: 0.4rem 0.55rem;
+}
+
+.sf-variation-head {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  margin-bottom: 0.65rem;
+}
+
+.sf-variation-tips {
+  margin: 0 0 0.85rem;
+  padding-left: 1.15rem;
+  font-size: 0.82rem;
+  color: hsl(var(--sf-muted));
+  line-height: 1.4;
+}
+
+.sf-variation-tips li {
+  margin-bottom: 0.25rem;
+}
+
+.sf-linkish {
+  display: inline;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  color: hsl(var(--sf-primary));
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  min-height: 44px;
+}
+
 .sf-check {
   display: flex;
   gap: 0.5rem;

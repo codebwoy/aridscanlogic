@@ -57,7 +57,10 @@ Optional: `npm run dev:worker` with Redis. Real AI: set `STORYFORGE_IMAGE_PROVID
 ## What ships (Phase 1 + Launchpad Part A)
 
 - Desktop gate (client + API) + 20 trial credits (append-only ledger)
-- Character Turbo + pin anchor; Editor Pro from anchor; Story Scene Pro stub; Photo to Cartoon consent
+- Character Turbo + pin anchor; Editor Pro from anchor; **Editors** tab (Action / Expression / Outfit / Background presets); Story Scene Pro; Photo to Cartoon consent
+- **Full book panel**: Write manuscript (0) → Illustrate all pages → Upscale all → Finish pack / flipbook
+- **Digital flipbook** export (`export_flipbook`) — HTML ZIP for online sharing (separate from KDP print pack)
+- Speech bubbles on Canvas; cover wrap PDF with title band typography
 - **Bilingual mode** — selectable primary + secondary language pairs (ES/FR/IT/DE/EN + Twi/Igbo/Swahili/Arabic/…), per-page dual text, stacked / side-by-side / alternating layouts, L2 verified flag
 - **IP Character Builder** — merch-ready DNA gate; theme-aware names auto-seed from book emotional core (+ culture/trait), editable core, generate/shuffle, name coach; one colour/trait/object + Merch checks must lock before Character Turbo
 - **Series DNA reuse**, escalating picture-book **beat seeding**, and **Merch PNG** export from pinned hero (manual Amazon Merch upload)

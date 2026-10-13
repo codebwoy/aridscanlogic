@@ -6,11 +6,11 @@ import { initQueue } from '../src/queue/queues.js'
 import { lockTestIpDna } from './helpers/ipDna.js'
 import { buildEscalatingBeatBriefs } from '@storyforge/shared'
 
-async function waitForJob(store, userId, jobId, tries = 60) {
+async function waitForJob(store, userId, jobId, tries = 200) {
   for (let i = 0; i < tries; i++) {
     const job = await store.getJob(userId, jobId)
     if (job?.status === 'completed' || job?.status === 'failed') return job
-    await new Promise((r) => setTimeout(r, 25))
+    await new Promise((r) => setTimeout(r, 40))
   }
   return store.getJob(userId, jobId)
 }

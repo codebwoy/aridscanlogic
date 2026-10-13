@@ -18,6 +18,7 @@ export const CREDIT_COSTS = {
   photo_to_cartoon: 6,
   editor_action: 1,
   editor_expression: 1,
+  editor_outfit: 1,
   editor_background: 1,
   editor_erase: 1,
   editor_reframe: 1,
@@ -25,7 +26,15 @@ export const CREDIT_COSTS = {
   scene_to_video: 12,
   upscale_print: 2,
   consistency_rescore: 0,
+  /** Local manuscript draft for all pages (edit before KDP) */
   story_text: 0,
+  /**
+   * Batch illustrate every page from pinned anchor + briefs.
+   * Charged dynamically: pages × editor_pro (see resolveJobCost).
+   */
+  illustrate_all_pages: 0,
+  /** Batch 2.5× print upscale for pages with art — dynamic × upscale_print */
+  upscale_all_pages: 0,
   /** Theme-aware IP name ideas (local generator — 0 credits) */
   character_name_ideas: 0,
   preflight: 0,
@@ -36,6 +45,8 @@ export const CREDIT_COSTS = {
   export_source_zip: 1,
   /** Transparent / Merch-sized PNG from pinned Character Turbo anchor */
   export_merch_png: 1,
+  /** Self-contained HTML digital flipbook ZIP (share online — not print KDP) */
+  export_flipbook: 1,
   /** Launchpad content surfaces — always free */
   launchpad_guide: 0,
   launchpad_course: 0,
@@ -53,6 +64,19 @@ export const FREE_ACTIONS = new Set(
 export function costFor(action) {
   if (!(action in CREDIT_COSTS)) return null
   return CREDIT_COSTS[action]
+}
+
+/** Dynamic credit cost for batch jobs (illustrate / upscale all pages). */
+export function resolveJobCost(type, { pageCount = 32, pagesWithArt = 0, skipExisting = false } = {}) {
+  if (type === 'illustrate_all_pages') {
+    const n = Math.max(1, Number(pageCount) || 32)
+    const skip = skipExisting ? Math.min(n, Math.max(0, Number(pagesWithArt) || 0)) : 0
+    return Math.max(0, n - skip) * CREDIT_COSTS.editor_pro
+  }
+  if (type === 'upscale_all_pages') {
+    return Math.max(0, Number(pagesWithArt) || 0) * CREDIT_COSTS.upscale_print
+  }
+  return costFor(type)
 }
 
 /** Rough project estimate for a picture book. */

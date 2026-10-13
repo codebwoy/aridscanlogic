@@ -57,6 +57,10 @@ Status after print-pipeline + fal catalogue completion.
 | S50 | Coloring from story art | done | `recipe_coloring_from_story` |
 | S51 | KDP earnings realism ⚠ | done | Craft earnings section |
 | S52 | Action / expression editors | done | `EDITOR_VARIATION_PLAYBOOKS` |
+| S62 | Dedicated Action / Expression / Outfit / Background UI | done | Studio **Editors** tab + `EDITOR_VARIATION_PRESETS` + `editor_outfit` job |
+| S63 | Digital HTML flipbook export | done | `export_flipbook` → ZIP (`index.html` + assets); Canvas button |
+| S64 | Manuscript generator | done | `story_text` + `manuscript.js` — fills all page lines + speech bubbles |
+| S65 | Batch illustrate + upscale all | done | `illustrate_all_pages` / `upscale_all_pages` + Studio Full book panel |
 | S53 | Scene → video (fal image-to-video) | done | `scene_to_video` job + Studio tab; requires page still |
 | S55 | Print pack + signed exports | done | Print-ready interior/cover PDFs, HMAC download URLs, `export_source_zip` |
 | S56 | Full fal model catalogue | done | Shared `fal-models.js` + Studio pickers (Kontext/Kling Pro/Veo/Seedance/…) |

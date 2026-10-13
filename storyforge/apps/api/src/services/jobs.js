@@ -1,5 +1,6 @@
 import {
   costFor,
+  resolveJobCost,
   preflightImageResolution,
   PUBLISHING_SPECS,
   validatePageCount,
@@ -13,6 +14,11 @@ import {
   buildTurboDescriptionFromDna,
   assessPublicationReadiness,
   normalizePublicationSignoff,
+  buildManuscriptPages,
+  estimateManuscriptWords,
+  buildEscalatingBeatBriefs,
+  defaultRefrainForHook,
+  MANUSCRIPT_META,
 } from '@storyforge/shared'
 import { sha256Hex } from '../security/crypto.js'
 import { config } from '../config.js'
@@ -23,6 +29,7 @@ import { buildInteriorPdf, buildCoverWrapPdf } from './pdfExport.js'
 import { attachSignedDownload } from './exportStore.js'
 import { buildZip, dataUrlToBuffer } from './zipPack.js'
 import { buildMerchPngFromHero } from './merchExport.js'
+import { buildFlipbookZip } from './flipbookExport.js'
 
 const provider = createImageProvider(config.imageProvider)
 
@@ -40,6 +47,7 @@ const SCENE_TYPES = new Set([
   'story_scene_pro',
   'editor_action',
   'editor_expression',
+  'editor_outfit',
   'editor_background',
   'editor_erase',
   'editor_reframe',
@@ -76,7 +84,16 @@ function fail(status, code, message) {
 }
 
 export async function submitJob(store, { userId, type, projectId, inputs }) {
-  const cost = costFor(type)
+  if (costFor(type) === null) throw fail(400, 'unknown_job', `Unknown job type: ${type}`)
+
+  const project = projectId ? await store.getProject(userId, projectId) : null
+  const safeInputs = { ...(inputs || {}) }
+  const pagesWithArt = (project?.pages || []).filter((p) => p?.asset?.url).length
+  const cost = resolveJobCost(type, {
+    pageCount: project?.page_count || safeInputs.pageCount || 32,
+    pagesWithArt,
+    skipExisting: Boolean(safeInputs.skipExisting),
+  })
   if (cost === null) throw fail(400, 'unknown_job', `Unknown job type: ${type}`)
 
   const bal = await store.getBalance(userId)
@@ -86,9 +103,6 @@ export async function submitJob(store, { userId, type, projectId, inputs }) {
   if (cost > 0 && spent + cost > config.dailyCreditCap) {
     throw fail(429, 'daily_cap', 'Daily credit cap reached')
   }
-
-  const project = projectId ? await store.getProject(userId, projectId) : null
-  const safeInputs = { ...(inputs || {}) }
   const falPrefs = project?.meta?.falModels || {}
 
   // Reject raw photo bytes on any job type
@@ -152,17 +166,31 @@ export async function submitJob(store, { userId, type, projectId, inputs }) {
     safeInputs.consent = true
   }
 
-  if (SCENE_TYPES.has(type) || VIDEO_TYPES.has(type)) {
+  if (
+    SCENE_TYPES.has(type) ||
+    VIDEO_TYPES.has(type) ||
+    type === 'illustrate_all_pages' ||
+    type === 'upscale_all_pages'
+  ) {
     if (!projectId || !project) {
       throw fail(400, 'anchor_required', 'projectId required — scenes must start from a pinned anchor')
     }
-    if (!project.pinned_anchor_asset_id || !project.pinned_anchor) {
+    if (
+      (SCENE_TYPES.has(type) || VIDEO_TYPES.has(type) || type === 'illustrate_all_pages') &&
+      (!project.pinned_anchor_asset_id || !project.pinned_anchor)
+    ) {
       throw fail(400, 'anchor_required', 'Pin a Character Turbo anchor before Editor Pro scenes')
     }
-    safeInputs.fromAnchor = true
-    safeInputs.pinnedAnchorAssetId = project.pinned_anchor_asset_id
-    safeInputs.anchorEmbedding = project.pinned_anchor?.embedding
-    safeInputs.characterName = project.pinned_anchor?.name || safeInputs.characterName
+    if (SCENE_TYPES.has(type) || VIDEO_TYPES.has(type) || type === 'illustrate_all_pages') {
+      safeInputs.fromAnchor = true
+      safeInputs.pinnedAnchorAssetId = project.pinned_anchor_asset_id
+      safeInputs.anchorEmbedding = project.pinned_anchor?.embedding
+      safeInputs.characterName = project.pinned_anchor?.name || safeInputs.characterName
+    }
+  }
+
+  if (type === 'story_text' && !projectId) {
+    throw fail(400, 'project_required', 'projectId required for manuscript generation')
   }
 
   if (type === 'scene_to_video') {
@@ -322,6 +350,162 @@ async function runGenerationJob(store, data) {
           status: 'upscaled',
         })
       }
+    } else if (type === 'story_text') {
+      const refreshed = projectId ? await store.getProject(userId, projectId) : project
+      if (!refreshed) throw fail(400, 'project_required', 'Project required')
+      const name =
+        refreshed.ip_character?.name ||
+        refreshed.pinned_anchor?.name ||
+        inputs?.characterName ||
+        'Hero'
+      const core = refreshed.emotional_core || inputs?.emotionalCore || 'belonging'
+      const object = refreshed.ip_character?.signatureObject || 'favorite toy'
+      const refrain =
+        refreshed.refrain || inputs?.refrain || defaultRefrainForHook(core)
+      const pages = buildManuscriptPages({
+        pageCount: refreshed.page_count || 32,
+        characterName: name,
+        emotionalCore: core,
+        signatureObject: object,
+        refrain,
+        language: refreshed.language || 'en',
+        secondaryLanguage: refreshed.secondary_language || null,
+        speechBubbles: inputs?.speechBubbles !== false,
+      })
+      // Also seed illustration briefs when empty (or when overwriteBriefs)
+      const overwriteBriefs = Boolean(inputs?.overwriteBriefs)
+      const overwriteText = inputs?.overwriteText !== false
+      for (const row of pages) {
+        const existing = refreshed.pages?.[row.page_index] || {}
+        const patch = {
+          illustration_brief:
+            overwriteBriefs || !existing.illustration_brief
+              ? row.illustration_brief
+              : existing.illustration_brief,
+          speech_bubble: row.speech_bubble || existing.speech_bubble || '',
+        }
+        if (overwriteText || !String(existing.text_content || '').trim()) {
+          patch.text_content = row.text_content
+          patch.text_secondary = row.text_secondary
+        }
+        await store.setPage(userId, projectId, row.page_index, patch)
+      }
+      outputs = {
+        type,
+        pagesWritten: pages.length,
+        wordCount: estimateManuscriptWords(pages),
+        refrain,
+        note: MANUSCRIPT_META.note,
+        sample: pages.slice(0, 3).map((p) => ({
+          page: p.page_index + 1,
+          text: p.text_content,
+          brief: p.illustration_brief,
+        })),
+      }
+      await store.updateProject(userId, projectId, { progress_step: 'story' })
+    } else if (type === 'illustrate_all_pages') {
+      const refreshed = projectId ? await store.getProject(userId, projectId) : project
+      if (!refreshed?.pinned_anchor) {
+        throw fail(400, 'anchor_required', 'Pin a Character Turbo anchor before illustrating')
+      }
+      const print = requiredBleedPixels(refreshed.trim_id || 'sq_85')
+      const skipExisting = Boolean(inputs?.skipExisting)
+      const name = refreshed.pinned_anchor.name || refreshed.ip_character?.name || 'Hero'
+      let briefs = (refreshed.pages || []).map((p) => p.illustration_brief || '')
+      if (!briefs.some(Boolean)) {
+        const seeded = buildEscalatingBeatBriefs({
+          pageCount: refreshed.page_count,
+          characterName: name,
+          emotionalCore: refreshed.emotional_core || 'belonging',
+          signatureObject: refreshed.ip_character?.signatureObject || 'favorite toy',
+          refrain: refreshed.refrain || '',
+        })
+        for (const b of seeded) {
+          await store.setPage(userId, projectId, b.page_index, {
+            illustration_brief: b.illustration_brief,
+          })
+        }
+        briefs = seeded.map((b) => b.illustration_brief)
+      }
+      const results = []
+      const n = refreshed.page_count || refreshed.pages?.length || 32
+      for (let i = 0; i < n; i++) {
+        const page = refreshed.pages?.[i] || {}
+        if (skipExisting && page?.asset?.url) {
+          results.push({ pageIndex: i, skipped: true })
+          continue
+        }
+        const brief = briefs[i] || page.illustration_brief || `${name} on page ${i + 1}`
+        const scene = await provider.generateScene({
+          ...inputs,
+          brief,
+          characterName: name,
+          pinnedAnchorAssetId: refreshed.pinned_anchor_asset_id,
+          anchorEmbedding: refreshed.pinned_anchor.embedding,
+          anchorImageUrl: refreshed.pinned_anchor.heroUrl,
+          heroUrl: refreshed.pinned_anchor.heroUrl,
+          quality: 'final',
+          targetWidth: print.widthPx,
+          targetHeight: print.heightPx,
+          editor: 'editor_pro',
+          pageIndex: i,
+        })
+        await store.setPage(userId, projectId, i, {
+          asset: scene.assets?.[0] || null,
+          consistencyBadge: scene.consistencyBadge,
+          illustration_brief: brief,
+          status: 'generated',
+          chainSteps: scene.chainSteps,
+        })
+        results.push({
+          pageIndex: i,
+          consistencyBadge: scene.consistencyBadge,
+          assetId: scene.assets?.[0]?.assetId || null,
+        })
+      }
+      outputs = {
+        type,
+        generated: results.filter((r) => !r.skipped).length,
+        skipped: results.filter((r) => r.skipped).length,
+        results,
+        note: 'Batch illustration from pinned Character Turbo anchor — review consistency badges',
+      }
+      await store.updateProject(userId, projectId, { progress_step: 'scenes' })
+    } else if (type === 'upscale_all_pages') {
+      const refreshed = projectId ? await store.getProject(userId, projectId) : project
+      if (!refreshed) throw fail(400, 'project_required', 'Project required')
+      const print = requiredBleedPixels(refreshed.trim_id || 'sq_85')
+      const results = []
+      const n = refreshed.page_count || refreshed.pages?.length || 0
+      for (let i = 0; i < n; i++) {
+        const page = refreshed.pages?.[i]
+        const imageUrl = page?.asset?.url || page?.asset?.remoteUrl
+        if (!imageUrl) {
+          results.push({ pageIndex: i, skipped: true, reason: 'no_art' })
+          continue
+        }
+        const up = await provider.upscale({
+          ...inputs,
+          imageUrl,
+          scaleFactor: inputs?.scaleFactor || PRINT_UPSCALE_FACTOR,
+          targetWidth: print.widthPx,
+          targetHeight: print.heightPx,
+        })
+        if (up.assets?.[0]) {
+          await store.setPage(userId, projectId, i, {
+            asset: up.assets[0],
+            status: 'upscaled',
+          })
+        }
+        results.push({ pageIndex: i, skipped: false, assetId: up.assets?.[0]?.assetId })
+      }
+      outputs = {
+        type,
+        upscaled: results.filter((r) => !r.skipped).length,
+        skipped: results.filter((r) => r.skipped).length,
+        results,
+      }
+      await store.updateProject(userId, projectId, { progress_step: 'layout' })
     } else if (type === 'scene_to_video') {
       if (typeof provider.generateVideo !== 'function') {
         throw fail(503, 'video_unsupported', 'Current image provider does not support scene_to_video')
@@ -401,15 +585,19 @@ async function runExportJob(store, data) {
     const project = projectId ? await store.getProject(userId, projectId) : null
     const trimId = inputs?.trim_id || project?.trim_id || 'sq_85'
     const pageCount = inputs?.page_count || project?.page_count || 32
-    const pageCheck = validatePageCount(pageCount)
-    if (!pageCheck.ok) {
-      await store.updateJob(jobId, {
-        status: 'failed',
-        error: pageCheck.errors.join('; '),
-        outputs: { preflight: pageCheck },
-      })
-      if (cost > 0) await chargeOrRefund(store, { userId, cost, reason: type, jobId, refund: true })
-      return
+    // Digital / merch exports are not KDP page-count constrained
+    const skipKdpPageCount = type === 'export_flipbook' || type === 'export_merch_png'
+    if (!skipKdpPageCount) {
+      const pageCheck = validatePageCount(pageCount)
+      if (!pageCheck.ok) {
+        await store.updateJob(jobId, {
+          status: 'failed',
+          error: pageCheck.errors.join('; '),
+          outputs: { preflight: pageCheck },
+        })
+        if (cost > 0) await chargeOrRefund(store, { userId, cost, reason: type, jobId, refund: true })
+        return
+      }
     }
 
     const req = requiredBleedPixels(trimId)
@@ -573,6 +761,30 @@ async function runExportJob(store, data) {
           specsLastVerified: PUBLISHING_SPECS.lastVerified,
         },
       })
+      return
+    }
+
+    if (type === 'export_flipbook') {
+      const flip = await buildFlipbookZip({
+        project,
+        userId,
+        includeCover: inputs?.includeCover !== false,
+      })
+      await store.updateJob(jobId, {
+        status: 'completed',
+        outputs: {
+          type,
+          zip: flip.zip,
+          flipbook: {
+            pageCount: flip.pageCount,
+            hasCover: flip.hasCover,
+            note: flip.note,
+          },
+          checklist: flip.checklist,
+          independenceDisclaimer: PUBLISHING_SPECS.disclaimers.notAffiliated,
+        },
+      })
+      if (projectId) await store.updateProject(userId, projectId, { progress_step: 'export' })
       return
     }
 

@@ -118,4 +118,28 @@ export const TRACEABILITY = [
     status: 'done',
     note: 'Theme-aware name generator (cultural + book-core + hybrid; toddler/Merch rules)',
   },
+  {
+    id: 'S62',
+    area: 'Editors',
+    status: 'done',
+    note: 'Dedicated Action / Expression / Outfit / Background Studio editors with preset chips',
+  },
+  {
+    id: 'S63',
+    area: 'Export',
+    status: 'done',
+    note: 'Digital HTML flipbook ZIP for online sharing (separate from KDP print pack)',
+  },
+  {
+    id: 'S64',
+    area: 'Manuscript',
+    status: 'done',
+    note: 'Local manuscript generator (story_text) fills all page lines from emotional arc',
+  },
+  {
+    id: 'S65',
+    area: 'Full book',
+    status: 'done',
+    note: 'Batch illustrate_all_pages + upscale_all_pages from pinned anchor (0→KDP middle funnel)',
+  },
 ]

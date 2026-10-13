@@ -267,22 +267,43 @@ export async function buildCoverWrapPdf({
   }
 
   const frontTitle = String(title).slice(0, 80)
+  // Title band — readable kids-book cover type (PDF overlay; art stays title-safe)
+  const titleBandH = Math.min(72, frontLive.h * 0.18)
+  page.drawRectangle({
+    x: frontLive.x + 10,
+    y: frontLive.y + frontLive.h - titleBandH - 10,
+    width: frontLive.w - 20,
+    height: titleBandH,
+    color: rgb(1, 1, 1),
+    opacity: 0.88,
+    borderColor: ink(0.12, 0.18, 0.16),
+    borderWidth: 0.8,
+  })
+  const titleSize = frontTitle.length > 36 ? 14 : frontTitle.length > 22 ? 18 : 22
   page.drawText(frontTitle, {
-    x: frontLive.x + 18,
-    y: frontLive.y + frontLive.h - 36,
-    size: 16,
+    x: frontLive.x + 22,
+    y: frontLive.y + frontLive.h - titleBandH + titleBandH * 0.38,
+    size: titleSize,
     font: bold,
     color: ink(0.08, 0.12, 0.11),
-    maxWidth: frontLive.w - 36,
+    maxWidth: frontLive.w - 44,
   })
   if (author) {
+    page.drawRectangle({
+      x: frontLive.x + 10,
+      y: frontLive.y + 14,
+      width: frontLive.w - 20,
+      height: 28,
+      color: rgb(1, 1, 1),
+      opacity: 0.82,
+    })
     page.drawText(String(author).slice(0, 60), {
-      x: frontLive.x + 18,
-      y: frontLive.y + 28,
-      size: 11,
+      x: frontLive.x + 22,
+      y: frontLive.y + 22,
+      size: 12,
       font,
       color: mute,
-      maxWidth: frontLive.w - 36,
+      maxWidth: frontLive.w - 44,
     })
   }
 

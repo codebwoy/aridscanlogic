@@ -9,7 +9,13 @@ export {
   preflightImageResolution,
   validatePageCount,
 } from './print-math.js'
-export { CREDIT_COSTS, FREE_ACTIONS, costFor, estimateBookCredits } from './credits.js'
+export {
+  CREDIT_COSTS,
+  FREE_ACTIONS,
+  costFor,
+  resolveJobCost,
+  estimateBookCredits,
+} from './credits.js'
 export { DESKTOP_MIN_WIDTH, DESKTOP_SURFACE, isDesktopViewport } from './desktop.js'
 export {
   NAMED_TOOLS,
@@ -53,6 +59,7 @@ export {
   COLORING_PAGE_WORKFLOW,
   KDP_EARNINGS_REALISM,
   EDITOR_VARIATION_PLAYBOOKS,
+  EDITOR_VARIATION_PRESETS,
   EXTERNAL_LEARNING_INDEX,
   craftLibraryPayload,
 } from './craft-library.js'
@@ -108,6 +115,12 @@ export {
   defaultRefrainForHook,
   pictureBookPayload,
 } from './picture-book.js'
+export {
+  MANUSCRIPT_META,
+  buildManuscriptPages,
+  estimateManuscriptWords,
+  manuscriptPayload,
+} from './manuscript.js'
 export {
   PUBLICATION_READINESS_META,
   CONTINUITY_SIGNOFF_ITEMS,

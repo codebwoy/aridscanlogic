@@ -31,19 +31,25 @@ test('craft prompts and recipes are wired', () => {
   assert.ok(WORKFLOW_PLAYBOOKS.some((w) => w.id === 'wf_action_editor'))
 })
 
-test('traceability includes craft S39–S52 and readiness S60–S61', () => {
+test('traceability includes craft S39–S52 and readiness S60–S63', () => {
   for (let n = 39; n <= 52; n++) {
     assert.ok(
       TRACEABILITY.some((t) => t.id === `S${n}` && t.status === 'done'),
       `missing S${n}`,
     )
   }
-  assert.ok(
-    TRACEABILITY.some((t) => t.id === 'S60' && t.status === 'done'),
-    'missing S60 publication readiness',
-  )
-  assert.ok(
-    TRACEABILITY.some((t) => t.id === 'S61' && t.status === 'done'),
-    'missing S61 theme-aware names',
-  )
+  for (const id of ['S60', 'S61', 'S62', 'S63']) {
+    assert.ok(
+      TRACEABILITY.some((t) => t.id === id && t.status === 'done'),
+      `missing ${id}`,
+    )
+  }
+})
+
+test('variation playbooks include outfit + presets', () => {
+  const p = craftLibraryPayload()
+  assert.ok(p.editorVariationPlaybooks.some((w) => w.tool === 'editor_outfit'))
+  assert.ok(p.editorVariationPresets.editor_action.length >= 4)
+  assert.ok(p.editorVariationPresets.editor_expression.length >= 4)
+  assert.ok(WORKFLOW_PLAYBOOKS.some((w) => w.id === 'wf_outfit_editor'))
 })

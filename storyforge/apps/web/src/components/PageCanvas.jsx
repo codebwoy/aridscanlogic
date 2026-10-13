@@ -1,4 +1,4 @@
-import { Stage, Layer, Rect, Text, Image as KonvaImage } from 'react-konva'
+import { Stage, Layer, Rect, Text, Image as KonvaImage, Ellipse, Path } from 'react-konva'
 import { useEffect, useState } from 'react'
 
 function hslToken(name, alpha) {
@@ -23,7 +23,7 @@ function useHtmlImage(url) {
   return img
 }
 
-/** Konva workspace — shows preview image + text-safe zone. */
+/** Konva workspace — preview image, text-safe zone, optional speech bubble. */
 export default function PageCanvas({
   width = 640,
   height = 640,
@@ -32,12 +32,20 @@ export default function PageCanvas({
   previewUrl = null,
   pageLabel = '',
   pageText = '',
+  speechBubble = '',
 }) {
   const bg = hslToken('--sf-card')
   const primary = hslToken('--sf-primary')
   const muted = hslToken('--sf-muted')
   const mutedDim = hslToken('--sf-muted', 0.75)
+  const bubbleFill = hslToken('--sf-card')
+  const bubbleStroke = hslToken('--sf-fg')
   const img = useHtmlImage(previewUrl)
+  const bubble = String(speechBubble || '').trim()
+  const bubbleW = Math.min(280, width * 0.42)
+  const bubbleH = Math.min(120, 36 + Math.ceil(bubble.length / 28) * 18)
+  const bubbleX = width - safeInset - bubbleW - 8
+  const bubbleY = safeInset + 28
 
   return (
     <div className="sf-konva-frame" role="img" aria-label={title}>
@@ -74,6 +82,37 @@ export default function PageCanvas({
             fill={mutedDim}
             fontSize={12}
           />
+          {bubble ? (
+            <>
+              <Ellipse
+                x={bubbleX + bubbleW / 2}
+                y={bubbleY + bubbleH / 2}
+                radiusX={bubbleW / 2}
+                radiusY={bubbleH / 2}
+                fill={bubbleFill}
+                stroke={bubbleStroke}
+                strokeWidth={2}
+                opacity={0.94}
+              />
+              <Path
+                data={`M ${bubbleX + bubbleW * 0.35} ${bubbleY + bubbleH - 4} L ${bubbleX + bubbleW * 0.22} ${bubbleY + bubbleH + 28} L ${bubbleX + bubbleW * 0.55} ${bubbleY + bubbleH - 2} Z`}
+                fill={bubbleFill}
+                stroke={bubbleStroke}
+                strokeWidth={2}
+              />
+              <Text
+                text={bubble.slice(0, 120)}
+                x={bubbleX + 18}
+                y={bubbleY + 16}
+                width={bubbleW - 36}
+                align="center"
+                fill={bubbleStroke}
+                fontSize={13}
+                fontStyle="bold"
+                lineHeight={1.2}
+              />
+            </>
+          ) : null}
           {pageText ? (
             <Text
               text={pageText.slice(0, 420)}
