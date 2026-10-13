@@ -30,6 +30,8 @@ export const CREDIT_COSTS = {
   story_text: 0,
   /** 5-part KDP listing description from project facts (0 credits) */
   listing_description: 0,
+  /** Subtitle + ≤7 keywords + age + category ideas (0 credits) */
+  listing_metadata: 0,
   /**
    * Title-safe front cover art from pinned Character Turbo (Replicate/fal).
    * Typography + wrap PDF still via export_cover_pdf.

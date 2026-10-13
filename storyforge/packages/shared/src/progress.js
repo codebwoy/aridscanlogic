@@ -161,4 +161,11 @@ export const TRACEABILITY = [
     note:
       'Professional cover: generate_cover_art (title-safe, pinned anchor) + layout presets + KDP wrap checklist (G201953020) + export_cover_pdf',
   },
+  {
+    id: 'S69',
+    area: 'Listing',
+    status: 'done',
+    note:
+      'KDP listing metadata builder: subtitle, age range, ≤7 keywords, category guidance + ZIP export',
+  },
 ]

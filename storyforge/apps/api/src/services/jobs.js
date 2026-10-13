@@ -997,6 +997,7 @@ async function runExportJob(store, data) {
         '9. Own ISBN (MVB) preferred for control; KDP free ISBN is allowed if you acknowledge imprint limits',
         '10. Keep rights contracts offline forever — StoryForge attach is a record only',
         '11. Paste listing-description.txt (or HTML) into the Amazon KDP book description — edit first; never invent reviews',
+        '12. Paste listing-metadata.txt keywords (≤7) + subtitle into KDP; verify category ideas in the Amazon picker',
         '',
         PUBLISHING_SPECS.disclaimers.notAffiliated,
       ].join('\n')
@@ -1006,6 +1007,10 @@ async function runExportJob(store, data) {
         (listing && String(listing.plain || '').trim()) ||
         '(No listing description saved yet — use Studio → Canvas → KDP description builder.)'
       const listingHtml = listing && String(listing.html || '').trim()
+      const listingMeta = project?.listing_metadata
+      const listingMetaPlain =
+        (listingMeta && String(listingMeta.plain || '').trim()) ||
+        '(No listing metadata saved yet — use Studio → Canvas → KDP metadata builder.)'
 
       const zipBytes = buildZip([
         {
@@ -1069,6 +1074,16 @@ async function runExportJob(store, data) {
         ...(listingHtml
           ? [{ name: 'listing-description.html', data: listingHtml, compress: true }]
           : []),
+        { name: 'listing-metadata.txt', data: listingMetaPlain, compress: true },
+        ...(listingMeta
+          ? [
+              {
+                name: 'listing-metadata.json',
+                data: JSON.stringify(listingMeta, null, 2),
+                compress: true,
+              },
+            ]
+          : []),
         {
           name: 'manifest.json',
           data: JSON.stringify(
@@ -1087,12 +1102,19 @@ async function runExportJob(store, data) {
                 'manuscript.txt',
                 'listing-description.txt',
                 ...(listingHtml ? ['listing-description.html'] : []),
+                'listing-metadata.txt',
+                ...(listingMeta ? ['listing-metadata.json'] : []),
               ],
               printReady: true,
               readinessScore: readiness.score,
               readinessLevel: readiness.level,
               complianceOk: Boolean(complianceSummary.ok),
               hasListingDescription: Boolean(listing && String(listing.plain || '').trim()),
+              hasListingMetadata: Boolean(
+                listingMeta &&
+                  (String(listingMeta.subtitle || '').trim() ||
+                    (listingMeta.keywords || []).some((k) => String(k || '').trim())),
+              ),
               independenceDisclaimer: PUBLISHING_SPECS.disclaimers.notAffiliated,
             },
             null,

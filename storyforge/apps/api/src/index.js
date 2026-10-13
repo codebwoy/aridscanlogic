@@ -42,6 +42,8 @@ import {
   kdpCompliancePayload,
   listingDescriptionPayload,
   normalizeListingDescription,
+  listingMetadataPayload,
+  normalizeListingMetadata,
   coverStudioPayload,
   normalizeCoverStudioState,
   normalizePublicationSignoff,
@@ -134,6 +136,31 @@ const projectBody = z.object({
       html: z.string().max(8000).optional(),
       review_quote: z.string().max(500).optional(),
       language: z.enum(['en', 'de']).optional(),
+      updated_at: z.string().max(64).optional().nullable(),
+    })
+    .optional()
+    .nullable(),
+  listing_metadata: z
+    .object({
+      title: z.string().max(200).optional(),
+      subtitle: z.string().max(200).optional(),
+      age_range: z.string().max(32).optional(),
+      format_id: z.string().max(32).optional(),
+      format_label: z.string().max(80).optional(),
+      keywords: z.array(z.string().max(50)).max(7).optional(),
+      categories: z
+        .array(
+          z.union([
+            z.string().max(200),
+            z.object({ id: z.string().max(64).optional(), label: z.string().max(200) }),
+          ]),
+        )
+        .max(3)
+        .optional(),
+      language: z.enum(['en', 'de']).optional(),
+      secondary_language: z.string().max(16).optional().nullable(),
+      notes: z.array(z.string().max(300)).max(8).optional(),
+      plain: z.string().max(8000).optional(),
       updated_at: z.string().max(64).optional().nullable(),
     })
     .optional()
@@ -276,6 +303,7 @@ const server = createServer(async (req, res) => {
         publicationReadiness: publicationReadinessPayload(),
         kdpCompliance: kdpCompliancePayload(),
         listingDescription: listingDescriptionPayload(),
+        listingMetadata: listingMetadataPayload(),
         coverStudio: coverStudioPayload(),
         characterNames: characterNamesPayload(),
         product_positioning: {
@@ -374,6 +402,7 @@ const server = createServer(async (req, res) => {
         publicationReadiness: publicationReadinessPayload(),
         kdpCompliance: kdpCompliancePayload(),
         listingDescription: listingDescriptionPayload(),
+        listingMetadata: listingMetadataPayload(),
         coverStudio: coverStudioPayload(),
         characterNames: characterNamesPayload(),
         commercialUse: COMMERCIAL_USE_STATEMENT,
@@ -502,6 +531,12 @@ const server = createServer(async (req, res) => {
         if (body.listing_description) {
           body.listing_description = {
             ...normalizeListingDescription(body.listing_description),
+            updated_at: new Date().toISOString(),
+          }
+        }
+        if (body.listing_metadata) {
+          body.listing_metadata = {
+            ...normalizeListingMetadata(body.listing_metadata),
             updated_at: new Date().toISOString(),
           }
         }

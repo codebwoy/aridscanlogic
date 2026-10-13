@@ -44,6 +44,7 @@ import IpCharacterBuilder from '../components/IpCharacterBuilder.jsx'
 import VariationEditors from '../components/VariationEditors.jsx'
 import ComplianceChecklist from '../components/ComplianceChecklist.jsx'
 import ListingDescriptionBuilder from '../components/ListingDescriptionBuilder.jsx'
+import ListingMetadataBuilder from '../components/ListingMetadataBuilder.jsx'
 import CoverStudio from '../components/CoverStudio.jsx'
 
 const STEPS = ['story', 'characters', 'scenes', 'layout', 'preflight', 'export']
@@ -1700,6 +1701,24 @@ export default function Studio({
                     const res = await api(`/v1/projects/${active.id}`, {
                       method: 'PATCH',
                       body: { listing_description: listing },
+                    })
+                    setProjects((list) =>
+                      list.map((p) => (p.id === res.project.id ? res.project : p)),
+                    )
+                    await onSelectProject(res.project.id)
+                  }}
+                />
+
+                <ListingMetadataBuilder
+                  project={active}
+                  busy={busy}
+                  setBusy={setBusy}
+                  setError={setError}
+                  setStatus={setStatus}
+                  onSaved={async (listing_metadata) => {
+                    const res = await api(`/v1/projects/${active.id}`, {
+                      method: 'PATCH',
+                      body: { listing_metadata },
                     })
                     setProjects((list) =>
                       list.map((p) => (p.id === res.project.id ? res.project : p)),

@@ -140,6 +140,15 @@ export const NAMED_TOOLS = {
     description:
       'Build a 5-part Amazon book description (hook, story promise, SEL benefit, real review only, CTA) from your project facts.',
   },
+  listing_metadata: {
+    id: 'listing_metadata',
+    label: 'KDP metadata',
+    jobType: null,
+    surface: 'canvas',
+    sourceIds: ['S69'],
+    description:
+      'Draft subtitle, age range, up to 7 backend keywords, and category ideas for the Amazon KDP listing (edit before upload).',
+  },
   cover_studio: {
     id: 'cover_studio',
     label: 'Cover Studio',

@@ -144,6 +144,21 @@ export {
   coverStudioPayload,
 } from './cover-studio.js'
 export {
+  LISTING_METADATA_META,
+  CATEGORY_SUGGESTIONS,
+  ageRangeForFormat,
+  formatLabelForId,
+  buildKeywords,
+  buildSubtitle,
+  suggestCategories,
+  buildListingMetadata,
+  composeListingMetadataPlain,
+  emptyListingMetadata,
+  normalizeListingMetadata,
+  keywordsForForm,
+  listingMetadataPayload,
+} from './listing-metadata.js'
+export {
   KDP_COMPLIANCE_META,
   COMPLIANCE_LINKS,
   ISBN_CHOICES,
