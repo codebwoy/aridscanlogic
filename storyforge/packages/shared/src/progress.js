@@ -142,4 +142,16 @@ export const TRACEABILITY = [
     status: 'done',
     note: 'Batch illustrate_all_pages + upscale_all_pages from pinned anchor (0→KDP middle funnel)',
   },
+  {
+    id: 'S66',
+    area: 'Compliance',
+    status: 'done',
+    note: 'KDP compliance checklist: ISBN, trademark, rights doc, AI disclose — hard gate before Finish pack',
+  },
+  {
+    id: 'S67',
+    area: 'Listing',
+    status: 'done',
+    note: '5-part KDP book description builder (hook / promise / SEL / real social proof / CTA)',
+  },
 ]

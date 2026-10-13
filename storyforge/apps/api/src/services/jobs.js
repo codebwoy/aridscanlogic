@@ -14,6 +14,7 @@ import {
   buildTurboDescriptionFromDna,
   assessPublicationReadiness,
   normalizePublicationSignoff,
+  assessComplianceGate,
   buildManuscriptPages,
   estimateManuscriptWords,
   buildEscalatingBeatBriefs,
@@ -790,6 +791,27 @@ async function runExportJob(store, data) {
 
     // Full print pack: interior + cover + preflight + checklist as signed ZIP
     if (type === 'export_source_zip') {
+      const complianceGate = assessComplianceGate(
+        normalizePublicationSignoff(project?.publication_signoff).compliance,
+      )
+      if (!complianceGate.ok && !inputs?.bypassCompliance) {
+        await store.updateJob(jobId, {
+          status: 'failed',
+          error: `KDP compliance checklist incomplete (${complianceGate.doneCount}/${complianceGate.requiredCount}). Complete ISBN, trademark, rights, and AI disclosure in Studio → Canvas.`,
+          outputs: {
+            code: 'compliance_required',
+            missing: complianceGate.missing,
+            compliance: {
+              ok: false,
+              doneCount: complianceGate.doneCount,
+              requiredCount: complianceGate.requiredCount,
+              disclosure: complianceGate.disclosure,
+            },
+          },
+        })
+        if (cost > 0) await chargeOrRefund(store, { userId, cost, reason: type, jobId, refund: true })
+        return
+      }
       const title = project?.title || inputs?.title || 'StoryForge Book'
       const interiorRaw = await buildInteriorPdf({
         title,
@@ -840,17 +862,29 @@ async function runExportJob(store, data) {
       const readiness = assessPublicationReadiness(project, {
         signoff: project?.publication_signoff,
       })
+      const readinessForZip = sanitizeReadinessForZip(readiness)
+      const complianceSummary = readiness.compliance || complianceGate
       const checklist = [
         '1. Upload interior PDF as paperback manuscript',
         '2. Upload cover-wrap PDF as paperback cover',
         '3. Confirm trim size + page count match KDP calculator',
         '4. Keep barcode reserve clear on back cover',
-        '5. Disclose AI-assisted art if required by Amazon policy',
+        '5. Disclose AI-assisted art if required by Amazon policy (see compliance.json)',
         '6. Always verify in KDP Online Previewer before publishing',
         `7. StoryForge publication readiness score: ${readiness.score}/100 (${readiness.levelLabel}) — checklist only, not Amazon approval`,
+        `8. Compliance checklist: ${complianceSummary.doneCount}/${complianceSummary.requiredCount} — ISBN / trademark / rights / AI / one account / no manipulation`,
+        '9. Own ISBN (MVB) preferred for control; KDP free ISBN is allowed if you acknowledge imprint limits',
+        '10. Keep rights contracts offline forever — StoryForge attach is a record only',
+        '11. Paste listing-description.txt (or HTML) into the Amazon KDP book description — edit first; never invent reviews',
         '',
         PUBLISHING_SPECS.disclaimers.notAffiliated,
       ].join('\n')
+
+      const listing = project?.listing_description
+      const listingPlain =
+        (listing && String(listing.plain || '').trim()) ||
+        '(No listing description saved yet — use Studio → Canvas → KDP description builder.)'
+      const listingHtml = listing && String(listing.html || '').trim()
 
       const zipBytes = buildZip([
         {
@@ -887,11 +921,33 @@ async function runExportJob(store, data) {
         },
         {
           name: 'publication-readiness.json',
-          data: JSON.stringify(readiness, null, 2),
+          data: JSON.stringify(readinessForZip, null, 2),
+          compress: true,
+        },
+        {
+          name: 'compliance.json',
+          data: JSON.stringify(
+            {
+              ok: complianceSummary.ok,
+              doneCount: complianceSummary.doneCount,
+              requiredCount: complianceSummary.requiredCount,
+              missing: complianceSummary.missing || [],
+              disclosure: complianceSummary.disclosure,
+              checklist: readinessForZip.signoff?.compliance || null,
+              meta: complianceSummary.meta,
+              note: 'Prevention checklist only — not legal advice; not a guarantee against Amazon action.',
+            },
+            null,
+            2,
+          ),
           compress: true,
         },
         { name: 'UPLOAD-CHECKLIST.txt', data: checklist, compress: true },
         { name: 'manuscript.txt', data: manuscript || '(empty)', compress: true },
+        { name: 'listing-description.txt', data: listingPlain, compress: true },
+        ...(listingHtml
+          ? [{ name: 'listing-description.html', data: listingHtml, compress: true }]
+          : []),
         {
           name: 'manifest.json',
           data: JSON.stringify(
@@ -905,12 +961,17 @@ async function runExportJob(store, data) {
                 coverRaw.filename,
                 'preflight.json',
                 'publication-readiness.json',
+                'compliance.json',
                 'UPLOAD-CHECKLIST.txt',
                 'manuscript.txt',
+                'listing-description.txt',
+                ...(listingHtml ? ['listing-description.html'] : []),
               ],
               printReady: true,
               readinessScore: readiness.score,
               readinessLevel: readiness.level,
+              complianceOk: Boolean(complianceSummary.ok),
+              hasListingDescription: Boolean(listing && String(listing.plain || '').trim()),
               independenceDisclaimer: PUBLISHING_SPECS.disclaimers.notAffiliated,
             },
             null,
@@ -1068,6 +1129,26 @@ async function runExportJob(store, data) {
     await store.updateJob(jobId, { status: 'failed', error: err.message || 'Export failed' })
     if (cost > 0) await chargeOrRefund(store, { userId, cost, reason: type, jobId, refund: true })
     console.error('[storyforge] export failed', jobId, err.message)
+  }
+}
+
+/** Strip bulky rights-doc dataUrls from ZIP JSON. */
+function sanitizeReadinessForZip(readiness) {
+  try {
+    const copy = JSON.parse(JSON.stringify(readiness || {}))
+    const doc = copy?.signoff?.compliance?.rights_doc
+    if (doc?.dataUrl) {
+      delete doc.dataUrl
+      doc.dataUrlOmitted = true
+    }
+    const doc2 = copy?.compliance?.checklist?.rights_doc
+    if (doc2?.dataUrl) {
+      delete doc2.dataUrl
+      doc2.dataUrlOmitted = true
+    }
+    return copy
+  } catch {
+    return readiness
   }
 }
 

@@ -131,6 +131,15 @@ export const NAMED_TOOLS = {
     sourceIds: ['S65'],
     description: 'Run 2.5× / KDP bleed upscale on every page that already has art.',
   },
+  listing_description: {
+    id: 'listing_description',
+    label: 'KDP description',
+    jobType: null,
+    surface: 'canvas',
+    sourceIds: ['S67'],
+    description:
+      'Build a 5-part Amazon book description (hook, story promise, SEL benefit, real review only, CTA) from your project facts.',
+  },
   scene_to_video: {
     id: 'scene_to_video',
     label: 'Scene → Video',

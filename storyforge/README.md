@@ -61,6 +61,8 @@ Optional: `npm run dev:worker` with Redis. Real AI: set `STORYFORGE_IMAGE_PROVID
 - **Full book panel**: Write manuscript (0) → Illustrate all pages → Upscale all → Finish pack / flipbook
 - **Digital flipbook** export (`export_flipbook`) — HTML ZIP for online sharing (separate from KDP print pack)
 - Speech bubbles on Canvas; cover wrap PDF with title band typography
+- **KDP compliance checklist** (ISBN plan, trademark self-check, rights-doc attach, AI disclosure, one account, no manipulation) — hard gate before Finish pack
+- **5-part KDP description builder** (hook / story promise / SEL / real review only / CTA) from project facts — Canvas + Finish pack text/HTML
 - **Bilingual mode** — selectable primary + secondary language pairs (ES/FR/IT/DE/EN + Twi/Igbo/Swahili/Arabic/…), per-page dual text, stacked / side-by-side / alternating layouts, L2 verified flag
 - **IP Character Builder** — merch-ready DNA gate; theme-aware names auto-seed from book emotional core (+ culture/trait), editable core, generate/shuffle, name coach; one colour/trait/object + Merch checks must lock before Character Turbo
 - **Series DNA reuse**, escalating picture-book **beat seeding**, and **Merch PNG** export from pinned hero (manual Amazon Merch upload)

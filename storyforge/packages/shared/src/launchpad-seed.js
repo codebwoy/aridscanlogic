@@ -667,10 +667,11 @@ export const COURSE_STEPS = [
     id: 5,
     key: 'upload',
     title: 'Upload to Amazon KDP',
-    sourceIds: ['S30', 'S60'],
+    sourceIds: ['S30', 'S60', 'S67'],
     checklist: [
       'Confirm publication readiness score in Studio → Canvas (checklist only — not Amazon approval)',
       'Review publication-readiness.json inside the KDP ZIP pack',
+      'Build/edit the 5-part KDP description in Studio → Canvas (hook, promise, SEL, real review only, CTA) — copy into the listing',
       'Before upload: ScanLogic Amazon Hub → First-time publisher truths (ISBN plan, pricing band, tax/Freiberufler orientation)',
       'Go to kdp.amazon.com',
       'Set title, description, keywords, categories',

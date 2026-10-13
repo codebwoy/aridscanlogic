@@ -122,6 +122,31 @@ export {
   manuscriptPayload,
 } from './manuscript.js'
 export {
+  LISTING_DESCRIPTION_META,
+  LISTING_DESCRIPTION_PARTS,
+  buildListingDescription,
+  composeListingPlain,
+  composeListingHtml,
+  emptyListingDescription,
+  normalizeListingDescription,
+  refreshListingFromParts,
+  listingDescriptionPayload,
+} from './listing-description.js'
+export {
+  KDP_COMPLIANCE_META,
+  COMPLIANCE_LINKS,
+  ISBN_CHOICES,
+  AI_MODE_CHOICES,
+  RIGHTS_DOC_MAX_BYTES,
+  emptyComplianceChecklist,
+  normalizeComplianceChecklist,
+  complianceDisclosure,
+  missingComplianceItems,
+  assessComplianceGate,
+  stampComplianceIfComplete,
+  kdpCompliancePayload,
+} from './kdp-compliance.js'
+export {
   PUBLICATION_READINESS_META,
   CONTINUITY_SIGNOFF_ITEMS,
   PICTURE_BOOK_BANNED_PHRASES,

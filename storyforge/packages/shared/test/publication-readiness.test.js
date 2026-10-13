@@ -50,6 +50,18 @@ describe('publication readiness', () => {
     for (const item of CONTINUITY_SIGNOFF_ITEMS) signoff.continuity[item.id] = true
     signoff.kdp_previewer_reviewed = true
     signoff.kdp_previewer_reviewed_at = new Date().toISOString()
+    signoff.compliance = {
+      ...signoff.compliance,
+      isbn_plan_acknowledged: true,
+      isbn_choice: 'mvb_own',
+      trademark_self_checked: true,
+      rights_docs_acknowledged: true,
+      used_ai: true,
+      ai_generation_mode: 'prompt',
+      ai_disclose_acknowledged: true,
+      single_account_acknowledged: true,
+      no_review_manipulation_acknowledged: true,
+    }
 
     const report = assessPublicationReadiness(
       {
@@ -68,6 +80,7 @@ describe('publication readiness', () => {
     assert.equal(report.level, 'ready_for_preview')
     assert.equal(report.gates.print.status, 'pass')
     assert.equal(report.gates.human.status, 'pass')
+    assert.equal(report.kdpPackAllowed, true)
     assert.equal(report.publishClaimAllowed, false)
   })
 

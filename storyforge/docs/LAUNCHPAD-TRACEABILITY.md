@@ -61,6 +61,8 @@ Status after print-pipeline + fal catalogue completion.
 | S63 | Digital HTML flipbook export | done | `export_flipbook` → ZIP (`index.html` + assets); Canvas button |
 | S64 | Manuscript generator | done | `story_text` + `manuscript.js` — fills all page lines + speech bubbles |
 | S65 | Batch illustrate + upscale all | done | `illustrate_all_pages` / `upscale_all_pages` + Studio Full book panel |
+| S66 | KDP compliance checklist | done | ISBN / trademark / rights doc / AI disclose / one account — hard gate before Finish pack |
+| S67 | 5-part KDP book description | done | `listing-description.js` + Studio Canvas builder; Finish pack `listing-description.txt` |
 | S53 | Scene → video (fal image-to-video) | done | `scene_to_video` job + Studio tab; requires page still |
 | S55 | Print pack + signed exports | done | Print-ready interior/cover PDFs, HMAC download URLs, `export_source_zip` |
 | S56 | Full fal model catalogue | done | Shared `fal-models.js` + Studio pickers (Kontext/Kling Pro/Veo/Seedance/…) |

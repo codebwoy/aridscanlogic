@@ -649,6 +649,58 @@ textarea.sf-input {
   min-height: 44px;
 }
 
+.sf-compliance {
+  margin: 1rem 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid hsl(var(--sf-border));
+  border-radius: var(--sf-radius);
+  background: hsl(var(--sf-card) / 0.9);
+}
+
+.sf-compliance-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.sf-compliance-head h3 {
+  margin: 0;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sf-compliance-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.5rem 0 0.85rem;
+}
+
+.sf-compliance-ai {
+  margin: 0.75rem 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  border: 1px dashed hsl(var(--sf-border));
+}
+
+.sf-listing-desc {
+  margin: 1rem 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid hsl(var(--sf-border));
+  border-radius: var(--sf-radius);
+  background: hsl(var(--sf-card) / 0.9);
+}
+
+.sf-listing-parts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+}
+
 .sf-check {
   display: flex;
   gap: 0.5rem;

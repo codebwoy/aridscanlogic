@@ -5,6 +5,12 @@
 
 import { preflightImageResolution, validatePageCount } from './print-math.js'
 import { CONTINUITY_CHECKLIST } from './craft-library.js'
+import {
+  emptyComplianceChecklist,
+  normalizeComplianceChecklist,
+  assessComplianceGate,
+  stampComplianceIfComplete,
+} from './kdp-compliance.js'
 
 export const PUBLICATION_READINESS_META = {
   id: 'publication_readiness',
@@ -58,6 +64,7 @@ export function emptyPublicationSignoff() {
     kdp_previewer_reviewed_at: null,
     notes: '',
     updated_at: null,
+    compliance: emptyComplianceChecklist(),
   }
 }
 
@@ -75,6 +82,9 @@ export function normalizePublicationSignoff(raw) {
     kdp_previewer_reviewed_at: raw.kdp_previewer_reviewed_at || null,
     notes: String(raw.notes || '').slice(0, 2000),
     updated_at: raw.updated_at || null,
+    compliance: stampComplianceIfComplete(
+      normalizeComplianceChecklist(raw.compliance ?? base.compliance),
+    ),
   }
 }
 
@@ -317,17 +327,36 @@ export function assessPublicationReadiness(project, opts = {}) {
   }
   copyScore = clamp01(copyScore)
 
-  // ── Human sign-off ──────────────────────────────────────────────────────
+  // ── Human sign-off + compliance ─────────────────────────────────────────
+  const complianceGate = assessComplianceGate(signoff.compliance)
   let humanScore = 0
-  if (signoff.kdp_previewer_reviewed) {
-    humanScore = 1
-  } else {
+  if (signoff.kdp_previewer_reviewed) humanScore += 0.45
+  else {
     warnings.push({
       gate: 'human',
       severity: 'warn',
       message: 'Confirm you reviewed the book in the Amazon KDP Online Previewer',
     })
   }
+  if (complianceGate.ok) humanScore += 0.55
+  else {
+    humanScore += 0.55 * (complianceGate.doneCount / Math.max(1, complianceGate.requiredCount))
+    for (const m of complianceGate.missing.slice(0, 4)) {
+      warnings.push({
+        gate: 'human',
+        severity: 'warn',
+        message: `Compliance: ${m}`,
+      })
+    }
+    if (!complianceGate.ok) {
+      issues.push({
+        gate: 'human',
+        severity: 'block',
+        message: `Complete KDP compliance checklist (${complianceGate.doneCount}/${complianceGate.requiredCount}) before Finish pack`,
+      })
+    }
+  }
+  humanScore = clamp01(humanScore)
 
   const weighted =
     printScore * GATE_WEIGHTS.print +
@@ -357,7 +386,7 @@ export function assessPublicationReadiness(project, opts = {}) {
   }
 
   const blockCount = issues.filter((i) => i.severity === 'block').length
-  const exportAllowed = blockCount === 0 && score >= 70
+  const exportAllowed = blockCount === 0 && score >= 70 && complianceGate.ok
   const publishClaimAllowed = false // never claim 100% publication-ready
 
   return {
@@ -379,13 +408,18 @@ export function assessPublicationReadiness(project, opts = {}) {
       kdpPreviewerReviewed: Boolean(signoff.kdp_previewer_reviewed),
       bilingual,
       dpiBlocks: dpiBlocks.length,
+      complianceOk: complianceGate.ok,
+      complianceDone: complianceGate.doneCount,
+      complianceRequired: complianceGate.requiredCount,
     },
     continuityItems: CONTINUITY_SIGNOFF_ITEMS.map((item) => ({
       ...item,
       checked: Boolean(signoff.continuity[item.id]),
     })),
+    compliance: complianceGate,
     signoff,
     exportSuggested: exportAllowed,
+    kdpPackAllowed: complianceGate.ok,
     publishClaimAllowed,
     disclaimer: PUBLICATION_READINESS_META.disclaimer,
     dpiChecks,

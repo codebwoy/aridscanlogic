@@ -39,6 +39,9 @@ import {
   defaultRefrainForHook,
   pictureBookPayload,
   publicationReadinessPayload,
+  kdpCompliancePayload,
+  listingDescriptionPayload,
+  normalizeListingDescription,
   normalizePublicationSignoff,
   generateCharacterNames,
   characterNamesPayload,
@@ -117,6 +120,18 @@ const projectBody = z.object({
       kdp_previewer_reviewed: z.boolean().optional(),
       kdp_previewer_reviewed_at: z.string().max(64).optional().nullable(),
       notes: z.string().max(2000).optional(),
+      updated_at: z.string().max(64).optional().nullable(),
+      compliance: z.record(z.any()).optional().nullable(),
+    })
+    .optional()
+    .nullable(),
+  listing_description: z
+    .object({
+      parts: z.record(z.string().max(800)).optional(),
+      plain: z.string().max(6000).optional(),
+      html: z.string().max(8000).optional(),
+      review_quote: z.string().max(500).optional(),
+      language: z.enum(['en', 'de']).optional(),
       updated_at: z.string().max(64).optional().nullable(),
     })
     .optional()
@@ -242,6 +257,8 @@ const server = createServer(async (req, res) => {
         ipCharacter: ipCharacterPayload(),
         pictureBook: pictureBookPayload(),
         publicationReadiness: publicationReadinessPayload(),
+        kdpCompliance: kdpCompliancePayload(),
+        listingDescription: listingDescriptionPayload(),
         characterNames: characterNamesPayload(),
         product_positioning: {
           product: STORYFORGE_PRODUCT,
@@ -337,6 +354,8 @@ const server = createServer(async (req, res) => {
         tutorialsMeta: TUTORIALS_META,
         craft: craftLibraryPayload(),
         publicationReadiness: publicationReadinessPayload(),
+        kdpCompliance: kdpCompliancePayload(),
+        listingDescription: listingDescriptionPayload(),
         characterNames: characterNamesPayload(),
         commercialUse: COMMERCIAL_USE_STATEMENT,
         tools: NAMED_TOOLS,
@@ -459,6 +478,12 @@ const server = createServer(async (req, res) => {
             kdp_previewer_reviewed_at: reviewed
               ? next.kdp_previewer_reviewed_at || new Date().toISOString()
               : null,
+          }
+        }
+        if (body.listing_description) {
+          body.listing_description = {
+            ...normalizeListingDescription(body.listing_description),
+            updated_at: new Date().toISOString(),
           }
         }
         const project = await store.updateProject(userId, id, body)

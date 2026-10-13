@@ -58,6 +58,18 @@ describe('publication_readiness job', () => {
     const signoff = emptyPublicationSignoff()
     for (const item of CONTINUITY_SIGNOFF_ITEMS) signoff.continuity[item.id] = true
     signoff.kdp_previewer_reviewed = true
+    signoff.compliance = {
+      ...signoff.compliance,
+      isbn_plan_acknowledged: true,
+      isbn_choice: 'mvb_own',
+      trademark_self_checked: true,
+      rights_docs_acknowledged: true,
+      used_ai: true,
+      ai_generation_mode: 'prompt',
+      ai_disclose_acknowledged: true,
+      single_account_acknowledged: true,
+      no_review_manipulation_acknowledged: true,
+    }
 
     const submitted = await submitJob(store, {
       userId: user.id,

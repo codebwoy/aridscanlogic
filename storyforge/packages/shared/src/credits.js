@@ -28,6 +28,8 @@ export const CREDIT_COSTS = {
   consistency_rescore: 0,
   /** Local manuscript draft for all pages (edit before KDP) */
   story_text: 0,
+  /** 5-part KDP listing description from project facts (0 credits) */
+  listing_description: 0,
   /**
    * Batch illustrate every page from pinned anchor + briefs.
    * Charged dynamically: pages × editor_pro (see resolveJobCost).

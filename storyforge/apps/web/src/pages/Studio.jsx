@@ -30,6 +30,7 @@ import {
   assessPublicationReadiness,
   emptyPublicationSignoff,
   normalizePublicationSignoff,
+  assessComplianceGate,
   CONTINUITY_SIGNOFF_ITEMS,
   STORYFORGE_NICHES,
   STORYFORGE_MARKET_DISCLAIMER,
@@ -41,6 +42,8 @@ import { runAndWait } from '../lib/jobs.js'
 import PageCanvas from '../components/PageCanvas.jsx'
 import IpCharacterBuilder from '../components/IpCharacterBuilder.jsx'
 import VariationEditors from '../components/VariationEditors.jsx'
+import ComplianceChecklist from '../components/ComplianceChecklist.jsx'
+import ListingDescriptionBuilder from '../components/ListingDescriptionBuilder.jsx'
 
 const STEPS = ['story', 'characters', 'scenes', 'layout', 'preflight', 'export']
 
@@ -373,7 +376,9 @@ export default function Studio({
     if (cost > 0 && !skipConfirm) {
       const isExport = type.startsWith('export_')
       const ok = isExport
-        ? confirmExportWithReadiness(`Run “${type}”`, cost)
+        ? confirmExportWithReadiness(`Run “${type}”`, cost, {
+            requireCompliance: type === 'export_source_zip',
+          })
         : window.confirm(`Run “${type}” for ${cost} credit(s)?`)
       if (!ok) return
     }
@@ -460,15 +465,51 @@ export default function Studio({
     })
   }
 
-  function confirmExportWithReadiness(actionLabel, cost) {
+  function complianceGateOrError({ hard = false } = {}) {
+    const gate = assessComplianceGate(signoffDraft.compliance)
+    if (gate.ok) return true
+    const list = gate.missing.slice(0, 6).map((m) => `• ${m}`).join('\n')
+    if (hard) {
+      setError(
+        `Complete the KDP compliance checklist in Canvas before Finish pack (${gate.doneCount}/${gate.requiredCount}).`,
+      )
+      setToolTab('canvas')
+      window.alert(
+        `Finish pack blocked until compliance is complete:\n\n${list}\n\nThis is a prevention checklist — not legal advice.`,
+      )
+      return false
+    }
+    return window.confirm(
+      `${actionLabelFallback(gate)}\n\nMissing:\n${list}\n\nExport PDF anyway? (Finish pack still requires full checklist.)`,
+    )
+  }
+
+  function actionLabelFallback(gate) {
+    return `Compliance incomplete (${gate.doneCount}/${gate.requiredCount}).`
+  }
+
+  function confirmExportWithReadiness(actionLabel, cost, { requireCompliance = false } = {}) {
+    if (requireCompliance && !complianceGateOrError({ hard: true })) return false
+    if (!requireCompliance) {
+      const soft = assessComplianceGate(signoffDraft.compliance)
+      if (!soft.ok) {
+        const okSoft = complianceGateOrError({ hard: false })
+        if (!okSoft) return false
+      }
+    }
     const score = readiness?.score ?? 0
     const level = readiness?.levelLabel || readiness?.level || 'unknown'
     const blocks = readiness?.issues?.filter((i) => i.severity === 'block').length || 0
     let msg = `${actionLabel} for ${cost} credit(s)?\n\nPublication readiness: ${score}/100 (${level}).`
     if (blocks > 0) {
-      msg += `\n\n⚠ ${blocks} blocking issue(s) remain. Export is still allowed — this score is a checklist, not Amazon approval.`
+      msg += `\n\n⚠ ${blocks} blocking issue(s) remain. Export is still allowed for draft PDFs — this score is a checklist, not Amazon approval.`
     } else if (score < 70) {
       msg += '\n\nScore is below “Almost ready”. Consider fixing print/copy/continuity first.'
+    }
+    const disclosure = readiness?.compliance?.disclosure
+    if (disclosure?.recommendDisclose) {
+      msg +=
+        '\n\nAI disclosure: StoryForge recommends disclosing AI-generated content in KDP when required. Confirm you will follow current KDP Help.'
     }
     msg += '\n\nAlways verify in the Amazon KDP Online Previewer before publishing.'
     return window.confirm(msg)
@@ -477,7 +518,11 @@ export default function Studio({
   async function runFinishPack() {
     if (!active) return
     const total = CREDIT_COSTS.export_source_zip || 1
-    if (!confirmExportWithReadiness('KDP finish pack (interior + cover + checklist ZIP)', total))
+    if (
+      !confirmExportWithReadiness('KDP finish pack (interior + cover + checklist ZIP)', total, {
+        requireCompliance: true,
+      })
+    )
       return
     setBusy(true)
     setError('')
@@ -1627,6 +1672,41 @@ export default function Studio({
                     ) : null}
                   </span>
                 </label>
+
+                <ComplianceChecklist
+                  compliance={signoffDraft.compliance}
+                  busy={busy}
+                  disabled={!active}
+                  bookTitle={active?.title || ''}
+                  characterName={
+                    active?.ip_character?.name || active?.pinned_anchor?.name || charName
+                  }
+                  onChange={async (nextCompliance) => {
+                    await savePublicationSignoff({
+                      ...signoffDraft,
+                      compliance: nextCompliance,
+                    })
+                  }}
+                />
+
+                <ListingDescriptionBuilder
+                  project={active}
+                  busy={busy}
+                  setBusy={setBusy}
+                  setError={setError}
+                  setStatus={setStatus}
+                  onSaved={async (listing) => {
+                    const res = await api(`/v1/projects/${active.id}`, {
+                      method: 'PATCH',
+                      body: { listing_description: listing },
+                    })
+                    setProjects((list) =>
+                      list.map((p) => (p.id === res.project.id ? res.project : p)),
+                    )
+                    await onSelectProject(res.project.id)
+                  }}
+                />
+
                 <div className="sf-btn-row">
                   <button
                     type="button"

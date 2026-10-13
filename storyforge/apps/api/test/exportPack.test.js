@@ -89,6 +89,23 @@ describe('print export pipeline', () => {
       paper_type: 'white',
       premise: 'A fox finds a lamp.',
     })
+    await store.updateProject(user.id, project.id, {
+      publication_signoff: {
+        continuity: {},
+        kdp_previewer_reviewed: true,
+        compliance: {
+          isbn_plan_acknowledged: true,
+          isbn_choice: 'mvb_own',
+          trademark_self_checked: true,
+          rights_docs_acknowledged: true,
+          used_ai: true,
+          ai_generation_mode: 'prompt',
+          ai_disclose_acknowledged: true,
+          single_account_acknowledged: true,
+          no_review_manipulation_acknowledged: true,
+        },
+      },
+    })
     const job = await submitJob(store, {
       userId: user.id,
       type: 'export_source_zip',
@@ -101,5 +118,26 @@ describe('print export pipeline', () => {
     assert.ok(done.outputs?.pdf?.signed || done.outputs?.pdf?.dataUrl)
     assert.ok(Array.isArray(done.outputs?.uploadChecklist))
     assert.ok(dataUrlToBuffer(done.outputs?.pdf?.dataUrl) || done.outputs?.pdf?.downloadPath)
+  })
+
+  it('export_source_zip fails without compliance checklist', async () => {
+    const store = createMemoryStore({ persist: false })
+    wireLocalJobHandlers(store)
+    const user = await store.ensureUser('export-pack-compliance')
+    const project = await store.createProject(user.id, {
+      title: 'Blocked Pack',
+      page_count: 24,
+      trim_id: 'sq_85',
+    })
+    const job = await submitJob(store, {
+      userId: user.id,
+      type: 'export_source_zip',
+      projectId: project.id,
+      inputs: {},
+    })
+    const done = await waitJob(store, user.id, job.id)
+    assert.equal(done.status, 'failed')
+    assert.match(done.error || '', /compliance/i)
+    assert.equal(done.outputs?.code, 'compliance_required')
   })
 })
