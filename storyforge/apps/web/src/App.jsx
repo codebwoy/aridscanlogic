@@ -52,6 +52,7 @@ export default function App() {
     if (!gate.ok) return
     setBusy(true)
     setError('')
+    setStatus('Connecting to StoryForge API…')
     try {
       let data
       if (getSessionToken()) {
@@ -72,8 +73,14 @@ export default function App() {
       setSession(data)
       const list = await api('/v1/projects')
       setProjects(list.projects || [])
+      setStatus('')
     } catch (e) {
-      setError(e.message || 'Failed to open desktop session')
+      const msg = e.message || 'Failed to open desktop session'
+      setError(
+        /unavailable|Failed to fetch|503|starting/i.test(msg)
+          ? `${msg} — wait for API on :8787, then click Retry session.`
+          : msg,
+      )
     } finally {
       setBusy(false)
     }
@@ -126,10 +133,15 @@ export default function App() {
           <span className="sf-badge sf-badge-ok">
             <BookOpen size={14} aria-hidden /> KDP specs {PUBLISHING_SPECS.lastVerified}
           </span>
+          {(error || !session) && (
+            <button type="button" className="sf-btn" disabled={busy} onClick={() => bootstrap()}>
+              Retry session
+            </button>
+          )}
         </div>
       </header>
 
-      {error && view === 'launchpad' ? (
+      {error ? (
         <div className="sf-card" role="alert" style={{ margin: '0.75rem 1rem', borderColor: 'hsl(var(--sf-danger))' }}>
           {error}
         </div>

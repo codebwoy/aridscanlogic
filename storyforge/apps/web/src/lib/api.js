@@ -22,7 +22,24 @@ async function parse(res) {
   return data
 }
 
-export async function api(path, { method = 'GET', body, auth = true } = {}) {
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms))
+}
+
+function isRetryable(err, res) {
+  if (res && (res.status === 502 || res.status === 503 || res.status === 504)) return true
+  if (!err) return false
+  const msg = String(err.message || err)
+  return (
+    err.name === 'TypeError' ||
+    /Failed to fetch|NetworkError|ECONNREFUSED|api_unavailable/i.test(msg)
+  )
+}
+
+/**
+ * Fetch with short retries — covers API cold start and node --watch restarts.
+ */
+export async function api(path, { method = 'GET', body, auth = true, retries = 4 } = {}) {
   const headers = {
     'Content-Type': 'application/json',
     'X-StoryForge-Viewport': String(getViewportWidth()),
@@ -31,13 +48,31 @@ export async function api(path, { method = 'GET', body, auth = true } = {}) {
     const token = getSessionToken()
     if (token) headers.Authorization = `Bearer ${token}`
   }
-  const res = await fetch(path, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-    credentials: 'same-origin',
-  })
-  return parse(res)
+
+  let lastErr
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(path, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+        credentials: 'same-origin',
+      })
+      if (!res.ok && isRetryable(null, res) && attempt < retries) {
+        await sleep(350 * (attempt + 1))
+        continue
+      }
+      return await parse(res)
+    } catch (e) {
+      lastErr = e
+      if (attempt < retries && isRetryable(e)) {
+        await sleep(350 * (attempt + 1))
+        continue
+      }
+      throw e
+    }
+  }
+  throw lastErr || new Error('API request failed')
 }
 
 export async function openDesktopSession(externalRef = 'local-dev') {

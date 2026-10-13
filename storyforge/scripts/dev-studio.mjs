@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Boot API + web for local StoryForge studio (no Redis worker required).
+ * Boot API first, then web — avoids Vite proxy ECONNREFUSED on cold start.
  * Usage: npm run dev:studio
  */
 import { spawn } from 'node:child_process'
@@ -58,27 +58,34 @@ function portOpen(port, host = '127.0.0.1') {
   })
 }
 
-async function waitPort(port, timeoutMs = 60_000) {
+async function waitPort(port, timeoutMs = 60_000, label = `:${port}`) {
   const start = Date.now()
   while (Date.now() - start < timeoutMs) {
     if (await portOpen(port)) return true
     await new Promise((r) => setTimeout(r, 400))
   }
+  console.error(`[dev-studio] timed out waiting for ${label}`)
   return false
 }
 
 process.on('SIGINT', () => shutdown(0))
 process.on('SIGTERM', () => shutdown(0))
 
-console.info('[dev-studio] starting StoryForge API (:8787) + web (:5180)')
+console.info('[dev-studio] starting StoryForge API (:8787)…')
 run('api', ['dev:api'])
+
+const apiUp = await waitPort(8787, 60_000, 'API :8787')
+if (!apiUp) {
+  console.error('[dev-studio] API did not become ready — not starting web')
+  shutdown(1)
+}
+
+console.info('[dev-studio] API ready — starting web (:5180)…')
 run('web', ['dev:web'])
 
-const apiUp = await waitPort(8787)
-const webUp = await waitPort(5180)
-if (!apiUp || !webUp) {
-  console.error('[dev-studio] servers did not become ready in time')
-  console.error('  API ready:', apiUp, '· Web ready:', webUp)
+const webUp = await waitPort(5180, 60_000, 'web :5180')
+if (!webUp) {
+  console.error('[dev-studio] web did not become ready')
   shutdown(1)
 }
 
