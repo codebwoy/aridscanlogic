@@ -41,6 +41,7 @@ export function ProjectPage({ projectId, onError, onBack }) {
   const [estimate, setEstimate] = useState(null)
   const [showDialogue, setShowDialogue] = useState(false)
   const [reportPane, setReportPane] = useState('summary')
+  const [kdpChecklist, setKdpChecklist] = useState(null)
   const manuscriptRef = useRef(null)
 
   const load = useCallback(async () => {
@@ -54,7 +55,19 @@ export function ProjectPage({ projectId, onError, onBack }) {
       .estimate(projectId)
       .then(setEstimate)
       .catch(() => setEstimate(null))
+    pfApi
+      .kdpChecklist(projectId)
+      .then(setKdpChecklist)
+      .catch(() => setKdpChecklist(null))
   }, [load, onError, projectId])
+
+  useEffect(() => {
+    if (tab !== 'export') return
+    pfApi
+      .kdpChecklist(projectId)
+      .then(setKdpChecklist)
+      .catch(() => setKdpChecklist(null))
+  }, [tab, projectId, project?.status, project?.print_config])
 
   useEffect(() => {
     if (!job || job.status === 'completed' || job.status === 'failed') return
@@ -250,7 +263,9 @@ export function ProjectPage({ projectId, onError, onBack }) {
         {project.scores ? (
           <div className="row" style={{ marginTop: '1rem', gap: '1.25rem', alignItems: 'flex-start' }}>
             <div>
-              <p className="score">{project.scores.overall}</p>
+              <p className="score">
+                {project.scores.overall == null ? '—' : project.scores.overall}
+              </p>
               <p className="muted" style={{ margin: 0 }}>
                 Editorial score (guide)
               </p>
@@ -262,14 +277,20 @@ export function ProjectPage({ projectId, onError, onBack }) {
               <p className="muted" style={{ margin: '0.25rem 0 0' }}>
                 {project.scores.note}
               </p>
-              <p className="muted" style={{ margin: '0.35rem 0 0' }}>
-                Open {project.scores.counts?.total_open ?? 0} · Critical{' '}
-                {project.scores.counts?.critical ?? 0} · Major {project.scores.counts?.major ?? 0}
-                {project.scores.kdp_blocking != null
-                  ? ` · KDP blocking ${project.scores.kdp_blocking}`
-                  : ''}
-              </p>
-              {cats ? (
+              {project.scores.overall != null ? (
+                <p className="muted" style={{ margin: '0.35rem 0 0' }}>
+                  Open {project.scores.counts?.total_open ?? 0} · Critical{' '}
+                  {project.scores.counts?.critical ?? 0} · Major {project.scores.counts?.major ?? 0}
+                  {project.scores.kdp_blocking != null
+                    ? ` · KDP blocking ${project.scores.kdp_blocking}`
+                    : ''}
+                </p>
+              ) : (
+                <p className="muted" style={{ margin: '0.35rem 0 0' }}>
+                  No score yet — click <strong>Run full audit</strong> to analyze this manuscript.
+                </p>
+              )}
+              {cats && project.scores.overall != null ? (
                 <div className="row" style={{ marginTop: '0.75rem', gap: '0.75rem' }}>
                   {[
                     ['Pacing', cats.pacing_and_momentum],
@@ -289,13 +310,15 @@ export function ProjectPage({ projectId, onError, onBack }) {
                   ) : null}
                 </div>
               ) : null}
-              {project.scores?.dimensions ? (
+              {project.scores?.dimensions && project.scores.overall != null ? (
                 <div className="row" style={{ marginTop: '0.65rem', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  {Object.entries(project.scores.dimensions).map(([k, v]) => (
-                    <span key={k} className="sev" title="Scorecard dimension (guide)">
-                      {k.replaceAll('_', ' ')} {v}
-                    </span>
-                  ))}
+                  {Object.entries(project.scores.dimensions)
+                    .filter(([, v]) => v != null)
+                    .map(([k, v]) => (
+                      <span key={k} className="sev" title="Scorecard dimension (guide)">
+                        {k.replaceAll('_', ' ')} {v}
+                      </span>
+                    ))}
                 </div>
               ) : null}
               {project.tone?.overall ? (
@@ -470,11 +493,98 @@ export function ProjectPage({ projectId, onError, onBack }) {
         <section className="panel">
           <h3 style={{ marginTop: 0, fontFamily: 'var(--font-display)' }}>Exports</h3>
           <p className="muted">
-            Editorial report separate from corrected manuscript. PDF layout reconstruction is not
-            claimed.
+            KDP accepts different files for ebook vs print. Set trim / margins / bleed under the{' '}
+            <button type="button" className="btn" style={{ padding: '0.15rem 0.5rem' }} onClick={() => setTab('kdp')}>
+              kdp
+            </button>{' '}
+            tab before print PDF. Not affiliated with Amazon — always validate in Kindle Previewer /
+            Print Previewer.
           </p>
+
+          <h4 style={{ marginBottom: '0.35rem', fontFamily: 'var(--font-display)' }}>
+            Print (paperback / hardcover) — fixed page size
+          </h4>
+          <p className="muted" style={{ marginTop: 0 }}>
+            Highest quality for print: PDF at your trim size with mirror margins
+            {project.print_config?.trim_size_in
+              ? ` (trim ${project.print_config.trim_size_in}`
+              : ' (default trim 6×9'}
+            {project.print_config?.bleed ? ', bleed on' : ''}
+            ). Prefer this over reflowable formats for text/design fidelity on paper.
+          </p>
+          <div className="row" style={{ marginBottom: '1rem' }}>
+            <button type="button" className="btn btn-primary" onClick={() => download('pdf')}>
+              Print PDF (KDP interior)
+            </button>
+            <button type="button" className="btn" onClick={() => download('docx')}>
+              DOCX (Word → embed fonts → PDF)
+            </button>
+          </div>
+
+          <h4 style={{ marginBottom: '0.35rem', fontFamily: 'var(--font-display)' }}>
+            Kindle ebook — reflowable
+          </h4>
+          <p className="muted" style={{ marginTop: 0 }}>
+            Upload DOCX or EPUB to KDP, or open DOCX in Kindle Create to build KPF. MOBI fixed-layout
+            is no longer accepted (March 2025).
+          </p>
+          <div className="row" style={{ marginBottom: '1rem' }}>
+            <button type="button" className="btn btn-primary" onClick={() => download('docx')}>
+              DOCX (Kindle / Create)
+            </button>
+            <button type="button" className="btn" onClick={() => download('epub')}>
+              EPUB
+            </button>
+            <button type="button" className="btn" onClick={() => download('html')}>
+              HTML
+            </button>
+            <button type="button" className="btn" onClick={() => download('txt')}>
+              TXT
+            </button>
+          </div>
+          <p className="muted" style={{ fontSize: '0.85rem', marginTop: '-0.5rem' }}>
+            KPF is produced inside Amazon Kindle Create — ProofForge cannot emit KPF directly. MOBI
+            fixed-layout ended March 2025. PDF-as-ebook only for limited languages — prefer
+            DOCX/EPUB/KPF.
+          </p>
+
+          {kdpChecklist ? (
+            <div style={{ marginBottom: '1rem' }}>
+              <h4 style={{ marginBottom: '0.35rem', fontFamily: 'var(--font-display)' }}>
+                KDP upload checklist
+              </h4>
+              <p className="muted" style={{ marginTop: 0 }}>
+                {kdpChecklist.disclaimer}
+              </p>
+              <ul style={{ margin: '0.5rem 0', paddingLeft: '1.2rem' }}>
+                {(kdpChecklist.items || []).map((it) => (
+                  <li key={it.id} className="muted" style={{ marginBottom: '0.35rem' }}>
+                    <span style={{ color: it.done ? 'var(--brand)' : undefined }}>
+                      {it.done ? '[x]' : '[ ]'}
+                    </span>{' '}
+                    {it.label}
+                    {it.link ? (
+                      <>
+                        {' '}
+                        <a href={it.link} target="_blank" rel="noopener noreferrer">
+                          source
+                        </a>
+                      </>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          <h4 style={{ marginBottom: '0.35rem', fontFamily: 'var(--font-display)' }}>
+            Editorial reports
+          </h4>
           <div className="row">
-            <button type="button" className="btn btn-primary" onClick={() => download('json')}>
+            <button type="button" className="btn" onClick={() => download('pdf-report')}>
+              Audit PDF report
+            </button>
+            <button type="button" className="btn" onClick={() => download('json')}>
               JSON report
             </button>
             <button type="button" className="btn" onClick={() => download('csv')}>
@@ -484,18 +594,13 @@ export function ProjectPage({ projectId, onError, onBack }) {
               Markdown report
             </button>
             <button type="button" className="btn" onClick={() => download('manuscript')}>
-              Corrected manuscript
-            </button>
-            <button type="button" className="btn" onClick={() => download('epub')}>
-              Corrected EPUB
-            </button>
-            <button type="button" className="btn" onClick={() => download('docx')}>
-              Corrected DOCX
+              Corrected manuscript (.md)
             </button>
           </div>
           <p className="muted" style={{ marginTop: '0.75rem' }}>
-            Validate EPUB in Kindle Previewer before KDP upload. Reflowable export does not preserve
-            complex print layouts.
+            Print PDF uses Times Roman at your configured trim. For custom commercial fonts: export
+            DOCX → Word (File → Options → Save → Embed fonts) → Save as PDF, then upload that PDF to
+            KDP.
           </p>
         </section>
       ) : null}

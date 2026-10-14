@@ -1,9 +1,12 @@
 /**
- * Minimal DOCX export of corrected manuscript (OOXML zip).
- * Sufficient for KDP Word upload path — validate in Word / Kindle Create.
+ * DOCX export of corrected manuscript (OOXML zip).
+ * Page size / margins follow project.print_config for KDP Word → PDF path.
+ * For Kindle ebook, upload DOCX or convert via Kindle Create (KPF).
  */
 
 import JSZip from 'jszip'
+import { resolvePrintPageGeometry } from './exportPdf.js'
+import { wordCount } from './deterministic.js'
 
 function escapeXml(s) {
   return String(s || '')
@@ -50,11 +53,25 @@ export async function buildCorrectedDocx(project) {
     }
   }
 
+  const totalWords = sections.reduce((n, s) => n + wordCount(s.content_md), 0)
+  const geo = resolvePrintPageGeometry(project, { wordCountTotal: totalWords })
+  // OOXML uses twips (1/20 pt); 1 inch = 1440 twips
+  const wTwip = Math.round(geo.page_width_in * 1440)
+  const hTwip = Math.round(geo.page_height_in * 1440)
+  const top = Math.round(geo.top_in * 1440)
+  const bottom = Math.round(geo.bottom_in * 1440)
+  const gutter = Math.round(geo.gutter_in * 1440)
+  const outside = Math.round(geo.outside_in * 1440)
+
   const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
   <w:body>
     ${bodyParts.join('\n')}
-    <w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr>
+    <w:sectPr>
+      <w:pgSz w:w="${wTwip}" w:h="${hTwip}"/>
+      <w:pgMar w:top="${top}" w:right="${outside}" w:bottom="${bottom}" w:left="${gutter}" w:gutter="0"/>
+      <w:pgNumType w:start="1"/>
+    </w:sectPr>
   </w:body>
 </w:document>`
 

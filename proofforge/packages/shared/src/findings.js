@@ -151,6 +151,31 @@ export function scoreFromFindings(findings = [], { kdpBlocking = 0, coverage = n
     suggestion: 1,
     needs_verification: 4,
   }
+
+  // No findings yet = analysis not run — never show a fake 100
+  if (!list.length) {
+    const emptyDims = Object.fromEntries(SCORE_DIMENSIONS.map((d) => [d.id, null]))
+    const emptyCats = Object.fromEntries(FINDING_CATEGORIES.map((c) => [c, null]))
+    return {
+      overall: null,
+      categories: emptyCats,
+      dimensions: emptyDims,
+      counts: {
+        critical: 0,
+        major: 0,
+        moderate: 0,
+        minor: 0,
+        suggestion: 0,
+        needs_verification: 0,
+        total_open: 0,
+        total: 0,
+      },
+      readiness: 'analysis_incomplete',
+      coverage_note: coverage || null,
+      note: 'Run a full audit to generate an editorial score. Scores are guides — not KDP approval.',
+    }
+  }
+
   let penalty = 0
   for (const f of open) {
     penalty += weight[f.severity] || 2
@@ -188,8 +213,7 @@ export function scoreFromFindings(findings = [], { kdpBlocking = 0, coverage = n
     total: list.length,
   }
   let readiness = 'not_yet_assessed'
-  if (!list.length) readiness = 'analysis_incomplete'
-  else if (counts.critical > 0 || kdpBlocking > 0) readiness = 'critical_issues_detected'
+  if (counts.critical > 0 || kdpBlocking > 0) readiness = 'critical_issues_detected'
   else if (counts.major > 0) readiness = 'corrections_recommended'
   else if (counts.total_open > 0) readiness = 'ready_for_final_author_review'
   else readiness = 'checks_passed_for_selected_profile'

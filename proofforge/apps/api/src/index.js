@@ -26,6 +26,11 @@ import {
   buildCorrectedManuscript,
   buildCorrectedEpub,
   buildCorrectedDocx,
+  buildPrintPdf,
+  buildReportPdf,
+  buildPlainTextManuscript,
+  buildEbookHtml,
+  kdpUploadChecklist,
   resolveEntitlement,
 } from '@proofforge/shared'
 import { createPlagiarismProvider } from '@proofforge/agents'
@@ -200,7 +205,30 @@ const server = http.createServer(async (req, res) => {
         entitlements: resolveEntitlement(),
         formats: {
           ingest: ['txt', 'md', 'docx', 'pdf', 'epub'],
-          export: ['json', 'csv', 'md', 'manuscript', 'epub', 'docx'],
+          export: [
+            'json',
+            'csv',
+            'md',
+            'manuscript',
+            'epub',
+            'docx',
+            'pdf',
+            'pdf-report',
+            'txt',
+            'html',
+          ],
+          kdp_upload_paths: {
+            kindle_ebook: [
+              'docx',
+              'epub',
+              'html',
+              'txt',
+              'pdf_limited_languages',
+              'kpf_via_kindle_create',
+            ],
+            paperback_hardcover: ['pdf_print_interior', 'docx_then_pdf_with_fonts_embedded'],
+            note: 'KPF is produced in Amazon Kindle Create. Print PDF uses project trim/margins/bleed. MOBI fixed-layout ended March 2025.',
+          },
           ocr: process.env.PROOFFORGE_OCR !== '0',
         },
         plagiarism: {
@@ -429,8 +457,19 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
+    const checklistMatch = path.match(/^\/v1\/projects\/([^/]+)\/kdp-checklist$/)
+    if (req.method === 'GET' && checklistMatch) {
+      const project = store.getProject(checklistMatch[1])
+      if (!project || project.owner_id !== LOCAL_USER) {
+        sendError(res, 404, 'Project not found')
+        return
+      }
+      sendJson(res, 200, kdpUploadChecklist(project))
+      return
+    }
+
     const exportMatch = path.match(
-      /^\/v1\/projects\/([^/]+)\/export\/(json|csv|md|manuscript|epub|docx)$/
+      /^\/v1\/projects\/([^/]+)\/export\/(json|csv|md|manuscript|epub|docx|pdf|pdf-report|txt|html)$/
     )
     if (req.method === 'GET' && exportMatch) {
       const project = store.getProject(exportMatch[1])
@@ -490,6 +529,44 @@ const server = http.createServer(async (req, res) => {
           'Content-Length': bytes.length,
         })
         res.end(Buffer.from(bytes))
+        return
+      }
+      if (kind === 'pdf') {
+        const { bytes, filename } = await buildPrintPdf(project)
+        res.writeHead(200, {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="${filename || `manuscript-print-${project.id}.pdf`}"`,
+          'Content-Length': bytes.length,
+        })
+        res.end(Buffer.from(bytes))
+        return
+      }
+      if (kind === 'pdf-report') {
+        const { bytes, filename } = await buildReportPdf(project)
+        res.writeHead(200, {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="${filename || `report-${project.id}.pdf`}"`,
+          'Content-Length': bytes.length,
+        })
+        res.end(Buffer.from(bytes))
+        return
+      }
+      if (kind === 'txt') {
+        const { text, filename } = buildPlainTextManuscript(project)
+        res.writeHead(200, {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Content-Disposition': `attachment; filename="${filename}"`,
+        })
+        res.end(text)
+        return
+      }
+      if (kind === 'html') {
+        const { html, filename } = buildEbookHtml(project)
+        res.writeHead(200, {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Content-Disposition': `attachment; filename="${filename}"`,
+        })
+        res.end(html)
         return
       }
     }

@@ -37,6 +37,12 @@ test('scoreFromFindings lowers score for critical issues', () => {
   assert.equal(s.readiness, 'critical_issues_detected')
 })
 
+test('scoreFromFindings does not fake 100 before analysis', () => {
+  const s = scoreFromFindings([])
+  assert.equal(s.overall, null)
+  assert.equal(s.readiness, 'analysis_incomplete')
+})
+
 test('detectSections splits on chapter headings', () => {
   const ms = `# Chapter 1\n\nOnce upon a time there was a long enough opening paragraph for the splitter.\n\n# Chapter 2\n\nLater that day the story continued with another paragraph of substance.`
   const sections = detectSections(ms)

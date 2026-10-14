@@ -66,4 +66,5 @@ export const pfApi = {
   ingest: (body) => api('/v1/projects/ingest', { method: 'POST', body }),
   exportUrl: (projectId, kind) => `/v1/projects/${projectId}/export/${kind}`,
   kdpRulesAdmin: () => api('/v1/admin/kdp-rules'),
+  kdpChecklist: (projectId) => api(`/v1/projects/${projectId}/kdp-checklist`),
 }

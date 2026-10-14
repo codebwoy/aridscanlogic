@@ -5,13 +5,16 @@
   "type": "module",
   "main": "./src/index.js",
   "exports": {
-    ".": "./src/index.js"
+    ".": "./src/index.js",
+    "./desktop.js": "./src/desktop.js",
+    "./exportPdf.js": "./src/exportPdf.js"
   },
   "scripts": {
     "build": "node -e \"console.log('@proofforge/shared: ok')\"",
     "test": "node --test test/*.test.js"
   },
   "dependencies": {
-    "jszip": "^3.10.1"
+    "jszip": "^3.10.1",
+    "pdf-lib": "^1.17.1"
   }
 }
