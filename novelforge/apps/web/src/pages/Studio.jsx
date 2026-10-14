@@ -33,6 +33,7 @@ import {
   stepBook,
   submitJob,
   waitJob,
+  jobWaitTimeoutMs,
   saveCompliance,
 } from '../lib/api'
 import BookEditor from '../components/BookEditor'
@@ -159,7 +160,7 @@ export default function Studio({ lang = 'en' }) {
     setMessage(`Running ${type} (${costFor(type) ?? 0} credits)…`)
     try {
       const { job } = await submitJob(type, book?.id, inputs)
-      const done = await waitJob(job.id)
+      const done = await waitJob(job.id, { timeoutMs: jobWaitTimeoutMs(type) })
       if (done.status === 'failed') throw new Error(done.error || 'Job failed')
       await refresh()
       if (book?.id) await loadBook(book.id)

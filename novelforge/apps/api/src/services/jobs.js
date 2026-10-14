@@ -360,7 +360,7 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
           continuity: book.continuity,
           node,
         },
-        metadata: { bookId, jobId, targetWords: node.target_words },
+        metadata: { bookId, jobId, targetWords: node.target_words, maxTokens: 8192 },
       })
       const content_md = String(agent.parsed.content_md || '').trim()
       const existingMd = String(book.sections?.[inputs.sectionKey]?.content_md || '').trim()

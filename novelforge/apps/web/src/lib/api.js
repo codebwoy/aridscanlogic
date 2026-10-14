@@ -123,14 +123,34 @@ export async function getJob(id) {
   return api(`/v1/jobs/${id}`)
 }
 
-export async function waitJob(id, { timeoutMs = 120_000, intervalMs = 400 } = {}) {
+/** Client poll budget — writing/outline Anthropic calls often exceed 2 minutes. */
+export function jobWaitTimeoutMs(type) {
+  switch (type) {
+    case 'generate_all_chapter':
+      return 900_000 // 15 min — multiple scene drafts in one job
+    case 'section_draft':
+    case 'section_regenerate':
+    case 'outline_generate':
+    case 'outline_regenerate_subtree':
+    case 'outline_expand_chapter':
+    case 'manuscript_import':
+      return 600_000 // 10 min
+    default:
+      return 300_000 // 5 min
+  }
+}
+
+export async function waitJob(id, { timeoutMs = 300_000, intervalMs = 800 } = {}) {
   const start = Date.now()
   while (Date.now() - start < timeoutMs) {
     const { job } = await getJob(id)
     if (job.status === 'completed' || job.status === 'failed') return job
     await new Promise((r) => setTimeout(r, intervalMs))
   }
-  throw new Error('Job timed out')
+  const mins = Math.round(timeoutMs / 60_000)
+  throw new Error(
+    `Job timed out after ${mins} min (still running on the server). Wait a moment, refresh the book, or retry Draft scene one scene at a time.`
+  )
 }
 
 export async function grantDevCredits() {

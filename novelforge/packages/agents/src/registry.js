@@ -212,20 +212,81 @@ function normalizeAgentPayload(data, schema) {
   return next
 }
 
-export function parseAgentJson(text, schema) {
+/**
+ * Strip markdown fences and extract the first balanced JSON value.
+ * Handles: ```json wrappers (with or without closing fence), leading prose,
+ * and ``` inside string values (unlike a non-greedy fence regex).
+ */
+export function extractJsonPayload(text) {
   let raw = String(text || '').trim()
-  const fence = raw.match(/```(?:json)?\s*([\s\S]*?)```/)
-  if (fence) raw = fence[1].trim()
-  const objStart = raw.indexOf('{')
-  const objEnd = raw.lastIndexOf('}')
-  const arrStart = raw.indexOf('[')
-  const arrEnd = raw.lastIndexOf(']')
-  if (objStart >= 0 && objEnd > objStart && (arrStart < 0 || objStart <= arrStart)) {
-    raw = raw.slice(objStart, objEnd + 1)
-  } else if (arrStart >= 0 && arrEnd > arrStart) {
-    raw = raw.slice(arrStart, arrEnd + 1)
+  if (!raw) throw new Error('Empty model response — retry.')
+
+  // Drop opening ``` / ```json even when the model omits the closing fence.
+  if (raw.startsWith('```')) {
+    const nl = raw.indexOf('\n')
+    raw = (nl >= 0 ? raw.slice(nl + 1) : raw.replace(/^```(?:json)?\s*/i, '')).trim()
   }
-  let data = JSON.parse(raw)
+  // Drop trailing fence if present
+  if (raw.endsWith('```')) {
+    raw = raw.slice(0, -3).trim()
+  }
+
+  const objStart = raw.indexOf('{')
+  const arrStart = raw.indexOf('[')
+  let start = -1
+  let open = ''
+  let close = ''
+  if (objStart >= 0 && (arrStart < 0 || objStart <= arrStart)) {
+    start = objStart
+    open = '{'
+    close = '}'
+  } else if (arrStart >= 0) {
+    start = arrStart
+    open = '['
+    close = ']'
+  }
+  if (start < 0) {
+    throw new Error('Model response was not JSON. Retry the job.')
+  }
+
+  let depth = 0
+  let inString = false
+  let escape = false
+  for (let i = start; i < raw.length; i++) {
+    const ch = raw[i]
+    if (inString) {
+      if (escape) escape = false
+      else if (ch === '\\') escape = true
+      else if (ch === '"') inString = false
+      continue
+    }
+    if (ch === '"') {
+      inString = true
+      continue
+    }
+    if (ch === open) depth++
+    else if (ch === close) {
+      depth--
+      if (depth === 0) return raw.slice(start, i + 1)
+    }
+  }
+
+  throw new Error(
+    'AI response was cut off (incomplete JSON, often from a markdown ```json fence). Retry Draft scene — use a shorter target word count if it keeps failing.'
+  )
+}
+
+export function parseAgentJson(text, schema) {
+  const raw = extractJsonPayload(text)
+  let data
+  try {
+    data = JSON.parse(raw)
+  } catch (e) {
+    const hint = String(e?.message || 'invalid JSON')
+    throw new Error(
+      `Could not parse AI JSON (${hint}). Retry the job — if this persists, the model may have wrapped or truncated the reply.`
+    )
+  }
   data = normalizeAgentPayload(data, schema)
   const result = schema.safeParse(data)
   if (result.success) return result.data

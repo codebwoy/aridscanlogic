@@ -3,6 +3,7 @@ export {
   getPromptEntry,
   renderPrompt,
   parseAgentJson,
+  extractJsonPayload,
   promptFilesOnDisk,
 } from './registry.js'
 export { runAgent } from './runAgent.js'

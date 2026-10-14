@@ -9,7 +9,9 @@ import { AnthropicLLMProvider } from './anthropicProvider.js'
  * }} [cfg]
  */
 export function createLlmProvider(cfg = {}) {
-  const name = (cfg.provider || process.env.NOVELFORGE_LLM_PROVIDER || 'fake').toLowerCase()
+  const name = String(cfg.provider || process.env.NOVELFORGE_LLM_PROVIDER || 'fake')
+    .toLowerCase()
+    .trim()
   if (name === 'anthropic') {
     return new AnthropicLLMProvider({
       apiKey: cfg.anthropicApiKey || process.env.ANTHROPIC_API_KEY || '',

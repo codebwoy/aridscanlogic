@@ -19,12 +19,18 @@ export async function runAgent(llm, promptKey, { input, modelClass = 'draft', me
     UNIVERSAL_COAUTHOR_RULES: UNIVERSAL_FICTION_RULES,
   })
   systemParts.push(rendered)
-  systemParts.push('Respond with valid JSON only matching the schema. No markdown prose outside JSON.')
+  systemParts.push(
+    'Respond with valid JSON only matching the schema. Do not wrap the JSON in markdown code fences (no ```json). No prose outside the JSON object.'
+  )
   const system = systemParts.join('\n\n')
 
   const userContent =
     typeof input === 'string' ? input : JSON.stringify(input ?? {}, null, 2)
   const inputHash = createHash('sha256').update(`${promptKey}:${userContent}`).digest('hex')
+
+  // Writer prose needs headroom; Anthropic provider caps at 8192.
+  const defaultMax =
+    promptKey === 'writer.v1' || promptKey === 'outline.v1' ? 8192 : 4096
 
   const completion = await llm.complete({
     modelClass,
@@ -33,7 +39,7 @@ export async function runAgent(llm, promptKey, { input, modelClass = 'draft', me
     cacheableSystemPrefix: input?.bookBible
       ? `BOOK_BIBLE:\n${JSON.stringify(input.bookBible)}`
       : undefined,
-    maxTokens: metadata.maxTokens || 4096,
+    maxTokens: metadata.maxTokens || defaultMax,
     metadata: {
       ...metadata,
       promptKey,

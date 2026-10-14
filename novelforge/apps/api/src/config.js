@@ -43,7 +43,7 @@ export const config = {
   serveStatic: process.env.NOVELFORGE_SERVE_STATIC !== '0',
   redisUrl: process.env.REDIS_URL || '',
   databaseUrl: process.env.DATABASE_URL || '',
-  llmProvider: process.env.NOVELFORGE_LLM_PROVIDER || 'fake',
+  llmProvider: String(process.env.NOVELFORGE_LLM_PROVIDER || 'fake').trim(),
   anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
   bookBudgetEur: Number(process.env.NOVELFORGE_BOOK_BUDGET_EUR || 8),
   marketProvider: process.env.NOVELFORGE_MARKET_PROVIDER || 'mock',
