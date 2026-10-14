@@ -23,10 +23,9 @@ test('FakeLLMProvider section returns fiction prose', async () => {
     messages: [{ role: 'user', content: JSON.stringify({ node: { title: 'Arrival' } }) }],
     metadata: { targetWords: 200, promptName: 'writer' },
   })
-  const data = JSON.parse(r.text)
-  assert.ok(data.content_md.length > 40)
-  assert.ok(Array.isArray(data.characters_on_page))
-  assert.equal(data.story_slots, undefined)
+  assert.match(r.text, /<<<NF_PROSE>>>/)
+  assert.match(r.text, /Arrival|Ama|S-Bahn/i)
+  assert.doesNotMatch(r.text, /"content_md"\s*:/)
 })
 
 test('FakeLLMProvider title wins even when fiction co-writer rules are in system', async () => {

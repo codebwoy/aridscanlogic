@@ -52,6 +52,7 @@ import {
   probeAuthorforgeReady,
 } from '@/lib/authorforge/launch'
 import { launchNovelforgeDesktop } from '@/lib/novelforge/launch'
+import { launchProofforgeDesktop } from '@/lib/proofforge/launch'
 import { hubNicheLadder, MARKET_DISCLAIMER as NICHE_MARKET_DISCLAIMER } from '@/lib/authorforge/recommendedNiches'
 import MerchConfigPanel from '@/components/bizstart/amazon/MerchConfigPanel'
 import KdpConfigPanel from '@/components/bizstart/amazon/KdpConfigPanel'
@@ -155,6 +156,7 @@ export default function AmazonHub({ lang = 'en', onBack }) {
   const [storyforgeReady, setStoryforgeReady] = useState(null)
   const [authorforgeReady, setAuthorforgeReady] = useState(null)
   const [novelforgeReady, setNovelforgeReady] = useState(null)
+  const [proofforgeReady, setProofforgeReady] = useState(null)
 
   useEffect(() => {
     // Only probe localhost studios. Remote Fly URLs: never poll /health (wakes machines +
@@ -240,6 +242,22 @@ export default function AmazonHub({ lang = 'en', onBack }) {
       return
     }
     toast.error(amazonT(lang, 'novelforgePopupBlocked'))
+  }
+
+  async function onOpenProofforge() {
+    const result = await launchProofforgeDesktop({ view: 'studio' })
+    setProofforgeReady(result.opened || result.reason !== 'offline')
+    if (result.opened) return
+    if (result.reason === 'mobile') {
+      toast.message(amazonT(lang, 'proofforgeMobile'))
+      return
+    }
+    if (result.reason === 'offline') {
+      setProofforgeReady(false)
+      toast.error(amazonT(lang, 'proofforgeOffline'))
+      return
+    }
+    toast.error(amazonT(lang, 'proofforgePopupBlocked'))
   }
 
   function openPlaybook(guideId) {
@@ -620,6 +638,39 @@ export default function AmazonHub({ lang = 'en', onBack }) {
             ) : novelforgeReady === true ? (
               <p className="mt-2 text-[11px] font-medium text-emerald-300/90">
                 {amazonT(lang, 'novelforgeOnline')}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="premium-card mb-4 border border-emerald-500/25 p-4">
+        <div className="flex items-start gap-3">
+          <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" aria-hidden />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-slate-100">{amazonT(lang, 'proofforgeTitle')}</p>
+            <p className="mt-1.5 text-xs leading-relaxed text-slate-300">
+              {amazonT(lang, 'proofforgeBody')}
+            </p>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <button
+                type="button"
+                onClick={() => onOpenProofforge()}
+                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-sm font-semibold text-white sm:w-auto"
+              >
+                {amazonT(lang, 'proofforgeCta')}
+              </button>
+            </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+              {amazonT(lang, 'proofforgeHint')}
+            </p>
+            {proofforgeReady === false ? (
+              <p className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-2 text-[11px] leading-relaxed text-amber-100/90">
+                {amazonT(lang, 'proofforgeOffline')}
+              </p>
+            ) : proofforgeReady === true ? (
+              <p className="mt-2 text-[11px] font-medium text-emerald-300/90">
+                {amazonT(lang, 'proofforgeOnline')}
               </p>
             ) : null}
           </div>

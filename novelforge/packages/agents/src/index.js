@@ -14,6 +14,14 @@ export {
   maxTokensForDraftWords,
   chapterDraftNodes,
 } from './draftLimits.js'
+export {
+  parseWriterPayload,
+  parseDelimitedWriter,
+  repairWriterJson,
+  NF_META,
+  NF_PROSE,
+  NF_END,
+} from './writerParse.js'
 export { runAgent } from './runAgent.js'
 export { focusTagCoverage, flattenOutlineNodes } from './outlineCoverage.js'
 export {

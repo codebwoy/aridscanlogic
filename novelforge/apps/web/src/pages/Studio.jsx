@@ -39,6 +39,7 @@ import {
 import BookEditor from '../components/BookEditor'
 import ManuscriptImport from '../components/ManuscriptImport'
 import LaunchReadinessPanel from '../components/LaunchReadinessPanel'
+import { handoffBookToProofForge } from '../lib/proofforgeHandoff'
 
 function flattenLeaves(chapters = []) {
   const out = []
@@ -1011,6 +1012,34 @@ export default function Studio({ lang = 'en' }) {
                     }
                   }}
                 />
+                <h3 style={{ marginTop: '1.25rem' }}>ProofForge audit</h3>
+                <p className="muted">
+                  Send this manuscript to ProofForge for a whole-book proofread / localization pass
+                  (accept or reject each finding). Requires local{' '}
+                  <code>npm run proofforge:dev</code> (:5183). Does not guarantee KDP approval.
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={!!busy || !book}
+                  onClick={async () => {
+                    setBusy('proofforge')
+                    try {
+                      const result = await handoffBookToProofForge(book)
+                      if (result.opened) {
+                        setMessage('Opened ProofForge with this manuscript')
+                      } else {
+                        setMessage(result.error || result.reason || 'ProofForge handoff failed')
+                      }
+                    } catch (e) {
+                      setMessage(e.message || 'ProofForge handoff failed')
+                    } finally {
+                      setBusy('')
+                    }
+                  }}
+                >
+                  Audit in ProofForge
+                </button>
                 <h3 style={{ marginTop: '1.25rem' }}>Export files</h3>
                 <div className="row" style={{ flexWrap: 'wrap' }}>
                   {['export_docx', 'export_interior_pdf', 'export_epub', 'export_cover_pdf', 'export_kdp_zip'].map(

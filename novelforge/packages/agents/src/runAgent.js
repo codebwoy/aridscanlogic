@@ -24,9 +24,15 @@ export async function runAgent(llm, promptKey, { input, modelClass = 'draft', me
     UNIVERSAL_COAUTHOR_RULES: UNIVERSAL_FICTION_RULES,
   })
   systemParts.push(rendered)
-  systemParts.push(
-    'Respond with valid JSON only matching the schema. Do not wrap the JSON in markdown code fences (no ```json). No prose outside the JSON object. Always close every string and brace.'
-  )
+  if (promptKey === 'writer.v1') {
+    systemParts.push(
+      'Output MUST use <<<NF_META>>>, <<<NF_PROSE>>>, <<<NF_END>>> delimiters. Put all fiction prose only between NF_PROSE and NF_END. Meta JSON must not contain the scene prose. No markdown fences.'
+    )
+  } else {
+    systemParts.push(
+      'Respond with valid JSON only matching the schema. Do not wrap the JSON in markdown code fences (no ```json). No prose outside the JSON object. Always close every string and brace.'
+    )
+  }
   const system = systemParts.join('\n\n')
 
   let agentInput = input
@@ -40,7 +46,7 @@ export async function runAgent(llm, promptKey, { input, modelClass = 'draft', me
       },
       draft_constraints: {
         max_words: tw,
-        must_finish_json: true,
+        output_format: 'NF_DELIMITED',
       },
     }
   }

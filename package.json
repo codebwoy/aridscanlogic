@@ -32,6 +32,12 @@
     "novelforge:dev:api": "npm run dev:api --prefix novelforge",
     "novelforge:dev:web": "npm run dev:web --prefix novelforge",
     "novelforge:build": "npm run build --prefix novelforge",
+    "proofforge:install": "npm install --prefix proofforge",
+    "proofforge:test": "npm run test --prefix proofforge",
+    "proofforge:dev": "npm run dev:studio --prefix proofforge",
+    "proofforge:dev:api": "npm run dev:api --prefix proofforge",
+    "proofforge:dev:web": "npm run dev:web --prefix proofforge",
+    "proofforge:build": "npm run build --prefix proofforge",
     "storyforge:build": "npm run build --prefix storyforge"
   },
   "dependencies": {

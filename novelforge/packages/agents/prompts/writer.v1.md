@@ -13,16 +13,16 @@ Write one scene/section of adult fiction prose for NovelForge.
 
 ## Length & format (critical)
 - Stay at or under `node.target_words` (never pad past it).
-- Finish a complete, valid JSON object before stopping — never leave `content_md` unclosed.
-- Do **not** wrap the reply in markdown fences (no ```json).
 - Prefer a finished shorter scene over a truncated longer one.
+- Do **not** wrap the reply in markdown fences (no ```).
+- Do **not** put the prose inside a JSON string (dialogue quotes break JSON).
 
-## Output
-Return ONLY JSON:
-{
-  "content_md": "markdown prose for this section",
-  "scene_goal": "what this scene achieves",
-  "characters_on_page": ["names"],
-  "open_loops": ["threads left hanging"],
-  "continuity_notes": ["facts established"]
-}
+## Output (required shape)
+
+Use these exact delimiters:
+
+<<<NF_META>>>
+{"scene_goal":"what this scene achieves","characters_on_page":["names"],"open_loops":["threads left hanging"],"continuity_notes":["facts established"]}
+<<<NF_PROSE>>>
+markdown prose for this section — dialogue quotes and newlines are allowed here
+<<<NF_END>>>

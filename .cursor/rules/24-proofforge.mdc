@@ -1,0 +1,61 @@
+---
+description: ProofForge desktop manuscript audit / humanoid proofreader (sibling app)
+globs: proofforge/**,src/lib/proofforge/**
+alwaysApply: false
+---
+
+# ProofForge
+
+## Product positioning (non-negotiable)
+
+ProofForge is a desktop **manuscript audit** studio — whole-book proofread, naturalness,
+localization, and editorial findings with accept/reject — used **after** drafting in
+NovelForge, AuthorForge, or StoryForge (or via pasted manuscript).
+
+| Studio | Owns |
+|--------|------|
+| **NovelForge** | Adult fiction draft |
+| **AuthorForge** | Adult non-fiction draft |
+| **StoryForge** | Children’s picture books |
+| **ProofForge** | Post-draft audit / humanoid proofreader |
+
+Do **not** turn ProofForge into a co-author writer or kids’ art canvas.
+Do **not** claim Amazon KDP approval or eliminate the need for human review on high-stakes claims.
+Scores are **guides**, not literary judgment (AutoCrit-style product principle).
+
+Primary languages: `en` / `de` / `es` / `fr` / `it` / `nl` + varieties — see `22-book-languages.mdc`
+and `proofforge/packages/shared/src/book-languages.js`.
+
+## Placement
+
+- **Not** a ScanLogic tab and **not** available on mobile.
+- Entry: Amazon Hub → `launchProofforgeDesktop()` → `VITE_PROOFFORGE_URL` (default `http://127.0.0.1:5183`).
+- NovelForge Publish → **Audit in ProofForge** (`proofforgeHandoff.js` → `/v1/projects/import`).
+- Code: `proofforge/` monorepo (`packages/*`, `apps/api`, `apps/web`).
+
+## Rules
+
+- Desktop min width **1024px** — web gate **and** API session / mutate checks.
+- Personal studio: no Stripe / no paywall. Work-unit estimates are informational only.
+- All LLM calls via `@proofforge/llm` on the ProofForge API — never ScanLogic `/api/llm`, never from the browser.
+- Findings must cite excerpts that exist in the source text (`normalizeFinding`).
+- Never silently rewrite the whole manuscript; accept/reject only.
+- Prefer **local** `npm run proofforge:dev` for agent work; do not wake Fly unless asked.
+
+## Research
+
+Crawled product references live in `proofforge/docs/RESEARCH.md` (ProWritingAid, AutoCrit,
+Grammarly, KDP trim/margins, Anthropic prompting). Implement original engines from those
+concepts — never copy proprietary code.
+
+Core workflow must stay: ingest → whole-book analysis → findings → accept/reject/agree/disagree →
+exports + KDP rule report. Also: reports catalog (Summary / Overused / Sticky / Structure /
+Readability / Grammar / Dialogue), Ignore/Defer/dictionary, credit estimate, hardcover reminder,
+OCR, plagiarism consent. No Stripe. Never silent third-party plagiarism uploads. Scores are guides.
+
+## Commands
+
+```bash
+cd proofforge && npm install && npm test
+npm run proofforge:dev   # from repo root — API :8790 + web :5183
+```

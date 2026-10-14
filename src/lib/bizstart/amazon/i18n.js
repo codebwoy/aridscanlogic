@@ -77,6 +77,18 @@ export const AMAZON_STRINGS = {
     novelforgeOffline:
       'Local NovelForge is not running. Start it with npm run novelforge:dev (http://127.0.0.1:5182), or set VITE_NOVELFORGE_URL and redeploy ScanLogic.',
     novelforgeOnline: 'NovelForge is reachable — Open NovelForge will work.',
+    proofforgeTitle: 'ProofForge — manuscript audit & proofreader',
+    proofforgeBody:
+      'Desktop-only humanoid proofreader after NovelForge / AuthorForge / StoryForge: whole-manuscript grammar, naturalness, localization (en/de/es/fr/it/nl), accept/reject findings. Scores are guides — not Amazon KDP approval.',
+    proofforgeCta: 'Open ProofForge (desktop)',
+    proofforgeHint:
+      'Local: npm run proofforge:dev (:5183). Set VITE_PROOFFORGE_URL for production. From NovelForge Publish → Audit in ProofForge.',
+    proofforgeMobile:
+      'ProofForge needs a desktop screen (≥1024px). Open ScanLogic on a computer to use the studio.',
+    proofforgePopupBlocked: 'Pop-up blocked — allow pop-ups or open ProofForge manually.',
+    proofforgeOffline:
+      'Local ProofForge is not running. Start it with npm run proofforge:dev (http://127.0.0.1:5183), or set VITE_PROOFFORGE_URL and redeploy ScanLogic.',
+    proofforgeOnline: 'ProofForge is reachable — Open ProofForge will work.',
     playbooksTitle: 'KDP + Merch playbooks',
     playbooksIntro:
       'Start with First-time publisher truths, then Publish wide + email list (don’t put all eggs in one Amazon basket). Then KDP requirements, account termination protection, learning centre, Merch, and research. Creation: StoryForge + AuthorForge (desktop).',
@@ -461,6 +473,18 @@ export const AMAZON_STRINGS = {
     novelforgeOffline:
       'Lokales NovelForge läuft nicht. Start: npm run novelforge:dev (http://127.0.0.1:5182) — oder VITE_NOVELFORGE_URL setzen und ScanLogic neu deployen.',
     novelforgeOnline: 'NovelForge ist erreichbar — „NovelForge öffnen“ funktioniert.',
+    proofforgeTitle: 'ProofForge — Manuskript-Audit & Korrekturlesen',
+    proofforgeBody:
+      'Nur Desktop: humanoides Korrekturlesen nach NovelForge / AuthorForge / StoryForge — Ganzmanuskript (Grammatik, Natürlichkeit, Lokalisierung en/de/es/fr/it/nl), Findings annehmen/ablehnen. Scores sind Orientierung — keine Amazon-KDP-Freigabe.',
+    proofforgeCta: 'ProofForge öffnen (Desktop)',
+    proofforgeHint:
+      'Lokal: npm run proofforge:dev (:5183). Produktion: VITE_PROOFFORGE_URL. Aus NovelForge Publish → Audit in ProofForge.',
+    proofforgeMobile:
+      'ProofForge braucht einen Desktop-Bildschirm (≥1024px). Öffnen Sie ScanLogic am Computer.',
+    proofforgePopupBlocked: 'Pop-up blockiert — erlauben oder ProofForge manuell öffnen.',
+    proofforgeOffline:
+      'Lokales ProofForge läuft nicht. Start: npm run proofforge:dev (http://127.0.0.1:5183) — oder VITE_PROOFFORGE_URL setzen und ScanLogic neu deployen.',
+    proofforgeOnline: 'ProofForge ist erreichbar — „ProofForge öffnen“ funktioniert.',
     playbooksTitle: 'KDP + Merch Playbooks',
     playbooksIntro:
       'Zuerst: Wahrheiten für Erstautor:innen, dann Wide publizieren + E-Mail-Liste (nicht alle Eier in einen Amazon-Korb). Dann KDP-Anforderungen, Kontosperrung-Absicherung, Lernzentrum, Merch und Recherche. Erstellung: StoryForge + AuthorForge + NovelForge (Desktop).',

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { z } from 'zod'
+import { parseWriterPayload } from './writerParse.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PROMPTS_DIR = join(__dirname, '../prompts')
@@ -332,12 +333,26 @@ export function salvageTruncatedWriterJson(text) {
 }
 
 export function parseAgentJson(text, schema) {
+  const looksLikeWriter =
+    schema?.shape?.content_md != null || /"content_md"\s*:|<<<NF_PROSE>>>/.test(String(text || ''))
+
   let data
   try {
-    const raw = extractJsonPayload(text)
-    data = JSON.parse(raw)
+    if (looksLikeWriter) {
+      const writer = parseWriterPayload(text)
+      if (writer) {
+        data = writer
+      } else {
+        const raw = extractJsonPayload(text)
+        data = JSON.parse(raw)
+      }
+    } else {
+      const raw = extractJsonPayload(text)
+      data = JSON.parse(raw)
+    }
   } catch (e) {
-    const salvaged = salvageTruncatedWriterJson(text)
+    const salvaged =
+      salvageTruncatedWriterJson(text) || (looksLikeWriter ? parseWriterPayload(text) : null)
     if (salvaged) {
       data = salvaged
     } else {

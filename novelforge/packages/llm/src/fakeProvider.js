@@ -38,10 +38,11 @@ export class FakeLLMProvider extends LLMProvider {
       promptName.includes('writer') ||
       system.includes('writeragent') ||
       system.includes('content_md') ||
+      system.includes('nf_prose') ||
       system.includes('fiction co-writer') ||
       system.includes('co-writer')
     ) {
-      text = JSON.stringify(fakeSection(req))
+      text = fakeSection(req)
     } else {
       text = JSON.stringify({
         ok: true,
@@ -206,13 +207,20 @@ function fakeSection(req) {
     '',
     'By the time the train doors closed, the choice she had postponed was already shaping the night ahead.',
   ]
-  return {
-    content_md: paras.join('\n'),
+  // Match production writer format (delimited) so FakeLLM exercises the same parser.
+  const meta = JSON.stringify({
     scene_goal: 'Force Ama to face the family call',
     characters_on_page: ['Ama Mensah', 'Kwame Mensah'],
     open_loops: ['Will she book the flight?'],
     continuity_notes: ['Evening in Berlin', 'Kwame called from home'],
-  }
+  })
+  return [
+    '<<<NF_META>>>',
+    meta,
+    '<<<NF_PROSE>>>',
+    paras.join('\n'),
+    '<<<NF_END>>>',
+  ].join('\n')
 }
 
 function fakeDescription(user) {

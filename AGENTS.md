@@ -27,8 +27,9 @@ Cursor loads rules from `.cursor/rules/*.mdc`. Use the matching rule when editin
 | `19-authorforge.mdc` | AuthorForge culturally specific adult non-fiction (parenting / coaching / journals / identity self-help; African-heritage · bilingual · DE lane) — kids’ books → StoryForge; adult fiction → NovelForge; not a mobile suite tab |
 | `20-hybrid-fly-cost.mdc` | Always on — no unnecessary Fly machine wakes (AuthorForge/StoryForge cost rail) |
 | `21-novelforge.mdc` | NovelForge adult fiction co-author (novels / novellas; diaspora lane) — not non-fiction, not kids’ picture books; not a mobile suite tab |
-| `22-book-languages.mdc` | AuthorForge + NovelForge primary manuscript languages (en/de/es/fr/it/nl) + per-language culture/tone profiles for audience fit |
+| `22-book-languages.mdc` | AuthorForge + NovelForge + ProofForge primary manuscript languages (en/de/es/fr/it/nl) + per-language culture/tone profiles for audience fit |
 | `23-launch-readiness.mdc` | Pre-Amazon launch checklist on Publish (edit, KDP account, Previewer, manual upload) — export ≠ live on Amazon |
+| `24-proofforge.mdc` | ProofForge desktop manuscript audit / humanoid proofreader after write studios — not a mobile suite tab |
 
 Human-readable security policy: `SECURITY.md`. StoryForge: `storyforge/SECURITY.md`.
 

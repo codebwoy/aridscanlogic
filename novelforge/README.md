@@ -45,6 +45,12 @@ Interactive checklist before Amazon: manuscript quality, KDP account, studio set
 upload, strategy disclaimer. Canonical: `LAUNCH_READINESS` in `publishing-specs.js`. See
 `.cursor/rules/23-launch-readiness.mdc`. Export still does **not** upload to Amazon.
 
+### ProofForge audit
+
+On Publish, **Audit in ProofForge** imports the manuscript into the ProofForge studio
+(`npm run proofforge:dev` on :5183) for whole-book proofread / localization findings.
+See `.cursor/rules/24-proofforge.mdc`.
+
 Default LLM is **fake** (offline fixtures). For live Anthropic:
 
 ```bash

@@ -1,0 +1,22 @@
+{
+  "name": "proofforge",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "node scripts/dev-studio.mjs",
+    "dev:studio": "node scripts/dev-studio.mjs",
+    "dev:api": "npm run dev -w @proofforge/api",
+    "dev:web": "npm run dev -w @proofforge/web",
+    "build": "npm run build -w @proofforge/shared && npm run build -w @proofforge/llm && npm run build -w @proofforge/agents && npm run build -w @proofforge/api && npm run build -w @proofforge/web",
+    "test": "PROOFFORGE_PERSIST=0 PROOFFORGE_LLM_PROVIDER=fake npm run test -w @proofforge/shared && PROOFFORGE_PERSIST=0 PROOFFORGE_LLM_PROVIDER=fake npm run test -w @proofforge/llm && PROOFFORGE_PERSIST=0 PROOFFORGE_LLM_PROVIDER=fake npm run test -w @proofforge/agents && PROOFFORGE_PERSIST=0 PROOFFORGE_LLM_PROVIDER=fake npm run test -w @proofforge/api",
+    "start:prod": "NODE_ENV=production PROOFFORGE_SERVE_STATIC=1 npm run start -w @proofforge/api"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

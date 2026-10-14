@@ -1,6 +1,6 @@
 ---
-description: Primary manuscript languages + culture/tone profiles (AuthorForge & NovelForge)
-globs: authorforge/packages/shared/src/book-languages.js,novelforge/packages/shared/src/book-languages.js,authorforge/packages/agents/src/runAgent.js,novelforge/packages/agents/src/runAgent.js,authorforge/apps/web/src/pages/Studio.jsx,novelforge/apps/web/src/pages/Studio.jsx,authorforge/apps/api/src/index.js,novelforge/apps/api/src/index.js,authorforge/apps/api/src/services/jobs.js,novelforge/apps/api/src/services/jobs.js
+description: Primary manuscript languages + culture/tone profiles (AuthorForge, NovelForge & ProofForge)
+globs: authorforge/packages/shared/src/book-languages.js,novelforge/packages/shared/src/book-languages.js,proofforge/packages/shared/src/book-languages.js,authorforge/packages/agents/src/runAgent.js,novelforge/packages/agents/src/runAgent.js,proofforge/packages/agents/src/runAgent.js,authorforge/apps/web/src/pages/Studio.jsx,novelforge/apps/web/src/pages/Studio.jsx,authorforge/apps/api/src/index.js,novelforge/apps/api/src/index.js,proofforge/apps/api/src/index.js,authorforge/apps/api/src/services/jobs.js,novelforge/apps/api/src/services/jobs.js
 alwaysApply: false
 ---
 
@@ -8,7 +8,7 @@ alwaysApply: false
 
 ## Non-negotiable
 
-When a user creates or drafts a book in **AuthorForge** or **NovelForge**, the **primary manuscript language** is an explicit user choice (dropdown), not only the studio UI `?lang=` chrome.
+When a user creates or drafts a book in **AuthorForge** or **NovelForge** (or audits in **ProofForge**), the **primary manuscript language** is an explicit user choice (dropdown), not only the studio UI `?lang=` chrome.
 
 Supported codes (keep in sync everywhere): **`en` · `de` · `es` · `fr` · `it` · `nl`**.
 
@@ -16,6 +16,7 @@ Canonical source: `book-languages.js` in each studio’s `@*/shared` package:
 
 - `authorforge/packages/shared/src/book-languages.js`
 - `novelforge/packages/shared/src/book-languages.js`
+- `proofforge/packages/shared/src/book-languages.js`
 
 Each language entry **must** include audience culture undertones:
 

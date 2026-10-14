@@ -79,3 +79,28 @@ test('parseAgentJson salvages truncated content_md', () => {
   assert.match(out.content_md, /S-Bahn/)
   assert.match(out.content_md, /cut off/i)
 })
+
+test('parseAgentJson repairs dialogue quotes inside content_md', () => {
+  const broken = `{
+  "content_md": "She said "Papa, I'm listening," and meant it for the first time.",
+  "scene_goal": "Face the call",
+  "characters_on_page": ["Ama"],
+  "open_loops": ["flight?"],
+  "continuity_notes": ["evening"]
+}`
+  const out = parseAgentJson(broken, writerSchema)
+  assert.match(out.content_md, /Papa/)
+  assert.match(out.content_md, /listening/)
+  assert.equal(out.scene_goal, 'Face the call')
+})
+
+test('parseAgentJson accepts delimited NF_PROSE writer format', () => {
+  const text = `<<<NF_META>>>
+{"scene_goal":"Arrive","characters_on_page":["Ama"],"open_loops":[],"continuity_notes":[]}
+<<<NF_PROSE>>>
+She said "I'm home," and the hallway smelled like rain.
+<<<NF_END>>>`
+  const out = parseAgentJson(text, writerSchema)
+  assert.match(out.content_md, /I'm home/)
+  assert.equal(out.scene_goal, 'Arrive')
+})
