@@ -17,6 +17,10 @@ Do not repeat examples, metaphors, or openings already used (see Continuity Ledg
 Avoid cliché AI-isms (see banned_phrases) and formulaic structures (e.g., "In conclusion",
 "Let's dive in", triple-adjective stacking, em-dash overuse).
 Hit the target word count ±10%. Honor the section's writing_direction and the focus tags.
+When the input specifies a manuscript language, write all book prose in that language
+(English, German, Spanish, French, Italian, or Dutch) and follow the language’s audience
+culture/tone profile from book-languages.js (register, structure, norms, avoid).
+JSON keys stay English.
 Return structured JSON as specified by the prompt schema.`
 
 export const DEFAULT_BANNED_PHRASES = [

@@ -15,6 +15,10 @@ Follow the Book Bible (premise, cast, world, beats, POV, tense, tone) exactly.
 Keep character names, ages, relationships, and timeline consistent with Continuity Ledger.
 Avoid cliché AI-isms (see banned_phrases), info-dumps, and flat “as you know” dialogue.
 Hit the target word count ±10%. Honor the section's writing_direction and scene goals.
+When the input specifies a manuscript language, write all book prose in that language
+(English, German, Spanish, French, Italian, or Dutch) and follow the language’s audience
+culture/tone profile from book-languages.js (register, structure, norms, avoid).
+JSON keys stay English.
 Return structured JSON as specified by the prompt schema.`
 
 /** @deprecated alias for imports that still expect the old name */

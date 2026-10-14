@@ -11,6 +11,13 @@ import {
   nextStepId,
   prevStepId,
   ADULT_CONTENT_NOTE,
+  BOOK_LANGUAGES,
+  normalizeBookLanguage,
+  normalizeBookLanguageVariety,
+  bookLanguageLabel,
+  bookLanguageCultureHint,
+  bookLanguageVarieties,
+  bookLanguageVarietyLabel,
 } from '@novelforge/shared'
 import {
   createBook,
@@ -48,6 +55,18 @@ export default function Studio({ lang = 'en' }) {
   const [book, setBook] = useState(null)
   const [busy, setBusy] = useState('')
   const [message, setMessage] = useState('')
+  const [primaryLanguage, setPrimaryLanguage] = useState(() =>
+    normalizeBookLanguage(lang === 'de' ? 'de' : 'en')
+  )
+  const [primaryVariety, setPrimaryVariety] = useState(() =>
+    normalizeBookLanguageVariety(lang === 'de' ? 'de' : 'en')
+  )
+
+  function onPrimaryLanguageChange(code) {
+    const next = normalizeBookLanguage(code)
+    setPrimaryLanguage(next)
+    setPrimaryVariety(normalizeBookLanguageVariety(next))
+  }
   const [sectionKey, setSectionKey] = useState('')
   const [editorText, setEditorText] = useState('')
   const [assist, setAssist] = useState(null)
@@ -96,9 +115,12 @@ export default function Studio({ lang = 'en' }) {
   async function onNewBook() {
     setBusy('create')
     try {
+      const manuscriptLang = normalizeBookLanguage(primaryLanguage)
+      const manuscriptVariety = normalizeBookLanguageVariety(manuscriptLang, primaryVariety)
       const { book: b } = await createBook({
         working_title: 'Untitled novel',
-        language: lang === 'de' ? 'de' : 'en',
+        language: manuscriptLang,
+        language_variety: manuscriptVariety,
         wizard_step: 'genre',
         target_words: 80000,
         chapter_count: 12,
@@ -107,7 +129,9 @@ export default function Studio({ lang = 'en' }) {
       })
       setBook(b)
       await refresh()
-      setMessage('Novel created')
+      setMessage(
+        `Novel created — ${bookLanguageLabel(manuscriptLang)} · ${bookLanguageVarietyLabel(manuscriptLang, manuscriptVariety)}`
+      )
     } catch (e) {
       setMessage(e.message)
     } finally {
@@ -188,7 +212,48 @@ export default function Studio({ lang = 'en' }) {
         <p className="muted" style={{ fontSize: '0.78rem' }}>
           {t(lang, 'positioningLead')}
         </p>
-        <div className="row" style={{ marginTop: '0.75rem' }}>
+        <div className="field" style={{ marginTop: '0.75rem' }}>
+          <label htmlFor="nf-new-book-lang">Primary language</label>
+          <select
+            id="nf-new-book-lang"
+            value={primaryLanguage}
+            onChange={(e) => onPrimaryLanguageChange(e.target.value)}
+            disabled={!!busy}
+            aria-label="Primary manuscript language for new novel"
+          >
+            {BOOK_LANGUAGES.map((l) => (
+              <option key={l.code} value={l.code}>
+                {l.label} ({l.nativeLabel})
+              </option>
+            ))}
+          </select>
+          {bookLanguageVarieties(primaryLanguage).length > 1 ? (
+            <>
+              <label htmlFor="nf-new-book-variety" style={{ marginTop: '0.5rem' }}>
+                Variety
+              </label>
+              <select
+                id="nf-new-book-variety"
+                value={primaryVariety}
+                onChange={(e) =>
+                  setPrimaryVariety(normalizeBookLanguageVariety(primaryLanguage, e.target.value))
+                }
+                disabled={!!busy}
+                aria-label="Language variety for new novel"
+              >
+                {bookLanguageVarieties(primaryLanguage).map((v) => (
+                  <option key={v.code} value={v.code}>
+                    {v.label}
+                  </option>
+                ))}
+              </select>
+            </>
+          ) : null}
+          <p className="muted" style={{ fontSize: '0.7rem', marginTop: '0.35rem' }}>
+            {bookLanguageCultureHint(primaryLanguage)}
+          </p>
+        </div>
+        <div className="row" style={{ marginTop: '0.65rem' }}>
           <button type="button" className="btn btn-primary" disabled={!!busy} onClick={onNewBook}>
             {t(lang, 'newBook')}
           </button>
@@ -218,6 +283,11 @@ export default function Studio({ lang = 'en' }) {
                 onClick={() => loadBook(b.id)}
               >
                 <BookOpen size={14} /> {b.working_title || 'Untitled'}
+                {b.language ? (
+                  <span className="muted" style={{ marginLeft: 4 }}>
+                    · {String(b.language).toUpperCase()}
+                  </span>
+                ) : null}
               </button>
               <button
                 type="button"
@@ -241,7 +311,14 @@ export default function Studio({ lang = 'en' }) {
           <div>
             <strong>{book?.working_title || 'No novel open'}</strong>
             {book ? (
-              <span className="muted"> · {WIZARD_STEPS.find((s) => s.id === step)?.title || step}</span>
+              <span className="muted">
+                {' '}
+                · {bookLanguageLabel(book.language)}
+                {book.language_variety
+                  ? ` · ${bookLanguageVarietyLabel(book.language, book.language_variety)}`
+                  : ''}{' '}
+                · {WIZARD_STEPS.find((s) => s.id === step)?.title || step}
+              </span>
             ) : null}
           </div>
           {message ? <p className="status-msg">{message}</p> : null}
@@ -255,7 +332,48 @@ export default function Studio({ lang = 'en' }) {
             <p className="muted" style={{ fontSize: '0.75rem' }}>
               {MARKET_DISCLAIMER}
             </p>
-            <button type="button" className="btn btn-primary" onClick={onNewBook}>
+            <div className="field" style={{ maxWidth: 320, marginTop: '1rem' }}>
+              <label htmlFor="nf-empty-book-lang">Primary language</label>
+              <select
+                id="nf-empty-book-lang"
+                value={primaryLanguage}
+                onChange={(e) => onPrimaryLanguageChange(e.target.value)}
+                disabled={!!busy}
+                aria-label="Primary manuscript language for new novel"
+              >
+                {BOOK_LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.label} ({l.nativeLabel})
+                  </option>
+                ))}
+              </select>
+              {bookLanguageVarieties(primaryLanguage).length > 1 ? (
+                <>
+                  <label htmlFor="nf-empty-book-variety" style={{ marginTop: '0.5rem' }}>
+                    Variety
+                  </label>
+                  <select
+                    id="nf-empty-book-variety"
+                    value={primaryVariety}
+                    onChange={(e) =>
+                      setPrimaryVariety(normalizeBookLanguageVariety(primaryLanguage, e.target.value))
+                    }
+                    disabled={!!busy}
+                    aria-label="Language variety for new novel"
+                  >
+                    {bookLanguageVarieties(primaryLanguage).map((v) => (
+                      <option key={v.code} value={v.code}>
+                        {v.label}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              ) : null}
+              <p className="muted" style={{ fontSize: '0.7rem', marginTop: '0.35rem' }}>
+                {bookLanguageCultureHint(primaryLanguage)}
+              </p>
+            </div>
+            <button type="button" className="btn btn-primary" style={{ marginTop: '0.75rem' }} onClick={onNewBook}>
               {t(lang, 'newBook')}
             </button>
           </div>
@@ -323,6 +441,67 @@ export default function Studio({ lang = 'en' }) {
                       key={`wt-${book.id}`}
                       onBlur={(e) => saveBasics({ working_title: e.target.value })}
                     />
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`nf-book-lang-${book.id}`}>Primary language</label>
+                    <select
+                      id={`nf-book-lang-${book.id}`}
+                      key={`lang-${book.id}-${book.language}`}
+                      value={normalizeBookLanguage(book.language)}
+                      onChange={(e) => {
+                        const next = normalizeBookLanguage(e.target.value)
+                        saveBasics({
+                          language: next,
+                          language_variety: normalizeBookLanguageVariety(next),
+                        })
+                      }}
+                      disabled={!!busy}
+                      aria-label="Primary manuscript language"
+                    >
+                      {BOOK_LANGUAGES.map((l) => (
+                        <option key={l.code} value={l.code}>
+                          {l.label} ({l.nativeLabel})
+                        </option>
+                      ))}
+                    </select>
+                    {bookLanguageVarieties(book.language).length > 1 ? (
+                      <>
+                        <label htmlFor={`nf-book-variety-${book.id}`} style={{ marginTop: '0.5rem' }}>
+                          Variety
+                        </label>
+                        <select
+                          id={`nf-book-variety-${book.id}`}
+                          key={`variety-${book.id}-${book.language_variety}`}
+                          value={normalizeBookLanguageVariety(book.language, book.language_variety)}
+                          onChange={(e) =>
+                            saveBasics({
+                              language_variety: normalizeBookLanguageVariety(
+                                book.language,
+                                e.target.value
+                              ),
+                            })
+                          }
+                          disabled={!!busy}
+                          aria-label="Language variety"
+                        >
+                          {bookLanguageVarieties(book.language).map((v) => (
+                            <option key={v.code} value={v.code}>
+                              {v.label}
+                            </option>
+                          ))}
+                        </select>
+                      </>
+                    ) : null}
+                    <p className="muted" style={{ fontSize: '0.72rem', marginTop: '0.35rem' }}>
+                      AI drafts this novel in {bookLanguageLabel(book.language)}
+                      {book.language_variety
+                        ? ` (${bookLanguageVarietyLabel(book.language, book.language_variety)})`
+                        : ''}
+                      .
+                    </p>
+                    <p className="muted" style={{ fontSize: '0.7rem', marginTop: '0.25rem' }}>
+                      {bookLanguageCultureHint(book.language)}
+                    </p>
                   </div>
                   <div className="field">
                     <label>Topic / logline seed</label>

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { UNIVERSAL_FICTION_RULES } from '@novelforge/shared'
+import { UNIVERSAL_FICTION_RULES, bookLanguageAgentInstruction } from '@novelforge/shared'
 import { getPromptEntry, parseAgentJson, renderPrompt } from './registry.js'
 
 /**
@@ -9,6 +9,11 @@ export async function runAgent(llm, promptKey, { input, modelClass = 'draft', me
   const entry = getPromptEntry(promptKey)
   const systemParts = []
   if (entry.coauthorRules) systemParts.push(UNIVERSAL_FICTION_RULES)
+  const langCode = input?.language || metadata?.language
+  if (langCode) {
+    const variety = input?.language_variety || metadata?.language_variety
+    systemParts.push(bookLanguageAgentInstruction(langCode, variety))
+  }
   const rendered = renderPrompt(entry.template, {
     UNIVERSAL_FICTION_RULES,
     UNIVERSAL_COAUTHOR_RULES: UNIVERSAL_FICTION_RULES,

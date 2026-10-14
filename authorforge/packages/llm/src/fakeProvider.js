@@ -260,10 +260,29 @@ function fakeFocusTags() {
   }
 }
 
+function detectManuscriptLang(req) {
+  const meta = String(req?.metadata?.language || '').toLowerCase()
+  if (['en', 'de', 'es', 'fr', 'it', 'nl'].includes(meta)) return meta
+  const system = String(req?.system || '')
+  const m = system.match(/Manuscript language:[^(]*\(([a-z]{2})\)/i)
+  const code = m ? m[1].toLowerCase() : 'en'
+  return ['en', 'de', 'es', 'fr', 'it', 'nl'].includes(code) ? code : 'en'
+}
+
+const FAKE_OPENERS = {
+  en: 'This section advances the chapter’s promise with a continuous argument rather than a listicle.',
+  de: 'Dieses Kapitel hält das Versprechen des Buches mit klarer, praktischer Argumentation — ohne Hype.',
+  es: 'Este capítulo cumple la promesa del libro con un argumento claro y práctico, sin frases vacías.',
+  fr: 'Ce chapitre tient la promesse du livre avec un argument clair et concret, sans slogans creux.',
+  it: 'Questo capitolo mantiene la promessa del libro con un ragionamento chiaro e concreto, senza slogan vuoti.',
+  nl: 'Dit hoofdstuk lost de belofte van het boek in met een heldere, praktische redenering — zonder hype.',
+}
+
 function fakeSection(req) {
   const target = req.metadata?.targetWords || 800
+  const lang = detectManuscriptLang(req)
   const paragraphs = [
-    'This section advances the chapter’s promise with a continuous argument rather than a listicle.',
+    FAKE_OPENERS[lang] || FAKE_OPENERS.en,
     'Use only frameworks and generic scenarios here. When a lived anecdote would help, insert a story slot for the author.',
     '<!-- STORY_SLOT: Describe a real situation from your experience that illustrates this point. Do not invent clients. -->',
     'Prefer qualitative claims unless you attach a verified source. If a number seems necessary:',

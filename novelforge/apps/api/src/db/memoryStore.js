@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { normalizeBookLanguage, normalizeBookLanguageVariety } from '@novelforge/shared'
 import { config } from '../config.js'
 import { resolveDataPath, loadPersistedState, createDebouncedSaver } from './persist.js'
 
@@ -84,6 +85,7 @@ export function createMemoryStore(options = {}) {
       status: b.status,
       wizard_step: b.wizard_step,
       language: b.language,
+      language_variety: b.language_variety,
       target_words: b.target_words,
       llm_cost_usd: b.llm_cost_usd,
       updated_at: b.updated_at,
@@ -217,7 +219,11 @@ export function createMemoryStore(options = {}) {
         target_words: data.target_words || 28000,
         chapter_count: data.chapter_count || 8,
         structure_type: data.structure_type || 'how-to',
-        language: data.language || 'en',
+        language: normalizeBookLanguage(data.language),
+        language_variety: normalizeBookLanguageVariety(
+          normalizeBookLanguage(data.language),
+          data.language_variety
+        ),
         trim_size: data.trim_size || '6x9',
         wizard_step: data.wizard_step || 'genre',
         bible: { ...emptyBible(), ...(data.bible || {}) },
@@ -253,6 +259,13 @@ export function createMemoryStore(options = {}) {
     async getBook(userId, bookId) {
       const b = books.get(bookId)
       if (!b || b.user_id !== userId) return null
+      const language = normalizeBookLanguage(b.language)
+      const language_variety = normalizeBookLanguageVariety(language, b.language_variety)
+      if (b.language !== language || b.language_variety !== language_variety) {
+        const hydrated = { ...b, language, language_variety }
+        books.set(bookId, hydrated)
+        return hydrated
+      }
       return b
     },
 
@@ -275,6 +288,15 @@ export function createMemoryStore(options = {}) {
         formatting: patch.formatting ? { ...b.formatting, ...patch.formatting } : b.formatting,
         compliance: patch.compliance ? { ...b.compliance, ...patch.compliance } : b.compliance,
         updated_at: new Date().toISOString(),
+      }
+      if (patch.language !== undefined) {
+        next.language = normalizeBookLanguage(patch.language)
+        next.language_variety = normalizeBookLanguageVariety(
+          next.language,
+          patch.language_variety !== undefined ? patch.language_variety : next.language_variety
+        )
+      } else if (patch.language_variety !== undefined) {
+        next.language_variety = normalizeBookLanguageVariety(next.language, patch.language_variety)
       }
       // Preserve nested maps that shouldn't be replaced blindly unless provided
       if (patch.sections) next.sections = patch.sections
@@ -321,6 +343,7 @@ export function createMemoryStore(options = {}) {
         chapter_count: src.chapter_count,
         structure_type: src.structure_type,
         language: src.language,
+        language_variety: src.language_variety,
         trim_size: src.trim_size,
         wizard_step: src.wizard_step || 'writing',
         bible: src.bible || {},

@@ -1,7 +1,13 @@
-import { costFor, nicheContextForBook, nichesForStudio } from '@novelforge/shared'
+import {
+  costFor,
+  nicheContextForBook,
+  nichesForStudio,
+  normalizeBookLanguage,
+  normalizeBookLanguageVariety,
+} from '@novelforge/shared'
 import { createLlmProvider } from '@novelforge/llm'
 import {
-  runAgent,
+  runAgent as invokeAgent,
   focusTagCoverage,
   sectionQualityReport,
   ngramOverlap,
@@ -142,6 +148,31 @@ function starterTitleOptions(seed, topic, warnings = []) {
 async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
   ensureProviders()
   const book = bookId ? await store.getBook(userId, bookId) : null
+  const manuscriptLanguage = normalizeBookLanguage(book?.language)
+  const manuscriptVariety = normalizeBookLanguageVariety(
+    manuscriptLanguage,
+    book?.language_variety
+  )
+  const runAgent = (provider, promptKey, opts = {}) => {
+    const raw = opts.input
+    const input =
+      raw && typeof raw === 'object' && !Array.isArray(raw)
+        ? {
+            ...raw,
+            language: raw.language || manuscriptLanguage,
+            language_variety: raw.language_variety || manuscriptVariety,
+          }
+        : raw
+    return invokeAgent(provider, promptKey, {
+      ...opts,
+      input,
+      metadata: {
+        ...(opts.metadata || {}),
+        language: opts.metadata?.language || manuscriptLanguage,
+        language_variety: opts.metadata?.language_variety || manuscriptVariety,
+      },
+    })
+  }
 
   switch (type) {
     case 'genre_search': {
@@ -564,7 +595,7 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
         title: book.working_title,
         author: book.author_name,
         chapters: chaptersFromBook(book),
-        language: book.language,
+        language: normalizeBookLanguage(book.language),
       })
       return persistExportArtifact(store, { bookId, format: 'epub', bytes: epub.bytes })
     }

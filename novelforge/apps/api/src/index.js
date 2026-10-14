@@ -11,6 +11,8 @@ import {
   prevStepId,
   DEFAULT_BANNED_PHRASES,
   productPositioningPayload,
+  BOOK_LANGUAGE_CODES,
+  bookLanguagesPayload,
 } from '@novelforge/shared'
 import { llmProviderStatus } from '@novelforge/llm'
 import { focusTagCoverage, listPrompts } from '@novelforge/agents'
@@ -68,7 +70,8 @@ const bookBody = z.object({
   target_words: z.number().int().min(500).max(120000).optional(),
   chapter_count: z.number().int().min(1).max(40).optional(),
   structure_type: z.string().max(64).optional(),
-  language: z.enum(['en', 'de']).optional(),
+  language: z.enum(BOOK_LANGUAGE_CODES).optional(),
+  language_variety: z.string().max(16).optional(),
   trim_size: z.string().max(32).optional(),
   wizard_step: z.string().max(64).optional(),
   bible: z.record(z.any()).optional(),
@@ -211,6 +214,7 @@ const server = createServer(async (req, res) => {
         llm: llmProviderStatus(getLlm()),
         book_budget_eur: config.bookBudgetEur,
         product_positioning: productPositioningPayload('en'),
+        book_languages: bookLanguagesPayload(),
       })
       return
     }

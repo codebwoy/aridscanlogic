@@ -32,6 +32,13 @@ Open **http://127.0.0.1:5182/?view=studio#studio** (viewport ≥1024px).
 From ScanLogic (with `VITE_NOVELFORGE_URL=http://127.0.0.1:5182` in root `.env`):
 Amazon Hub → **Open NovelForge**.
 
+### Primary manuscript language
+
+Users choose the novel language up front (`en` / `de` / `es` / `fr` / `it` / `nl`) plus a variety
+where relevant (e.g. US vs UK English, LatAm vs Spain Spanish). Culture/tone profiles live in
+`packages/shared/src/book-languages.js` and are injected into every writing agent. See
+`.cursor/rules/22-book-languages.mdc`.
+
 Default LLM is **fake** (offline fixtures). For live Anthropic:
 
 ```bash

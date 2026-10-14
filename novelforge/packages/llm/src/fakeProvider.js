@@ -167,6 +167,24 @@ function fakeOutline() {
   return { chapters, note: 'Fake outline — edit freely.' }
 }
 
+function detectManuscriptLang(req) {
+  const meta = String(req?.metadata?.language || '').toLowerCase()
+  if (['en', 'de', 'es', 'fr', 'it', 'nl'].includes(meta)) return meta
+  const system = String(req?.system || '')
+  const m = system.match(/Manuscript language:[^(]*\(([a-z]{2})\)/i)
+  const code = m ? m[1].toLowerCase() : 'en'
+  return ['en', 'de', 'es', 'fr', 'it', 'nl'].includes(code) ? code : 'en'
+}
+
+const FAKE_SCENE_BODY = {
+  en: 'Ama locked her bike under the S-Bahn and checked the time. Berlin’s evening light made every glass front look like a promise she had already signed.',
+  de: 'Ama schloss ihr Rad unter der S-Bahn ab und prüfte die Uhr. Berlins Abendlicht ließ jede Glasfassade wie ein Versprechen wirken, das sie schon unterschrieben hatte.',
+  es: 'Ama encadenó la bici bajo el S-Bahn y miró la hora. La luz de Berlín hacía que cada escaparate pareciera una promesa ya firmada.',
+  fr: 'Ama attacha son vélo sous le S-Bahn et regarda l’heure. La lumière du soir à Berlin faisait de chaque vitrine une promesse déjà signée.',
+  it: 'Ama chiuse la bici sotto la S-Bahn e controllò l’ora. La luce serale di Berlino faceva di ogni vetrina una promessa già firmata.',
+  nl: 'Ama zette haar fiets op slot onder de S-Bahn en keek op de tijd. Het avondlicht in Berlijn maakte van elke etalage een belofte die ze al had getekend.',
+}
+
 function fakeSection(req) {
   const user = req.messages?.map((m) => m.content).join('\n') || ''
   let title = 'Scene'
@@ -176,10 +194,11 @@ function fakeSection(req) {
   } catch {
     /* ignore */
   }
+  const lang = detectManuscriptLang(req)
   const paras = [
     `## ${title}`,
     '',
-    'Ama locked her bike under the S-Bahn and checked the time. Berlin’s evening light made every glass front look like a promise she had already signed.',
+    FAKE_SCENE_BODY[lang] || FAKE_SCENE_BODY.en,
     '',
     'Her phone buzzed again — Kwame. She almost silenced it. Instead she answered, switching mid-breath into the softer cadence she used at home.',
     '',

@@ -62,6 +62,13 @@ ANTHROPIC_API_KEY=sk-ant-...   # may match ScanLogic’s key — never VITE_*
 8. Market research — Niche Hunter + competitive analysis via mock adapter (licensed adapters pluggable)  
 9. Polish — DE/EN strings, admin cost snapshot, translation job + AI disclosure, docs, tests  
 
+### Primary manuscript language
+
+Users choose the book language up front (`en` / `de` / `es` / `fr` / `it` / `nl`) plus a variety
+where relevant (e.g. US vs UK English, LatAm vs Spain Spanish). Culture/tone profiles live in
+`packages/shared/src/book-languages.js` and are injected into every writing agent. See
+`.cursor/rules/22-book-languages.mdc`.
+
 ### Editor & quality
 
 - Tiptap editor with inline Improve / Rephrase / Elaborate / Soften-claim (approve/reject diffs)

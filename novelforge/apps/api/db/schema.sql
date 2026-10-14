@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS af_books (
   status TEXT NOT NULL DEFAULT 'draft',
   genre TEXT,
   target_words INTEGER NOT NULL DEFAULT 28000,
+  -- Primary manuscript language: en|de|es|fr|it|nl (see @novelforge/shared book-languages)
   language TEXT NOT NULL DEFAULT 'en',
   trim_size TEXT NOT NULL DEFAULT '6x9',
   wizard_step TEXT NOT NULL DEFAULT 'basics',

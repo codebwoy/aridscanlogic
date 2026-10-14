@@ -1,5 +1,6 @@
 export * from './desktop.js'
 export * from './credits.js'
+export * from './book-languages.js'
 export * from './wizard.js'
 export * from './publishing-specs.js'
 export * from './print-math.js'

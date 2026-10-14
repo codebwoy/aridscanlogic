@@ -1,0 +1,59 @@
+---
+description: Primary manuscript languages + culture/tone profiles (AuthorForge & NovelForge)
+globs: authorforge/packages/shared/src/book-languages.js,novelforge/packages/shared/src/book-languages.js,authorforge/packages/agents/src/runAgent.js,novelforge/packages/agents/src/runAgent.js,authorforge/apps/web/src/pages/Studio.jsx,novelforge/apps/web/src/pages/Studio.jsx,authorforge/apps/api/src/index.js,novelforge/apps/api/src/index.js,authorforge/apps/api/src/services/jobs.js,novelforge/apps/api/src/services/jobs.js
+alwaysApply: false
+---
+
+# Book primary languages (AuthorForge + NovelForge)
+
+## Non-negotiable
+
+When a user creates or drafts a book in **AuthorForge** or **NovelForge**, the **primary manuscript language** is an explicit user choice (dropdown), not only the studio UI `?lang=` chrome.
+
+Supported codes (keep in sync everywhere): **`en` · `de` · `es` · `fr` · `it` · `nl`**.
+
+Canonical source: `book-languages.js` in each studio’s `@*/shared` package:
+
+- `authorforge/packages/shared/src/book-languages.js`
+- `novelforge/packages/shared/src/book-languages.js`
+
+Each language entry **must** include audience culture undertones:
+
+| Field | Purpose |
+|-------|---------|
+| `audience` | Who the market voice is for |
+| `register` | Formality / address (Sie/du, tu/vous, variety) |
+| `structure` | How chapters/scenes should move |
+| `tone` | Emotional / rhetorical default |
+| `defaultVariety` + `varieties[]` | Market variety (US/UK, LatAm/Spain, DE/AT/CH, …) |
+| `norms` | Do’s for that language market |
+| `avoid` | Anti-patterns (calques, hype, mixed varieties) |
+
+`bookLanguageAgentInstruction(code, variety)` must inject **language + variety + full culture profile** into agent system prompts. `runAgent` / job wrappers pass `book.language` and `book.language_variety` so drafts fit that audience — not English-with-labels.
+
+## Rules for agents
+
+1. **Do not** drop culture fields when editing `BOOK_LANGUAGES` — every code needs the full undertone set.
+2. **Do not** shrink the API enum below these six codes (`z.enum` on create/patch).
+3. **Do not** re-bind book language only to UI `lang` — New Book must use the primary-language select.
+4. Keep AF (non-fiction) and NF (fiction) profile wording studio-appropriate, but the **same six codes**.
+5. Studio chrome i18n (`en`/`de` UI strings) stays separate from manuscript language.
+6. Diaspora / bilingual / Germany–EU niche guidance from `product-positioning.js` stacks **on top** of language profiles — never invent credentials, stats, or proverbs.
+7. When adding a new manuscript language: update both shared `book-languages.js` files, both API enums, both Studio selects, tests, and this rule.
+
+## API / store
+
+- `GET /v1/specs` includes `book_languages: bookLanguagesPayload()` (includes varieties).
+- Create/patch: `language` = `z.enum(BOOK_LANGUAGE_CODES)`; `language_variety` optional string.
+- `memoryStore` normalizes language **and** variety on create/update/import.
+- EPUB + KDP package exports use `normalizeBookLanguage(book.language)`.
+- `getBook` hydrates missing/invalid `language` + `language_variety` for older persisted books.
+- AuthorForge `translation_chapter` must set target `language` + `language_variety` so culture profiles apply.
+
+## UI
+
+- Primary language `<select>` on New Book (rail + empty state) and on Basics / Genre.
+- When `varieties.length > 1`, show a **Variety** `<select>` (US/UK, LatAm/Spain, etc.).
+- Show `bookLanguageLabel` + variety + `bookLanguageCultureHint` under the picker.
+- Show language (and variety) in open-book chrome; language code on library rows.
+- AuthorForge translate-chapter: target language (+ variety when needed) among the six codes (excluding current).

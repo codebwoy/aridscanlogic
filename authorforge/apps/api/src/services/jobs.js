@@ -1,7 +1,13 @@
-import { costFor, nicheContextForBook, nichesForStudio } from '@authorforge/shared'
+import {
+  costFor,
+  nicheContextForBook,
+  nichesForStudio,
+  normalizeBookLanguage,
+  normalizeBookLanguageVariety,
+} from '@authorforge/shared'
 import { createLlmProvider } from '@authorforge/llm'
 import {
-  runAgent,
+  runAgent as invokeAgent,
   focusTagCoverage,
   sectionQualityReport,
   extractStorySlots,
@@ -138,6 +144,31 @@ export function wireLocalJobHandlers(store) {
 async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
   ensureProviders()
   const book = bookId ? await store.getBook(userId, bookId) : null
+  const manuscriptLanguage = normalizeBookLanguage(book?.language)
+  const manuscriptVariety = normalizeBookLanguageVariety(
+    manuscriptLanguage,
+    book?.language_variety
+  )
+  const runAgent = (provider, promptKey, opts = {}) => {
+    const raw = opts.input
+    const input =
+      raw && typeof raw === 'object' && !Array.isArray(raw)
+        ? {
+            ...raw,
+            language: raw.language || manuscriptLanguage,
+            language_variety: raw.language_variety || manuscriptVariety,
+          }
+        : raw
+    return invokeAgent(provider, promptKey, {
+      ...opts,
+      input,
+      metadata: {
+        ...(opts.metadata || {}),
+        language: opts.metadata?.language || manuscriptLanguage,
+        language_variety: opts.metadata?.language_variety || manuscriptVariety,
+      },
+    })
+  }
 
   switch (type) {
     case 'niche_search': {
@@ -918,7 +949,7 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
         title: book.working_title,
         author: book.author_name,
         chapters: chaptersFromBook(book),
-        language: book.language,
+        language: normalizeBookLanguage(book.language),
       })
       return persistExportArtifact(store, { bookId, format: 'epub', bytes: epub.bytes })
     }
@@ -1052,20 +1083,28 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
       const key = inputs.sectionKey || Object.keys(book.sections || {})[0]
       const section = book.sections?.[key]
       if (!section) throw new Error('section not found')
-      const targetLang = inputs.target_lang || (book.language === 'en' ? 'de' : 'en')
+      const targetLang = normalizeBookLanguage(
+        inputs.target_lang || (book.language === 'en' ? 'de' : 'en')
+      )
+      const targetVariety = normalizeBookLanguageVariety(
+        targetLang,
+        inputs.target_variety || inputs.language_variety
+      )
       const glossary = book.bible?.glossary || []
       const agent = await runAgent(llm, 'writer.v1', {
         modelClass: 'draft',
         input: {
           mode: 'chapter-aware translation',
+          language: targetLang,
+          language_variety: targetVariety,
           target_lang: targetLang,
           glossary,
           preserve_terms: glossary,
           content_md: section.content_md,
           instruction:
-            'Translate preserving glossary terms. Do not invent facts. Flag AI-translated for KDP disclosure.',
+            'Translate into the target manuscript language and variety, matching that language’s audience culture/tone profile. Preserve glossary terms. Do not invent facts. Flag AI-translated for KDP disclosure.',
         },
-        metadata: { bookId, jobId },
+        metadata: { bookId, jobId, language: targetLang, language_variety: targetVariety },
       })
       await store.addLlmCost(userId, bookId, agent.completion.costUsd)
       const translatedKey = `${key}__${targetLang}`
@@ -1079,6 +1118,7 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
           ai_translated: true,
           source_key: key,
           language: targetLang,
+          language_variety: targetVariety,
           version: 1,
         },
       }
@@ -1096,6 +1136,7 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
       return {
         sectionKey: translatedKey,
         target_lang: targetLang,
+        target_variety: targetVariety,
         ai_translated: true,
         content_md: agent.parsed.content_md,
       }

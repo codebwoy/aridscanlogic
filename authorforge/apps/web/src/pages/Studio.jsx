@@ -10,6 +10,13 @@ import {
   applyRecommendedNiche,
   nicheLocalized,
   applyAngleToBookPatch,
+  BOOK_LANGUAGES,
+  normalizeBookLanguage,
+  normalizeBookLanguageVariety,
+  bookLanguageLabel,
+  bookLanguageCultureHint,
+  bookLanguageVarieties,
+  bookLanguageVarietyLabel,
 } from '@authorforge/shared'
 import CompetitiveAdvantagePanel from '../components/CompetitiveAdvantagePanel.jsx'
 import ManuscriptImport from '../components/ManuscriptImport.jsx'
@@ -87,7 +94,19 @@ export default function Studio({ lang = 'en' }) {
   const [admin, setAdmin] = useState(null)
   const [persistOn, setPersistOn] = useState(true)
   const [savedFlash, setSavedFlash] = useState(false)
+  const [primaryLanguage, setPrimaryLanguage] = useState(() =>
+    normalizeBookLanguage(lang === 'de' ? 'de' : 'en')
+  )
+  const [primaryVariety, setPrimaryVariety] = useState(() =>
+    normalizeBookLanguageVariety(lang === 'de' ? 'de' : 'en')
+  )
   const importRef = useRef(null)
+
+  function onPrimaryLanguageChange(code) {
+    const next = normalizeBookLanguage(code)
+    setPrimaryLanguage(next)
+    setPrimaryVariety(normalizeBookLanguageVariety(next))
+  }
 
   const step = book?.wizard_step || 'basics'
   const stepMeta = WIZARD_STEPS.find((s) => s.id === step) || WIZARD_STEPS[2]
@@ -297,9 +316,12 @@ export default function Studio({ lang = 'en' }) {
   async function onNewBook() {
     setBusy('create')
     try {
+      const manuscriptLang = normalizeBookLanguage(primaryLanguage)
+      const manuscriptVariety = normalizeBookLanguageVariety(manuscriptLang, primaryVariety)
       const { book: b } = await createBook({
         working_title: 'Untitled non-fiction',
-        language: lang === 'de' ? 'de' : 'en',
+        language: manuscriptLang,
+        language_variety: manuscriptVariety,
         wizard_step: 'basics',
       })
       rememberBookId(b.id)
@@ -307,7 +329,9 @@ export default function Studio({ lang = 'en' }) {
       setSectionKey('')
       setEditorText('')
       await refreshLibrary()
-      setMessage('Book created and saved to your library')
+      setMessage(
+        `Book created (${bookLanguageLabel(manuscriptLang)} · ${bookLanguageVarietyLabel(manuscriptLang, manuscriptVariety)}) — saved to your library`
+      )
     } catch (e) {
       setMessage(e.message)
     } finally {
@@ -558,7 +582,48 @@ export default function Studio({ lang = 'en' }) {
         <p className="muted" style={{ marginTop: '0.5rem', fontSize: '0.72rem' }}>
           {t(lang, 'hybridHint')}
         </p>
-        <button type="button" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }} onClick={onNewBook} disabled={!!busy}>
+        <div className="field" style={{ marginTop: '1rem' }}>
+          <label htmlFor="af-new-book-lang">Primary language</label>
+          <select
+            id="af-new-book-lang"
+            value={primaryLanguage}
+            onChange={(e) => onPrimaryLanguageChange(e.target.value)}
+            disabled={!!busy}
+            aria-label="Primary manuscript language for new book"
+          >
+            {BOOK_LANGUAGES.map((l) => (
+              <option key={l.code} value={l.code}>
+                {l.label} ({l.nativeLabel})
+              </option>
+            ))}
+          </select>
+          {bookLanguageVarieties(primaryLanguage).length > 1 ? (
+            <>
+              <label htmlFor="af-new-book-variety" style={{ marginTop: '0.5rem' }}>
+                Variety
+              </label>
+              <select
+                id="af-new-book-variety"
+                value={primaryVariety}
+                onChange={(e) =>
+                  setPrimaryVariety(normalizeBookLanguageVariety(primaryLanguage, e.target.value))
+                }
+                disabled={!!busy}
+                aria-label="Language variety for new book"
+              >
+                {bookLanguageVarieties(primaryLanguage).map((v) => (
+                  <option key={v.code} value={v.code}>
+                    {v.label}
+                  </option>
+                ))}
+              </select>
+            </>
+          ) : null}
+          <p className="muted" style={{ fontSize: '0.7rem', marginTop: '0.35rem' }}>
+            {bookLanguageCultureHint(primaryLanguage)}
+          </p>
+        </div>
+        <button type="button" className="btn btn-primary" style={{ width: '100%', marginTop: '0.65rem' }} onClick={onNewBook} disabled={!!busy}>
           {t(lang, 'newBook')}
         </button>
         <div className="row" style={{ marginTop: '0.65rem', gap: '0.35rem' }}>
@@ -604,7 +669,15 @@ export default function Studio({ lang = 'en' }) {
                     onClick={() => loadBook(b.id)}
                     title={b.working_title}
                   >
-                    <span className="library-title">{b.working_title || 'Untitled'}</span>
+                    <span className="library-title">
+                      {b.working_title || 'Untitled'}
+                      {b.language ? (
+                        <span className="muted" style={{ fontWeight: 400 }}>
+                          {' '}
+                          · {String(b.language).toUpperCase()}
+                        </span>
+                      ) : null}
+                    </span>
                     <span className="library-meta">
                       {stepTitle}
                       {b.word_count ? ` · ${b.word_count.toLocaleString()}w` : ''}
@@ -649,6 +722,15 @@ export default function Studio({ lang = 'en' }) {
           <div className="row">
             <BookOpen size={18} aria-hidden />
             <strong>{book?.working_title || 'No book selected'}</strong>
+            {book ? (
+              <span className="muted">
+                {' '}
+                · {bookLanguageLabel(book.language)}
+                {book.language_variety
+                  ? ` · ${bookLanguageVarietyLabel(book.language, book.language_variety)}`
+                  : ''}
+              </span>
+            ) : null}
             <span className="badge">{stepMeta.title}</span>
             {savedFlash ? <span className="badge">Saved</span> : null}
           </div>
@@ -706,6 +788,50 @@ export default function Studio({ lang = 'en' }) {
           {!book ? (
             <div className="card">
               <p>Create a non-fiction book to start the guided wizard.</p>
+              <div className="field" style={{ maxWidth: 320, margin: '0.85rem 0' }}>
+                <label htmlFor="af-empty-book-lang">Primary language</label>
+                <select
+                  id="af-empty-book-lang"
+                  value={primaryLanguage}
+                  onChange={(e) => onPrimaryLanguageChange(e.target.value)}
+                  disabled={!!busy}
+                  aria-label="Primary manuscript language for new book"
+                >
+                  {BOOK_LANGUAGES.map((l) => (
+                    <option key={l.code} value={l.code}>
+                      {l.label} ({l.nativeLabel})
+                    </option>
+                  ))}
+                </select>
+                {bookLanguageVarieties(primaryLanguage).length > 1 ? (
+                  <>
+                    <label htmlFor="af-empty-book-variety" style={{ marginTop: '0.5rem' }}>
+                      Variety
+                    </label>
+                    <select
+                      id="af-empty-book-variety"
+                      value={primaryVariety}
+                      onChange={(e) =>
+                        setPrimaryVariety(normalizeBookLanguageVariety(primaryLanguage, e.target.value))
+                      }
+                      disabled={!!busy}
+                      aria-label="Language variety for new book"
+                    >
+                      {bookLanguageVarieties(primaryLanguage).map((v) => (
+                        <option key={v.code} value={v.code}>
+                          {v.label}
+                        </option>
+                      ))}
+                    </select>
+                  </>
+                ) : null}
+                <p className="muted" style={{ fontSize: '0.7rem', marginTop: '0.35rem' }}>
+                  {bookLanguageCultureHint(primaryLanguage)}
+                </p>
+              </div>
+              <button type="button" className="btn btn-primary" onClick={onNewBook} disabled={!!busy}>
+                {t(lang, 'newBook')}
+              </button>
               <PositioningCallout lang={lang} />
             </div>
           ) : (
@@ -1240,6 +1366,13 @@ function WizardStep(props) {
     lang = 'en',
   } = props
 
+  const [translateTarget, setTranslateTarget] = useState(() =>
+    normalizeBookLanguage(book?.language === 'en' ? 'de' : 'en')
+  )
+  const [translateVariety, setTranslateVariety] = useState(() =>
+    normalizeBookLanguageVariety(book?.language === 'en' ? 'de' : 'en')
+  )
+
   return (
     <div>
       <div className="row" style={{ marginBottom: '1rem' }}>
@@ -1309,6 +1442,64 @@ function WizardStep(props) {
                 defaultValue={book.working_title}
                 onBlur={(e) => onSaveBasics({ working_title: e.target.value })}
               />
+            </div>
+            <div className="field">
+              <label htmlFor={`af-book-lang-${book.id}`}>Primary language</label>
+              <select
+                id={`af-book-lang-${book.id}`}
+                key={`${book.id}-lang-${book.language}`}
+                value={normalizeBookLanguage(book.language)}
+                onChange={(e) => {
+                  const next = normalizeBookLanguage(e.target.value)
+                  onSaveBasics({
+                    language: next,
+                    language_variety: normalizeBookLanguageVariety(next),
+                  })
+                }}
+                disabled={!!busy}
+                aria-label="Primary manuscript language"
+              >
+                {BOOK_LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.label} ({l.nativeLabel})
+                  </option>
+                ))}
+              </select>
+              {bookLanguageVarieties(book.language).length > 1 ? (
+                <>
+                  <label htmlFor={`af-book-variety-${book.id}`} style={{ marginTop: '0.5rem' }}>
+                    Variety
+                  </label>
+                  <select
+                    id={`af-book-variety-${book.id}`}
+                    key={`${book.id}-variety-${book.language_variety}`}
+                    value={normalizeBookLanguageVariety(book.language, book.language_variety)}
+                    onChange={(e) =>
+                      onSaveBasics({
+                        language_variety: normalizeBookLanguageVariety(book.language, e.target.value),
+                      })
+                    }
+                    disabled={!!busy}
+                    aria-label="Language variety"
+                  >
+                    {bookLanguageVarieties(book.language).map((v) => (
+                      <option key={v.code} value={v.code}>
+                        {v.label}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              ) : null}
+              <p className="muted" style={{ fontSize: '0.72rem', marginTop: '0.35rem' }}>
+                AI drafts this book in {bookLanguageLabel(book.language)}
+                {book.language_variety
+                  ? ` (${bookLanguageVarietyLabel(book.language, book.language_variety)})`
+                  : ''}
+                .
+              </p>
+              <p className="muted" style={{ fontSize: '0.7rem', marginTop: '0.25rem' }}>
+                {bookLanguageCultureHint(book.language)}
+              </p>
             </div>
             <div className="field">
               <label>Subtitle</label>
@@ -1756,11 +1947,59 @@ function WizardStep(props) {
                 <button type="button" className="btn" disabled={!!busy} onClick={() => onRunJob('originality_scan', { sectionKey })}>
                   Originality scan
                 </button>
+                <label className="muted" style={{ fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                  Translate to
+                  <select
+                    value={translateTarget}
+                    onChange={(e) => {
+                      const next = normalizeBookLanguage(e.target.value)
+                      setTranslateTarget(next)
+                      setTranslateVariety(normalizeBookLanguageVariety(next))
+                    }}
+                    disabled={!!busy}
+                    aria-label="Translation target language"
+                    style={{ minHeight: 44 }}
+                  >
+                    {BOOK_LANGUAGES.filter((l) => l.code !== normalizeBookLanguage(book.language)).map((l) => (
+                      <option key={l.code} value={l.code}>
+                        {l.label}
+                      </option>
+                    ))}
+                  </select>
+                  {bookLanguageVarieties(translateTarget).length > 1 ? (
+                    <select
+                      value={translateVariety}
+                      onChange={(e) =>
+                        setTranslateVariety(
+                          normalizeBookLanguageVariety(translateTarget, e.target.value)
+                        )
+                      }
+                      disabled={!!busy}
+                      aria-label="Translation target variety"
+                      style={{ minHeight: 44 }}
+                    >
+                      {bookLanguageVarieties(translateTarget).map((v) => (
+                        <option key={v.code} value={v.code}>
+                          {v.label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : null}
+                </label>
                 <button
                   type="button"
                   className="btn"
                   disabled={!!busy}
-                  onClick={() => onRunJob('translation_chapter', { sectionKey, target_lang: book.language === 'en' ? 'de' : 'en' })}
+                  onClick={() =>
+                    onRunJob('translation_chapter', {
+                      sectionKey,
+                      target_lang: normalizeBookLanguage(translateTarget),
+                      target_variety: normalizeBookLanguageVariety(
+                        translateTarget,
+                        translateVariety
+                      ),
+                    })
+                  }
                 >
                   Translate chapter (AI disclosure)
                 </button>

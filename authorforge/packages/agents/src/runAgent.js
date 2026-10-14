@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { UNIVERSAL_COAUTHOR_RULES } from '@authorforge/shared'
+import { UNIVERSAL_COAUTHOR_RULES, bookLanguageAgentInstruction } from '@authorforge/shared'
 import { getPromptEntry, parseAgentJson, renderPrompt } from './registry.js'
 
 /**
@@ -10,6 +10,11 @@ export async function runAgent(llm, promptKey, { input, modelClass = 'draft', me
   // Co-writer rules confuse non-writing agents (title/positioning) into returning prose JSON.
   const systemParts = []
   if (entry.coauthorRules) systemParts.push(UNIVERSAL_COAUTHOR_RULES)
+  const langCode = input?.language || metadata?.language
+  if (langCode) {
+    const variety = input?.language_variety || metadata?.language_variety
+    systemParts.push(bookLanguageAgentInstruction(langCode, variety))
+  }
   systemParts.push(entry.template)
   systemParts.push('Respond with valid JSON only matching the schema. No markdown prose outside JSON.')
   const system = systemParts.join('\n\n')

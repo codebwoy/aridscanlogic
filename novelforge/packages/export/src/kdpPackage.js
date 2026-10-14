@@ -1,5 +1,9 @@
 import JSZip from 'jszip'
-import { COMPLIANCE_CHECKLIST_DEFAULT, PUBLISHING_SPECS } from '@novelforge/shared'
+import {
+  COMPLIANCE_CHECKLIST_DEFAULT,
+  PUBLISHING_SPECS,
+  normalizeBookLanguage,
+} from '@novelforge/shared'
 import { buildInteriorPdf } from './interiorPdf.js'
 import { buildCoverWrapPdf } from './coverPdf.js'
 import { buildEpub } from './epub.js'
@@ -14,7 +18,7 @@ export async function buildKdpPackage({
   const title = book?.working_title || book?.title || 'Untitled'
   const author = book?.author_name || book?.bible?.author_name || 'Author'
   const trimId = book?.trim_size || '6x9'
-  const language = book?.language || 'en'
+  const language = normalizeBookLanguage(book?.language)
 
   const interior = await buildInteriorPdf({ title, author, chapters, trimId })
   const cover = await buildCoverWrapPdf({
