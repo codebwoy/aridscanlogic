@@ -13,6 +13,9 @@ import {
   ngramOverlap,
   parseManuscriptText,
   manuscriptToBookPatch,
+  chapterDraftNodes,
+  clampDraftTargetWords,
+  maxTokensForDraftWords,
 } from '@novelforge/agents'
 import {
   buildInteriorPdf,
@@ -352,15 +355,22 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
       if (!book) throw new Error('book required')
       const node = inputs.node
       if (!node?.title) throw new Error('node required')
+      const draftTarget = clampDraftTargetWords(node.target_words)
+      const draftNode = { ...node, target_words: draftTarget }
       const agent = await runAgent(llm, 'writer.v1', {
         modelClass: 'draft',
         input: {
           bookBible: book.bible,
           persona: book.persona,
           continuity: book.continuity,
-          node,
+          node: draftNode,
         },
-        metadata: { bookId, jobId, targetWords: node.target_words, maxTokens: 8192 },
+        metadata: {
+          bookId,
+          jobId,
+          targetWords: draftTarget,
+          maxTokens: maxTokensForDraftWords(draftTarget),
+        },
       })
       const content_md = String(agent.parsed.content_md || '').trim()
       const existingMd = String(book.sections?.[inputs.sectionKey]?.content_md || '').trim()
@@ -373,7 +383,7 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
       }
       const quality = sectionQualityReport({
         content_md,
-        target_words: node.target_words,
+        target_words: draftTarget,
         banned_phrases: book.bible?.banned_phrases,
       })
       let maxOverlap = 0
@@ -424,8 +434,10 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
       const chapterIndex = Number(inputs.chapterIndex) || 0
       const chapter = book.outline?.chapters?.[chapterIndex]
       if (!chapter) throw new Error('chapter not found')
-      const nodes = flattenLeafNodes(chapter, `c${chapterIndex}`)
+      // Split oversized single-leaf chapters into ~2k-word parts so JSON fits max_tokens.
+      const nodes = chapterDraftNodes(chapter, chapterIndex, flattenLeafNodes)
       const results = []
+      const bodies = []
       for (const { key, node } of nodes) {
         const out = await runJobBody(store, {
           userId,
@@ -434,9 +446,37 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
           inputs: { sectionKey: key, node },
           jobId,
         })
+        bodies.push(String(out.section?.content_md || '').trim())
         results.push({ key, words: out.section?.word_count })
       }
-      return { chapterIndex, results }
+      // Editor dropdown uses outline leaf keys (e.g. c0) — merge auto-parts there.
+      const autoSplit = nodes.length > 1 && nodes.every((n) => /\.p\d+$/.test(n.key))
+      if (autoSplit) {
+        const mergeKey = `c${chapterIndex}`
+        const mergedMd = bodies.filter(Boolean).join('\n\n')
+        if (mergedMd.length >= 40) {
+          const latest = await store.getBook(userId, bookId)
+          const word_count = mergedMd.split(/\s+/).filter(Boolean).length
+          const prev = latest?.sections?.[mergeKey]
+          const section = {
+            outline_path: mergeKey,
+            title: chapter.title || `Chapter ${chapterIndex + 1}`,
+            content_md: mergedMd,
+            word_count,
+            version: (prev?.version || 0) + 1,
+            status: 'draft',
+            scene_goal: `Merged ${nodes.length} draft parts`,
+            versions: [
+              ...((prev?.versions || []).slice(-9)),
+              { version: (prev?.version || 0) + 1, content_md: mergedMd, at: new Date().toISOString() },
+            ],
+          }
+          await store.updateBook(userId, bookId, {
+            sections: { ...(latest?.sections || {}), [mergeKey]: section },
+          })
+        }
+      }
+      return { chapterIndex, results, parts: nodes.length }
     }
     case 'continuity_scan': {
       if (!book) throw new Error('book required')

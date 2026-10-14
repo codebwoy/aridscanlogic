@@ -1,5 +1,10 @@
 import { createHash } from 'node:crypto'
 import { UNIVERSAL_FICTION_RULES, bookLanguageAgentInstruction } from '@novelforge/shared'
+import {
+  clampDraftTargetWords,
+  maxTokensForDraftWords,
+  WRITER_MAX_OUTPUT_TOKENS,
+} from './draftLimits.js'
 import { getPromptEntry, parseAgentJson, renderPrompt } from './registry.js'
 
 /**
@@ -20,17 +25,36 @@ export async function runAgent(llm, promptKey, { input, modelClass = 'draft', me
   })
   systemParts.push(rendered)
   systemParts.push(
-    'Respond with valid JSON only matching the schema. Do not wrap the JSON in markdown code fences (no ```json). No prose outside the JSON object.'
+    'Respond with valid JSON only matching the schema. Do not wrap the JSON in markdown code fences (no ```json). No prose outside the JSON object. Always close every string and brace.'
   )
   const system = systemParts.join('\n\n')
 
+  let agentInput = input
+  if (promptKey === 'writer.v1' && input && typeof input === 'object' && input.node) {
+    const tw = clampDraftTargetWords(input.node.target_words ?? metadata.targetWords)
+    agentInput = {
+      ...input,
+      node: {
+        ...input.node,
+        target_words: tw,
+      },
+      draft_constraints: {
+        max_words: tw,
+        must_finish_json: true,
+      },
+    }
+  }
+
   const userContent =
-    typeof input === 'string' ? input : JSON.stringify(input ?? {}, null, 2)
+    typeof agentInput === 'string' ? agentInput : JSON.stringify(agentInput ?? {}, null, 2)
   const inputHash = createHash('sha256').update(`${promptKey}:${userContent}`).digest('hex')
 
-  // Writer prose needs headroom; Anthropic provider caps at 8192.
   const defaultMax =
-    promptKey === 'writer.v1' || promptKey === 'outline.v1' ? 8192 : 4096
+    promptKey === 'writer.v1'
+      ? maxTokensForDraftWords(agentInput?.node?.target_words || metadata.targetWords)
+      : promptKey === 'outline.v1'
+        ? WRITER_MAX_OUTPUT_TOKENS
+        : 4096
 
   const completion = await llm.complete({
     modelClass,

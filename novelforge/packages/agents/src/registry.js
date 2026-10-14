@@ -276,16 +276,78 @@ export function extractJsonPayload(text) {
   )
 }
 
+/**
+ * Recover prose when the model hits max_tokens mid-`content_md` string.
+ * @returns {null | { content_md: string, scene_goal: string, characters_on_page: string[], open_loops: string[], continuity_notes: string[] }}
+ */
+export function salvageTruncatedWriterJson(text) {
+  let raw = String(text || '').trim()
+  if (raw.startsWith('```')) {
+    const nl = raw.indexOf('\n')
+    raw = (nl >= 0 ? raw.slice(nl + 1) : raw.replace(/^```(?:json)?\s*/i, '')).trim()
+  }
+  if (raw.endsWith('```')) raw = raw.slice(0, -3).trim()
+
+  const key = '"content_md"'
+  const idx = raw.indexOf(key)
+  if (idx < 0) return null
+  let i = raw.indexOf(':', idx + key.length)
+  if (i < 0) return null
+  i++
+  while (i < raw.length && /\s/.test(raw[i])) i++
+  if (raw[i] !== '"') return null
+  i++
+
+  let content = ''
+  let escape = false
+  let closed = false
+  for (; i < raw.length; i++) {
+    const ch = raw[i]
+    if (escape) {
+      const map = { n: '\n', r: '\r', t: '\t', '"': '"', '\\': '\\', '/': '/' }
+      content += map[ch] != null ? map[ch] : ch
+      escape = false
+      continue
+    }
+    if (ch === '\\') {
+      escape = true
+      continue
+    }
+    if (ch === '"') {
+      closed = true
+      break
+    }
+    content += ch
+  }
+  if (closed) return null
+  const trimmed = content.trim()
+  if (trimmed.length < 80) return null
+  return {
+    content_md: `${trimmed}\n\n*[Draft cut off mid-generation — regenerate or Draft scene to continue.]*`,
+    scene_goal: 'Partial draft (model hit output limit)',
+    characters_on_page: [],
+    open_loops: [],
+    continuity_notes: [],
+  }
+}
+
 export function parseAgentJson(text, schema) {
-  const raw = extractJsonPayload(text)
   let data
   try {
+    const raw = extractJsonPayload(text)
     data = JSON.parse(raw)
   } catch (e) {
-    const hint = String(e?.message || 'invalid JSON')
-    throw new Error(
-      `Could not parse AI JSON (${hint}). Retry the job — if this persists, the model may have wrapped or truncated the reply.`
-    )
+    const salvaged = salvageTruncatedWriterJson(text)
+    if (salvaged) {
+      data = salvaged
+    } else {
+      const hint = String(e?.message || 'invalid JSON')
+      throw new Error(
+        /cut off|incomplete JSON/i.test(hint)
+          ? hint
+          : `Could not parse AI JSON (${hint}). Retry the job — if this persists, the model may have wrapped or truncated the reply.`
+      )
+    }
   }
   data = normalizeAgentPayload(data, schema)
   const result = schema.safeParse(data)

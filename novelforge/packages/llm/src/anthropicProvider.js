@@ -59,7 +59,8 @@ export class AnthropicLLMProvider extends LLMProvider {
 
     const body = {
       model,
-      max_tokens: Math.min(Number(req.maxTokens) || 4096, 8192),
+      // Writer chapter/scene JSON needs headroom; Claude Sonnet supports 16k+ output.
+      max_tokens: Math.min(Number(req.maxTokens) || 4096, 16_384),
       temperature: req.temperature ?? 0.7,
       system: systemParts.length === 1 && !req.cacheableSystemPrefix ? req.system : systemParts,
       messages: (req.messages || []).map((m) => ({

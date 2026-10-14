@@ -11,6 +11,12 @@ Write one scene/section of adult fiction prose for NovelForge.
 ## Rules
 {{UNIVERSAL_FICTION_RULES}}
 
+## Length & format (critical)
+- Stay at or under `node.target_words` (never pad past it).
+- Finish a complete, valid JSON object before stopping — never leave `content_md` unclosed.
+- Do **not** wrap the reply in markdown fences (no ```json).
+- Prefer a finished shorter scene over a truncated longer one.
+
 ## Output
 Return ONLY JSON:
 {

@@ -69,3 +69,13 @@ test('extractJsonPayload explains truncated fence responses', () => {
     /cut off|incomplete JSON/i
   )
 })
+
+test('parseAgentJson salvages truncated content_md', () => {
+  const prose =
+    'Ama stepped off the S-Bahn into cold Berlin air and kept walking toward the flat she still called temporary. '.repeat(
+      3
+    )
+  const out = parseAgentJson(`\`\`\`json\n{ "content_md": "${prose}`, writerSchema)
+  assert.match(out.content_md, /S-Bahn/)
+  assert.match(out.content_md, /cut off/i)
+})
