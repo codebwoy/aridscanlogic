@@ -21,6 +21,7 @@ Do **not** copy proprietary code or private editorial databases — original imp
 | Amazon KDP trim/bleed/margins | https://kdp.amazon.com/help/topic/GVBQ3CMEQW3W2VL6 | 2026-10-14 | Gutter by page count; bleed 0.125″; outside margins |
 | Amazon KDP ebook formats | https://kdp.amazon.com/en_US/help/topic/G200634390 | 2026-10-14 | DOCX / KPF / EPUB; MOBI fixed-layout ended March 2025; Kindle Previewer |
 | Amazon KDP Content Guidelines | https://kdp.amazon.com/en_US/help/topic/G200672390 | 2026-10-14 | Illegal/offensive; AI-generated vs AI-assisted disclosure; translation credit; public domain |
+| Amazon KDP fix formatting (print) | https://kdp.amazon.com/en_US/help/topic/G201834260 | 2026-10-14 | Blank pages ≤4 mid/front ≤10 end; embed fonts; pagination; hidden chars; spine &lt;79; flatten transparencies |
 | Anthropic prompting best practices | https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices | 2026-10-14 | Structured JSON outputs; clear constraints |
 | OpenAI structured outputs | https://platform.openai.com/docs/guides/structured-outputs | 2026-10-14 | Schema-validated agent JSON for verify provider |
 
@@ -48,3 +49,15 @@ Do **not** copy proprietary code or private editorial databases — original imp
 20. Work-unit estimate before audit (personal studio — not billed); hardcover case-laminate reminder.
 21. KDP Word-template pre-pub checklist: placeholders, title/author match, ≥300 DPI images, ≥7 pt legibility (G201834230).
 22. Ordered action plan + re-verify after corrections; alternatives picker; DOCX export; file sha256 on ingest; drag-drop upload; kids/YA soft safeguards; cross-chapter continuity pass.
+23. Scorecard dimensions (grammar, naturalness, regional, clarity, repetition, structure, genre, factual, formatting, KDP) — critical KDP blocking outweighs clean prose.
+24. Finding start/end offsets from excerpt; analysis_run_id on findings.
+25. Paragraph length + overused/abrupt transitions; integrity (dates/numbers/terminology); formality + character list + glossary refs.
+26. KDP G201834260: blank pages, font embed, pagination, hidden characters, spine &lt;79 pages, transparencies.
+27. PWA Style Report extras: long subordinate clauses; author style-guide rules (“prefer X not Y” / “never use Z”).
+28. Mechanics: duplicate words, confused pairs, wordiness/redundancy, nominalizations; tone consistency across chapters.
+29. Nonfiction: mixed citation-style heuristic + high-stakes expert-verification disclaimer.
+30. EN varieties AU/NZ/CA; workbook answer-key / writing-space / page-ref checks; ISBN format (G201834230); PDF+embed reminder.
+31. Project metadata: subtitle, author/pen name, intended tone, style guide paste, translation glossary wired into glossary checks.
+32. Manuscript Analysis Text Location pins (jump buttons) from related findings (PWA).
+33. Overused-words thesaurus alternatives (PWA Thesaurus Report concept); sticky sentences as findings.
+34. Fiction POV/tense consistency heuristics; KDP title/author manuscript match; bleed toggle; Amazon Endure note; translation log in MD export.

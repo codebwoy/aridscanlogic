@@ -137,6 +137,76 @@ function repeatedSentenceStarts(text) {
     .map(([word, count]) => ({ word, count }))
 }
 
+/** Paragraph length extremes (BookReady / PWA readability adjacent). */
+function paragraphLengthReport(text) {
+  const paras = String(text || '')
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+  const lengths = paras.map((p) => wordCount(p))
+  const veryLong = []
+  const veryShort = []
+  paras.forEach((p, i) => {
+    const wc = lengths[i]
+    if (wc >= 180) {
+      veryLong.push({ paragraph_index: i, word_count: wc, preview: p.slice(0, 140) })
+    } else if (wc <= 3 && !/^#{1,6}\s/.test(p) && !/^\*\*.+\*\*$/.test(p)) {
+      veryShort.push({ paragraph_index: i, word_count: wc, preview: p.slice(0, 80) })
+    }
+  })
+  const avg = lengths.length ? lengths.reduce((a, b) => a + b, 0) / lengths.length : 0
+  return {
+    paragraph_count: paras.length,
+    average_words: Number(avg.toFixed(1)),
+    very_long: veryLong.slice(0, 12),
+    very_short: veryShort.slice(0, 12),
+    note: 'Very long paragraphs can fatigue readers; stacks of tiny paragraphs can feel abrupt (heuristic).',
+  }
+}
+
+const TRANSITION_PHRASES = Object.freeze([
+  'however',
+  'therefore',
+  'meanwhile',
+  'suddenly',
+  'then',
+  'next',
+  'after that',
+  'in addition',
+  'furthermore',
+  'on the other hand',
+  'as a result',
+  'in conclusion',
+  'needless to say',
+  'at that moment',
+  'before long',
+])
+
+/** Overused / abrupt transitions (BookReady natural-writing engine). */
+function transitionReport(text) {
+  const lower = String(text || '').toLowerCase()
+  const hits = []
+  for (const phrase of TRANSITION_PHRASES) {
+    const re = new RegExp(`\\b${phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi')
+    const m = lower.match(re)
+    if (m?.length >= 3) hits.push({ phrase, count: m.length })
+  }
+  hits.sort((a, b) => b.count - a.count)
+
+  // Abrupt: short sentence then hard jump ("Then." / "Suddenly." alone-ish)
+  const abrupt = []
+  for (const s of sentences(text)) {
+    if (/^(then|suddenly|meanwhile|however)[.!]?$/i.test(s.trim())) {
+      abrupt.push({ sentence: s.slice(0, 80) })
+    }
+  }
+  return {
+    overused: hits.slice(0, 10),
+    abrupt: abrupt.slice(0, 8),
+    note: 'Transition flags are style guides — intentional rhythm is valid.',
+  }
+}
+
 function passiveApprox(text) {
   // English-oriented heuristic: was/were/been + past participle-ish
   const re = /\b(?:was|were|been|being|is|are|am)\s+\w+ed\b/gi
@@ -240,6 +310,8 @@ export function buildStyleReports(
     cliches,
     emotion_tells,
     hidden_verbs,
+    paragraph_length: paragraphLengthReport(text),
+    transitions: transitionReport(text),
     passive: language === 'en' ? passiveApprox(text) : { hits: 0, percent_of_sentences: null, guide: 'Passive heuristic is English-oriented.' },
     word_count: wordCount(text),
   }
@@ -343,6 +415,73 @@ function styleFindingsFromReports(reports, ctx) {
       suggested_correction: '',
       reason: 'deterministic_hidden_verb',
       confidence: 0.6,
+      objective: false,
+      section_key: ctx.sectionKey,
+      chapter: ctx.chapter,
+    })
+  }
+  for (const p of (reports.paragraph_length?.very_long || []).slice(0, 4)) {
+    out.push({
+      category: 'style',
+      subcategory: 'paragraph_length',
+      severity: 'suggestion',
+      title: `Very long paragraph (~${p.word_count} words)`,
+      explanation:
+        'Long unbroken paragraphs can tire readers. Consider a break if pacing allows (heuristic — keep intentional blocks).',
+      original_excerpt: p.preview.slice(0, 120),
+      suggested_correction: '',
+      reason: 'deterministic_paragraph_length',
+      confidence: 0.5,
+      objective: false,
+      section_key: ctx.sectionKey,
+      chapter: ctx.chapter,
+    })
+  }
+  for (const t of (reports.transitions?.overused || []).slice(0, 5)) {
+    out.push({
+      category: 'style',
+      subcategory: 'transition',
+      severity: 'suggestion',
+      title: `Overused transition: “${t.phrase}” (${t.count}×)`,
+      explanation:
+        'BookReady / natural-writing: repeated transition phrases can feel formulaic. Vary or cut when clear without them.',
+      original_excerpt: t.phrase,
+      suggested_correction: '',
+      reason: 'deterministic_overused_transition',
+      confidence: 0.55,
+      objective: false,
+      section_key: ctx.sectionKey,
+      chapter: ctx.chapter,
+    })
+  }
+  for (const a of (reports.transitions?.abrupt || []).slice(0, 3)) {
+    out.push({
+      category: 'style',
+      subcategory: 'transition',
+      severity: 'suggestion',
+      title: 'Abrupt one-word transition',
+      explanation: 'A lone transition sentence may feel abrupt — expand or cut if unintended.',
+      original_excerpt: a.sentence,
+      suggested_correction: '',
+      reason: 'deterministic_abrupt_transition',
+      confidence: 0.5,
+      objective: false,
+      section_key: ctx.sectionKey,
+      chapter: ctx.chapter,
+    })
+  }
+  for (const s of (reports.sticky || []).slice(0, 5)) {
+    out.push({
+      category: 'style',
+      subcategory: 'sticky',
+      severity: 'suggestion',
+      title: 'Sticky sentence (high glue-word density)',
+      explanation:
+        'PWA Sticky Sentences: many glue words (the/a/of/to…) can make prose drag. Tighten if unintentional.',
+      original_excerpt: s.sentence.slice(0, 120),
+      suggested_correction: '',
+      reason: 'deterministic_sticky',
+      confidence: 0.5,
       objective: false,
       section_key: ctx.sectionKey,
       chapter: ctx.chapter,

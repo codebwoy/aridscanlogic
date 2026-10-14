@@ -50,6 +50,18 @@ Research: [`docs/RESEARCH.md`](./docs/RESEARCH.md). Security: [`SECURITY.md`](./
 | Rate limit + audit log + desktop auth | Done |
 | Personal studio (no Stripe / no paywall) | Done |
 | Docker production image | Done |
+| Scorecard dimensions + finding offsets | Done |
+| Formality / character list / glossary / integrity | Done |
+| Paragraph length + transitions | Done |
+| KDP blank pages / fonts / ISBN / PDF embed | Done |
+| Mechanics (duplicates, confused words, wordiness) | Done |
+| Style guide + tone consistency + high-stakes / citations | Done |
+| EN AU/NZ/CA + workbook answer-key / writing space | Done |
+| Manuscript Analysis Text Location jump pins | Done |
+| Thesaurus alternatives on overused words | Done |
+| Sticky → findings + POV/tense consistency | Done |
+| KDP title/author match + bleed toggle + Endure note | Done |
+| Translation log in Markdown export | Done |
 
 ## Quick start
 

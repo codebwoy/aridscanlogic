@@ -87,10 +87,21 @@ export function normalizeFinding(raw, ctx = {}) {
   const category = FINDING_CATEGORIES.includes(raw.category) ? raw.category : 'other'
   const confidence = Math.max(0, Math.min(1, Number(raw.confidence) || 0.5))
 
+  let start_offset = Number.isFinite(raw.start_offset) ? raw.start_offset : null
+  let end_offset = Number.isFinite(raw.end_offset) ? raw.end_offset : null
+  if (sectionText && start_offset == null) {
+    const idx = sectionText.indexOf(original)
+    if (idx >= 0) {
+      start_offset = idx
+      end_offset = idx + original.length
+    }
+  }
+
   return {
     ok: true,
     finding: {
       id: raw.id || undefined,
+      analysis_run_id: ctx.analysisRunId || raw.analysis_run_id || null,
       category,
       subcategory: String(raw.subcategory || '').slice(0, 80),
       severity,
@@ -106,8 +117,8 @@ export function normalizeFinding(raw, ctx = {}) {
       verification_status: raw.verification_status === 'verified' ? 'verified' : 'unverified',
       section_key: ctx.sectionKey || raw.section_key || '',
       chapter: String(raw.chapter || ctx.chapter || ''),
-      start_offset: Number.isFinite(raw.start_offset) ? raw.start_offset : null,
-      end_offset: Number.isFinite(raw.end_offset) ? raw.end_offset : null,
+      start_offset,
+      end_offset,
       objective: Boolean(raw.objective),
       resolution: 'open',
       user_decision: null,
@@ -116,7 +127,20 @@ export function normalizeFinding(raw, ctx = {}) {
   }
 }
 
-export function scoreFromFindings(findings = []) {
+const SCORE_DIMENSIONS = Object.freeze([
+  { id: 'grammar_mechanics', cats: ['grammar', 'spelling', 'punctuation'] },
+  { id: 'naturalness_fluency', cats: ['naturalness'] },
+  { id: 'regional_language', cats: ['localization'] },
+  { id: 'clarity_readability', cats: ['style'], subs: ['filler', 'wordiness'] },
+  { id: 'style_repetition', cats: ['repetition', 'style'] },
+  { id: 'structure_consistency', cats: ['structure', 'consistency'] },
+  { id: 'genre_specific', cats: ['structure'], subs: ['chapter', 'pacing'] },
+  { id: 'factual_citation', cats: ['consistency'], subs: ['claim', 'dates', 'numbers'] },
+  { id: 'formatting_quality', cats: ['kdp_technical'] },
+  { id: 'kdp_compliance', cats: ['kdp_technical', 'kdp_policy'] },
+])
+
+export function scoreFromFindings(findings = [], { kdpBlocking = 0, coverage = null } = {}) {
   const list = Array.isArray(findings) ? findings : []
   const open = list.filter((f) => !f.resolution || f.resolution === 'open')
   const weight = {
@@ -131,6 +155,8 @@ export function scoreFromFindings(findings = []) {
   for (const f of open) {
     penalty += weight[f.severity] || 2
   }
+  // Critical print/KDP blocking must drag overall even if prose looks clean
+  penalty += Number(kdpBlocking || 0) * 20
   const overall = Math.max(0, Math.min(100, Math.round(100 - penalty)))
   const byCat = {}
   for (const c of FINDING_CATEGORIES) byCat[c] = 100
@@ -138,6 +164,19 @@ export function scoreFromFindings(findings = []) {
     const c = f.category || 'other'
     byCat[c] = Math.max(0, (byCat[c] ?? 100) - (weight[f.severity] || 2) * 2)
   }
+
+  const dimensions = {}
+  for (const dim of SCORE_DIMENSIONS) {
+    const relevant = open.filter((f) => {
+      if (!dim.cats.includes(f.category)) return false
+      if (dim.subs?.length) return dim.subs.includes(f.subcategory) || !f.subcategory
+      return true
+    })
+    let p = 0
+    for (const f of relevant) p += weight[f.severity] || 2
+    dimensions[dim.id] = Math.max(0, Math.min(100, Math.round(100 - p * 2)))
+  }
+
   const counts = {
     critical: open.filter((f) => f.severity === 'critical').length,
     major: open.filter((f) => f.severity === 'major').length,
@@ -150,7 +189,7 @@ export function scoreFromFindings(findings = []) {
   }
   let readiness = 'not_yet_assessed'
   if (!list.length) readiness = 'analysis_incomplete'
-  else if (counts.critical > 0) readiness = 'critical_issues_detected'
+  else if (counts.critical > 0 || kdpBlocking > 0) readiness = 'critical_issues_detected'
   else if (counts.major > 0) readiness = 'corrections_recommended'
   else if (counts.total_open > 0) readiness = 'ready_for_final_author_review'
   else readiness = 'checks_passed_for_selected_profile'
@@ -158,9 +197,11 @@ export function scoreFromFindings(findings = []) {
   return {
     overall,
     categories: byCat,
+    dimensions,
     counts,
     readiness,
-    note: 'Scores are estimated guides, not proof of literary quality or KDP approval.',
+    coverage_note: coverage || null,
+    note: 'Scores are estimated guides, not proof of literary quality or KDP approval. Critical KDP/print issues outweigh clean grammar.',
   }
 }
 

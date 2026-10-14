@@ -200,6 +200,114 @@ export const KDP_RULES = Object.freeze([
     retrieved: KDP_RULES_VERSION,
     automated: false,
   },
+  {
+    id: 'kdp.print.fonts_embed',
+    title: 'Fonts fully embedded (print PDF)',
+    format: 'print',
+    severity: 'major',
+    requirement:
+      'All fonts must be fully embedded in interior and cover files. In Word: File → Options → Save → Embed fonts; uncheck “Embed only characters used” and “Do not embed common system fonts”; save as PDF. Commercial-license restrictions can still block embedding.',
+    verification: 'author_confirm',
+    source_url: 'https://kdp.amazon.com/en_US/help/topic/G201834260',
+    retrieved: KDP_RULES_VERSION,
+    automated: false,
+  },
+  {
+    id: 'kdp.print.blank_pages',
+    title: 'Consecutive blank pages limit',
+    format: 'print',
+    severity: 'major',
+    requirement:
+      'KDP allows no more than 4 consecutive blank pages at the beginning or middle of a manuscript, and/or 10 consecutive blank pages at the end (reader-experience rule).',
+    verification: 'structure_scan',
+    source_url: 'https://kdp.amazon.com/en_US/help/topic/G201834260',
+    retrieved: KDP_RULES_VERSION,
+    automated: true,
+  },
+  {
+    id: 'kdp.print.pagination',
+    title: 'Sequential pagination',
+    format: 'print',
+    severity: 'needs_verification',
+    requirement:
+      'Page numbers must be ordered sequentially (LTR: even left / odd right). Skips can indicate missing or mis-ordered pages.',
+    verification: 'author_confirm',
+    source_url: 'https://kdp.amazon.com/en_US/help/topic/G201834260',
+    retrieved: KDP_RULES_VERSION,
+    automated: false,
+  },
+  {
+    id: 'kdp.print.hidden_characters',
+    title: 'No text/spaces outside margins',
+    format: 'print',
+    severity: 'needs_verification',
+    requirement:
+      'Text, italic overhangs, hidden spaces, and empty text boxes outside margins trigger Print Previewer errors. Reveal formatting marks (¶) and remove stray objects before PDF upload.',
+    verification: 'author_confirm',
+    source_url: 'https://kdp.amazon.com/en_US/help/topic/G201834260',
+    retrieved: KDP_RULES_VERSION,
+    automated: false,
+  },
+  {
+    id: 'kdp.print.spine_min_pages',
+    title: 'Spine text requires ≥79 pages',
+    format: 'print',
+    severity: 'needs_verification',
+    requirement:
+      'Books with fewer than 79 pages cannot have text on the spine — remove spine text if page count is below the threshold.',
+    verification: 'author_confirm',
+    source_url: 'https://kdp.amazon.com/en_US/help/topic/G201834260',
+    retrieved: KDP_RULES_VERSION,
+    automated: false,
+  },
+  {
+    id: 'kdp.print.transparencies',
+    title: 'Flatten transparencies / layers',
+    format: 'print',
+    severity: 'needs_verification',
+    requirement:
+      'When creating print PDFs, flatten transparencies and layers so content order stays stable in production.',
+    verification: 'author_confirm',
+    source_url: 'https://kdp.amazon.com/en_US/help/topic/G201834260',
+    retrieved: KDP_RULES_VERSION,
+    automated: false,
+  },
+  {
+    id: 'kdp.print.isbn_format',
+    title: 'ISBN format on copyright page (if used)',
+    format: 'all',
+    severity: 'suggestion',
+    requirement:
+      'ISBN is optional on the copyright page. If you include one, format like 978-X-XXXX-XXXX-X and ensure it matches the ISBN assigned to the title. Mismatches cause metadata issues.',
+    verification: 'structure_scan',
+    source_url: 'https://kdp.amazon.com/en_US/help/topic/G201834230',
+    retrieved: KDP_RULES_VERSION,
+    automated: true,
+  },
+  {
+    id: 'kdp.print.save_pdf_embed',
+    title: 'Save interior as PDF with fonts embedded',
+    format: 'print',
+    severity: 'suggestion',
+    requirement:
+      'Pre-publication checklist: for best results save the formatted manuscript as PDF with fonts embedded before KDP upload (in addition to embedding settings in Word).',
+    verification: 'author_confirm',
+    source_url: 'https://kdp.amazon.com/en_US/help/topic/G201834230',
+    retrieved: KDP_RULES_VERSION,
+    automated: false,
+  },
+  {
+    id: 'kdp.print.endure_font_note',
+    title: 'Optional Amazon Endure font (page-count)',
+    format: 'print',
+    severity: 'suggestion',
+    requirement:
+      'KDP offers Amazon Endure, a custom font designed to reduce page count / print cost. Not available for Japanese, Kanji, or Cyrillic. Optional — only if it fits your design.',
+    verification: 'author_confirm',
+    source_url: 'https://kdp.amazon.com/en_US/help/topic/G201834230',
+    retrieved: KDP_RULES_VERSION,
+    automated: false,
+  },
 ])
 
 export function gutterForPageCount(pages) {
@@ -228,9 +336,16 @@ export function runKdpChecks(project, { wordCountTotal = 0, sectionCount = 0 } =
   const outside = project.print_config?.outside_margin_in
   const gutter = project.print_config?.gutter_in
 
+  const isPrintTarget =
+    formats.includes('paperback') ||
+    formats.includes('hardcover') ||
+    target === 'multiple'
+
   const results = []
   for (const rule of KDP_RULES) {
-    if (rule.format !== 'all' && !formats.includes(rule.format) && target !== 'editorial_only') {
+    if (rule.format === 'print') {
+      if (!isPrintTarget) continue
+    } else if (rule.format !== 'all' && !formats.includes(rule.format) && target !== 'editorial_only') {
       continue
     }
     if (target === 'editorial_only' && rule.format !== 'all') continue
@@ -337,7 +452,7 @@ export function runKdpChecks(project, { wordCountTotal = 0, sectionCount = 0 } =
       const body = Object.values(project.sections || {})
         .map((s) => s.content_md || '')
         .join('\n')
-      const hit = /(lorem ipsum|\[title\]|\[author\]|placeholder text|click here to|sample chapter)/i.test(
+      const hit = /(lorem ipsum|\[title\]|\[author\]|placeholder text|click here to|sample chapter|insert text here|insert chapter)/i.test(
         body
       )
       if (hit) {
@@ -359,10 +474,163 @@ export function runKdpChecks(project, { wordCountTotal = 0, sectionCount = 0 } =
       } else {
         detail = 'No common placeholder patterns detected (still re-check manually).'
       }
+    } else if (rule.id === 'kdp.print.blank_pages') {
+      // Heuristic: runs of empty section bodies or 5+ consecutive blank markdown pages (--- / empty paras)
+      const secs = Object.values(project.sections || {}).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      let run = 0
+      let maxRun = 0
+      for (const s of secs) {
+        const empty = !String(s.content_md || '').trim()
+        if (empty) {
+          run += 1
+          maxRun = Math.max(maxRun, run)
+        } else run = 0
+      }
+      const full = secs.map((s) => s.content_md || '').join('\n')
+      const blankBlocks = (full.match(/(?:\n\s*){8,}/g) || []).length
+      if (maxRun >= 5 || blankBlocks >= 3) {
+        status = 'fail'
+        detail = `Possible excessive blank runs (empty sections run=${maxRun}, large whitespace blocks=${blankBlocks}). KDP: ≤4 consecutive blank mid/front; ≤10 at end.`
+        finding = {
+          category: 'kdp_technical',
+          subcategory: 'blank_pages',
+          severity: 'major',
+          title: rule.title,
+          explanation: detail + ' ' + rule.requirement,
+          original_excerpt: project.title || 'manuscript',
+          suggested_correction: '',
+          reason: rule.id,
+          confidence: 0.7,
+          objective: true,
+          source_rule_id: rule.id,
+        }
+      } else {
+        detail = `No heuristic blank-page excess (empty-section run=${maxRun}). Still verify in Print Previewer / PDF.`
+      }
+    } else if (rule.id === 'kdp.print.prepub_details_match') {
+      const body = Object.values(project.sections || {})
+        .map((s) => s.content_md || '')
+        .join('\n')
+      const title = String(project.title || '').trim()
+      const author = String(project.author_name || '').trim()
+      const issues = []
+      if (title && title.length >= 3 && !body.toLowerCase().includes(title.toLowerCase())) {
+        issues.push(`title “${title}” not found in manuscript text`)
+      }
+      if (author && author.length >= 2 && !body.toLowerCase().includes(author.toLowerCase())) {
+        issues.push(`author “${author}” not found in manuscript text`)
+      }
+      if (issues.length) {
+        status = 'fail'
+        detail = `Metadata mismatch heuristic: ${issues.join('; ')}. KDP requires file details to match title setup.`
+        finding = {
+          category: 'kdp_technical',
+          subcategory: 'metadata_match',
+          severity: 'major',
+          title: rule.title,
+          explanation: detail + ' ' + rule.requirement,
+          original_excerpt: title || author || 'title page',
+          suggested_correction: '',
+          reason: rule.id,
+          confidence: 0.7,
+          objective: true,
+          source_rule_id: rule.id,
+        }
+      } else if (title || author) {
+        detail = 'Title/author strings appear in manuscript (still confirm headers/copyright match KDP setup exactly).'
+        status = 'pass'
+      } else {
+        status = 'needs_verification'
+        detail = rule.requirement + ' Set project title and author_name to enable automatic check.'
+        finding = {
+          category: 'kdp_policy',
+          subcategory: 'metadata_match',
+          severity: 'needs_verification',
+          title: rule.title,
+          explanation: detail,
+          original_excerpt: project.title || 'KDP metadata',
+          suggested_correction: '',
+          reason: rule.id,
+          confidence: 0.7,
+          objective: false,
+          source_rule_id: rule.id,
+        }
+      }
+    } else if (rule.id === 'kdp.print.isbn_format') {
+      const body = Object.values(project.sections || {})
+        .map((s) => s.content_md || '')
+        .join('\n')
+      const hasIsbnLabel = /\bisbn\b/i.test(body)
+      const isbnMatch = body.match(/\b97[89][\d\-–— ]{10,20}\d\b/)
+      if (hasIsbnLabel && !isbnMatch) {
+        status = 'fail'
+        detail = '“ISBN” mentioned but no 978/979-style number found nearby — confirm format 978-X-XXXX-XXXX-X.'
+        finding = {
+          category: 'kdp_technical',
+          subcategory: 'isbn',
+          severity: 'moderate',
+          title: rule.title,
+          explanation: detail + ' ' + rule.requirement,
+          original_excerpt: 'ISBN',
+          suggested_correction: '978-X-XXXX-XXXX-X',
+          reason: rule.id,
+          confidence: 0.7,
+          objective: true,
+          source_rule_id: rule.id,
+        }
+      } else if (isbnMatch && !/97[89]-\d/.test(isbnMatch[0]) && !/\s/.test(isbnMatch[0])) {
+        status = 'needs_verification'
+        detail = `ISBN-like number found (${isbnMatch[0]}); confirm hyphenation and title-setup match.`
+        finding = {
+          category: 'kdp_technical',
+          subcategory: 'isbn',
+          severity: 'suggestion',
+          title: rule.title,
+          explanation: detail,
+          original_excerpt: isbnMatch[0],
+          suggested_correction: '',
+          reason: rule.id,
+          confidence: 0.55,
+          objective: false,
+          source_rule_id: rule.id,
+        }
+      } else if (isbnMatch) {
+        detail = `ISBN-like value detected (${isbnMatch[0]}) — still confirm it matches KDP title setup.`
+        status = 'pass'
+      } else {
+        detail = 'No ISBN in manuscript (optional).'
+        status = 'pass'
+      }
+    } else if (rule.id === 'kdp.print.spine_min_pages') {
+      if (estimatedPages < 79) {
+        status = 'needs_verification'
+        detail = `Est. ~${estimatedPages} pages (<79) — remove spine text on cover if present.`
+        finding = {
+          category: 'kdp_technical',
+          subcategory: 'spine',
+          severity: 'needs_verification',
+          title: rule.title,
+          explanation: detail + ' ' + rule.requirement,
+          original_excerpt: project.title || 'cover',
+          suggested_correction: '',
+          reason: rule.id,
+          confidence: 0.75,
+          objective: false,
+          source_rule_id: rule.id,
+        }
+      } else {
+        detail = `Est. ~${estimatedPages} pages — spine text allowed if margins allow.`
+        status = 'pass'
+      }
     } else if (
-      rule.id === 'kdp.print.prepub_details_match' ||
       rule.id === 'kdp.print.prepub_images_dpi' ||
       rule.id === 'kdp.print.prepub_legibility' ||
+      rule.id === 'kdp.print.fonts_embed' ||
+      rule.id === 'kdp.print.pagination' ||
+      rule.id === 'kdp.print.hidden_characters' ||
+      rule.id === 'kdp.print.transparencies' ||
+      rule.id === 'kdp.print.save_pdf_embed' ||
+      rule.id === 'kdp.print.endure_font_note' ||
       rule.id === 'kdp.policy.ai_disclosure' ||
       rule.id === 'kdp.policy.content_guidelines' ||
       rule.id === 'kdp.policy.translation_credit' ||

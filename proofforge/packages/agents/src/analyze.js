@@ -25,6 +25,17 @@ import {
   buildSummaryReport,
   buildActionPlan,
   kidsSafeguardFindings,
+  integrityFindingsFromText,
+  terminologyDriftFindings,
+  formalityFindingsFromText,
+  referenceDocFindings,
+  missingCharacterFindings,
+  mechanicsFindings,
+  citationFindings,
+  highStakesFindings,
+  styleGuideFindings,
+  toneConsistencyFindings,
+  narrativeConsistencyFindings,
 } from '@proofforge/shared'
 import { createVerifyProvider } from '@proofforge/llm'
 import { runAgent } from './runAgent.js'
@@ -48,6 +59,15 @@ export async function runManuscriptAnalysis(llm, project, hooks = {}) {
   const documentDomain = project.document_domain || prefs.document_domain || 'general'
   const genreComparison = project.genre_comparison || 'general_fiction'
   const authorGoals = String(project.author_goals || '').trim()
+  const formality = project.formality || prefs.formality || 'neutral'
+  const readingLevel = project.reading_level || ''
+  const characterList = Array.isArray(project.character_list) ? project.character_list : []
+  const glossary = Array.isArray(project.glossary) ? project.glossary : []
+  const translationGlossary = Array.isArray(project.translation_glossary)
+    ? project.translation_glossary
+    : []
+  const styleGuide = String(project.style_guide || '').trim()
+  const analysisRunId = `run_${Date.now().toString(36)}`
   const findings = []
   const stats = {}
   const sectionReportMap = {}
@@ -141,12 +161,38 @@ export async function runManuscriptAnalysis(llm, project, hooks = {}) {
       ...repetitionFindings(section),
       ...localizationFindings(section, project.language, project.language_variety),
       ...styleBundle.findings,
+      ...integrityFindingsFromText(section.content_md, {
+        sectionKey: section.key,
+        chapter: section.title,
+      }),
+      ...formalityFindingsFromText(section.content_md, {
+        formality,
+        language: project.language,
+        sectionKey: section.key,
+        chapter: section.title,
+      }),
+      ...referenceDocFindings(section.content_md, {
+        characterList,
+        glossary: [...glossary, ...translationGlossary],
+        sectionKey: section.key,
+        chapter: section.title,
+      }),
+      ...mechanicsFindings(section.content_md, {
+        sectionKey: section.key,
+        chapter: section.title,
+        language: project.language,
+      }),
+      ...styleGuideFindings(section.content_md, styleGuide, {
+        sectionKey: section.key,
+        chapter: section.title,
+      }),
     ]
     for (const det of deterministic) {
       const n = normalizeFinding(det, {
         sectionText: section.content_md,
         sectionKey: section.key,
         chapter: section.title,
+        analysisRunId,
       })
       if (n.ok) findings.push(n.finding)
     }
@@ -325,9 +371,82 @@ export async function runManuscriptAnalysis(llm, project, hooks = {}) {
       sectionText: det.original_excerpt,
       sectionKey: '',
       chapter: 'Safeguards',
+      analysisRunId,
     })
     if (n.ok) findings.push(n.finding)
   }
+
+  // Cross-section terminology + character list coverage
+  for (const det of terminologyDriftFindings(sections)) {
+    const n = normalizeFinding(det, {
+      sectionText: det.original_excerpt,
+      sectionKey: '',
+      chapter: 'Cross-section',
+      analysisRunId,
+    })
+    if (n.ok) findings.push(n.finding)
+  }
+  const fullMs = sections.map((s) => s.content_md).join('\n\n')
+  for (const det of missingCharacterFindings(fullMs, characterList)) {
+    const n = normalizeFinding(det, {
+      sectionText: det.original_excerpt,
+      sectionKey: '',
+      chapter: 'Character list',
+      analysisRunId,
+    })
+    if (n.ok) findings.push(n.finding)
+  }
+  if (readingLevel && /young|kids|children|ya|middle.?grade/i.test(readingLevel)) {
+    // Soft note only — kidsSafeguards already covers content; reading_level is metadata
+    memory.reading_level_target = readingLevel
+  }
+  for (const det of toneConsistencyFindings(sections)) {
+    const n = normalizeFinding(det, {
+      sectionText: det.original_excerpt,
+      sectionKey: det.section_key || '',
+      chapter: det.chapter || 'Tone',
+      analysisRunId,
+    })
+    if (n.ok) findings.push(n.finding)
+  }
+  if (isFictionType(project.book_type)) {
+    for (const det of narrativeConsistencyFindings(sections)) {
+      const n = normalizeFinding(det, {
+        sectionText: det.original_excerpt,
+        sectionKey: det.section_key || '',
+        chapter: det.chapter || 'Narrative',
+        analysisRunId,
+      })
+      if (n.ok) findings.push(n.finding)
+    }
+  }
+  // Nonfiction citation + high-stakes (sample from full manuscript)
+  if (!isFictionType(project.book_type) || project.document_domain === 'academic') {
+    for (const det of citationFindings(fullMs, { chapter: 'Citations' })) {
+      const n = normalizeFinding(det, {
+        sectionText: det.original_excerpt,
+        sectionKey: '',
+        chapter: 'Citations',
+        analysisRunId,
+      })
+      if (n.ok) findings.push(n.finding)
+    }
+    for (const det of highStakesFindings(fullMs, {
+      bookType: project.book_type,
+      documentDomain,
+      chapter: 'High-stakes',
+    })) {
+      const n = normalizeFinding(det, {
+        sectionText: det.original_excerpt,
+        sectionKey: '',
+        chapter: 'High-stakes',
+        analysisRunId,
+      })
+      if (n.ok) findings.push(n.finding)
+    }
+  }
+  if (styleGuide) memory.style_guide_applied = true
+  if (translationGlossary.length) memory.translation_glossary_terms = translationGlossary.length
 
   // Word-count gate (PWA 6k–300k guidance)
   const preWords = sections.reduce((n, s) => n + wordCount(s.content_md), 0)
@@ -559,12 +678,22 @@ export async function runManuscriptAnalysis(llm, project, hooks = {}) {
     }
   }
 
-  const scores = scoreFromFindings(deduped)
+  const scores = scoreFromFindings(deduped, {
+    kdpBlocking: kdp.summary.blocking,
+    coverage: {
+      sections: sections.length,
+      words: totalWords,
+      formality,
+      reading_level: readingLevel || null,
+    },
+  })
   // Blend AutoCrit-style category scores into scores payload
   scores.autocrit_style = style_reports.category_scores
   scores.kdp_blocking = kdp.summary.blocking
   scores.kdp_needs_config = kdp.summary.needs_config
   scores.word_gate = wordGate?.status
+  scores.formality = formality
+  scores.analysis_run_id = analysisRunId
 
   const action_plan = buildActionPlan(deduped, { scores, kdp })
 
@@ -589,6 +718,9 @@ export async function runManuscriptAnalysis(llm, project, hooks = {}) {
     document_domain: documentDomain,
     genre_comparison: genreComparison,
     author_goals: authorGoals || null,
+    formality,
+    reading_level: readingLevel || null,
+    analysis_run_id: analysisRunId,
     usage: usageTotal,
     coverage: {
       sections_analyzed: sections.length,
@@ -598,6 +730,11 @@ export async function runManuscriptAnalysis(llm, project, hooks = {}) {
       word_gate: wordGate,
       document_domain: documentDomain,
       genre_comparison: genreComparison,
+      formality,
+      reading_level: readingLevel || null,
+      character_list_count: characterList.length,
+      glossary_count: glossary.length,
+      analysis_run_id: analysisRunId,
       tone: tone.overall,
       disagreements: disagreements.length,
       chapter_critiques: chapterCritiques.length,
@@ -607,8 +744,29 @@ export async function runManuscriptAnalysis(llm, project, hooks = {}) {
         deterministic_style: true,
         emotion_tells: true,
         hidden_verbs: true,
+        paragraph_length: true,
+        overused_transitions: true,
         first_chapter_pacing: true,
         tone_detector: true,
+        tone_consistency: true,
+        narrative_pov_tense: isFictionType(project.book_type),
+        sticky_findings: true,
+        thesaurus_overused: true,
+        manuscript_text_locations: true,
+        duplicate_words: true,
+        confused_words: true,
+        wordiness_redundancy: true,
+        nominalizations: true,
+        long_clauses: true,
+        style_guide: Boolean(styleGuide),
+        citation_heuristics: !isFictionType(project.book_type) || documentDomain === 'academic',
+        high_stakes_disclaimer: true,
+        formality_register: true,
+        integrity_heuristics: true,
+        terminology_drift: true,
+        character_glossary_refs: true,
+        finding_offsets: true,
+        scorecard_dimensions: true,
         manuscript_analysis_sections: true,
         genre_comparison: true,
         summary_report: true,
@@ -630,6 +788,8 @@ export async function runManuscriptAnalysis(llm, project, hooks = {}) {
         verify_sample: toVerify.length > 0,
         dual_model_verify: disagreements.length > 0 || Boolean(createVerifyProvider()),
         kdp_rules: true,
+        kdp_blank_pages: true,
+        kdp_fonts_embed: true,
         document_domain: true,
         word_count_gate: true,
         pdf_ocr: true,

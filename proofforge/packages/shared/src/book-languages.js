@@ -19,9 +19,12 @@ export const BOOK_LANGUAGES = [
     varieties: [
       { code: 'us', label: 'US English', note: 'US spelling and idiom (color, organize, gotten)' },
       { code: 'uk', label: 'UK English', note: 'UK spelling and idiom (colour, organise, got)' },
+      { code: 'au', label: 'Australian English', note: 'AU spelling largely UK-aligned (-ise/-our)' },
+      { code: 'nz', label: 'New Zealand English', note: 'NZ spelling largely UK-aligned (-ise/-our)' },
+      { code: 'ca', label: 'Canadian English', note: 'CA often mixes US/UK — lock one house style' },
     ],
     norms: [
-      'Pick one English variety (US or UK) and keep spelling/idiom consistent',
+      'Pick one English variety (US/UK/AU/NZ/CA) and keep spelling/idiom consistent',
       'Pace, stakes, and character voice matter more than purple prose',
       'Dialogue should sound spoken, not essay-like',
     ],

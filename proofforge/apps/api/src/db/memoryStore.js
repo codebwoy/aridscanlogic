@@ -185,6 +185,10 @@ export function createMemoryStore(options = {}) {
         id,
         owner_id: ownerId,
         title: String(body.title || 'Untitled manuscript').slice(0, 200),
+        subtitle: String(body.subtitle || '').slice(0, 200),
+        author_name: String(body.author_name || '').slice(0, 120),
+        intended_tone: String(body.intended_tone || '').slice(0, 120),
+        style_guide: String(body.style_guide || '').slice(0, 4000),
         book_type: body.book_type || 'fiction',
         language,
         language_variety,
@@ -205,6 +209,15 @@ export function createMemoryStore(options = {}) {
         source_language: body.source_language || '',
         chapter_critique: body.chapter_critique !== false,
         plagiarism_consent: Boolean(body.plagiarism_consent),
+        formality: body.formality || 'neutral',
+        reading_level: String(body.reading_level || '').slice(0, 80),
+        character_list: Array.isArray(body.character_list)
+          ? body.character_list.map(String).slice(0, 80)
+          : [],
+        glossary: Array.isArray(body.glossary) ? body.glossary.slice(0, 80) : [],
+        translation_glossary: Array.isArray(body.translation_glossary)
+          ? body.translation_glossary.slice(0, 80)
+          : [],
         print_config: body.print_config || {
           trim_size_in: null,
           bleed: false,
@@ -248,6 +261,10 @@ export function createMemoryStore(options = {}) {
       const p = state.projects.get(id)
       if (!p) return null
       if (patch.title != null) p.title = String(patch.title).slice(0, 200)
+      if (patch.subtitle != null) p.subtitle = String(patch.subtitle).slice(0, 200)
+      if (patch.author_name != null) p.author_name = String(patch.author_name).slice(0, 120)
+      if (patch.intended_tone != null) p.intended_tone = String(patch.intended_tone).slice(0, 120)
+      if (patch.style_guide != null) p.style_guide = String(patch.style_guide).slice(0, 4000)
       if (patch.book_type) p.book_type = patch.book_type
       if (patch.edit_mode) p.edit_mode = patch.edit_mode
       if (patch.publishing_target) p.publishing_target = patch.publishing_target
@@ -273,6 +290,15 @@ export function createMemoryStore(options = {}) {
         p.consent = { ...(p.consent || {}), external_plagiarism: p.plagiarism_consent }
       }
       if (patch.print_config) p.print_config = { ...(p.print_config || {}), ...patch.print_config }
+      if (patch.formality != null) p.formality = String(patch.formality).slice(0, 32)
+      if (patch.reading_level != null) p.reading_level = String(patch.reading_level).slice(0, 80)
+      if (patch.character_list) {
+        p.character_list = patch.character_list.map(String).slice(0, 80)
+      }
+      if (patch.glossary) p.glossary = patch.glossary.slice(0, 80)
+      if (patch.translation_glossary) {
+        p.translation_glossary = patch.translation_glossary.slice(0, 80)
+      }
       if (patch.consent) {
         p.consent = { ...(p.consent || {}), ...patch.consent }
         if (patch.consent.external_plagiarism != null) {
@@ -280,7 +306,6 @@ export function createMemoryStore(options = {}) {
         }
       }
       if (patch.ingest_warnings) p.ingest_warnings = patch.ingest_warnings
-      if (patch.author_name != null) p.author_name = String(patch.author_name).slice(0, 120)
       if (patch.language) {
         p.language = normalizeBookLanguage(patch.language)
         p.language_variety = normalizeBookLanguageVariety(
@@ -314,16 +339,20 @@ export function createMemoryStore(options = {}) {
     setAnalysisResult(id, result) {
       const p = state.projects.get(id)
       if (!p) return null
+      const runId = result.analysis_run_id || result.scores?.analysis_run_id || null
       const withIds = (result.findings || []).map((f) => ({
         ...f,
         id: f.id || randomUUID(),
+        analysis_run_id: f.analysis_run_id || runId,
         resolution: f.resolution || 'open',
       }))
       p.findings = withIds
       p.overview = result.overview
       p.manuscript_analysis = result.manuscript_analysis || null
       p.tone = result.tone || null
-      p.scores = result.scores || scoreFromFindings(withIds)
+      p.scores =
+        result.scores ||
+        scoreFromFindings(withIds, { kdpBlocking: result.kdp?.summary?.blocking || 0 })
       p.style_reports = result.style_reports || null
       p.kdp = result.kdp || null
       p.memory = result.memory || null
@@ -335,11 +364,14 @@ export function createMemoryStore(options = {}) {
       p.action_plan = result.action_plan || null
       p.document_domain = result.document_domain || p.document_domain
       p.genre_comparison = result.genre_comparison || p.genre_comparison
+      p.formality = result.formality || p.formality
+      p.analysis_run_id = runId
       p.stats = result.stats || {}
       p.last_analysis = {
         at: nowIso(),
         coverage: result.coverage,
         usage: result.usage,
+        analysis_run_id: runId,
       }
       p.status = 'analyzed'
       p.updated_at = nowIso()

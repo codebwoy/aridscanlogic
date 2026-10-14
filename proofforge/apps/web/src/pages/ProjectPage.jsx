@@ -289,9 +289,19 @@ export function ProjectPage({ projectId, onError, onBack }) {
                   ) : null}
                 </div>
               ) : null}
+              {project.scores?.dimensions ? (
+                <div className="row" style={{ marginTop: '0.65rem', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {Object.entries(project.scores.dimensions).map(([k, v]) => (
+                    <span key={k} className="sev" title="Scorecard dimension (guide)">
+                      {k.replaceAll('_', ' ')} {v}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
               {project.tone?.overall ? (
                 <p className="muted" style={{ margin: '0.5rem 0 0' }}>
                   Tone: {project.tone.overall}
+                  {project.formality ? ` · Formality: ${project.formality}` : ''}
                 </p>
               ) : null}
             </div>
@@ -411,6 +421,40 @@ export function ProjectPage({ projectId, onError, onBack }) {
                           <li key={it}>{it}</li>
                         ))}
                       </ul>
+                    ) : null}
+                    {(s.text_locations || []).length ? (
+                      <div style={{ marginTop: '0.5rem' }}>
+                        <p className="muted" style={{ margin: '0 0 0.35rem', fontSize: '0.85rem' }}>
+                          Text locations (jump):
+                        </p>
+                        <div className="row" style={{ gap: '0.35rem', flexWrap: 'wrap' }}>
+                          {s.text_locations.map((loc, i) => (
+                            <button
+                              key={`${loc.preview}-${i}`}
+                              type="button"
+                              className="btn"
+                              style={{ fontSize: '0.8rem' }}
+                              title={loc.title || loc.preview}
+                              onClick={() => {
+                                if (loc.finding_id) {
+                                  const f = (project.findings || []).find((x) => x.id === loc.finding_id)
+                                  if (f) jumpToFinding(f)
+                                  else {
+                                    setHighlightExcerpt(loc.excerpt || loc.preview)
+                                    setTab('findings')
+                                  }
+                                } else {
+                                  setHighlightExcerpt(loc.excerpt || loc.preview)
+                                  setTab('findings')
+                                }
+                              }}
+                            >
+                              Loc: {(loc.preview || '').slice(0, 42)}
+                              {(loc.preview || '').length > 42 ? '…' : ''}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     ) : null}
                   </div>
                 )
@@ -893,6 +937,19 @@ export function ProjectPage({ projectId, onError, onBack }) {
                 }}
               />
             </div>
+            <label className="row" style={{ alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <input
+                type="checkbox"
+                checked={Boolean(project.print_config?.bleed)}
+                onChange={async (e) => {
+                  const { project: p } = await pfApi.patchProject(projectId, {
+                    print_config: { bleed: e.target.checked },
+                  })
+                  setProject(p)
+                }}
+              />
+              Interior bleed (0.125″ — if any image reaches the edge)
+            </label>
           </div>
         </section>
       ) : null}
@@ -925,6 +982,125 @@ export function ProjectPage({ projectId, onError, onBack }) {
                 </option>
               ))}
             </select>
+          </div>
+          <div className="field">
+            <label>Formality</label>
+            <select
+              value={project.formality || 'neutral'}
+              onChange={async (e) => {
+                const { project: p } = await pfApi.patchProject(projectId, {
+                  formality: e.target.value,
+                })
+                setProject(p)
+              }}
+              style={selectStyle}
+            >
+              {['casual', 'neutral', 'formal'].map((f) => (
+                <option key={f} value={f}>
+                  {f}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label>Reading level (optional)</label>
+            <input
+              defaultValue={project.reading_level || ''}
+              placeholder="e.g. adult, YA, middle grade"
+              onBlur={async (e) => {
+                const { project: p } = await pfApi.patchProject(projectId, {
+                  reading_level: e.target.value,
+                })
+                setProject(p)
+              }}
+            />
+          </div>
+          <div className="field">
+            <label>Character list (comma-separated)</label>
+            <input
+              defaultValue={(project.character_list || []).join(', ')}
+              placeholder="Ada, Malik, …"
+              onBlur={async (e) => {
+                const list = e.target.value
+                  .split(',')
+                  .map((s) => s.trim())
+                  .filter(Boolean)
+                const { project: p } = await pfApi.patchProject(projectId, {
+                  character_list: list,
+                })
+                setProject(p)
+              }}
+            />
+          </div>
+          <div className="field">
+            <label>Glossary preferred terms (comma-separated)</label>
+            <input
+              defaultValue={(project.glossary || [])
+                .map((g) => (typeof g === 'string' ? g : g.preferred || g.term))
+                .join(', ')}
+              placeholder="preferred spellings / terms"
+              onBlur={async (e) => {
+                const glossary = e.target.value
+                  .split(',')
+                  .map((s) => s.trim())
+                  .filter(Boolean)
+                  .map((term) => ({ term, preferred: term, aliases: [] }))
+                const { project: p } = await pfApi.patchProject(projectId, { glossary })
+                setProject(p)
+              }}
+            />
+          </div>
+          <div className="field">
+            <label>Author / pen name</label>
+            <input
+              defaultValue={project.author_name || ''}
+              onBlur={async (e) => {
+                const { project: p } = await pfApi.patchProject(projectId, {
+                  author_name: e.target.value,
+                })
+                setProject(p)
+              }}
+            />
+          </div>
+          <div className="field">
+            <label>Subtitle</label>
+            <input
+              defaultValue={project.subtitle || ''}
+              onBlur={async (e) => {
+                const { project: p } = await pfApi.patchProject(projectId, {
+                  subtitle: e.target.value,
+                })
+                setProject(p)
+              }}
+            />
+          </div>
+          <div className="field">
+            <label>Intended tone</label>
+            <input
+              defaultValue={project.intended_tone || ''}
+              placeholder="e.g. warm, urgent, wry"
+              onBlur={async (e) => {
+                const { project: p } = await pfApi.patchProject(projectId, {
+                  intended_tone: e.target.value,
+                })
+                setProject(p)
+              }}
+            />
+          </div>
+          <div className="field">
+            <label>Style guide (prefer X not Y / never use Z)</label>
+            <textarea
+              rows={3}
+              defaultValue={project.style_guide || ''}
+              placeholder={'prefer color not colour\nnever use suddenly'}
+              onBlur={async (e) => {
+                const { project: p } = await pfApi.patchProject(projectId, {
+                  style_guide: e.target.value,
+                })
+                setProject(p)
+              }}
+              style={{ width: '100%', fontFamily: 'inherit' }}
+            />
           </div>
           <div className="field">
             <label>Genre comparison</label>

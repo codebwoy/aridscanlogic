@@ -9,8 +9,35 @@ const STOP = new Set(
   )
 )
 
+/** Small built-in thesaurus for overused-word alternatives (PWA Thesaurus Report concept). */
+const THESAURUS = Object.freeze({
+  look: ['glance', 'gaze', 'peer', 'regard', 'observe'],
+  said: ['replied', 'asked', 'murmured', 'answered', 'noted'],
+  walked: ['strode', 'paced', 'wandered', 'stepped', 'marched'],
+  felt: ['sensed', 'noticed', 'registered', 'experienced'],
+  saw: ['noticed', 'spotted', 'glimpsed', 'observed'],
+  just: ['simply', 'merely', 'only'],
+  really: ['truly', 'genuinely', 'indeed'],
+  very: ['deeply', 'highly', 'especially'],
+  got: ['received', 'became', 'obtained', 'reached'],
+  went: ['moved', 'headed', 'traveled', 'left'],
+  nice: ['pleasant', 'kind', 'fine', 'lovely'],
+  good: ['solid', 'fine', 'strong', 'sound'],
+  bad: ['poor', 'harsh', 'grim', 'rough'],
+  big: ['large', 'vast', 'huge', 'great'],
+  small: ['slight', 'modest', 'tiny', 'narrow'],
+  suddenly: ['abruptly', 'all at once', 'without warning'],
+  somehow: ['in some way', 'by some means'],
+  seemed: ['appeared', 'looked', 'felt'],
+  thought: ['wondered', 'considered', 'realized', 'figured'],
+  knew: ['understood', 'realized', 'recognized'],
+  started: ['began', 'set out', 'commenced'],
+  turned: ['spun', 'faced', 'shifted', 'pivoted'],
+})
+
 /**
  * Overused Words Report — frequency of content words (PWA concept).
+ * Includes thesaurus-style alternatives for common verbs/adverbs (original mini-lexicon).
  */
 export function overusedWordsReport(text, { top = 25, minCount = 4 } = {}) {
   const counts = new Map()
@@ -31,10 +58,13 @@ export function overusedWordsReport(text, { top = 25, minCount = 4 } = {}) {
       word,
       count,
       per_thousand: Number(((count / Math.max(1, words.length)) * 1000).toFixed(1)),
+      alternatives: THESAURUS[word] ? [...THESAURUS[word]] : [],
     }))
   return {
     total_words: words.length,
     items: ranked,
+    thesaurus_note:
+      'Alternatives are a tiny built-in thesaurus for common overused words (PWA Thesaurus Report idea) — not a full synonym dictionary. Character names and motifs often repeat on purpose.',
     note: 'Overused-word frequencies are guides — intentional motifs and character names often repeat (PWA Overused Words concept).',
   }
 }

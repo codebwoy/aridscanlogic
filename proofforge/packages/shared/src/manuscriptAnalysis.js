@@ -133,7 +133,26 @@ export function manuscriptAnalysisPayload() {
 }
 
 /**
+ * Map findings → PWA “Text Location” pins (jump targets).
+ */
+function textLocationsFromFindings(hits, limit = 6) {
+  return (hits || [])
+    .filter((f) => f.original_excerpt)
+    .slice(0, limit)
+    .map((f) => ({
+      finding_id: f.id || null,
+      section_key: f.section_key || '',
+      chapter: f.chapter || '',
+      preview: String(f.original_excerpt).slice(0, 100),
+      excerpt: String(f.original_excerpt).slice(0, 200),
+      severity: f.severity,
+      title: f.title,
+    }))
+}
+
+/**
  * Normalize overview LLM output into PWA-style manuscript analysis sections.
+ * Attaches Text Location pins from related open findings (PWA jump-to-text).
  */
 export function buildManuscriptAnalysisSections(overview = {}, findings = []) {
   const open = (findings || []).filter((f) => !f.resolution || f.resolution === 'open')
@@ -146,6 +165,18 @@ export function buildManuscriptAnalysisSections(overview = {}, findings = []) {
   }
 
   const sections = overview.manuscript_sections || {}
+  const plotHits = open.filter(
+    (f) => f.category === 'structure' || f.subcategory === 'pacing' || f.subcategory === 'cross_chapter'
+  )
+  const charHits = open.filter(
+    (f) =>
+      /character/i.test(f.title || '') ||
+      f.subcategory === 'character_list' ||
+      f.subcategory === 'dialogue'
+  )
+  const setHits = open.filter((f) => /setting|world|location/i.test(`${f.title} ${f.subcategory}`))
+  const themeHits = open.filter((f) => f.subcategory === 'theme' || /theme/i.test(f.title || ''))
+
   return {
     about_story: {
       label: 'About My Story',
@@ -155,6 +186,7 @@ export function buildManuscriptAnalysisSections(overview = {}, findings = []) {
       audience: overview.audience_fit || '',
       competitive_landscape: sections.about_story?.competitive_landscape || overview.audience_fit || '',
       items: sections.about_story?.items || [],
+      text_locations: textLocationsFromFindings(open.filter((f) => f.severity === 'critical' || f.severity === 'major'), 4),
     },
     themes: {
       label: 'Themes & Message',
@@ -162,6 +194,7 @@ export function buildManuscriptAnalysisSections(overview = {}, findings = []) {
       summary: sections.themes?.summary || (overview.themes || []).join('; '),
       themes: overview.themes || [],
       items: sections.themes?.items || [],
+      text_locations: textLocationsFromFindings(themeHits.length ? themeHits : open.slice(0, 3), 5),
     },
     plot: {
       label: 'Plot & Structure',
@@ -170,6 +203,7 @@ export function buildManuscriptAnalysisSections(overview = {}, findings = []) {
         levelFromFindings((f) => f.category === 'structure' || f.subcategory === 'pacing'),
       summary: sections.plot?.summary || overview.structure_summary || '',
       items: sections.plot?.items || [],
+      text_locations: textLocationsFromFindings(plotHits, 8),
     },
     characters: {
       label: 'Characters',
@@ -177,6 +211,7 @@ export function buildManuscriptAnalysisSections(overview = {}, findings = []) {
       summary: sections.characters?.summary || (overview.character_notes || []).join('; '),
       notes: overview.character_notes || [],
       items: sections.characters?.items || [],
+      text_locations: textLocationsFromFindings(charHits, 8),
     },
     setting: {
       label: 'Setting',
@@ -184,6 +219,7 @@ export function buildManuscriptAnalysisSections(overview = {}, findings = []) {
       summary: sections.setting?.summary || (overview.setting_notes || []).join('; '),
       notes: overview.setting_notes || [],
       items: sections.setting?.items || [],
+      text_locations: textLocationsFromFindings(setHits, 6),
     },
     strengths: overview.strengths || [],
     opportunities: overview.opportunities || [],

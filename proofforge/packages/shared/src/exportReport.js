@@ -78,7 +78,17 @@ export function buildMarkdownReport(project) {
     `- Overall score: ${s.overall ?? '—'}`,
     `- Readiness: ${s.readiness ?? '—'}`,
     `- Open findings: ${s.counts?.total_open ?? 0}`,
+    `- Formality: ${project.formality || s.formality || '—'}`,
     '',
+  ]
+  if (s.dimensions && typeof s.dimensions === 'object') {
+    lines.push('## Scorecard dimensions', '')
+    for (const [k, v] of Object.entries(s.dimensions)) {
+      lines.push(`- ${k.replaceAll('_', ' ')}: ${v}`)
+    }
+    lines.push('')
+  }
+  lines.push(
     '## Overview',
     '',
     project.overview?.subject_or_story || '_No overview_',
@@ -86,8 +96,8 @@ export function buildMarkdownReport(project) {
     project.overview?.structure_summary || '',
     '',
     '## Critical & major findings',
-    '',
-  ]
+    ''
+  )
   const important = (project.findings || []).filter((f) =>
     ['critical', 'major'].includes(f.severity)
   )
@@ -111,6 +121,19 @@ export function buildMarkdownReport(project) {
   for (const f of project.findings || []) {
     lines.push(
       `- [${f.resolution || 'open'}][${f.severity}] ${f.category}/${f.subcategory || '-'}: ${f.title}`
+    )
+  }
+  if (project.translation_mode || project.edit_mode === 'translation' || project.translation) {
+    lines.push('', '## Translation log', '')
+    lines.push(`- Source language: ${project.source_language || '—'}`)
+    lines.push(`- Target: ${project.language}/${project.language_variety}`)
+    lines.push(`- Glossary terms: ${(project.translation_glossary || []).length}`)
+    if (project.translation?.note) lines.push(`- Note: ${project.translation.note}`)
+    if (project.translation?.detected_languages?.length) {
+      lines.push(`- Detected: ${project.translation.detected_languages.join(', ')}`)
+    }
+    lines.push(
+      '- Reminder: credit translator + original author on KDP when publishing a translation.'
     )
   }
   return lines.join('\n')

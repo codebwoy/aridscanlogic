@@ -10,6 +10,12 @@ export const PREFERENCE_KEYS = Object.freeze([
   { id: 'style_adverbs', label: 'Adverbs', default: true },
   { id: 'style_cliches', label: 'Clichés', default: true },
   { id: 'style_filler', label: 'Filler words', default: true },
+  { id: 'style_transitions', label: 'Transitions', default: true },
+  { id: 'style_paragraph_length', label: 'Paragraph length', default: true },
+  { id: 'formality', label: 'Formality / register', default: true },
+  { id: 'integrity', label: 'Integrity / consistency heuristics', default: true },
+  { id: 'mechanics_extras', label: 'Wordiness / confused words / clauses', default: true },
+  { id: 'style_guide', label: 'Author style guide', default: true },
   { id: 'pacing', label: 'Pacing heuristics', default: true },
   { id: 'dialogue', label: 'Dialogue patterns', default: true },
   { id: 'naturalness', label: 'Naturalness (AI)', default: true },
@@ -35,9 +41,23 @@ export function filterFindingsByPreferences(findings, prefs = {}) {
     if (cat === 'style' && sub === 'adverb') return p.style_adverbs !== false
     if (cat === 'style' && sub === 'cliche') return p.style_cliches !== false
     if (cat === 'style' && sub === 'filler') return p.style_filler !== false
+    if (cat === 'style' && sub === 'transition') return p.style_transitions !== false
+    if (cat === 'style' && sub === 'paragraph_length') return p.style_paragraph_length !== false
+    if (cat === 'style' && sub === 'formality') return p.formality !== false
+    if (cat === 'localization' && sub === 'formality') return p.formality !== false
+    if (cat === 'style' && sub === 'style_guide') return p.style_guide !== false
+    if (
+      cat === 'style' &&
+      ['wordiness', 'redundancy', 'nominalization', 'long_clause', 'tone_consistency'].includes(sub)
+    ) {
+      return p.mechanics_extras !== false
+    }
+    if (cat === 'grammar' && ['confused_words', 'duplicate_word'].includes(sub)) {
+      return p.mechanics_extras !== false
+    }
     if (cat === 'style') return true
     if (cat === 'kdp_technical' || cat === 'kdp_policy') return p.kdp_technical !== false
-    if (cat === 'consistency') return p.structure !== false
+    if (cat === 'consistency') return p.integrity !== false && p.structure !== false
     return true
   })
 }
