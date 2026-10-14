@@ -13,6 +13,7 @@ import {
   productPositioningPayload,
   BOOK_LANGUAGE_CODES,
   bookLanguagesPayload,
+  launchReadinessPayload,
 } from '@authorforge/shared'
 import { llmProviderStatus } from '@authorforge/llm'
 import { focusTagCoverage, listPrompts } from '@authorforge/agents'
@@ -215,6 +216,7 @@ const server = createServer(async (req, res) => {
         book_budget_eur: config.bookBudgetEur,
         product_positioning: productPositioningPayload('en'),
         book_languages: bookLanguagesPayload(),
+        launch_readiness: launchReadinessPayload(),
       })
       return
     }
@@ -520,6 +522,7 @@ const server = createServer(async (req, res) => {
             ai_disclosure: z.record(z.any()).optional(),
             passed: z.boolean().optional(),
             export_override: z.boolean().optional(),
+            launch_readiness_version: z.number().int().optional(),
           })
           .parse(await readJson(req))
         const compliance = {

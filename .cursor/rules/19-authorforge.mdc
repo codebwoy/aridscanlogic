@@ -46,6 +46,9 @@ Primary manuscript language is user-chosen (`en`/`de`/`es`/`fr`/`it`/`nl`) with 
 audience culture/tone profiles — see `22-book-languages.mdc` and
 `packages/shared/src/book-languages.js`.
 
+Pre-Amazon **Launch readiness** checklist on Publish — see `23-launch-readiness.mdc` and
+`LAUNCH_READINESS` in `publishing-specs.js`.
+
 ## Placement
 
 - **Not** a ScanLogic tab and **not** available on mobile.

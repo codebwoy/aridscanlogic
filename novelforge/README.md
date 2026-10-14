@@ -39,6 +39,12 @@ where relevant (e.g. US vs UK English, LatAm vs Spain Spanish). Culture/tone pro
 `packages/shared/src/book-languages.js` and are injected into every writing agent. See
 `.cursor/rules/22-book-languages.mdc`.
 
+### Launch readiness (Publish step)
+
+Interactive checklist before Amazon: manuscript quality, KDP account, studio setup, after-export
+upload, strategy disclaimer. Canonical: `LAUNCH_READINESS` in `publishing-specs.js`. See
+`.cursor/rules/23-launch-readiness.mdc`. Export still does **not** upload to Amazon.
+
 Default LLM is **fake** (offline fixtures). For live Anthropic:
 
 ```bash

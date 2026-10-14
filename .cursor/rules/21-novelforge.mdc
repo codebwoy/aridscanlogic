@@ -25,6 +25,7 @@ Canonical niches: `novelforge/packages/shared/src/product-positioning.js`.
 Fiction rules: `UNIVERSAL_FICTION_RULES` in `coauthor-rules.js`.
 Primary manuscript language + culture/tone profiles: `22-book-languages.mdc` and
 `packages/shared/src/book-languages.js` (`en`/`de`/`es`/`fr`/`it`/`nl`).
+Pre-Amazon launch checklist: `23-launch-readiness.mdc` + `LAUNCH_READINESS` in `publishing-specs.js`.
 
 Commercial PG-13 / literary R tone only. No CSAM. Adult characters only in romantic/sexual roles.
 

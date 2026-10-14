@@ -33,9 +33,11 @@ import {
   stepBook,
   submitJob,
   waitJob,
+  saveCompliance,
 } from '../lib/api'
 import BookEditor from '../components/BookEditor'
 import ManuscriptImport from '../components/ManuscriptImport'
+import LaunchReadinessPanel from '../components/LaunchReadinessPanel'
 
 function flattenLeaves(chapters = []) {
   const out = []
@@ -991,6 +993,24 @@ export default function Studio({ lang = 'en' }) {
               <div className="card">
                 <h2>Publish / export</h2>
                 <p className="muted">Export files + checklist only — no unofficial Amazon upload.</p>
+                <LaunchReadinessPanel
+                  book={book}
+                  busy={busy}
+                  onSaveCompliance={async (body) => {
+                    try {
+                      const r = await saveCompliance(book.id, body)
+                      setBook(r.book)
+                      setMessage(
+                        body.passed
+                          ? 'Launch readiness saved — required items complete'
+                          : 'Launch readiness progress saved'
+                      )
+                    } catch (e) {
+                      setMessage(e.message || 'Compliance save failed')
+                    }
+                  }}
+                />
+                <h3 style={{ marginTop: '1.25rem' }}>Export files</h3>
                 <div className="row" style={{ flexWrap: 'wrap' }}>
                   {['export_docx', 'export_interior_pdf', 'export_epub', 'export_cover_pdf', 'export_kdp_zip'].map(
                     (jt) => (

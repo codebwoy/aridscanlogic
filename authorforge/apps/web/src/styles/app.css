@@ -669,3 +669,64 @@ a {
   flex: 1 1 auto;
   min-height: var(--af-touch);
 }
+
+.launch-readiness {
+  margin: 1rem 0 0.5rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--af-border);
+  background: var(--af-surface);
+}
+
+.launch-readiness__progress {
+  margin: 0.5rem 0 0.85rem;
+  font-size: 0.85rem;
+}
+
+.launch-readiness__ok {
+  color: var(--af-success, #3d8b6e);
+  font-weight: 600;
+}
+
+.launch-readiness__phase {
+  margin-bottom: 0.85rem;
+}
+
+.launch-readiness__phase h4 {
+  margin: 0 0 0.4rem;
+  font-size: 0.88rem;
+}
+
+.launch-readiness__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.launch-readiness__item {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  min-height: var(--af-touch);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.launch-readiness__item input {
+  margin-top: 0.35rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+}
+
+.launch-readiness__req {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--af-warning, #c47a2c);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}

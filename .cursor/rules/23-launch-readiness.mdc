@@ -1,0 +1,22 @@
+---
+description: Pre-Amazon launch readiness checklist (AuthorForge & NovelForge Publish step)
+globs: authorforge/packages/shared/src/publishing-specs.js,novelforge/packages/shared/src/publishing-specs.js,authorforge/apps/web/src/components/LaunchReadinessPanel.jsx,novelforge/apps/web/src/components/LaunchReadinessPanel.jsx,authorforge/apps/web/src/pages/Studio.jsx,novelforge/apps/web/src/pages/Studio.jsx
+alwaysApply: false
+---
+
+# Launch readiness (pre-Amazon)
+
+Studio **export ≠ live on Amazon**. AuthorForge and NovelForge must keep a **Launch readiness** checklist on the Publish step covering:
+
+1. Manuscript & product quality (edit pass; AF story slots/facts; NF continuity/adult content)
+2. Amazon / KDP account (tax, marketplace language, pricing, ISBN, categories, AI disclosure, Previewer, barcode zone)
+3. Studio setup (live LLM, desktop/credits, backup, trim/paper verify)
+4. After export (manual KDP upload, Look Inside, optional A+, post-publish updates)
+5. Strategy (niche tips are guidance, not sales data)
+
+Canonical data: `LAUNCH_READINESS` + helpers in each studio’s `publishing-specs.js`.  
+UI: `LaunchReadinessPanel` on Publish. Persist ticks on `book.compliance.checklist`.  
+Specs: `GET /v1/specs` includes `launch_readiness: launchReadinessPayload()`.
+
+Do **not** reintroduce a one-click “Mark compliance reviewed” that skips the phased checklist.  
+Do **not** claim the app uploads to Amazon or certifies KDP acceptance.

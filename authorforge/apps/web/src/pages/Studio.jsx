@@ -20,6 +20,7 @@ import {
 } from '@authorforge/shared'
 import CompetitiveAdvantagePanel from '../components/CompetitiveAdvantagePanel.jsx'
 import ManuscriptImport from '../components/ManuscriptImport.jsx'
+import LaunchReadinessPanel from '../components/LaunchReadinessPanel.jsx'
 import {
   createBook,
   deleteBook,
@@ -866,8 +867,10 @@ export default function Studio({ lang = 'en' }) {
                   setBook(r.book)
                   setMessage(
                     body.export_override
-                      ? 'Compliance saved (export override noted)'
-                      : 'Compliance marked reviewed',
+                      ? 'Launch readiness saved (export override noted)'
+                      : body.passed
+                        ? 'Launch readiness — required items complete'
+                        : 'Launch readiness progress saved',
                   )
                 } catch (e) {
                   setMessage(e.message || 'Compliance save failed')
@@ -2048,9 +2051,16 @@ function WizardStep(props) {
           ) : (
             <p className="muted">Export gate clear (or no pending items).</p>
           )}
+          <LaunchReadinessPanel
+            book={book}
+            busy={busy}
+            gate={gate}
+            onSaveCompliance={onCompliance}
+          />
+          <h3 style={{ marginTop: '1.25rem' }}>Export files</h3>
           <p className="muted" style={{ marginBottom: '0.75rem' }}>
             Each export runs the job, then downloads the file to your computer. Storefront opens the public
-            sales page in a new tab.
+            sales page in a new tab. Studio does not upload to Amazon for you.
           </p>
           <div className="row">
             <button type="button" className="btn" disabled={!!busy} onClick={() => onRunJob('export_interior_pdf')}>
@@ -2109,28 +2119,6 @@ function WizardStep(props) {
                 Open /?view=store&slug={book.storefront.slug}
               </a>
               {book.storefront.status ? ` · ${book.storefront.status}` : ''}
-            </p>
-          ) : null}
-          <button
-            type="button"
-            className="btn"
-            style={{ marginTop: '0.75rem' }}
-            disabled={!!busy}
-            onClick={() =>
-              onCompliance({
-                passed: true,
-                checklist: [{ id: 'previewer', checked: true }],
-                ai_disclosure: book.compliance?.ai_disclosure || { used_ai_text: true },
-                export_override: !!gate?.softBlock,
-              })
-            }
-          >
-            Mark compliance reviewed
-          </button>
-          {book.compliance?.passed ? (
-            <p className="muted" style={{ marginTop: '0.5rem' }}>
-              Compliance reviewed
-              {book.compliance.export_override ? ' (soft-gate override)' : ''}.
             </p>
           ) : null}
         </div>

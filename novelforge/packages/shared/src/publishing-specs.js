@@ -1,5 +1,5 @@
 /**
- * KDP-oriented print specs for non-fiction trim sizes.
+ * KDP-oriented print specs for adult fiction trim sizes.
  * Values are operational defaults with lastVerified — not guaranteed Amazon policy.
  */
 
@@ -32,44 +32,246 @@ export const PUBLISHING_SPECS = {
     aiDisclosure: 'https://kdp.amazon.com/help/topic/G200672390',
     coverCalculator: 'https://kdp.amazon.com/cover-calculator',
     manuscript: 'https://kdp.amazon.com/help/topic/G201834230',
+    kdpAccount: 'https://kdp.amazon.com/help/topic/G200672390',
   },
 }
 
-export const COMPLIANCE_CHECKLIST_DEFAULT = {
-  version: 1,
+/**
+ * Pre-Amazon launch readiness — export is not “live on Amazon”.
+ * Authors tick these on the Publish step; state persists on book.compliance.checklist.
+ */
+export const LAUNCH_READINESS = {
+  version: 2,
+  studio: 'novelforge',
   lastVerified: PUBLISHING_SPECS.lastVerified,
-  items: [
+  lead:
+    'Studio export = KDP-shaped files + checklist. You still edit, disclose AI use, run Previewer, and upload manually in KDP.',
+  phases: [
     {
-      id: 'ai_text_disclosure',
-      label: 'Disclose AI-generated text/images/translations at KDP upload if applicable',
-      linkKey: 'aiDisclosure',
+      id: 'manuscript',
+      title: 'Manuscript & product quality',
+      items: [
+        {
+          id: 'human_edit',
+          label: 'Human edit pass completed (voice, typos, pacing) — AI draft is not final copy',
+          required: true,
+        },
+        {
+          id: 'continuity_pass',
+          label: 'Continuity pass done (names, ages, timeline, open loops closed or intentional)',
+          required: true,
+        },
+        {
+          id: 'adult_content_ok',
+          label: 'Adult fiction content within your rating intent; no CSAM; adult characters only in romantic/sexual roles',
+          required: true,
+          linkKey: 'contentGuidelines',
+        },
+        {
+          id: 'bio_blurb',
+          label: 'Author bio, back-cover copy, and series name (if any) reviewed',
+          required: true,
+        },
+        {
+          id: 'rights_ok',
+          label: 'Rights OK: no trademarked fanfic, no living-person libel, no “true story” claims you cannot support',
+          required: true,
+          linkKey: 'contentGuidelines',
+        },
+        {
+          id: 'no_misleading_title',
+          label: 'Title/subtitle: no misleading “bestseller” claims or trademark stuffing',
+          required: true,
+          linkKey: 'contentGuidelines',
+        },
+      ],
     },
     {
-      id: 'no_misleading_title',
-      label: 'Title/subtitle: no misleading “bestseller” claims or trademark stuffing',
-      linkKey: 'contentGuidelines',
+      id: 'amazon_account',
+      title: 'Amazon / KDP account side',
+      items: [
+        {
+          id: 'kdp_account',
+          label: 'KDP account ready (identity, tax, bank payouts)',
+          required: true,
+          linkKey: 'kdpAccount',
+        },
+        {
+          id: 'marketplace_language',
+          label: 'Marketplace(s) and listing language match the manuscript language',
+          required: true,
+        },
+        {
+          id: 'pricing_royalty',
+          label: 'Pricing, royalty plan, and territories decided',
+          required: true,
+        },
+        {
+          id: 'isbn_imprint',
+          label: 'ISBN (or free KDP ISBN) and imprint name decided',
+          required: false,
+        },
+        {
+          id: 'categories_keywords',
+          label: 'Categories + 7 keywords finalized (studio draft reviewed by you)',
+          required: true,
+        },
+        {
+          id: 'ai_text_disclosure',
+          label: 'Disclose AI-generated text/images/translations at KDP upload if applicable',
+          required: true,
+          linkKey: 'aiDisclosure',
+        },
+        {
+          id: 'previewer',
+          label: 'Run Amazon KDP Previewer on interior + cover; fix margin/bleed warnings',
+          required: true,
+          linkKey: 'coverCalculator',
+        },
+        {
+          id: 'barcode_clear',
+          label: 'Cover barcode zone left clear (Amazon places the barcode)',
+          required: true,
+          linkKey: 'coverCalculator',
+        },
+        {
+          id: 'upload_pacing',
+          label: 'Respect sensible per-day upload pacing (avoid spammy bulk uploads)',
+          required: false,
+          linkKey: 'contentGuidelines',
+        },
+      ],
     },
     {
-      id: 'facts_verified',
-      label: 'All statistics/citations verified or marked UNVERIFIED and confirmed by you',
-      linkKey: null,
+      id: 'studio_setup',
+      title: 'Studio / tech setup',
+      items: [
+        {
+          id: 'live_llm',
+          label: 'Publishable prose generated with a live LLM (not FakeLLM offline fixtures)',
+          required: true,
+        },
+        {
+          id: 'desktop_credits',
+          label: 'Desktop ≥1024px session used; credits available for remaining jobs',
+          required: false,
+        },
+        {
+          id: 'backup_export',
+          label: 'Book backup / library persisted if you need a local copy',
+          required: false,
+        },
+        {
+          id: 'trim_paper_verify',
+          label: 'Trim size + cream/white paper confirmed against current KDP help',
+          required: true,
+          linkKey: 'manuscript',
+        },
+      ],
     },
     {
-      id: 'story_slots',
-      label: 'Personal anecdotes are yours (Story Slots filled) or removed',
-      linkKey: null,
+      id: 'after_export',
+      title: 'After studio export',
+      items: [
+        {
+          id: 'manual_kdp_upload',
+          label: 'Upload ZIP/PDF/EPUB manually in KDP (studio does not auto-upload to Amazon)',
+          required: true,
+          linkKey: 'manuscript',
+        },
+        {
+          id: 'look_inside_desc',
+          label: 'KDP description / Look Inside checked after upload',
+          required: true,
+        },
+        {
+          id: 'aplus_optional',
+          label: 'A+ / ads creatives verified against Amazon image specs (if used)',
+          required: false,
+        },
+        {
+          id: 'post_publish_updates',
+          label: 'Plan post-publish typo fixes via KDP updates; marketing is outside the app',
+          required: false,
+        },
+      ],
     },
     {
-      id: 'previewer',
-      label: 'Run Amazon KDP Previewer on interior + cover before publishing',
-      linkKey: 'coverCalculator',
-    },
-    {
-      id: 'upload_pacing',
-      label: 'Respect sensible per-day upload pacing (avoid spammy bulk uploads)',
-      linkKey: 'contentGuidelines',
+      id: 'strategy',
+      title: 'Strategy reminder',
+      items: [
+        {
+          id: 'niche_validated',
+          label: 'Niche demand validated by you — studio niche tips are guidance, not Amazon sales data',
+          required: false,
+        },
+      ],
     },
   ],
+}
+
+/** Flat checklist for export ZIP + legacy compliance consumers (derived from launch readiness). */
+export const COMPLIANCE_CHECKLIST_DEFAULT = {
+  version: LAUNCH_READINESS.version,
+  lastVerified: PUBLISHING_SPECS.lastVerified,
+  items: LAUNCH_READINESS.phases.flatMap((p) =>
+    p.items.map((item) => ({
+      id: item.id,
+      label: item.label,
+      linkKey: item.linkKey || null,
+      phase: p.id,
+      required: !!item.required,
+    }))
+  ),
+}
+
+export function flattenLaunchItems(readiness = LAUNCH_READINESS) {
+  return readiness.phases.flatMap((p) =>
+    p.items.map((item) => ({
+      ...item,
+      phaseId: p.id,
+      phaseTitle: p.title,
+    }))
+  )
+}
+
+/** Merge saved ticks `{ id, checked }[]` onto the template. */
+export function mergeLaunchChecklist(savedChecklist = [], readiness = LAUNCH_READINESS) {
+  const byId = new Map(
+    (Array.isArray(savedChecklist) ? savedChecklist : []).map((row) => [row.id, !!row.checked])
+  )
+  return flattenLaunchItems(readiness).map((item) => ({
+    ...item,
+    checked: byId.has(item.id) ? byId.get(item.id) : false,
+  }))
+}
+
+export function launchReadinessProgress(savedChecklist = [], readiness = LAUNCH_READINESS) {
+  const merged = mergeLaunchChecklist(savedChecklist, readiness)
+  const required = merged.filter((i) => i.required)
+  const requiredDone = required.filter((i) => i.checked).length
+  const allDone = merged.filter((i) => i.checked).length
+  return {
+    total: merged.length,
+    checked: allDone,
+    requiredTotal: required.length,
+    requiredChecked: requiredDone,
+    requiredComplete: required.length > 0 && requiredDone === required.length,
+    percent: merged.length ? Math.round((allDone / merged.length) * 100) : 0,
+  }
+}
+
+export function launchReadinessPayload(readiness = LAUNCH_READINESS) {
+  return {
+    version: readiness.version,
+    studio: readiness.studio,
+    lastVerified: readiness.lastVerified,
+    lead: readiness.lead,
+    phases: readiness.phases,
+    helpUrls: PUBLISHING_SPECS.kdpHelpUrls,
+    dpiTarget: PUBLISHING_SPECS.dpiTarget,
+    verifiedNote: PUBLISHING_SPECS.verifiedNote,
+  }
 }
 
 export function spineWidthInches(pageCount, paperType = 'white') {
