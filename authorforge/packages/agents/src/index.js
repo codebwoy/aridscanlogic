@@ -21,7 +21,11 @@ export {
   extractClaimsFromText,
   factCheckClaims,
   rewriteClaimQualitatively,
+  flagSweepingClaims,
 } from './factCheck.js'
+export { checkTitlePromises, extractTitlePromises, countNounHits } from './titlePromise.js'
+export { finishRepetitionScan } from './finishScan.js'
+export { parseManuscriptText, manuscriptToBookPatch } from './manuscriptImport.js'
 export {
   neutralizeUntrustedText,
   chunkResource,

@@ -26,6 +26,12 @@
     "authorforge:dev:api": "npm run dev:api --prefix authorforge",
     "authorforge:dev:web": "npm run dev:web --prefix authorforge",
     "authorforge:build": "npm run build --prefix authorforge",
+    "novelforge:install": "npm install --prefix novelforge",
+    "novelforge:test": "npm run test --prefix novelforge",
+    "novelforge:dev": "npm run dev:studio --prefix novelforge",
+    "novelforge:dev:api": "npm run dev:api --prefix novelforge",
+    "novelforge:dev:web": "npm run dev:web --prefix novelforge",
+    "novelforge:build": "npm run build --prefix novelforge",
     "storyforge:build": "npm run build --prefix storyforge"
   },
   "dependencies": {

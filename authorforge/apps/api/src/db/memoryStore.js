@@ -123,6 +123,13 @@ export function createMemoryStore(options = {}) {
       glossary: [],
       author_name: '',
       pen_name: '',
+      selected_angle: null,
+      positioning_angles: [],
+      positioning_disclaimer: '',
+      positioning_analyzed_at: '',
+      positioning_notes: '',
+      reader_problem: '',
+      toc_direction: '',
     }
   }
 

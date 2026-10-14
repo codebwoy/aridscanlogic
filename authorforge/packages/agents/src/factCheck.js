@@ -109,3 +109,36 @@ export function rewriteClaimQualitatively(claimText) {
   const t = String(claimText || '').replace(/\d+(?:\.\d+)?%?/g, 'a meaningful share')
   return `Many practitioners report that ${t.replace(/^(in|since|by)\s+/i, '').trim()} — verify with a primary source before stating a precise figure.`
 }
+
+const SWEEPING_RE =
+  /\b(always|never|everyone|nobody|guaranteed|proven to|scientifically proven|outperforms?\s+all|the\s+only\s+way|must\s+always)\b/i
+
+/**
+ * Flag absolute / sweeping claims and suggest milder wording (no invented stats).
+ */
+export function flagSweepingClaims(content_md = '') {
+  const text = String(content_md || '')
+  const sentences = text.split(/(?<=[.!?])\s+/).filter((s) => s.trim().length > 20)
+  const flagged = []
+  for (const s of sentences) {
+    if (!SWEEPING_RE.test(s)) continue
+    const milder = s
+      .replace(/\balways\b/gi, 'often')
+      .replace(/\bnever\b/gi, 'rarely')
+      .replace(/\beveryone\b/gi, 'many people')
+      .replace(/\bnobody\b/gi, 'few people')
+      .replace(/\bguaranteed\b/gi, 'more likely')
+      .replace(/\bscientifically proven\b/gi, 'widely discussed in research (verify)')
+      .replace(/\bproven to\b/gi, 'associated with')
+      .replace(/\boutperforms?\s+all\b/gi, 'can outperform many')
+      .replace(/\bthe\s+only\s+way\b/gi, 'one effective way')
+      .replace(/\bmust\s+always\b/gi, 'usually should')
+    flagged.push({
+      text: s.trim(),
+      type: 'sweeping',
+      milder: milder.trim(),
+      note: 'Sweeping absolute — soften unless you have a primary source.',
+    })
+  }
+  return flagged
+}

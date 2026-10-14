@@ -1,0 +1,29 @@
+:root {
+  --nf-bg: #0f1419;
+  --nf-bg-elevated: #171d25;
+  --nf-bg-card: #1c2430;
+  --nf-border: #2a3444;
+  --nf-text: #e8eef6;
+  --nf-muted: #9aa8bc;
+  --nf-accent: #5eb7a8;
+  --nf-accent-soft: rgba(94, 183, 168, 0.18);
+  --nf-success: #6fbf8a;
+  --nf-info: #6a9fd4;
+  --nf-speed: #d4897a;
+  --nf-warning: #d4a54a;
+  --nf-danger: #d67a7a;
+  --nf-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --nf-sans: 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+  --nf-radius: 12px;
+  --nf-touch: 44px;
+  color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

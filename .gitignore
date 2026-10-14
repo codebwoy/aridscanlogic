@@ -32,3 +32,6 @@ storyforge/.data/
 *.njsproj
 *.sln
 *.sw?
+
+novelforge/.data/
+authorforge/.data/

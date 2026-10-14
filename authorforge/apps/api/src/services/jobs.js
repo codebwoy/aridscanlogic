@@ -10,6 +10,11 @@ import {
   extractClaimsFromText,
   factCheckClaims,
   rewriteClaimQualitatively,
+  flagSweepingClaims,
+  checkTitlePromises,
+  finishRepetitionScan,
+  parseManuscriptText,
+  manuscriptToBookPatch,
   chunkResource,
   retrieveChunks,
   createOriginalityProvider,
@@ -154,25 +159,44 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
     }
     case 'competitive_analysis': {
       const product = nicheContextForBook(book)
+      const regenerate = !!inputs.regenerate
       const meta = await market.competitorMeta({
         topic: inputs.topic || book?.topic || product.niche?.title,
         asin: inputs.asin,
       })
+      // Prefer fresh adapter titles; fall back to saved comps when regenerating angles.
+      const titles =
+        Array.isArray(meta?.titles) && meta.titles.length
+          ? meta.titles
+          : Array.isArray(book?.competitors)
+            ? book.competitors
+            : []
+      const metaForAgent = { ...meta, titles }
       // Comps UI needs meta.titles even if positioning JSON fails validation.
       let angles = {
         angles: [],
         disclaimer: 'Comparable titles from market adapter (estimates only).',
       }
       let tokens = null
+      const previousNames = [
+        ...(inputs.exclude_names || []),
+        ...((book?.bible?.positioning_angles || []).map((a) => a?.name).filter(Boolean) || []),
+      ]
       try {
         const agent = await runAgent(llm, 'positioning.v1', {
           modelClass: 'cheap',
           input: {
-            meta,
+            meta: metaForAgent,
             topic: inputs.topic || book?.topic,
             product_lane: product,
-            instruction:
-              'Prefer culturally specific, niched-down angles for African-heritage / bilingual / Germany-based non-fiction. Avoid generic middle-of-market self-help. Never claim verified Amazon sales stats.',
+            regenerate,
+            exclude_names: previousNames,
+            notes: inputs.notes || book?.bible?.positioning_notes || '',
+            target_reader: inputs.target_reader || book?.bible?.audience || '',
+            format: inputs.format || book?.structure_type || '',
+            instruction: regenerate
+              ? `Regenerate fresh positioning angles that avoid repeating these labels: ${previousNames.join('; ') || '(none)'}. Keep three distinct strategy kinds (more_value, niche_end_goal, simpler_faster). Never claim verified Amazon sales stats.`
+              : 'Prefer culturally specific, niched-down angles for African-heritage / bilingual / Germany-based non-fiction. Avoid generic middle-of-market self-help. Return three distinct strategy kinds. Never claim verified Amazon sales stats.',
           },
           metadata: { bookId, jobId },
         })
@@ -185,23 +209,40 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
           disclaimer: `Titles loaded; positioning angles skipped (${e.message || 'parse error'}).`,
         }
       }
-      if (book && Array.isArray(meta?.titles) && meta.titles.length) {
-        await store.updateBook(userId, bookId, { competitors: meta.titles })
+      if (book) {
+        const patch = {
+          bible: {
+            positioning_angles: angles.angles || [],
+            positioning_disclaimer: angles.disclaimer || '',
+            positioning_analyzed_at: new Date().toISOString(),
+          },
+        }
+        if (titles.length) patch.competitors = titles
+        await store.updateBook(userId, bookId, patch)
       }
-      return { meta, angles, tokens, product_lane: product }
+      return {
+        meta: { ...metaForAgent, titles },
+        angles,
+        tokens,
+        product_lane: product,
+        regenerated: regenerate,
+      }
     }
     case 'title_variations': {
       try {
         const product = nicheContextForBook(book)
+        const selected = book?.bible?.selected_angle || null
         const agent = await runAgent(llm, 'title.v1', {
           modelClass: 'cheap',
           input: {
             topic: book?.topic,
             bible: book?.bible,
-            seed: inputs.seed || book?.working_title,
+            selected_angle: selected,
+            seed: inputs.seed || selected?.proposed_title || book?.working_title,
             product_lane: product,
-            instruction:
-              'Propose non-fiction titles/subtitles for culturally specific guides, workbooks, or parenting books. No fiction. No children’s picture-book titles.',
+            instruction: selected
+              ? `Align titles with selected positioning "${selected.name}" (${selected.strategy_label || selected.strategy_kind || ''}): ${selected.unique_value || selected.rationale || ''}. Non-fiction only — no fiction, no children’s picture-book titles.`
+              : 'Propose non-fiction titles/subtitles for culturally specific guides, workbooks, or parenting books. No fiction. No children’s picture-book titles.',
           },
           metadata: { bookId, jobId },
         })
@@ -241,15 +282,32 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
       const tags = book?.bible?.focus_tags || inputs.focus_tags || []
       const targetWords = Number(book?.target_words) || 28000
       const chapterCount = Math.min(Math.max(Number(book?.chapter_count) || (targetWords <= 5000 ? 6 : 8), 1), 16)
+      const selected = book?.bible?.selected_angle || null
+      const chaptersOnly = inputs.mode === 'chapters_only' || inputs.chapters_only === true
+      const angleInstruction = selected
+        ? `Honor selected competitive positioning "${selected.name}": audience=${selected.target_audience || ''}; promise=${selected.unique_value || selected.rationale || ''}; must_contain=${(selected.must_contain || []).join(', ')}. TOC direction: ${selected.toc_direction || 'n/a'}.`
+        : ''
       const outlineInput = {
         bookBible: book?.bible,
+        selected_angle: selected,
         product_lane: nicheContextForBook(book),
         focus_tags: tags,
         target_words: targetWords,
         chapter_count: chapterCount,
         structure_type: book?.structure_type,
         topic: book?.topic || book?.working_title,
-        compact: targetWords <= 5000,
+        toc_direction: selected?.toc_direction || book?.bible?.toc_direction || '',
+        must_contain: selected?.must_contain || book?.bible?.key_selling_points || [],
+        compact: targetWords <= 5000 || chaptersOnly,
+        chapters_only: chaptersOnly,
+        instruction: [
+          angleInstruction,
+          chaptersOnly
+            ? 'STEP-BY-STEP MODE: return FLAT chapters only (title + one-sentence writing_direction + target_words). children must be []. Author will expand sections later.'
+            : '',
+        ]
+          .filter(Boolean)
+          .join(' '),
       }
 
       function stubChapters() {
@@ -299,6 +357,9 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
           console.warn('[authorforge] outline stub used after parse failures', firstErr.message)
         }
       }
+      if (chaptersOnly) {
+        chapters = chapters.map((ch) => ({ ...ch, children: [] }))
+      }
       // Ensure tag coverage — attach missing tags to first chapters if fake/model missed
       let coverage = focusTagCoverage(tags, chapters)
       if (!coverage.passed) {
@@ -315,9 +376,12 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
           outline: {
             chapters,
             coverage,
+            mode: chaptersOnly ? 'chapters_only' : 'full',
             note: usedStub
               ? 'Stub outline (model JSON failed). Edit titles/directions, then regenerate if needed.'
-              : undefined,
+              : chaptersOnly
+                ? 'Step-by-step: chapters only. Expand each chapter into sections when ready.'
+                : undefined,
           },
           status: 'outlined',
           wizard_step: 'outline',
@@ -327,6 +391,7 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
         chapters,
         coverage,
         stub: usedStub,
+        mode: chaptersOnly ? 'chapters_only' : 'full',
         prompt: { name: agent.promptName, version: agent.promptVersion },
       }
     }
@@ -350,13 +415,24 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
           product_lane: nicheContextForBook(book),
           persona: book.persona,
           continuity: book.continuity,
+          claim_ledger: book.bible?.claim_ledger || book.claims || [],
+          selected_angle: book.bible?.selected_angle || null,
           node,
           resourceChunks: retrieved.map((c) => ({ id: c.id, content: c.content, must_cover: c.must_cover })),
           filledStorySlots: (book.story_slots || []).filter((s) => s.status === 'filled'),
         },
         metadata: { bookId, jobId, targetWords: node.target_words },
       })
-      const content_md = agent.parsed.content_md
+      const content_md = String(agent.parsed.content_md || '').trim()
+      const existingMd = String(book.sections?.[inputs.sectionKey]?.content_md || '').trim()
+      // Never replace existing prose with empty/garbled model output (CoAuthor reliability rule)
+      if (!content_md || content_md.length < 40) {
+        throw new Error(
+          existingMd
+            ? 'AI returned empty/cut-off text — existing section preserved. Retry draft.'
+            : 'AI returned empty/cut-off text — nothing saved. Retry draft.'
+        )
+      }
       const slots = [
         ...extractStorySlots(content_md),
         ...(agent.parsed.story_slots || []).map((s) => ({
@@ -534,17 +610,149 @@ async function runJobBody(store, { userId, type, bookId, inputs, jobId }) {
       const extracted = extractClaimsFromText(section.content_md, inputs.sectionKey)
       const search = createSearchProvider()
       const checked = await factCheckClaims(extracted, { searchProvider: search })
+      const sweeping = flagSweepingClaims(section.content_md)
       const others = (book.claims || []).filter((c) => c.section_key !== inputs.sectionKey)
-      await store.updateBook(userId, bookId, { claims: [...others, ...checked.claims] })
+      const claimLedger = [...others, ...checked.claims]
+      // Running claim ledger on bible for continuity (CoAuthor-style record)
+      const ledgerSummary = claimLedger.slice(0, 80).map((c) => ({
+        text: c.text,
+        section_key: c.section_key,
+        status: c.verification_status,
+      }))
+      await store.updateBook(userId, bookId, {
+        claims: claimLedger,
+        bible: {
+          ...(book.bible || {}),
+          claim_ledger: ledgerSummary,
+        },
+      })
       return {
         ...checked,
+        sweeping,
+        report: {
+          sectionKey: inputs.sectionKey,
+          claims_checked: checked.claims.length,
+          sweeping_count: sweeping.length,
+          source_links: checked.claims.flatMap((c) =>
+            (c.evidence || []).map((e) => ({
+              claim: c.text,
+              title: e.title,
+              url: e.url,
+              snippet: e.snippet,
+              http_ok: e.http_ok,
+              supports_sentence: c.text,
+            }))
+          ),
+        },
         actions: {
           rewrite_qualitative: checked.claims.map((c) => ({
             text: c.text,
             suggestion: rewriteClaimQualitatively(c.text),
           })),
+          soften_sweeping: sweeping.map((s) => ({
+            text: s.text,
+            suggestion: s.milder,
+          })),
         },
       }
+    }
+    case 'finish_repetition_scan': {
+      if (!book) throw new Error('book required')
+      const report = await finishRepetitionScan(book)
+      await store.updateBook(userId, bookId, {
+        bible: {
+          ...(book.bible || {}),
+          finish_scan: {
+            at: new Date().toISOString(),
+            passed: report.passed,
+            rewrite_flags: (report.rewrite_flags || []).map((r) => r.key),
+            light_fixes: (report.light_fixes || []).map((r) => r.key),
+          },
+        },
+      })
+      return report
+    }
+    case 'title_promise_check': {
+      if (!book) throw new Error('book required')
+      const report = checkTitlePromises(book)
+      await store.updateBook(userId, bookId, {
+        bible: {
+          ...(book.bible || {}),
+          title_promise_check: {
+            at: new Date().toISOString(),
+            ...report,
+          },
+        },
+      })
+      return report
+    }
+    case 'import_manuscript': {
+      if (!book) throw new Error('book required')
+      const raw = inputs.text || inputs.manuscript || ''
+      if (!String(raw).trim()) throw new Error('manuscript text required')
+      const parsed = parseManuscriptText(raw, {
+        defaultTargetWords: Math.max(400, Math.floor((Number(book.target_words) || 28000) / 10)),
+      })
+      if (!parsed.chapters.length) throw new Error('Could not detect chapters in manuscript')
+      const patch = manuscriptToBookPatch(parsed)
+      // Never wipe existing sections unless user confirms replace
+      if (Object.keys(book.sections || {}).length && !inputs.replace) {
+        throw new Error('Book already has sections — pass replace:true to overwrite with import')
+      }
+      await store.updateBook(userId, bookId, {
+        ...patch,
+        bible: {
+          ...(book.bible || {}),
+          manuscript_import: {
+            at: new Date().toISOString(),
+            chapter_count: parsed.chapters.length,
+            warnings: parsed.warnings,
+          },
+        },
+      })
+      return {
+        chapter_count: parsed.chapters.length,
+        warnings: parsed.warnings,
+        preview: parsed.chapters.map((c, i) => ({
+          index: i,
+          title: c.title,
+          words: c.word_count,
+          excerpt: String(c.body || '').slice(0, 180),
+        })),
+      }
+    }
+    case 'outline_expand_chapter': {
+      if (!book) throw new Error('book required')
+      const chapters = book.outline?.chapters || []
+      const idx = Number(inputs.chapterIndex)
+      if (!Number.isInteger(idx) || idx < 0 || idx >= chapters.length) {
+        throw new Error('chapterIndex out of range')
+      }
+      const chapter = chapters[idx]
+      const product = nicheContextForBook(book)
+      const agent = await runAgent(llm, 'outline.v1', {
+        modelClass: 'cheap',
+        input: {
+          bookBible: book.bible,
+          selected_angle: book.bible?.selected_angle || null,
+          product_lane: product,
+          focus_tags: book.bible?.focus_tags || [],
+          expand_chapter: chapter,
+          chapter_index: idx,
+          compact: true,
+          instruction: `Expand ONLY chapter "${chapter.title}" into 2–5 sections (children). Return JSON with chapters array of length 1 containing the expanded chapter (with children). Do not rewrite other chapters.`,
+        },
+        metadata: { bookId, jobId, maxTokens: 4096 },
+      })
+      if (book) await store.addLlmCost(userId, bookId, agent.completion.costUsd)
+      const expanded = agent.parsed?.chapters?.[0]
+      if (!expanded?.title) throw new Error('Expand failed — empty outline JSON')
+      const nextChapters = chapters.map((c, i) => (i === idx ? { ...c, ...expanded, title: c.title || expanded.title } : c))
+      let coverage = focusTagCoverage(book.bible?.focus_tags || [], nextChapters)
+      await store.updateBook(userId, bookId, {
+        outline: { ...(book.outline || {}), chapters: nextChapters, coverage },
+      })
+      return { chapterIndex: idx, chapter: nextChapters[idx], coverage }
     }
     case 'originality_scan': {
       if (!book) throw new Error('book required')

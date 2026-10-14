@@ -9,7 +9,10 @@ import {
   MARKET_DISCLAIMER,
   applyRecommendedNiche,
   nicheLocalized,
+  applyAngleToBookPatch,
 } from '@authorforge/shared'
+import CompetitiveAdvantagePanel from '../components/CompetitiveAdvantagePanel.jsx'
+import ManuscriptImport from '../components/ManuscriptImport.jsx'
 import {
   createBook,
   deleteBook,
@@ -778,6 +781,11 @@ export default function Studio({ lang = 'en' }) {
             })
             setMessage(`Applied title: ${opt.title}`)
           }}
+          onApplyAngle={async (angle) => {
+            if (!book || !angle) return
+            await saveBasics(applyAngleToBookPatch(angle, book))
+            setMessage(`Selected positioning: ${angle.name || angle.strategy_label || 'angle'}`)
+          }}
           onDownload={(url) => {
             if (!url) return
             downloadExportUrl(url, exportFilename(assist?.type || 'export', assist?.outputs || {}))
@@ -1255,17 +1263,15 @@ function WizardStep(props) {
       )}
 
       {step === 'competitive' && (
-        <div className="card">
-          <h2>Competitive Advantage</h2>
-          <button
-            type="button"
-            className="btn btn-primary"
-            disabled={!!busy}
-            onClick={() => onRunJob('competitive_analysis', { topic: book.topic || book.working_title })}
-          >
-            Analyze angles ({costFor('competitive_analysis')} cr)
-          </button>
-        </div>
+        <CompetitiveAdvantagePanel
+          book={book}
+          busy={busy}
+          assist={assist}
+          costLabel={`${costFor('competitive_analysis')} cr`}
+          onRunJob={onRunJob}
+          onSaveBasics={onSaveBasics}
+          onMessage={onMessage}
+        />
       )}
 
       {(step === 'basics' || step === 'positioning' || step === 'title_opt' || step === 'details' || step === 'bio') && (
@@ -1282,6 +1288,17 @@ function WizardStep(props) {
                 onMessage?.(`Applied niche — review title, USP, and audience, then continue.`)
               }}
             />
+          ) : null}
+          {step === 'positioning' && book.bible?.selected_angle ? (
+            <p className="competitive-panel__selected" style={{ marginBottom: '1rem' }}>
+              From Competitive Advantage:{' '}
+              <strong>
+                {book.bible.selected_angle.strategy_label || book.bible.selected_angle.name}
+              </strong>
+              {book.bible.selected_angle.unique_value
+                ? ` — ${book.bible.selected_angle.unique_value}`
+                : null}
+            </p>
           ) : null}
           <div className="grid-2">
             <div className="field">
@@ -1445,6 +1462,12 @@ function WizardStep(props) {
               }
             />
           </div>
+          <h3 style={{ marginTop: '1.25rem' }}>Bring your own manuscript</h3>
+          <p className="muted">
+            Paste Markdown or plain text. Chapters are detected from headings (`# Title`, `Chapter 1`,
+            ALL CAPS). Preview structure, then import (replaces sections if you confirm).
+          </p>
+          <ManuscriptImport book={book} busy={busy} onRunJob={onRunJob} onMessage={onMessage} />
         </div>
       )}
 
@@ -1516,14 +1539,28 @@ function WizardStep(props) {
       {step === 'outline' && (
         <div className="card">
           <h2>Outline</h2>
-          <button
-            type="button"
-            className="btn btn-primary"
-            disabled={!!busy}
-            onClick={() => onRunJob('outline_generate')}
-          >
-            Generate outline ({costFor('outline_generate')} cr)
-          </button>
+          <p className="muted">
+            Full outline in one pass, or step-by-step: chapters first, then expand each chapter into
+            sections.
+          </p>
+          <div className="row" style={{ marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={!!busy}
+              onClick={() => onRunJob('outline_generate')}
+            >
+              Generate full outline ({costFor('outline_generate')} cr)
+            </button>
+            <button
+              type="button"
+              className="btn"
+              disabled={!!busy}
+              onClick={() => onRunJob('outline_generate', { mode: 'chapters_only' })}
+            >
+              Chapters only (step-by-step)
+            </button>
+          </div>
           {coverage ? (
             <div style={{ marginTop: '0.75rem' }}>
               <strong>Tag coverage: {coverage.passed ? 'PASS' : 'MISSING'}</strong>
@@ -1537,10 +1574,29 @@ function WizardStep(props) {
             </div>
           ) : null}
           <ol>
-            {(book.outline?.chapters || []).map((ch) => (
-              <li key={ch.title}>
+            {(book.outline?.chapters || []).map((ch, i) => (
+              <li key={`${ch.title}-${i}`}>
                 <strong>{ch.title}</strong> — {ch.target_words}w
                 <div className="muted">{ch.writing_direction}</div>
+                {(ch.children || []).length ? (
+                  <ul>
+                    {ch.children.map((sec, j) => (
+                      <li key={`${sec.title}-${j}`}>
+                        {sec.title} <span className="muted">({sec.target_words}w)</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn"
+                    style={{ marginTop: '0.35rem' }}
+                    disabled={!!busy}
+                    onClick={() => onRunJob('outline_expand_chapter', { chapterIndex: i })}
+                  >
+                    Expand sections ({costFor('outline_expand_chapter')} cr)
+                  </button>
+                )}
               </li>
             ))}
           </ol>
@@ -1601,34 +1657,114 @@ function WizardStep(props) {
                   />
                 </div>
               ))}
-              <h3>Claims</h3>
+              <h3>Claims & sources</h3>
               {(book.claims || []).map((c, i) => (
-                <div key={i} className="row" style={{ marginBottom: '0.5rem' }}>
-                  <span className="muted">
-                    [{c.verification_status}] {c.text}
-                  </span>
-                  <button type="button" className="btn" onClick={() => onConfirmClaim(i)}>
-                    I confirm
-                  </button>
+                <div key={i} style={{ marginBottom: '0.75rem' }}>
+                  <div className="row" style={{ marginBottom: '0.25rem' }}>
+                    <span className="muted">
+                      [{c.verification_status}] {c.text}
+                    </span>
+                    <button type="button" className="btn" onClick={() => onConfirmClaim(i)}>
+                      I confirm
+                    </button>
+                  </div>
+                  {(c.evidence || []).length ? (
+                    <ul className="assist-simple" style={{ margin: 0 }}>
+                      {c.evidence.slice(0, 3).map((e) => (
+                        <li key={e.url || e.title}>
+                          {e.url ? (
+                            <a href={e.url} target="_blank" rel="noopener noreferrer">
+                              {e.title || e.url}
+                            </a>
+                          ) : (
+                            e.title || 'Source'
+                          )}
+                          {e.snippet ? <div className="muted">{e.snippet}</div> : null}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="muted" style={{ margin: 0, fontSize: '0.72rem' }}>
+                      No evidence links yet — run fact-check (mock never marks verified).
+                    </p>
+                  )}
                 </div>
               ))}
-              <button type="button" className="btn" disabled={!!busy} onClick={() => onRunJob('fact_check_section', { sectionKey })}>
-                Fact-check section
-              </button>
-              <button type="button" className="btn" disabled={!!busy} onClick={() => onRunJob('quality_report')}>
-                Quality report
-              </button>
-              <button type="button" className="btn" disabled={!!busy} onClick={() => onRunJob('originality_scan', { sectionKey })}>
-                Originality scan
-              </button>
-              <button
-                type="button"
-                className="btn"
-                disabled={!!busy}
-                onClick={() => onRunJob('translation_chapter', { sectionKey, target_lang: book.language === 'en' ? 'de' : 'en' })}
-              >
-                Translate chapter (AI disclosure)
-              </button>
+              {assist?.type === 'fact_check_section' && Array.isArray(assist?.outputs?.sweeping) && assist.outputs.sweeping.length ? (
+                <div className="card" style={{ marginBottom: '0.75rem' }}>
+                  <strong>Sweeping claims</strong>
+                  <ul className="assist-simple">
+                    {assist.outputs.sweeping.map((s) => (
+                      <li key={s.text}>
+                        <div>{s.text}</div>
+                        <div className="muted">Milder: {s.milder}</div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              {assist?.type === 'finish_repetition_scan' && assist?.outputs ? (
+                <div className="card" style={{ marginBottom: '0.75rem' }}>
+                  <strong>Finish scan</strong>
+                  <p className="muted" style={{ margin: '0.35rem 0' }}>
+                    {assist.outputs.note}
+                  </p>
+                  {(assist.outputs.rewrite_flags || []).length ? (
+                    <p className="warn">
+                      Rewrite needed:{' '}
+                      {assist.outputs.rewrite_flags.map((r) => r.title || r.key).join(', ')}
+                    </p>
+                  ) : (
+                    <p className="ok">No heavy rewrite flags.</p>
+                  )}
+                  {(assist.outputs.light_fixes || []).length ? (
+                    <p className="muted">
+                      Light trim: {assist.outputs.light_fixes.map((r) => r.title || r.key).join(', ')}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+              {assist?.type === 'title_promise_check' && assist?.outputs ? (
+                <div className="card" style={{ marginBottom: '0.75rem' }}>
+                  <strong>Title promise check</strong>
+                  {(assist.outputs.results || []).length ? (
+                    <ul className="assist-simple">
+                      {assist.outputs.results.map((r) => (
+                        <li key={r.phrase}>
+                          [{r.status}] {r.message}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="muted">{assist.outputs.note}</p>
+                  )}
+                </div>
+              ) : null}
+              <div className="row" style={{ flexWrap: 'wrap', marginTop: '0.5rem' }}>
+                <button type="button" className="btn" disabled={!!busy} onClick={() => onRunJob('fact_check_section', { sectionKey })}>
+                  Fact-check section ({costFor('fact_check_section')} cr)
+                </button>
+                <button type="button" className="btn" disabled={!!busy} onClick={() => onRunJob('finish_repetition_scan')}>
+                  Finish repetition scan ({costFor('finish_repetition_scan')} cr)
+                </button>
+                <button type="button" className="btn" disabled={!!busy} onClick={() => onRunJob('title_promise_check')}>
+                  Title promise check ({costFor('title_promise_check')} cr)
+                </button>
+                <button type="button" className="btn" disabled={!!busy} onClick={() => onRunJob('quality_report')}>
+                  Quality report
+                </button>
+                <button type="button" className="btn" disabled={!!busy} onClick={() => onRunJob('originality_scan', { sectionKey })}>
+                  Originality scan
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={!!busy}
+                  onClick={() => onRunJob('translation_chapter', { sectionKey, target_lang: book.language === 'en' ? 'de' : 'en' })}
+                >
+                  Translate chapter (AI disclosure)
+                </button>
+              </div>
             </>
           )}
         </div>

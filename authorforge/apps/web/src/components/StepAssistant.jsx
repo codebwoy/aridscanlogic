@@ -153,7 +153,7 @@ function TitleOptions({ options, warnings, onApply }) {
   )
 }
 
-function AnglesView({ outputs }) {
+function AnglesView({ outputs, onApplyAngle }) {
   const angles = outputs?.angles?.angles || outputs?.angles || []
   const titles = outputs?.meta?.titles || []
   const disclaimer = outputs?.angles?.disclaimer || outputs?.disclaimer
@@ -175,9 +175,21 @@ function AnglesView({ outputs }) {
       {Array.isArray(angles) && angles.length ? (
         <ul className="assist-simple" style={{ marginTop: '0.75rem' }}>
           {angles.map((a) => (
-            <li key={a.name}>
-              <strong>{a.name}</strong>
-              {a.rationale ? <div className="muted">{a.rationale}</div> : null}
+            <li key={a.name || a.id}>
+              <strong>{a.strategy_label ? `${a.strategy_label}: ` : ''}{a.name}</strong>
+              {a.unique_value || a.rationale ? (
+                <div className="muted">{a.unique_value || a.rationale}</div>
+              ) : null}
+              {onApplyAngle ? (
+                <button
+                  type="button"
+                  className="btn"
+                  style={{ marginTop: '0.35rem', minHeight: 40 }}
+                  onClick={() => onApplyAngle(a)}
+                >
+                  Select
+                </button>
+              ) : null}
             </li>
           ))}
         </ul>
@@ -412,6 +424,7 @@ export default function StepAssistant({
   busy,
   onSuggestTitles,
   onApplyTitle,
+  onApplyAngle,
   onDownload,
   canSuggest,
   idleCopy,
@@ -440,7 +453,7 @@ export default function StepAssistant({
         <ExportSummary type={type} outputs={outputs} downloaded={downloaded} onDownload={onDownload} />
       )
     } else if (type === 'competitive_analysis' || outputs.angles || outputs.meta?.titles) {
-      body = <AnglesView outputs={outputs} />
+      body = <AnglesView outputs={outputs} onApplyAngle={onApplyAngle} />
     } else if (type === 'niche_search') {
       body = <NicheView outputs={outputs} />
     } else if (type === 'aplus_module' && Array.isArray(outputs.modules)) {

@@ -1,0 +1,17 @@
+{
+  "name": "@novelforge/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "build": "node -e \"console.log('@novelforge/worker: ok')\""
+  },
+  "dependencies": {
+    "@novelforge/shared": "0.1.0",
+    "bullmq": "^5.41.0",
+    "dotenv": "^16.4.7",
+    "ioredis": "^5.5.0"
+  }
+}

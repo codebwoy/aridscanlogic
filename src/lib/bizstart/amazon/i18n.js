@@ -65,6 +65,18 @@ export const AMAZON_STRINGS = {
     authorforgeOffline:
       'Local AuthorForge is not running. Start it with npm run authorforge:dev (http://127.0.0.1:5181), or set VITE_AUTHORFORGE_URL to your studio URL (Oracle/Fly) and redeploy ScanLogic.',
     authorforgeOnline: 'AuthorForge is reachable — Open AuthorForge will work.',
+    novelforgeTitle: 'NovelForge — adult fiction studio',
+    novelforgeBody:
+      'Desktop-only adult fiction co-author: novels and novellas (romance, thriller, contemporary, literary) with culturally specific diaspora lanes. Not non-fiction (AuthorForge) or kids’ picture books (StoryForge). ⚠ Niche tips are strategic, not verified Amazon sales data.',
+    novelforgeCta: 'Open NovelForge (desktop)',
+    novelforgeHint:
+      'Local: npm run novelforge:dev (:5182). Set VITE_NOVELFORGE_URL for production. Credits for generation; export + checklist only (no Amazon upload automation).',
+    novelforgeMobile:
+      'NovelForge needs a desktop screen (≥1024px). Open ScanLogic on a computer to use the studio.',
+    novelforgePopupBlocked: 'Pop-up blocked — allow pop-ups or open NovelForge manually.',
+    novelforgeOffline:
+      'Local NovelForge is not running. Start it with npm run novelforge:dev (http://127.0.0.1:5182), or set VITE_NOVELFORGE_URL and redeploy ScanLogic.',
+    novelforgeOnline: 'NovelForge is reachable — Open NovelForge will work.',
     playbooksTitle: 'KDP + Merch playbooks',
     playbooksIntro:
       'Start with First-time publisher truths, then Publish wide + email list (don’t put all eggs in one Amazon basket). Then KDP requirements, account termination protection, learning centre, Merch, and research. Creation: StoryForge + AuthorForge (desktop).',
@@ -437,9 +449,21 @@ export const AMAZON_STRINGS = {
     authorforgeOffline:
       'Lokales AuthorForge läuft nicht. Start: npm run authorforge:dev (http://127.0.0.1:5181) — oder VITE_AUTHORFORGE_URL auf die Studio-URL (Oracle/Fly) setzen und ScanLogic neu deployen.',
     authorforgeOnline: 'AuthorForge ist erreichbar — „AuthorForge öffnen“ funktioniert.',
+    novelforgeTitle: 'NovelForge — Erwachsenen-Fiction-Studio',
+    novelforgeBody:
+      'Nur Desktop: Erwachsenen-Fiction (Romane/Novellen — Romance, Thriller, Contemporary, Literary) mit kulturell spezifischer Diaspora-Spur. Kein Sachbuch (AuthorForge), keine Kinderbilderbücher (StoryForge). ⚠ Nischen-Hinweise sind strategisch, keine verifizierten Amazon-Verkaufsdaten.',
+    novelforgeCta: 'NovelForge öffnen (Desktop)',
+    novelforgeHint:
+      'Lokal: npm run novelforge:dev (:5182). Produktion: VITE_NOVELFORGE_URL. Credits für Generierung; nur Export + Checkliste (kein Amazon-Upload).',
+    novelforgeMobile:
+      'NovelForge braucht einen Desktop-Bildschirm (≥1024px). Öffnen Sie ScanLogic am Computer.',
+    novelforgePopupBlocked: 'Pop-up blockiert — erlauben oder NovelForge manuell öffnen.',
+    novelforgeOffline:
+      'Lokales NovelForge läuft nicht. Start: npm run novelforge:dev (http://127.0.0.1:5182) — oder VITE_NOVELFORGE_URL setzen und ScanLogic neu deployen.',
+    novelforgeOnline: 'NovelForge ist erreichbar — „NovelForge öffnen“ funktioniert.',
     playbooksTitle: 'KDP + Merch Playbooks',
     playbooksIntro:
-      'Zuerst: Wahrheiten für Erstautor:innen, dann Wide publizieren + E-Mail-Liste (nicht alle Eier in einen Amazon-Korb). Dann KDP-Anforderungen, Kontosperrung-Absicherung, Lernzentrum, Merch und Recherche. Erstellung: StoryForge + AuthorForge (Desktop).',
+      'Zuerst: Wahrheiten für Erstautor:innen, dann Wide publizieren + E-Mail-Liste (nicht alle Eier in einen Amazon-Korb). Dann KDP-Anforderungen, Kontosperrung-Absicherung, Lernzentrum, Merch und Recherche. Erstellung: StoryForge + AuthorForge + NovelForge (Desktop).',
     publisherTruthsTitle: '10 kritische Wahrheiten',
     publisherTruthsHint:
       'Strategie vor dem Upload — Business-Ökosystem statt Einmal-PDF. Cross-Links öffnen StoryForge / AuthorForge wenn bereit.',

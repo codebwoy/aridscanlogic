@@ -1,0 +1,44 @@
+# fly launch --config fly.toml  (from novelforge/)
+# Standby host — active path is Oracle: ../../deploy/oracle/
+# Docs: docs/HYBRID_DEPLOY.md
+#
+# Stateful in-memory + local .data — keep exactly ONE machine:
+#   fly scale count 1 -a scanlogic-novelforge
+# A second HA machine splits books/sessions and breaks Next/wizard.
+
+app = "scanlogic-novelforge"
+primary_region = "fra"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  NOVELFORGE_SERVE_STATIC = "1"
+  NOVELFORGE_LLM_PROVIDER = "anthropic"
+  NOVELFORGE_PERSIST = "1"
+  NOVELFORGE_DATA_PATH = "/data/state.json"
+
+[mounts]
+  source = "novelforge_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "15s"
+    method = "GET"
+    path = "/health"
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1

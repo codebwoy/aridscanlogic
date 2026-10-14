@@ -36,7 +36,8 @@ Keep UI, Hub, README, market mock, and agent `product_lane` inputs aligned.
 ⚠ Niche “demand / competition” copy is **strategic guidance**, not verified Amazon sales data.
 Never present it as official KDP stats. Always keep the market disclaimer from that module.
 
-Do not invent fiction workflows, picture-book canvases, or “novel mode” inside AuthorForge.
+Do not invent fiction workflows, picture-book canvases, or “novel mode” inside AuthorForge —
+adult fiction belongs in **NovelForge** (`21-novelforge.mdc`).
 
 Prompts (`UNIVERSAL_COAUTHOR_RULES` / agents) must stay non-fiction: never invent credentials,
 quotes, stats, proverbs, or personal anecdotes; use STORY_SLOT / CLAIM markers.

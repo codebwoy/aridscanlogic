@@ -1,0 +1,49 @@
+---
+description: NovelForge desktop adult fiction co-author (sibling app)
+globs: novelforge/**,src/lib/novelforge/**
+alwaysApply: false
+---
+
+# NovelForge
+
+## Product positioning (non-negotiable)
+
+NovelForge is an adult **fiction** co-author studio for novels and novellas — romance,
+thriller, contemporary, literary — with a culturally specific diaspora lane
+(African-heritage / bilingual / Germany-based).
+
+| Studio | Owns |
+|--------|------|
+| **NovelForge** | Adult fiction novels / novellas |
+| **AuthorForge** | Adult non-fiction guides / workbooks |
+| **StoryForge** | Children’s picture books + print art |
+
+Do **not** add non-fiction CLAIM/STORY_SLOT workflows or kids’ picture-book canvases here.
+Do **not** invent fiction mode inside AuthorForge — use this studio.
+
+Canonical niches: `novelforge/packages/shared/src/product-positioning.js`.
+Fiction rules: `UNIVERSAL_FICTION_RULES` in `coauthor-rules.js`.
+
+Commercial PG-13 / literary R tone only. No CSAM. Adult characters only in romantic/sexual roles.
+
+## Placement
+
+- **Not** a ScanLogic tab and **not** available on mobile.
+- Entry: Amazon Hub → `launchNovelforgeDesktop()` → `VITE_NOVELFORGE_URL` (default `http://127.0.0.1:5182`).
+- Code: `novelforge/` monorepo (`packages/*`, `apps/api`, `apps/web`, `apps/worker`).
+
+## Rules
+
+- Desktop min width **1024px** — web gate **and** API session / `requireDesktop`.
+- Credits = append-only ledger; show cost before jobs; refund on failure.
+- All LLM calls via `@novelforge/llm` on the NovelForge API — never ScanLogic `/api/llm`, never from the browser.
+- No Amazon scraping; mock/licensed market adapters only.
+- Export files + checklist only — no unofficial Amazon upload automation.
+- Prefer **local** `npm run novelforge:dev` for agent work; do not wake Fly unless the user asks.
+
+## Commands
+
+```bash
+cd novelforge && npm install && npm test
+npm run novelforge:dev   # from repo root — API :8789 + web :5182
+```

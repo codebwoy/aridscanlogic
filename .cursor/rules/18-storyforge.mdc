@@ -10,9 +10,9 @@ alwaysApply: false
 
 StoryForge is the **children’s picture-book** studio (character consistency, print art, KDP pack) —
 especially **bilingual** African-language + EN/DE series (priority #1 in the shared niche ladder).
-Adult **non-fiction** / parenting / coaching guides belong in **AuthorForge** — not here. Hybrid:
-kids’ series here → companion parent guide in AuthorForge (`19-authorforge.mdc`,
-`authorforge/.../product-positioning.js`).
+Adult **non-fiction** / parenting / coaching guides belong in **AuthorForge**; adult **fiction**
+novels belong in **NovelForge** — not here. Hybrid: kids’ series here → companion parent guide
+in AuthorForge (`19-authorforge.mdc`); adult novels → NovelForge (`21-novelforge.mdc`).
 
 ## Placement
 

@@ -1,0 +1,25 @@
+{
+  "name": "novelforge",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "node scripts/dev-studio.mjs",
+    "dev:studio": "node scripts/dev-studio.mjs",
+    "dev:api": "npm run dev -w @novelforge/api",
+    "dev:web": "npm run dev -w @novelforge/web",
+    "dev:worker": "npm run dev -w @novelforge/worker",
+    "build": "npm run build -w @novelforge/shared && npm run build -w @novelforge/llm && npm run build -w @novelforge/agents && npm run build -w @novelforge/export && npm run build -w @novelforge/market && npm run build -w @novelforge/api && npm run build -w @novelforge/web",
+    "test": "NOVELFORGE_PERSIST=0 NOVELFORGE_LLM_PROVIDER=fake npm run test -w @novelforge/shared && NOVELFORGE_PERSIST=0 NOVELFORGE_LLM_PROVIDER=fake npm run test -w @novelforge/llm && NOVELFORGE_PERSIST=0 NOVELFORGE_LLM_PROVIDER=fake npm run test -w @novelforge/agents && NOVELFORGE_PERSIST=0 NOVELFORGE_LLM_PROVIDER=fake npm run test -w @novelforge/export && NOVELFORGE_PERSIST=0 NOVELFORGE_LLM_PROVIDER=fake npm run test -w @novelforge/market && NOVELFORGE_PERSIST=0 NOVELFORGE_LLM_PROVIDER=fake npm run test -w @novelforge/api",
+    "lint": "npm run lint -w @novelforge/web --if-present",
+    "start:prod": "NODE_ENV=production NOVELFORGE_SERVE_STATIC=1 npm run start -w @novelforge/api",
+    "docker:build": "docker build -t scanlogic-novelforge ."
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

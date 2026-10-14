@@ -1,0 +1,23 @@
+{
+  "name": "@novelforge/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "build": "node -e \"console.log('@novelforge/api: ok')\"",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@novelforge/agents": "0.1.0",
+    "@novelforge/export": "0.1.0",
+    "@novelforge/llm": "0.1.0",
+    "@novelforge/market": "0.1.0",
+    "@novelforge/shared": "0.1.0",
+    "bullmq": "^5.41.0",
+    "dotenv": "^16.4.7",
+    "ioredis": "^5.5.0",
+    "zod": "^3.24.2"
+  }
+}

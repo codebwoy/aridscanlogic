@@ -69,14 +69,44 @@ Provide 4-6 options. subtitle may be an empty string.`,
     version: 'v1',
     file: null,
     coauthorRules: false,
-    inlineSystem: `PositioningAgent: differentiated angles from public metadata only.
-Return ONLY JSON shaped exactly as:
-{"angles":[{"name":"...","rationale":"...","confidence":"low|medium|high"}],"disclaimer":"..."}
-Never invent sales ranks, review counts, or Amazon scrape claims. Use estimates/fixtures only.`,
+    inlineSystem: `PositioningAgent: produce 3–5 DISTINCT competitive-advantage angles from public/mock metadata only.
+Each angle must differ in audience, promise, or approach — not superficial rewrites.
+Prefer culturally specific, niched-down non-fiction (African-heritage / bilingual / Germany-based) when the product lane fits.
+Return ONLY JSON:
+{"angles":[{
+  "strategy_kind":"more_value|niche_end_goal|simpler_faster",
+  "strategy_label":"MORE VALUE|NICHE END GOAL|SIMPLER / FASTER",
+  "name":"short label",
+  "proposed_title":"optional title idea",
+  "proposed_subtitle":"optional",
+  "target_audience":"who",
+  "reader_problem":"pain",
+  "unique_value":"promise",
+  "differentiation":"why it stands apart",
+  "evidence":["metadata-backed note only"],
+  "risks":["honest weakness"],
+  "must_contain":["what the finished book must deliver"],
+  "toc_direction":"outline direction in one sentence",
+  "rationale":"summary",
+  "confidence":"low|medium|high"
+}],"disclaimer":"..."}
+Never invent sales ranks, review counts, royalties, or Amazon scrape claims. Label estimates clearly.`,
     outputSchema: z.object({
       angles: z.array(
         z.object({
+          strategy_kind: z.string().optional(),
+          strategy_label: z.string().optional(),
           name: z.string(),
+          proposed_title: z.string().optional().default(''),
+          proposed_subtitle: z.string().optional().default(''),
+          target_audience: z.string().optional().default(''),
+          reader_problem: z.string().optional().default(''),
+          unique_value: z.string().optional().default(''),
+          differentiation: z.string().optional().default(''),
+          evidence: z.array(z.string()).optional().default([]),
+          risks: z.array(z.string()).optional().default([]),
+          must_contain: z.array(z.string()).optional().default([]),
+          toc_direction: z.string().optional().default(''),
           rationale: z.string(),
           confidence: z.string().optional(),
         })
@@ -202,10 +232,39 @@ function normalizeAgentPayload(data, schema) {
     if (Array.isArray(alt)) next.angles = alt
   }
   if (Array.isArray(next.angles)) {
-    next.angles = next.angles.map((a) => {
+    next.angles = next.angles.map((a, i) => {
       if (!a || typeof a !== 'object') return a
+      const evidence = Array.isArray(a.evidence)
+        ? a.evidence.map(String)
+        : Array.isArray(a.evidence_points)
+          ? a.evidence_points.map(String)
+          : []
+      const risks = Array.isArray(a.risks)
+        ? a.risks.map(String)
+        : Array.isArray(a.weaknesses)
+          ? a.weaknesses.map(String)
+          : []
+      const must = Array.isArray(a.must_contain)
+        ? a.must_contain.map(String)
+        : Array.isArray(a.must_deliver)
+          ? a.must_deliver.map(String)
+          : []
       return {
-        name: a.name || a.title || a.angle || 'Angle',
+        strategy_kind: a.strategy_kind || a.kind || undefined,
+        strategy_label: a.strategy_label || undefined,
+        name: a.name || a.title || a.angle || `Angle ${i + 1}`,
+        proposed_title: String(a.proposed_title || a.title_option || '').trim(),
+        proposed_subtitle: String(a.proposed_subtitle || a.subtitle || '').trim(),
+        target_audience: String(a.target_audience || a.audience || a.ideal_reader || '').trim(),
+        reader_problem: String(a.reader_problem || a.problem || '').trim(),
+        unique_value: String(a.unique_value || a.uvp || a.usp || '').trim(),
+        differentiation: String(
+          a.differentiation || a.why_different || a.stand_apart || a.rationale || a.reason || ''
+        ).trim(),
+        evidence,
+        risks,
+        must_contain: must,
+        toc_direction: String(a.toc_direction || a.outline_direction || a.toc || '').trim(),
         rationale: a.rationale || a.reason || a.description || a.summary || '',
         confidence: a.confidence,
       }
