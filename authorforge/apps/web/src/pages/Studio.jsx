@@ -17,6 +17,9 @@ import {
   bookLanguageCultureHint,
   bookLanguageVarieties,
   bookLanguageVarietyLabel,
+  SECTION_ROLE_OPTIONS,
+  KINDLE_CREATE_SPECS,
+  inferSectionRole,
 } from '@authorforge/shared'
 import CompetitiveAdvantagePanel from '../components/CompetitiveAdvantagePanel.jsx'
 import ManuscriptImport from '../components/ManuscriptImport.jsx'
@@ -855,10 +858,14 @@ export default function Studio({ lang = 'en' }) {
               onDownloadExport={(url, typeHint) =>
                 downloadExportUrl(url, exportFilename(typeHint || assist?.type || 'export', assist?.outputs || {}))
               }
-              onSaveSection={async () => {
-                const r = await saveSection(book.id, sectionKey, editorText)
+              onSaveSection={async (extras = {}) => {
+                const r = await saveSection(book.id, sectionKey, editorText, extras)
                 setBook(r.book)
-                setMessage('Section saved (human edit)')
+                setMessage(
+                  extras.section_role
+                    ? `Section saved · role: ${extras.section_role}`
+                    : 'Section saved (human edit)',
+                )
               }}
               onFillSlot={(i, text) => fillStorySlot(book.id, i, text).then((r) => setBook(r.book))}
               onConfirmClaim={(i) => updateClaim(book.id, i, 'user_confirmed').then((r) => setBook(r.book))}
@@ -1801,7 +1808,7 @@ function WizardStep(props) {
       {(step === 'writing' || step === 'edit_verify') && (
         <div className="card">
           <h2>{step === 'writing' ? 'Writing' : 'Edit & Verify'}</h2>
-          <div className="row" style={{ marginBottom: '0.75rem' }}>
+          <div className="row" style={{ marginBottom: '0.75rem', flexWrap: 'wrap' }}>
             <select value={sectionKey} onChange={(e) => setSectionKey(e.target.value)}>
               {leafNodes.map(({ key, node }) => (
                 <option key={key} value={key}>
@@ -1809,6 +1816,27 @@ function WizardStep(props) {
                 </option>
               ))}
             </select>
+            <label className="muted" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+              Kindle Create role
+              <select
+                aria-label="Section role for Kindle Create"
+                value={
+                  book.sections?.[sectionKey]?.section_role ||
+                  inferSectionRole(
+                    book.sections?.[sectionKey]?.title ||
+                      leafNodes.find((l) => l.key === sectionKey)?.node?.title,
+                  )
+                }
+                disabled={!!busy || !sectionKey}
+                onChange={(e) => onSaveSection({ section_role: e.target.value })}
+              >
+                {SECTION_ROLE_OPTIONS.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </label>
             <button
               type="button"
               className="btn btn-primary"
@@ -1828,7 +1856,7 @@ function WizardStep(props) {
             >
               Generate chapter 1
             </button>
-            <button type="button" className="btn" onClick={onSaveSection}>
+            <button type="button" className="btn" onClick={() => onSaveSection()}>
               Save edits
             </button>
           </div>
@@ -2091,6 +2119,14 @@ function WizardStep(props) {
             Each export runs the job, then downloads the file to your computer. Storefront opens the public
             sales page in a new tab. Studio does not upload to Amazon for you.
           </p>
+          <p className="muted" style={{ marginBottom: '0.75rem', fontSize: '0.82rem' }}>
+            DOCX / KDP ZIP are structured for{' '}
+            <a href={KINDLE_CREATE_SPECS.helpUrl} target="_blank" rel="noopener noreferrer">
+              Kindle Create
+            </a>{' '}
+            (Heading 1 + page breaks → HTML TOC / NCX). Open DOCX in Kindle Create to export KPF —
+            keep the KCB folder backed up. ZIP includes KINDLE-CREATE-NOTES.txt.
+          </p>
           <div className="row">
             <button type="button" className="btn" disabled={!!busy} onClick={() => onRunJob('export_interior_pdf')}>
               Interior PDF
@@ -2099,7 +2135,7 @@ function WizardStep(props) {
               EPUB
             </button>
             <button type="button" className="btn" disabled={!!busy} onClick={() => onRunJob('export_docx')}>
-              DOCX
+              DOCX (Kindle Create)
             </button>
             <button type="button" className="btn btn-primary" disabled={!!busy} onClick={() => onRunJob('export_kdp_zip')}>
               KDP package ZIP

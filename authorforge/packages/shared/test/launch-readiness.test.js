@@ -11,7 +11,14 @@ import {
 test('AuthorForge launch readiness has required Amazon phases', () => {
   assert.equal(LAUNCH_READINESS.studio, 'authorforge')
   const ids = new Set(LAUNCH_READINESS.phases.map((p) => p.id))
-  for (const need of ['manuscript', 'amazon_account', 'studio_setup', 'after_export', 'strategy']) {
+  for (const need of [
+    'manuscript',
+    'amazon_account',
+    'studio_setup',
+    'typesetting',
+    'after_export',
+    'strategy',
+  ]) {
     assert.ok(ids.has(need), need)
   }
   assert.ok(LAUNCH_READINESS.phases.some((p) => p.items.some((i) => i.id === 'story_slots')))

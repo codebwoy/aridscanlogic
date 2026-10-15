@@ -3,8 +3,10 @@
  * Values are operational defaults with lastVerified — not guaranteed Amazon policy.
  */
 
+import { KINDLE_CREATE_LAUNCH_ITEMS, KINDLE_CREATE_SPECS } from './kindle-create-specs.js'
+
 export const PUBLISHING_SPECS = {
-  lastVerified: '2026-04-01',
+  lastVerified: '2026-10-15',
   verifiedNote:
     '⚠ Confirm trim, bleed, spine, and AI disclosure on current Amazon KDP help pages before upload. NovelForge exports files + checklist only — no Amazon upload automation.',
   dpiTarget: 300,
@@ -33,6 +35,13 @@ export const PUBLISHING_SPECS = {
     coverCalculator: 'https://kdp.amazon.com/cover-calculator',
     manuscript: 'https://kdp.amazon.com/help/topic/G201834230',
     kdpAccount: 'https://kdp.amazon.com/help/topic/G200672390',
+    kindleCreate: KINDLE_CREATE_SPECS.helpUrl,
+    kindleCreateDe: KINDLE_CREATE_SPECS.helpUrlDe,
+  },
+  kindleCreate: {
+    lastVerified: KINDLE_CREATE_SPECS.lastVerified,
+    format: KINDLE_CREATE_SPECS.format,
+    note: KINDLE_CREATE_SPECS.verifiedNote,
   },
 }
 
@@ -41,11 +50,11 @@ export const PUBLISHING_SPECS = {
  * Authors tick these on the Publish step; state persists on book.compliance.checklist.
  */
 export const LAUNCH_READINESS = {
-  version: 2,
+  version: 3,
   studio: 'novelforge',
   lastVerified: PUBLISHING_SPECS.lastVerified,
   lead:
-    'Studio export = KDP-shaped files + checklist. You still edit, disclose AI use, run Previewer, and upload manually in KDP.',
+    'Studio export = KDP-shaped files + checklist. You still edit, disclose AI use, run Previewer, and upload manually in KDP. Reflowable DOCX is structured for Kindle Create (KPF) when you choose that path.',
   phases: [
     {
       id: 'manuscript',
@@ -170,6 +179,11 @@ export const LAUNCH_READINESS = {
       ],
     },
     {
+      id: 'typesetting',
+      title: 'Typesetting / Kindle Create (reflowable)',
+      items: KINDLE_CREATE_LAUNCH_ITEMS,
+    },
+    {
       id: 'after_export',
       title: 'After studio export',
       items: [
@@ -271,6 +285,7 @@ export function launchReadinessPayload(readiness = LAUNCH_READINESS) {
     helpUrls: PUBLISHING_SPECS.kdpHelpUrls,
     dpiTarget: PUBLISHING_SPECS.dpiTarget,
     verifiedNote: PUBLISHING_SPECS.verifiedNote,
+    kindleCreate: PUBLISHING_SPECS.kindleCreate,
   }
 }
 

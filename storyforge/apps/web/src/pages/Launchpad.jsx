@@ -507,6 +507,22 @@ export default function Launchpad({ activeProject, onRefreshProject, setStatus, 
               </div>
             ) : null}
 
+            {data.kindleCreate ? (
+              <div className="sf-card">
+                <h3 style={{ marginTop: 0 }}>Kindle Create (not for picture books)</h3>
+                <p className="sf-muted">{data.kindleCreate.verifiedNote}</p>
+                <p className="sf-muted" style={{ marginBottom: 0 }}>
+                  Use StoryForge print PDF packs + KDP Previewer instead of reflowable DOC(X) → Kindle
+                  Create.{' '}
+                  {data.kindleCreate.helpUrl ? (
+                    <a href={data.kindleCreate.helpUrl} target="_blank" rel="noopener noreferrer">
+                      Amazon help
+                    </a>
+                  ) : null}
+                </p>
+              </div>
+            ) : null}
+
             {data.publicationReadiness ? (
               <div className="sf-card">
                 <h3 style={{ marginTop: 0 }}>

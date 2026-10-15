@@ -41,6 +41,12 @@ export const COMPLIANCE_LINKS = [
     url: 'https://kdp.amazon.com/help',
     note: 'Verify current AI disclosure wording in KDP Help before upload.',
   },
+  {
+    id: 'kindle_create',
+    label: 'Kindle Create (text books only)',
+    url: 'https://kdp.amazon.com/en_US/help/topic/G7R2L7V5X6SJH948',
+    note: 'Reflowable DOC(X) path — not for illustrated picture-book spreads. StoryForge uses print PDF packs.',
+  },
 ]
 
 export const ISBN_CHOICES = [

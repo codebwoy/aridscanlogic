@@ -8,6 +8,7 @@ import {
   assessComplianceGate,
   stampComplianceIfComplete,
   KDP_COMPLIANCE_META,
+  KINDLE_CREATE_SPECS,
 } from '@storyforge/shared'
 
 /**
@@ -85,6 +86,31 @@ export default function ComplianceChecklist({
       <p className="sf-muted" style={{ marginTop: 0 }}>
         {KDP_COMPLIANCE_META.disclaimer}
       </p>
+
+      <aside
+        className="sf-compliance-kc"
+        style={{
+          margin: '0.65rem 0 0.85rem',
+          padding: '0.65rem 0.75rem',
+          borderRadius: '8px',
+          border: '1px solid var(--sf-border, var(--border))',
+          background: 'var(--sf-surface-2, var(--surface-2))',
+          fontSize: '0.82rem',
+          lineHeight: 1.45,
+        }}
+      >
+        <strong>Picture books ≠ Kindle Create reflowable</strong>
+        <p className="sf-muted" style={{ margin: '0.35rem 0 0.45rem' }}>
+          {KINDLE_CREATE_SPECS.verifiedNote}
+        </p>
+        <a href={KINDLE_CREATE_SPECS.helpUrl} target="_blank" rel="noopener noreferrer">
+          Kindle Create help (text books)
+        </a>
+        {' · '}
+        <a href={KINDLE_CREATE_SPECS.helpUrlDe} target="_blank" rel="noopener noreferrer">
+          DE
+        </a>
+      </aside>
 
       <div className="sf-compliance-links">
         {COMPLIANCE_LINKS.map((link) => (

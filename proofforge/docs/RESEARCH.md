@@ -62,6 +62,7 @@ Do **not** copy proprietary code or private editorial databases — original imp
 33. Overused-words thesaurus alternatives (PWA Thesaurus Report concept); sticky sentences as findings.
 34. Fiction POV/tense consistency heuristics; KDP title/author manuscript match; bleed toggle; Amazon Endure note; translation log in MD export.
 35. KDP export paths: print PDF at trim + mirror margins (+ bleed); DOCX page setup from print_config; EPUB/DOCX/HTML/TXT for Kindle; KPF via Kindle Create only; audit PDF report.
+40. Kindle Create reflowable typesetting (G7R2L7V5X6SJH948, retrieved 2026-10-15): DOC(X) → Dynamic Text Flow; page breaks → sections; Heading 1 → HTML TOC + NCX; front/back matter page types; body font restraint; tables/lists/footnotes edit-in-source; JPG/PNG + alt text + 300 ppi; KCB editable / KPF publish-only; print dual-path (roman front matter, recto chapter opens, widows/orphans). Encoded in `kindle-create-specs.js`, DOCX exporters, `kdpRules.js`, launch checklists. Not a KPF emitter. Picture books (StoryForge) are out of scope for reflowable KC.
 36. Scorecard shows “—” until an audit runs (no fake 100). Interactive KDP upload checklist on Export (Previewer, cover/spine, AI disclosure, MOBI end-date).
 37. Create-project metadata: author, subtitle, intended tone, formality — tone/formality steer analysis; RTF export + cover-calculator deep link; author_decisions log on accept/reject.
 38. Translation glossary + source language UI; richer NovelForge handoff metadata; AuthorForge + StoryForge → ProofForge handoff (same import API).

@@ -1,12 +1,15 @@
 /**
  * DOCX export of corrected manuscript (OOXML zip).
  * Page size / margins follow project.print_config for KDP Word → PDF path.
+ * Structure follows Kindle Create reflowable guidance (G7R2L7V5X6SJH948):
+ * Heading 1 chapters, page breaks between sections, first-para no indent.
  * For Kindle ebook, upload DOCX or convert via Kindle Create (KPF).
  */
 
 import JSZip from 'jszip'
 import { resolvePrintPageGeometry } from './exportPdf.js'
 import { wordCount } from './deterministic.js'
+import { classifyManuscriptSections } from './kindle-create-specs.js'
 
 function escapeXml(s) {
   return String(s || '')
@@ -26,12 +29,13 @@ function paragraphsFromMarkdown(md) {
 }
 
 /**
- * @param {{ title?: string, author_name?: string, sections?: Record<string, { title?: string, content_md?: string, order?: number }> }} project
+ * @param {{ title?: string, author_name?: string, sections?: Record<string, { title?: string, content_md?: string, order?: number, role?: string }> }} project
  */
 export async function buildCorrectedDocx(project) {
-  const sections = Object.values(project.sections || {}).sort(
+  const raw = Object.values(project.sections || {}).sort(
     (a, b) => (a.order ?? 0) - (b.order ?? 0)
   )
+  const sections = classifyManuscriptSections(raw)
   const bodyParts = []
   bodyParts.push(
     `<w:p><w:pPr><w:pStyle w:val="Title"/></w:pPr><w:r><w:t>${escapeXml(project.title || 'Manuscript')}</w:t></w:r></w:p>`
@@ -41,14 +45,35 @@ export async function buildCorrectedDocx(project) {
       `<w:p><w:r><w:t>${escapeXml(project.author_name)}</w:t></w:r></w:p>`
     )
   }
+  bodyParts.push(
+    `<w:p><w:r><w:t xml:space="preserve">${escapeXml(
+      'ProofForge export — Kindle Create–ready structure (Heading 1 + section breaks). KPF only via Amazon Kindle Create.'
+    )}</w:t></w:r></w:p>`
+  )
+
   for (const s of sections) {
+    // pageBreakBefore via w:pageBreakBefore on heading paragraph
     bodyParts.push(
-      `<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>${escapeXml(s.title || s.key)}</w:t></w:r></w:p>`
+      `<w:p><w:pPr><w:pStyle w:val="Heading1"/><w:pageBreakBefore/></w:pPr><w:r><w:t>${escapeXml(s.title || s.key)}</w:t></w:r></w:p>`
     )
+    if (s.role && s.role !== 'chapter') {
+      bodyParts.push(
+        `<w:p><w:r><w:t>${escapeXml(`Section: ${s.role.replace(/_/g, ' ')}`)}</w:t></w:r></w:p>`
+      )
+    }
+    let bodyParaIndex = 0
     for (const para of paragraphsFromMarkdown(s.content_md)) {
       const lines = para.split('\n')
-      for (const line of lines) {
-        bodyParts.push(`<w:p><w:r><w:t xml:space="preserve">${escapeXml(line)}</w:t></w:r></w:p>`)
+      const isFirst = bodyParaIndex === 0
+      bodyParaIndex += 1
+      const indent = isFirst
+        ? ''
+        : '<w:ind w:firstLine="360"/>'
+      for (let li = 0; li < lines.length; li++) {
+        const lineIndent = li === 0 ? indent : ''
+        bodyParts.push(
+          `<w:p><w:pPr>${lineIndent}</w:pPr><w:r><w:t xml:space="preserve">${escapeXml(lines[li])}</w:t></w:r></w:p>`
+        )
       }
     }
   }
@@ -95,6 +120,11 @@ export async function buildCorrectedDocx(project) {
   return {
     bytes,
     filename: `manuscript-${project.id || 'export'}.docx`,
-    note: 'Minimal DOCX — validate margins/fonts in Word or Kindle Create before KDP upload.',
+    note: 'Kindle Create–ready DOCX (Heading 1 + page breaks). Validate in Word or Kindle Create before KDP upload. KPF is Kindle Create–only.',
+    kindleCreate: {
+      structured: true,
+      sectionCount: sections.length,
+      helpUrl: 'https://kdp.amazon.com/en_US/help/topic/G7R2L7V5X6SJH948',
+    },
   }
 }

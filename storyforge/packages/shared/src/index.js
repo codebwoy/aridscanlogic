@@ -1,4 +1,5 @@
 export { PUBLISHING_SPECS, getTrimSize, getPaperType } from './publishing-specs.js'
+export { KINDLE_CREATE_SPECS, kindleCreatePayload } from './kindle-create-specs.js'
 export {
   requiredBleedPixels,
   effectiveDpi,

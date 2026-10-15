@@ -1246,11 +1246,13 @@ function chaptersFromBook(book) {
     return keys.map((k) => ({
       title: sections[k].title || k,
       content_md: sections[k].content_md || '',
+      role: sections[k].section_role || sections[k].role || undefined,
     }))
   }
   return (book.outline?.chapters || []).map((c) => ({
     title: c.title,
     content_md: c.writing_direction || '',
+    role: c.section_role || c.role || undefined,
   }))
 }
 

@@ -49,6 +49,7 @@ export function ProjectPage({ projectId, onError, onBack }) {
   const [showDialogue, setShowDialogue] = useState(false)
   const [reportPane, setReportPane] = useState('summary')
   const [kdpChecklist, setKdpChecklist] = useState(null)
+  const [kindleCreateSpecs, setKindleCreateSpecs] = useState(null)
   const manuscriptRef = useRef(null)
 
   const load = useCallback(async () => {
@@ -66,6 +67,10 @@ export function ProjectPage({ projectId, onError, onBack }) {
       .kdpChecklist(projectId)
       .then(setKdpChecklist)
       .catch(() => setKdpChecklist(null))
+    pfApi
+      .specs()
+      .then((s) => setKindleCreateSpecs(s.kindle_create || null))
+      .catch(() => setKindleCreateSpecs(null))
   }, [load, onError, projectId])
 
   useEffect(() => {
@@ -532,9 +537,36 @@ export function ProjectPage({ projectId, onError, onBack }) {
             Kindle ebook — reflowable
           </h4>
           <p className="muted" style={{ marginTop: 0 }}>
-            Upload DOCX or EPUB to KDP, or open DOCX in Kindle Create to build KPF. MOBI fixed-layout
-            is no longer accepted (March 2025).
+            Upload DOCX or EPUB to KDP, or open DOCX in Kindle Create (Dynamic Text Flow) to build
+            KPF. Exported DOCX/EPUB use Heading 1 + section breaks for chapter detection / TOC. MOBI
+            fixed-layout is no longer accepted (March 2025).
           </p>
+          {kindleCreateSpecs ? (
+            <aside
+              style={{
+                margin: '0 0 1rem',
+                padding: '0.65rem 0.75rem',
+                borderRadius: '8px',
+                border: '1px solid var(--border)',
+                background: 'var(--surface-2)',
+                fontSize: '0.82rem',
+                lineHeight: 1.45,
+              }}
+            >
+              <strong>Kindle Create guidance</strong>
+              <p className="muted" style={{ margin: '0.35rem 0' }}>
+                {kindleCreateSpecs.verifiedNote}
+              </p>
+              <p className="muted" style={{ margin: '0 0 0.35rem' }}>
+                Verified {kindleCreateSpecs.lastVerified} · KCB editable · KPF publish-only
+              </p>
+              {kindleCreateSpecs.helpUrl ? (
+                <a href={kindleCreateSpecs.helpUrl} target="_blank" rel="noopener noreferrer">
+                  Amazon Kindle Create help
+                </a>
+              ) : null}
+            </aside>
+          ) : null}
           <div className="row" style={{ marginBottom: '1rem' }}>
             <button type="button" className="btn btn-primary" onClick={() => download('docx')}>
               DOCX (Kindle / Create)
@@ -553,9 +585,10 @@ export function ProjectPage({ projectId, onError, onBack }) {
             </button>
           </div>
           <p className="muted" style={{ fontSize: '0.85rem', marginTop: '-0.5rem' }}>
-            KPF is produced inside Amazon Kindle Create — ProofForge cannot emit KPF directly. MOBI
-            fixed-layout ended March 2025. PDF-as-ebook only for limited languages — prefer
-            DOCX/EPUB/KPF. RTF is accepted by KDP but DOCX/EPUB are preferred.
+            KPF is produced inside Amazon Kindle Create — ProofForge cannot emit KPF directly. Keep
+            the KCB project folder backed up (KPF is publish-only). Tables/lists/footnotes: edit in
+            source before KC. Prefer reader-default body fonts. MOBI fixed-layout ended March 2025.
+            PDF-as-ebook only for limited languages — prefer DOCX/EPUB/KPF.
           </p>
 
           {kdpChecklist ? (

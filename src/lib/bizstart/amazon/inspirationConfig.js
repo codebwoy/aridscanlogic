@@ -5,12 +5,12 @@
  */
 
 export const INSPIRATION_CONFIG = {
-  lastVerified: '2026-10-11',
+  lastVerified: '2026-10-15',
   sourceLabel:
     'Owner research notes for DE children’s KDP / Amazon.de study shelf — re-check listings before relying on ranks/reviews',
   independenceDisclaimer: {
-    en: 'Not affiliated with Amazon or listed authors/publishers. Ratings, review counts, and “underserved” claims are dated source snapshots — verify live. Study structure and themes only — never copy text or art.',
-    de: 'Nicht mit Amazon oder genannten Autor:innen/Verlagen verbunden. Ratings, Review-Zahlen und „unterversorgt“-Claims sind datierte Quellen-Snapshots — live prüfen. Nur Struktur und Themen studieren — niemals Text oder Kunst kopieren.',
+    en: 'Not affiliated with Amazon, BookBeam, Publisher Rocket, or listed authors/publishers. Ratings, review counts, and “underserved” claims are dated source snapshots — verify live. Study structure and themes only — never copy text or art.',
+    de: 'Nicht mit Amazon, BookBeam, Publisher Rocket oder genannten Autor:innen/Verlagen verbunden. Ratings, Review-Zahlen und „unterversorgt“-Claims sind datierte Quellen-Snapshots — live prüfen. Nur Struktur und Themen studieren — niemals Text oder Kunst kopieren.',
   },
   primaryBlueprint: {
     en: 'Courage + animal character (ages ~2–5), rhyming or rhythmic German text, fear-of-change / inner courage arc — validate weekly on Amazon.de Kinderbücher bestseller paths.',
@@ -966,6 +966,22 @@ export const INSPIRATION_CONFIG = {
               de: 'Live-Signal: Amazon.de → Bücher → Kinderbücher (z. B. Familie für Kinder). Häufig aktualisiert — besser als jedes bezahlte Tool für Trend-Checks.',
             },
             url: 'https://www.amazon.de/gp/bestsellers/books/',
+          },
+          {
+            name: 'BookBeam',
+            cost: {
+              en: 'Paid SaaS + free tools/extension lite (verify pricing)',
+              de: 'Bezahltes SaaS + Free-Tools/Extension Lite (Preise prüfen)',
+            },
+            why: {
+              en: 'All-in-one KDP research suite (vendor claim: 200M+ books, 45k+ categories, multi-marketplace): Chrome extension (BSR/sales/royalty estimates on Amazon pages), Niche Finder, Keyword Research / Reverse Keywords / Keyword Filler (7 KDP fields), Category Explorer + history, Listing Optimizer, Description Formatter, Book Tracker, Trademark Checker (USPTO/EUIPO), plus production extras (Create interiors, AI Assistant/Editor). Free calculators: print/ebook/KENP royalty, BSR→sales.',
+              de: 'All-in-one-KDP-Research-Suite (Anbieter-Claim: 200M+ Bücher, 45k+ Kategorien, mehrere Marktplätze): Chrome-Extension (BSR-/Sales-/Royalty-Schätzungen auf Amazon-Seiten), Niche Finder, Keyword Research / Reverse Keywords / Keyword Filler (7 KDP-Felder), Category Explorer + Historie, Listing Optimizer, Description Formatter, Book Tracker, Trademark Checker (USPTO/EUIPO), plus Production (Create-Interiors, AI Assistant/Editor). Free-Rechner: Print-/Ebook-/KENP-Royalty, BSR→Sales.',
+            },
+            url: 'https://bookbeam.io/',
+            note: {
+              en: '⚠ Not affiliated. Vendor marketing (sales/royalty estimates, “40k+ publishers”) — treat as estimates; never scrape Amazon yourself; free Amazon.de autocomplete + bestsellers still come first. Verify pricing, privacy, and Chrome extension permissions before install.',
+              de: '⚠ Nicht verbunden. Anbieter-Marketing (Sales-/Royalty-Schätzungen, „40k+ Publishers“) — als Schätzungen behandeln; Amazon nicht selbst scrapen; Free Amazon.de-Autocomplete + Bestseller kommen zuerst. Preise, Privacy und Extension-Rechte vor Installation prüfen.',
+            },
           },
           {
             name: 'Publisher Rocket',

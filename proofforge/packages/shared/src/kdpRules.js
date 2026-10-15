@@ -3,7 +3,13 @@
  * Never claim Amazon approval. Separate technical vs policy; mark needs_config when specs missing.
  */
 
-export const KDP_RULES_VERSION = '2026-10-14'
+import { analyzeKindleCreateStructure } from './kindle-create-specs.js'
+
+export const KDP_RULES_VERSION = '2026-10-15'
+
+/** Kindle Create reflowable typesetting (G7R2L7V5X6SJH948). */
+export const KINDLE_CREATE_HELP =
+  'https://kdp.amazon.com/en_US/help/topic/G7R2L7V5X6SJH948'
 
 /** Gutter minimums from KDP trim/bleed/margins help (inches). */
 export const GUTTER_BY_PAGE_COUNT = Object.freeze([
@@ -36,6 +42,78 @@ export const KDP_RULES = Object.freeze([
     source_url: 'https://kdp.amazon.com/en_US/help/topic/GKX2T59EVGFSMKQK',
     retrieved: KDP_RULES_VERSION,
     automated: true,
+  },
+  {
+    id: 'kdp.ebook.kindle_create_headings',
+    title: 'Kindle Create chapter headings',
+    format: 'all',
+    severity: 'moderate',
+    requirement:
+      'Reflowable DOC(X) for Kindle Create needs Heading-style chapter titles so KC can build HTML TOC + interactive Kindle TOC (NCX). Page breaks become sections.',
+    verification: 'structure_scan',
+    source_url: KINDLE_CREATE_HELP,
+    retrieved: KDP_RULES_VERSION,
+    automated: true,
+  },
+  {
+    id: 'kdp.ebook.kindle_create_front_matter',
+    title: 'Kindle Create front matter',
+    format: 'all',
+    severity: 'suggestion',
+    requirement:
+      'Include title/copyright (imprint) front matter before main text. Kindle Create supports dedication, epigraph, foreword, preface, introduction, prologue.',
+    verification: 'structure_scan',
+    source_url: KINDLE_CREATE_HELP,
+    retrieved: KDP_RULES_VERSION,
+    automated: true,
+  },
+  {
+    id: 'kdp.ebook.kindle_create_body_fonts',
+    title: 'Body text font restraint (reflowable)',
+    format: 'all',
+    severity: 'suggestion',
+    requirement:
+      'Amazon recommends default body text so readers keep device font preferences. Lock custom fonts only for emphasis (headings, quotes), not the whole body.',
+    verification: 'author_confirm',
+    source_url: KINDLE_CREATE_HELP,
+    retrieved: KDP_RULES_VERSION,
+    automated: false,
+  },
+  {
+    id: 'kdp.ebook.kindle_create_limitations',
+    title: 'Tables / lists / footnotes edited in source',
+    format: 'all',
+    severity: 'suggestion',
+    requirement:
+      'Kindle Create cannot edit tables, lists, or footnotes after import — change them in Word/Pages/Docs then paste or re-import.',
+    verification: 'author_confirm',
+    source_url: KINDLE_CREATE_HELP,
+    retrieved: KDP_RULES_VERSION,
+    automated: false,
+  },
+  {
+    id: 'kdp.ebook.kindle_create_kpf',
+    title: 'KPF via Kindle Create only',
+    format: 'all',
+    severity: 'suggestion',
+    requirement:
+      'Export DOCX → open in Kindle Create → export KPF for KDP. Keep the KCB project folder backed up. This studio cannot emit KPF.',
+    verification: 'author_confirm',
+    source_url: KINDLE_CREATE_HELP,
+    retrieved: KDP_RULES_VERSION,
+    automated: false,
+  },
+  {
+    id: 'kdp.ebook.kindle_create_images',
+    title: 'Kindle Create image guidance',
+    format: 'all',
+    severity: 'suggestion',
+    requirement:
+      'Images JPG/PNG; recommend ≥100px long side and 300 ppi. Add alt text. Edge-bleed placement may force portrait-only reading.',
+    verification: 'author_confirm',
+    source_url: KINDLE_CREATE_HELP,
+    retrieved: KDP_RULES_VERSION,
+    automated: false,
   },
   {
     id: 'kdp.print.trim_required',
@@ -373,6 +451,72 @@ export function runKdpChecks(project, { wordCountTotal = 0, sectionCount = 0 } =
         }
       } else {
         detail = `${sectionCount} sections detected.`
+      }
+    } else if (rule.id === 'kdp.ebook.kindle_create_headings') {
+      const kc = analyzeKindleCreateStructure(Object.values(project.sections || {}))
+      const untitled = kc.issues.find((i) => i.id === 'untitled_sections')
+      const few = kc.issues.find((i) => i.id === 'few_sections')
+      if (untitled || few) {
+        status = 'fail'
+        detail = (untitled || few).message
+        finding = {
+          category: 'kdp_technical',
+          subcategory: 'kindle_create',
+          severity: 'moderate',
+          title: rule.title,
+          explanation: detail + ' ' + rule.requirement,
+          original_excerpt: project.title || 'manuscript',
+          suggested_correction: 'Give every section a clear Heading 1 title before DOCX → Kindle Create.',
+          reason: rule.id,
+          confidence: 0.85,
+          objective: true,
+          source_rule_id: rule.id,
+        }
+      } else {
+        detail = `${kc.tocEligible} TOC-eligible sections (${kc.chapterCount} chapters) — ready for Kindle Create chapter detection.`
+      }
+    } else if (rule.id === 'kdp.ebook.kindle_create_front_matter') {
+      const kc = analyzeKindleCreateStructure(Object.values(project.sections || {}))
+      const miss = kc.issues.find((i) => i.id === 'missing_imprint')
+      if (miss) {
+        status = 'needs_verification'
+        detail = miss.message
+        finding = {
+          category: 'kdp_technical',
+          subcategory: 'kindle_create',
+          severity: 'suggestion',
+          title: rule.title,
+          explanation: detail + ' ' + rule.requirement,
+          original_excerpt: project.title || 'front matter',
+          suggested_correction: 'Add a Copyright / Imprint section (or title it Copyright).',
+          reason: rule.id,
+          confidence: 0.7,
+          objective: false,
+          source_rule_id: rule.id,
+        }
+      } else {
+        detail = `Front-matter sections detected: ${kc.frontMatterCount}.`
+      }
+    } else if (
+      rule.id === 'kdp.ebook.kindle_create_body_fonts' ||
+      rule.id === 'kdp.ebook.kindle_create_limitations' ||
+      rule.id === 'kdp.ebook.kindle_create_kpf' ||
+      rule.id === 'kdp.ebook.kindle_create_images'
+    ) {
+      status = 'needs_verification'
+      detail = rule.requirement
+      finding = {
+        category: 'kdp_technical',
+        subcategory: 'kindle_create',
+        severity: 'suggestion',
+        title: rule.title,
+        explanation: rule.requirement,
+        original_excerpt: project.title || 'Kindle Create',
+        suggested_correction: '',
+        reason: rule.id,
+        confidence: 0.75,
+        objective: false,
+        source_rule_id: rule.id,
       }
     } else if (rule.id === 'kdp.print.trim_required') {
       if (!trim) {

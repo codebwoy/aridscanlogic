@@ -454,6 +454,8 @@ export function publicationReadinessPayload() {
     bannedPhrases: PICTURE_BOOK_BANNED_PHRASES,
     weights: GATE_WEIGHTS,
     emptySignoff: emptyPublicationSignoff(),
+    kindleCreateNote:
+      'Kindle Create reflowable DOC(X) is for text novels/non-fiction — StoryForge picture books use print PDF packs (trim/bleed/DPI). See publishing specs kindleCreate.',
   }
 }
 

@@ -97,6 +97,16 @@ export const AMAZON_STRINGS = {
       'Strategy before upload — build a business ecosystem, not a one-off PDF. Cross-links open StoryForge / AuthorForge when ready.',
     publisherTruthsMeta: 'Publisher truths playbook last verified',
     publisherTruthsSfCta: 'Open StoryForge for Book 1',
+    q4ForwardTitle: 'My plan moving forward (Q4)',
+    q4ForwardHint:
+      'Medium/high content + research + clever AI + build to December — tickable checklist with deep links.',
+    q4ForwardMeta: 'Q4 forward plan last verified',
+    q4ForwardLead: 'Priorities',
+    q4ForwardDone: 'done',
+    q4ForwardOpenPlaybook: 'Open playbook',
+    q4ForwardOpenAf: 'Open AuthorForge',
+    q4ForwardOpenNf: 'Open NovelForge',
+    q4ForwardOpenPf: 'Open ProofForge',
     planToWinTitle: 'Plan to Win — five pillars',
     planToWinHint:
       'Niche → Product → Metadata/SEO → Launch → Brand. Optimize every link or the book underperforms.',
@@ -361,6 +371,7 @@ export const AMAZON_STRINGS = {
     nicheResearchColTool: 'Tool',
     nicheResearchColCost: 'Cost',
     nicheResearchColBest: 'Best for',
+    nicheResearchWhen: 'When to use',
     nicheResearchCta: 'Niche research',
     bilingualStoryTitle: 'Write a bilingual children’s story',
     bilingualStoryHint:
@@ -493,6 +504,16 @@ export const AMAZON_STRINGS = {
       'Strategie vor dem Upload — Business-Ökosystem statt Einmal-PDF. Cross-Links öffnen StoryForge / AuthorForge wenn bereit.',
     publisherTruthsMeta: 'Publisher-Wahrheiten zuletzt geprüft',
     publisherTruthsSfCta: 'StoryForge für Buch 1 öffnen',
+    q4ForwardTitle: 'Mein Plan voraus (Q4)',
+    q4ForwardHint:
+      'Medium/High Content + Research + clevere KI + bis Dezember bauen — abhakbare Checkliste mit Deep Links.',
+    q4ForwardMeta: 'Q4-Forward-Plan zuletzt geprüft',
+    q4ForwardLead: 'Prioritäten',
+    q4ForwardDone: 'erledigt',
+    q4ForwardOpenPlaybook: 'Playbook öffnen',
+    q4ForwardOpenAf: 'AuthorForge öffnen',
+    q4ForwardOpenNf: 'NovelForge öffnen',
+    q4ForwardOpenPf: 'ProofForge öffnen',
     planToWinTitle: 'Plan to Win — fünf Säulen',
     planToWinHint:
       'Nische → Produkt → Metadaten/SEO → Launch → Marke. Jedes Glied optimieren, sonst underperformt das Buch.',
@@ -758,6 +779,7 @@ export const AMAZON_STRINGS = {
     nicheResearchColTool: 'Tool',
     nicheResearchColCost: 'Kosten',
     nicheResearchColBest: 'Am besten für',
+    nicheResearchWhen: 'Wann nutzen',
     nicheResearchCta: 'Nischen-Research',
     bilingualStoryTitle: 'Bilinguale Kinderbuch-Story schreiben',
     bilingualStoryHint:

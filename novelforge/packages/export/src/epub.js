@@ -1,7 +1,13 @@
 import JSZip from 'jszip'
+import { classifyManuscriptSections } from '@novelforge/shared'
 
-/** Minimal EPUB3 builder (reflowable). Validate with epubcheck in CI when available. */
-export async function buildEpub({ title = 'Untitled', author = 'Author', chapters = [], language = 'en' } = {}) {
+/** Minimal EPUB3 builder (reflowable) with Kindle Create–aligned section roles. */
+export async function buildEpub({
+  title = 'Untitled',
+  author = 'Author',
+  chapters = [],
+  language = 'en',
+} = {}) {
   const zip = new JSZip()
   zip.file('mimetype', 'application/epub+zip', { compression: 'STORE' })
   zip.folder('META-INF')?.file(
@@ -18,25 +24,51 @@ export async function buildEpub({ title = 'Untitled', author = 'Author', chapter
   const manifest = []
   const spine = []
   const navPoints = []
+  const classified = classifyManuscriptSections(chapters)
 
-  chapters.forEach((ch, i) => {
+  classified.forEach((ch, i) => {
     const id = `chap${i + 1}`
     const href = `${id}.xhtml`
     const body = escapeHtml(stripMarkers(ch.content_md || ch.body || ''))
+    const epubType = escapeHtml(ch.epubType || 'chapter')
+    const paras = body
+      .split(/\n\n+/)
+      .map((p) => p.trim())
+      .filter(Boolean)
+    const paraHtml = paras
+      .map((p, pi) => {
+        const cls = pi === 0 ? ' class="first"' : ''
+        return `<p${cls}>${escapeHtml(p)}</p>`
+      })
+      .join('\n')
+
     oebps.file(
       href,
       `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="${language}">
-<head><title>${escapeHtml(ch.title || id)}</title><meta charset="utf-8"/></head>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="${escapeHtml(language)}">
+<head>
+<title>${escapeHtml(ch.title || id)}</title>
+<meta charset="utf-8"/>
+<style>
+body{font-family:serif;line-height:1.45;margin:1em}
+h1{font-size:1.4em;margin:0 0 0.75em}
+p{margin:0 0 0.85em;text-indent:1.2em}
+p.first{text-indent:0}
+</style>
+</head>
 <body>
+<section epub:type="${epubType}">
 <h1>${escapeHtml(ch.title || id)}</h1>
-${body.split(/\n\n+/).map((p) => `<p>${escapeHtml(p)}</p>`).join('\n')}
+${paraHtml}
+</section>
 </body></html>`
     )
     manifest.push(`<item id="${id}" href="${href}" media-type="application/xhtml+xml"/>`)
     spine.push(`<itemref idref="${id}"/>`)
-    navPoints.push(`<li><a href="${href}">${escapeHtml(ch.title || id)}</a></li>`)
+    if (ch.toc !== false) {
+      navPoints.push(`<li><a href="${href}">${escapeHtml(ch.title || id)}</a></li>`)
+    }
   })
 
   oebps.file(
@@ -72,11 +104,13 @@ ${body.split(/\n\n+/).map((p) => `<p>${escapeHtml(p)}</p>`).join('\n')}
   )
 
   const bytes = await zip.generateAsync({ type: 'uint8array', mimeType: 'application/epub+zip' })
-  return { bytes }
+  return { bytes, sectionCount: classified.length }
 }
 
 function stripMarkers(md) {
-  return String(md || '').replace(/<!--[\s\S]*?-->/g, '').trim()
+  return String(md || '')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .trim()
 }
 
 function escapeHtml(s) {

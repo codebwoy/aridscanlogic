@@ -33,7 +33,7 @@ function escapeHtml(s) {
 
 /**
  * Simple semantic HTML for KDP HTML/ZIP upload path.
- * Author can zip the single .html before upload.
+ * Heading 1 + page-break-before for Kindle Create–style section detection.
  */
 export function buildEbookHtml(project) {
   const sections = Object.values(project.sections || {}).sort(
@@ -49,10 +49,12 @@ export function buildEbookHtml(project) {
 <style>
   body { font-family: Georgia, "Times New Roman", serif; line-height: 1.45; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; }
   h1 { font-size: 1.6rem; page-break-before: always; }
-  h1:first-of-type { page-break-before: avoid; }
+  .title-page h1 { page-break-before: avoid; }
   p { margin: 0 0 0.85em; text-indent: 1.2em; }
+  p.first { text-indent: 0; }
   .title-page { text-align: center; margin: 4rem 0; text-indent: 0; }
   .title-page p { text-indent: 0; }
+  .role { font-style: italic; font-size: 0.9rem; text-indent: 0; }
 </style>
 </head>
 <body>
@@ -61,19 +63,25 @@ export function buildEbookHtml(project) {
   <h1>${escapeHtml(project.title || 'Manuscript')}</h1>
   ${project.subtitle ? `<p><em>${escapeHtml(project.subtitle)}</em></p>` : ''}
   ${project.author_name ? `<p>${escapeHtml(project.author_name)}</p>` : ''}
+  <p class="role">ProofForge HTML — structured for Kindle Create / Previewer</p>
 </section>
 `)
   for (const s of sections) {
+    const role = s.role || s.section_role || ''
     parts.push(`<section id="${escapeHtml(s.key || '')}">\n`)
     parts.push(`<h1>${escapeHtml(s.title || s.key || 'Chapter')}</h1>\n`)
+    if (role && role !== 'chapter') {
+      parts.push(`<p class="role">Section: ${escapeHtml(String(role).replace(/_/g, ' '))}</p>\n`)
+    }
     const paras = String(s.content_md || '')
       .split(/\n\s*\n/)
       .map((p) => p.trim())
       .filter(Boolean)
-    for (const p of paras) {
+    paras.forEach((p, i) => {
       const clean = p.replace(/^#{1,6}\s+/, '').replace(/\*\*/g, '')
-      parts.push(`<p>${escapeHtml(clean).replace(/\n/g, '<br/>')}</p>\n`)
-    }
+      const cls = i === 0 ? ' class="first"' : ''
+      parts.push(`<p${cls}>${escapeHtml(clean).replace(/\n/g, '<br/>')}</p>\n`)
+    })
     parts.push(`</section>\n`)
   }
   parts.push(`</body>\n</html>\n`)
@@ -82,7 +90,7 @@ export function buildEbookHtml(project) {
     filename: `manuscript-${project.id || 'export'}.html`,
     contentType: 'text/html; charset=utf-8',
     kdp_note:
-      'KDP accepts HTML (or ZIP of HTML). Zip this file if uploading as HTML package. Validate in Kindle Previewer.',
+      'KDP accepts HTML (or ZIP of HTML). Zip this file if uploading as HTML package. Validate in Kindle Previewer. Prefer DOCX → Kindle Create for KPF.',
   }
 }
 
@@ -108,7 +116,9 @@ export function buildRtfManuscript(project) {
   ]
   if (project.author_name) parts.push(`${esc(project.author_name)}\\par\\par `)
   for (const s of sections) {
-    parts.push(`\\par\\b ${esc(s.title || s.key)}\\b0\\par `)
+    // Page break before each section (Kindle Create converts breaks → sections)
+    parts.push('\\page\\par\\b ')
+    parts.push(`${esc(s.title || s.key)}\\b0\\par `)
     const body = String(s.content_md || '')
       .replace(/^#{1,6}\s+/gm, '')
       .replace(/\*\*/g, '')
@@ -153,6 +163,47 @@ export function kdpUploadChecklist(project) {
     label: 'Optional: open DOCX in Kindle Create → export KPF (best device fit)',
     done: false,
     required: false,
+    link: 'https://kdp.amazon.com/en_US/help/topic/G7R2L7V5X6SJH948',
+  })
+  items.push({
+    id: 'kc_headings',
+    group: 'kindle_ebook',
+    label: 'Chapter titles are Heading 1–style so Kindle Create builds HTML TOC + NCX',
+    done: Object.keys(project.sections || {}).length >= 2,
+    required: ebook,
+    link: 'https://kdp.amazon.com/en_US/help/topic/G7R2L7V5X6SJH948',
+  })
+  items.push({
+    id: 'kc_body_fonts',
+    group: 'kindle_ebook',
+    label: 'Body text uses reader-default fonts (custom fonts only for emphasis)',
+    done: false,
+    required: false,
+    link: 'https://kdp.amazon.com/en_US/help/topic/G7R2L7V5X6SJH948',
+  })
+  items.push({
+    id: 'kc_tables_source',
+    group: 'kindle_ebook',
+    label: 'Tables/lists/footnotes edited in source DOC(X) before Kindle Create',
+    done: false,
+    required: false,
+    link: 'https://kdp.amazon.com/en_US/help/topic/G7R2L7V5X6SJH948',
+  })
+  items.push({
+    id: 'kc_kcb_backup',
+    group: 'kindle_ebook',
+    label: 'If using Kindle Create: back up the KCB project folder (KPF is publish-only)',
+    done: false,
+    required: false,
+    link: 'https://kdp.amazon.com/en_US/help/topic/G7R2L7V5X6SJH948',
+  })
+  items.push({
+    id: 'kc_hyperlinks',
+    group: 'kindle_ebook',
+    label: 'External links reviewed (https; enhance reading — follow current KDP link guidelines)',
+    done: false,
+    required: false,
+    link: 'https://kdp.amazon.com/en_US/help/topic/G7R2L7V5X6SJH948',
   })
   items.push({
     id: 'mobi_avoid',

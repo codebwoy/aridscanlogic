@@ -4,9 +4,9 @@
  */
 
 export const KDP_NICHE_RESEARCH_CONFIG = {
-  lastVerified: '2026-04-11',
+  lastVerified: '2026-10-15',
   sourceLabel:
-    'Owner playbook: Amazon autocomplete + BSR hygiene + community validation — BSR/revenue tables are rough third-party heuristics, not Amazon official',
+    'Owner playbook: Amazon autocomplete + BSR hygiene + community validation — BSR/revenue tables are rough third-party heuristics, not Amazon official. BookBeam feature notes from bookbeam.io (2026-10-15).',
   independenceDisclaimer: {
     en: 'Not affiliated with Amazon, Publisher Rocket, Book Bolt, KDSpy, BookBeam, or Neolemon. BSR→sales and “€/month” examples are rough estimates that change by marketplace, season, and format — never treat them as guarantees.',
     de: 'Nicht mit Amazon, Publisher Rocket, Book Bolt, KDSpy, BookBeam oder Neolemon verbunden. BSR→Sales und „€/Monat“-Beispiele sind grobe Schätzungen (Marktplatz, Saison, Format) — nie als Garantie behandeln.',
@@ -325,12 +325,13 @@ export const KDP_NICHE_RESEARCH_CONFIG = {
         },
       },
       {
-        tool: { en: 'BookBeam (free tier)', de: 'BookBeam (Free-Tier)' },
-        cost: { en: 'Free tier ⚠', de: 'Free-Tier ⚠' },
+        tool: { en: 'BookBeam', de: 'BookBeam' },
+        cost: { en: 'Paid + free tools ⚠', de: 'Bezahlt + Free-Tools ⚠' },
         bestFor: {
-          en: 'Optional BSR / multi-marketplace views — verify claims',
-          de: 'Optionale BSR- / Multi-Marketplace-Views — Claims prüfen',
+          en: 'Optional all-in-one: Niche Finder, keywords (incl. reverse + 7-field filler), Category Explorer, listing optimizer, Chrome extension estimates, trademark check — verify on bookbeam.io',
+          de: 'Optional all-in-one: Niche Finder, Keywords (inkl. Reverse + 7-Felder-Filler), Category Explorer, Listing-Optimizer, Chrome-Extension-Schätzungen, Marken-Check — auf bookbeam.io prüfen',
         },
+        url: 'https://bookbeam.io/',
       },
       {
         tool: { en: 'Publisher Rocket', de: 'Publisher Rocket' },
@@ -349,6 +350,118 @@ export const KDP_NICHE_RESEARCH_CONFIG = {
         },
       },
     ],
+  },
+  /** Featured third-party research suite (owner notes from vendor site — not an endorsement). */
+  bookBeam: {
+    heading: {
+      en: 'Featured research tool — BookBeam (optional)',
+      de: 'Featured Research-Tool — BookBeam (optional)',
+    },
+    url: 'https://bookbeam.io/',
+    urlLabel: { en: 'Open bookbeam.io', de: 'bookbeam.io öffnen' },
+    tagline: {
+      en: 'Vendor positions BookBeam as an all-in-one Amazon self-publishing research + optimisation suite (Chrome extension, niche/keyword/category tools, listing helpers, trackers).',
+      de: 'Anbieter positioniert BookBeam als All-in-one-Suite für Amazon-Self-Publishing-Research + Optimierung (Chrome-Extension, Nischen-/Keyword-/Kategorie-Tools, Listing-Helfer, Tracker).',
+    },
+    verifiedNote: {
+      en: '⚠ Not affiliated. Feature list distilled from bookbeam.io (2026-10-15). Sales/royalty/BSR figures are third-party estimates — always re-check live on Amazon.de. Free autocomplete + bestsellers remain the first research path. Do not scrape Amazon.',
+      de: '⚠ Nicht verbunden. Feature-Liste aus bookbeam.io (2026-10-15). Sales-/Royalty-/BSR-Zahlen sind Drittschätzungen — immer live auf Amazon.de prüfen. Free Autocomplete + Bestseller bleiben der erste Research-Pfad. Amazon nicht scrapen.',
+    },
+    research: {
+      heading: { en: 'Research', de: 'Research' },
+      items: {
+        en: [
+          'Chrome extension — marketplace metrics on Amazon book pages (sales/royalty estimates)',
+          'Niche Finder — filter a large book database by BSR, estimated sales, ratings, reviews',
+          'Category History — historical top charts for seasonal patterns',
+          'Trademark Checker — USPTO + EUIPO term search (still not legal advice)',
+        ],
+        de: [
+          'Chrome-Extension — Marktplatz-Metriken auf Amazon-Buchseiten (Sales-/Royalty-Schätzungen)',
+          'Niche Finder — große Buchdatenbank nach BSR, geschätzten Sales, Ratings, Reviews filtern',
+          'Category History — historische Top-Charts für saisonale Muster',
+          'Trademark Checker — USPTO + EUIPO-Begriffssuche (keine Rechtsberatung)',
+        ],
+      },
+    },
+    keywords: {
+      heading: { en: 'Keywords', de: 'Keywords' },
+      items: {
+        en: [
+          'Keyword Research Tool — demand vs competition estimates',
+          'Reverse Keyword Tool — keywords a book ranks for (title / KDP fields / ads)',
+          'Keyword Filler — help fill all 7 KDP backend keyword fields',
+        ],
+        de: [
+          'Keyword Research Tool — Demand- vs. Konkurrenz-Schätzungen',
+          'Reverse Keyword Tool — Keywords, für die ein Buch rankt (Titel / KDP-Felder / Ads)',
+          'Keyword Filler — Hilfe beim Füllen aller 7 KDP-Backend-Keyword-Felder',
+        ],
+      },
+    },
+    trackOptimize: {
+      heading: { en: 'Track & optimisation', de: 'Tracking & Optimierung' },
+      items: {
+        en: [
+          'Category Explorer — browse a large Amazon book-category database',
+          'Listing Optimizer — listing analysis + conversion suggestions',
+          'Description Formatter — formatted KDP description preview',
+          'Book Tracker — BSR / estimated income / keyword rank / reviews over time',
+        ],
+        de: [
+          'Category Explorer — große Amazon-Buchkategorie-Datenbank durchsuchen',
+          'Listing Optimizer — Listing-Analyse + Conversion-Vorschläge',
+          'Description Formatter — formatierte KDP-Beschreibungsvorschau',
+          'Book Tracker — BSR / geschätztes Einkommen / Keyword-Rang / Reviews über Zeit',
+        ],
+      },
+    },
+    production: {
+      heading: { en: 'Production (extra — not required for research)', de: 'Production (extra — nicht nötig für Research)' },
+      items: {
+        en: [
+          'BookBeam Create — KDP-oriented interiors (layouts, assets, puzzles, AI images)',
+          'AI Assistant / AI Editor — outlines, descriptions, draft edits (human review still required)',
+          'Opt-In Page Builder — email capture pages',
+        ],
+        de: [
+          'BookBeam Create — KDP-orientierte Interiors (Layouts, Assets, Puzzles, KI-Bilder)',
+          'AI Assistant / AI Editor — Outlines, Beschreibungen, Draft-Edits (Human Review bleibt Pflicht)',
+          'Opt-In Page Builder — E-Mail-Capture-Seiten',
+        ],
+      },
+    },
+    freeTools: {
+      heading: { en: 'Free calculators (vendor site)', de: 'Kostenlose Rechner (Anbieter-Site)' },
+      items: {
+        en: [
+          'Print royalty calculator',
+          'Book sales calculator (BSR → estimated sales)',
+          'KENP / Kindle Unlimited royalty estimator',
+          'eBook royalty calculator',
+          'Chrome Extension Lite (free tier — verify limits)',
+        ],
+        de: [
+          'Print-Royalty-Rechner',
+          'Buchverkaufs-Rechner (BSR → geschätzte Sales)',
+          'KENP- / Kindle-Unlimited-Royalty-Schätzer',
+          'E-Book-Royalty-Rechner',
+          'Chrome Extension Lite (Free-Tier — Limits prüfen)',
+        ],
+      },
+    },
+    whenToUse: {
+      en: [
+        'After you already ran free Amazon.de autocomplete + Top-100 + BSR hygiene',
+        'When you want optional paid depth on keywords, categories, or competitor tracking',
+        'Never as a substitute for reading live Amazon SERPs and official KDP Help',
+      ],
+      de: [
+        'Nachdem Sie Free Amazon.de-Autocomplete + Top-100 + BSR-Hygiene gemacht haben',
+        'Wenn Sie optional bezahlte Tiefe bei Keywords, Kategorien oder Competitor-Tracking wollen',
+        'Nie als Ersatz für Live-Amazon-SERPs und offizielle KDP-Hilfe',
+      ],
+    },
   },
   bilingualWorkflow: {
     heading: {
@@ -418,5 +531,6 @@ export const KDP_NICHE_RESEARCH_CONFIG = {
       url: 'https://trends.google.com/trends/?geo=DE',
     },
     { label: 'KDP', url: 'https://kdp.amazon.com/' },
+    { label: 'BookBeam', url: 'https://bookbeam.io/' },
   ],
 }

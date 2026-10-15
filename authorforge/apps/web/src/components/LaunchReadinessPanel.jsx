@@ -1,6 +1,7 @@
 import {
   LAUNCH_READINESS,
   PUBLISHING_SPECS,
+  KINDLE_CREATE_SPECS,
   mergeLaunchChecklist,
   launchReadinessProgress,
 } from '@authorforge/shared'
@@ -63,6 +64,40 @@ export default function LaunchReadinessPanel({
         Print target ~{PUBLISHING_SPECS.dpiTarget} DPI · bleed {PUBLISHING_SPECS.bleedInches}&quot; · verify on
         current KDP help.
       </p>
+      <aside
+        className="launch-readiness__kc"
+        style={{
+          margin: '0.65rem 0 0.85rem',
+          padding: '0.65rem 0.75rem',
+          borderRadius: '8px',
+          border: '1px solid var(--border)',
+          background: 'var(--surface-2)',
+          fontSize: '0.78rem',
+          lineHeight: 1.45,
+        }}
+      >
+        <strong>Kindle Create (reflowable)</strong>
+        <p className="muted" style={{ margin: '0.35rem 0 0.45rem' }}>
+          Exported DOCX uses Heading 1 chapters and page breaks so Kindle Create can build HTML TOC +
+          NCX. KPF is produced only inside Amazon Kindle Create — keep the KCB folder backed up.
+          Verified {KINDLE_CREATE_SPECS.lastVerified}.
+        </p>
+        <a
+          href={KINDLE_CREATE_SPECS.helpUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Amazon Kindle Create help
+        </a>
+        {' · '}
+        <a
+          href={KINDLE_CREATE_SPECS.helpUrlDe}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          DE
+        </a>
+      </aside>
       <div className="launch-readiness__progress" aria-live="polite">
         <strong>
           {progress.requiredChecked}/{progress.requiredTotal} required

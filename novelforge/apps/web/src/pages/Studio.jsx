@@ -18,6 +18,9 @@ import {
   bookLanguageCultureHint,
   bookLanguageVarieties,
   bookLanguageVarietyLabel,
+  SECTION_ROLE_OPTIONS,
+  KINDLE_CREATE_SPECS,
+  inferSectionRole,
 } from '@novelforge/shared'
 import {
   createBook,
@@ -409,7 +412,15 @@ export default function Studio({ lang = 'en' }) {
                 disabled={!!busy}
                 onClick={async () => {
                   if (sectionKey) {
-                    const r = await saveSection(book.id, sectionKey, editorText)
+                    const role =
+                      book.sections?.[sectionKey]?.section_role ||
+                      inferSectionRole(
+                        book.sections?.[sectionKey]?.title ||
+                          leafNodes.find((l) => l.key === sectionKey)?.node?.title,
+                      )
+                    const r = await saveSection(book.id, sectionKey, editorText, {
+                      section_role: role,
+                    })
                     setBook(r.book)
                   } else {
                     await saveBasics({})
@@ -830,6 +841,33 @@ export default function Studio({ lang = 'en' }) {
                       </option>
                     ))}
                   </select>
+                  <label className="muted" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                    Kindle Create role
+                    <select
+                      aria-label="Section role for Kindle Create"
+                      value={
+                        book.sections?.[sectionKey]?.section_role ||
+                        inferSectionRole(
+                          book.sections?.[sectionKey]?.title ||
+                            leafNodes.find((l) => l.key === sectionKey)?.node?.title,
+                        )
+                      }
+                      disabled={!!busy || !sectionKey}
+                      onChange={async (e) => {
+                        const r = await saveSection(book.id, sectionKey, editorText, {
+                          section_role: e.target.value,
+                        })
+                        setBook(r.book)
+                        setMessage(`Section role: ${e.target.value}`)
+                      }}
+                    >
+                      {SECTION_ROLE_OPTIONS.map((opt) => (
+                        <option key={opt.id} value={opt.id}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                   <button
                     type="button"
                     className="btn btn-primary"
@@ -1041,6 +1079,14 @@ export default function Studio({ lang = 'en' }) {
                   Audit in ProofForge
                 </button>
                 <h3 style={{ marginTop: '1.25rem' }}>Export files</h3>
+                <p className="muted" style={{ marginBottom: '0.75rem', fontSize: '0.82rem' }}>
+                  DOCX / KDP ZIP are structured for{' '}
+                  <a href={KINDLE_CREATE_SPECS.helpUrl} target="_blank" rel="noopener noreferrer">
+                    Kindle Create
+                  </a>{' '}
+                  (Heading 1 + page breaks → TOC / NCX). Open DOCX in Kindle Create to export KPF —
+                  keep the KCB folder backed up. ZIP includes KINDLE-CREATE-NOTES.txt.
+                </p>
                 <div className="row" style={{ flexWrap: 'wrap' }}>
                   {['export_docx', 'export_interior_pdf', 'export_epub', 'export_cover_pdf', 'export_kdp_zip'].map(
                     (jt) => (
@@ -1051,7 +1097,9 @@ export default function Studio({ lang = 'en' }) {
                         disabled={!!busy}
                         onClick={() => runJob(jt)}
                       >
-                        {jt.replace('export_', '').toUpperCase()} ({costFor(jt)} cr)
+                        {jt === 'export_docx'
+                          ? `DOCX (Kindle Create) (${costFor(jt)} cr)`
+                          : `${jt.replace('export_', '').toUpperCase()} (${costFor(jt)} cr)`}
                       </button>
                     )
                   )}

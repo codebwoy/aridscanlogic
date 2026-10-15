@@ -15,6 +15,8 @@ test('NovelForge launch readiness uses fiction manuscript items', () => {
   assert.ok(flat.some((i) => i.id === 'adult_content_ok'))
   assert.ok(!flat.some((i) => i.id === 'story_slots'))
   assert.ok(flat.some((i) => i.id === 'manual_kdp_upload'))
+  assert.ok(LAUNCH_READINESS.phases.some((p) => p.id === 'typesetting'))
+  assert.ok(flat.some((i) => i.id === 'kc_docx_structure'))
 })
 
 test('compliance checklist derives from launch readiness', () => {

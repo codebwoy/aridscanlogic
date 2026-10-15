@@ -14,6 +14,7 @@ import {
   BOOK_LANGUAGE_CODES,
   bookLanguagesPayload,
   launchReadinessPayload,
+  kindleCreatePayload,
 } from '@authorforge/shared'
 import { llmProviderStatus } from '@authorforge/llm'
 import { focusTagCoverage, listPrompts } from '@authorforge/agents'
@@ -217,6 +218,7 @@ const server = createServer(async (req, res) => {
         product_positioning: productPositioningPayload('en'),
         book_languages: bookLanguagesPayload(),
         launch_readiness: launchReadinessPayload(),
+        kindle_create: kindleCreatePayload(),
       })
       return
     }
@@ -452,6 +454,7 @@ const server = createServer(async (req, res) => {
             sectionKey: z.string().min(1),
             content_md: z.string(),
             status: z.string().optional(),
+            section_role: z.string().max(40).optional(),
           })
           .parse(await readJson(req))
         const prev = book.sections?.[body.sectionKey] || {}
@@ -459,6 +462,9 @@ const server = createServer(async (req, res) => {
           ...prev,
           content_md: body.content_md,
           status: body.status || 'edited',
+          ...(body.section_role != null
+            ? { section_role: String(body.section_role).trim().toLowerCase().slice(0, 40) || 'chapter' }
+            : {}),
           version: (prev.version || 0) + 1,
           versions: [
             ...(prev.versions || []).slice(-9),

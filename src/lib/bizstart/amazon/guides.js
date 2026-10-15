@@ -49,6 +49,7 @@ export const AMAZON_GUIDES = [
             'Use Merch playbooks only after your character is pinned and brand-safe',
             'Pair with KDP requirements + Hard Topics for upload mechanics; this playbook is strategy, not the print calculator',
             'Open “Plan to Win” for the five-pillar execution chain: Niche → Product → Metadata/SEO → Launch → Brand expansion',
+            'Open “My plan moving forward (Q4)” for the medium/high-content + research + clever AI checklist through December',
             'When comparing lanes beyond KDP/FBA, open “Under-explored Amazon ecosystems” (AWS Marketplace, Renewed, Merch, Custom, Business)',
             'Every price, ISBN, tax, and school claim has a ⚠ — verify before you spend money or register',
           ],
@@ -58,6 +59,7 @@ export const AMAZON_GUIDES = [
             'Merch-Playbooks erst nach gepinnter, markensicherer Figur',
             'Danach KDP-Anforderungen + Schwierigsthemen für Upload-Technik; dieses Playbook ist Strategie, kein Druckkosten-Rechner',
             '„Plan to Win“ öffnen für die Fünf-Säulen-Kette: Nische → Produkt → Metadaten/SEO → Launch → Marke',
+            '„Mein Plan voraus (Q4)“ öffnen für Medium/High Content + Research + clevere KI bis Dezember',
             'Beim Vergleich jenseits KDP/FBA „Unterschätzte Amazon-Ökosysteme“ öffnen (AWS Marketplace, Renewed, Merch, Custom, Business)',
             'Jeder Preis-, ISBN-, Steuer- und Schul-Hinweis hat ⚠ — vor Ausgaben oder Anmeldung prüfen',
           ],
@@ -69,6 +71,40 @@ export const AMAZON_GUIDES = [
             url: 'https://kdp.amazon.com/en_US/help/topic/G202187740',
           },
         ],
+      },
+    ],
+  },
+  {
+    id: 'q4-forward-plan',
+    defaultOpen: false,
+    title: {
+      en: 'My plan moving forward — Q4 checklist',
+      de: 'Mein Plan voraus — Q4-Checkliste',
+    },
+    summary: {
+      en: 'Owner execution plan: medium + high content books, deeper research for new types/interests, clever AI use (human edit + ProofForge + disclosure), and month-by-month build through December. Tickable checklist with deep links to niches, studios, and Plan to Win. ⚠ Not a sales forecast.',
+      de: 'Owner-Ausführungsplan: Medium- + High-Content-Bücher, tieferes Research für neue Typen/Interessen, clevere KI (Human Edit + ProofForge + Disclosure) und Monats-Meilensteine bis Dezember. Abhakbare Checkliste mit Deep Links zu Nischen, Studios und Plan to Win. ⚠ Keine Umsatzprognose.',
+    },
+    sections: [
+      {
+        heading: {
+          en: 'How to use this plan',
+          de: 'So nutzen Sie diesen Plan',
+        },
+        bullets: {
+          en: [
+            'Work the four pillars in order when starting a new title: research → medium/high content draft → clever AI audit → Q4 milestone',
+            'Use the panel checkboxes — progress is saved locally on this device',
+            'Deep links open related Hub playbooks or desktop studios (AuthorForge / NovelForge / ProofForge)',
+            'Pair with Plan to Win for the five-pillar execution chain and Publisher truths for the 3-year ecosystem view',
+          ],
+          de: [
+            'Die vier Säulen bei einem neuen Titel der Reihe nach: Research → Medium-/High-Content-Draft → clevere KI-Audit → Q4-Meilenstein',
+            'Checkboxen im Panel nutzen — Fortschritt wird lokal auf diesem Gerät gespeichert',
+            'Deep Links öffnen verwandte Hub-Playbooks oder Desktop-Studios (AuthorForge / NovelForge / ProofForge)',
+            'Mit Plan to Win für die Fünf-Säulen-Kette und Publisher-Wahrheiten für die 3-Jahres-Ökosystem-Sicht koppeln',
+          ],
+        },
       },
     ],
   },
@@ -2522,14 +2558,14 @@ export const AMAZON_GUIDES = [
         bullets: {
           en: [
             'Most important free habit: Amazon.de Kinderbücher bestseller lists weekly',
-            'Research: KDP Bookshelf, Publisher Rocket / KDP Spy (paid estimates ⚠), Kindlepreneur description tools',
+            'Research: KDP Bookshelf, BookBeam / Publisher Rocket / KDP Spy (paid estimates ⚠), Kindlepreneur description tools',
             'SEO: Keyword Planner, Ubersuggest, AnswerThePublic (DE phrases)',
             'Create: StoryForge pinned anchor → Canva / InDesign / Procreate as needed',
             'DE rhyme: DeepL draft + native translator — never ship machine rhyme alone',
           ],
           de: [
             'Wichtigste Free-Routine: wöchentlich Amazon.de Kinderbuch-Bestseller',
-            'Recherche: KDP Bookshelf, Publisher Rocket / KDP Spy (bezahlte Schätzungen ⚠), Kindlepreneur-Beschreibungen',
+            'Recherche: KDP Bookshelf, BookBeam / Publisher Rocket / KDP Spy (bezahlte Schätzungen ⚠), Kindlepreneur-Beschreibungen',
             'SEO: Keyword Planner, Ubersuggest, AnswerThePublic (DE-Phrasen)',
             'Erstellen: StoryForge-Anker → bei Bedarf Canva / InDesign / Procreate',
             'DE-Reim: DeepL-Entwurf + Native-Übersetzer — nie Maschinenreim allein live schalten',

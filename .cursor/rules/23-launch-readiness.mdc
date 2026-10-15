@@ -11,8 +11,9 @@ Studio **export ≠ live on Amazon**. AuthorForge and NovelForge must keep a **L
 1. Manuscript & product quality (edit pass; AF story slots/facts; NF continuity/adult content)
 2. Amazon / KDP account (tax, marketplace language, pricing, ISBN, categories, AI disclosure, Previewer, barcode zone)
 3. Studio setup (live LLM, desktop/credits, backup, trim/paper verify)
-4. After export (manual KDP upload, Look Inside, optional A+, post-publish updates)
-5. Strategy (niche tips are guidance, not sales data)
+4. Typesetting / Kindle Create (reflowable Heading 1 + page breaks, front matter, TOC/NCX, body-font restraint, optional KPF handoff — `kindle-create-specs.js`, help G7R2L7V5X6SJH948)
+5. After export (manual KDP upload, Look Inside, optional A+, post-publish updates)
+6. Strategy (niche tips are guidance, not sales data)
 
 Canonical data: `LAUNCH_READINESS` + helpers in each studio’s `publishing-specs.js`.  
 UI: `LaunchReadinessPanel` on Publish. Persist ticks on `book.compliance.checklist`.  

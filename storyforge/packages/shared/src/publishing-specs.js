@@ -65,6 +65,17 @@ export const PUBLISHING_SPECS = {
     kdpAiDisclosure:
       'Amazon KDP requires disclosure of AI-generated content when publishing. Keep an AI usage record for each project.',
   },
+  /**
+   * Kindle Create reflowable DOC(X) is for text novels/non-fiction — not picture-book spreads.
+   * @see kindle-create-specs.js
+   */
+  kindleCreate: {
+    applicable: false,
+    lastVerified: '2026-10-15',
+    helpUrl: 'https://kdp.amazon.com/en_US/help/topic/G7R2L7V5X6SJH948',
+    note:
+      'Picture books use fixed-layout / print PDF packs. Do not force Kindle Create reflowable chapter/TOC patterns onto illustrated spreads.',
+  },
 }
 
 export function getTrimSize(id) {

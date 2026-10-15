@@ -29,6 +29,7 @@ import {
   Share2,
   AlertTriangle,
   Trophy,
+  Rocket,
   Cloud,
   RefreshCw,
   Wrench,
@@ -61,6 +62,7 @@ import InspirationPanel from '@/components/bizstart/amazon/InspirationPanel'
 import PublishWhatPanel from '@/components/bizstart/amazon/PublishWhatPanel'
 import GermanFirstPanel from '@/components/bizstart/amazon/GermanFirstPanel'
 import PlanToWinPanel from '@/components/bizstart/amazon/PlanToWinPanel'
+import Q4ForwardPlanPanel from '@/components/bizstart/amazon/Q4ForwardPlanPanel'
 import AltEcosystemsPanel from '@/components/bizstart/amazon/AltEcosystemsPanel'
 import NicheResearchPanel from '@/components/bizstart/amazon/NicheResearchPanel'
 import BilingualStoryPanel from '@/components/bizstart/amazon/BilingualStoryPanel'
@@ -85,6 +87,7 @@ const ICONS = {
 
 const GUIDE_ICONS = {
   'publisher-truths': Compass,
+  'q4-forward-plan': Rocket,
   'kdp-plan-to-win': Trophy,
   'amazon-alt-ecosystems': Network,
   'publish-wide-email': Share2,
@@ -404,6 +407,23 @@ export default function AmazonHub({ lang = 'en', onBack }) {
                       onOpenStoryforge={onOpenStoryforge}
                       onOpenAuthorforge={onOpenAuthorforge}
                       onOpenPlaybook={openPlaybook}
+                    />
+                  </>
+                ) : null}
+                {guide.id === 'q4-forward-plan' ? (
+                  <>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      {amazonT(lang, 'q4ForwardTitle')}
+                    </p>
+                    <p className="text-[11px] leading-relaxed text-slate-400">
+                      {amazonT(lang, 'q4ForwardHint')}
+                    </p>
+                    <Q4ForwardPlanPanel
+                      lang={lang}
+                      onOpenPlaybook={openPlaybook}
+                      onOpenAuthorforge={onOpenAuthorforge}
+                      onOpenNovelforge={onOpenNovelforge}
+                      onOpenProofforge={onOpenProofforge}
                     />
                   </>
                 ) : null}

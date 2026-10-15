@@ -86,10 +86,15 @@ export async function getCoverage(id) {
   return api(`/v1/books/${id}/coverage`)
 }
 
-export async function saveSection(id, sectionKey, content_md) {
+export async function saveSection(id, sectionKey, content_md, extras = {}) {
   return api(`/v1/books/${id}/section`, {
     method: 'PATCH',
-    body: { sectionKey, content_md, status: 'edited' },
+    body: {
+      sectionKey,
+      content_md,
+      status: 'edited',
+      ...(extras.section_role != null ? { section_role: extras.section_role } : {}),
+    },
   })
 }
 
