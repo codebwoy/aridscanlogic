@@ -130,6 +130,40 @@ const createSchema = z.object({
   source_studio: z.string().optional(),
 })
 
+/** PATCH allow-list — never accept arbitrary keys / injection into project state. */
+const patchSchema = z
+  .object({
+    title: z.string().max(200).optional(),
+    subtitle: z.string().max(200).optional(),
+    author_name: z.string().max(120).optional(),
+    intended_tone: z.string().max(120).optional(),
+    style_guide: z.string().max(4000).optional(),
+    formality: z.enum(['casual', 'neutral', 'formal']).optional(),
+    language: z.enum(/** @type {[string, ...string[]]} */ ([...BOOK_LANGUAGE_CODES])).optional(),
+    language_variety: z.string().max(32).optional(),
+    book_type: z.string().max(32).optional(),
+    edit_mode: z.string().max(32).optional(),
+    publishing_target: z.string().max(32).optional(),
+    audience: z.string().max(200).optional(),
+    document_domain: z.string().max(32).optional(),
+    genre_comparison: z.string().max(64).optional(),
+    author_goals: z.string().max(2000).optional(),
+    translation_mode: z.boolean().optional(),
+    source_language: z.string().max(16).optional(),
+    reading_level: z.string().max(80).optional(),
+    character_list: z.array(z.string().max(80)).max(80).optional(),
+    glossary: z.array(z.any()).max(80).optional(),
+    translation_glossary: z.array(z.any()).max(80).optional(),
+    preferences: z.record(z.boolean()).optional(),
+    chapter_critique: z.boolean().optional(),
+    plagiarism_consent: z.boolean().optional(),
+    print_config: z.record(z.any()).optional(),
+    custom_dictionary: z.array(z.string().max(80)).max(500).optional(),
+    add_dictionary_word: z.string().max(80).optional(),
+    consent: z.record(z.boolean()).optional(),
+  })
+  .strict()
+
 function mime(path) {
   const map = {
     '.html': 'text/html',
@@ -409,7 +443,7 @@ const server = http.createServer(async (req, res) => {
       }
       if (req.method === 'PATCH') {
         if (!requireDesktopMutate(req, res)) return
-        const body = await readJson(req)
+        const body = patchSchema.parse(await readJson(req))
         const updated = store.updateProject(id, body)
         sendJson(res, 200, { project: updated })
         return

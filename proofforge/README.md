@@ -37,7 +37,7 @@ Research: [`docs/RESEARCH.md`](./docs/RESEARCH.md). Security: [`SECURITY.md`](./
 | Chapter critiques (per section) | Done |
 | Document domains (Grammarly-style) | Done |
 | Word-count soft gate (6k–300k) | Done |
-| Language packs en/de/es/fr/it/nl | Done |
+| Language packs en/de/es/fr/it/nl (picker always lists all six) | Done |
 | Fiction / nonfiction + translation mode | Done |
 | Dual-model verify + disagreement preserved | Done (set `PROOFFORGE_VERIFY_PROVIDER`) |
 | Internal originality (no silent third-party upload) | Done |

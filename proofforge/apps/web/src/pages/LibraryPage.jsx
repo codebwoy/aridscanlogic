@@ -1,4 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import {
+  BOOK_LANGUAGES,
+  bookLanguageCultureHint,
+  normalizeBookLanguage,
+  normalizeBookLanguageVariety,
+} from '@proofforge/shared/desktop.js'
 import { pfApi } from '../lib/api.js'
 
 const SAMPLE = `# Chapter 1
@@ -8,6 +14,28 @@ She she walked through the colour market at dusk. The air smelled of cardamom an
 # Chapter 2
 
 Jonas waited by the Spree. "Du kommst zu spät," he said, mixing languages without meaning to. The colour of the water matched the sky.`
+
+/** Always available — en / de / es / fr / it / nl — even if /v1/specs fails. */
+function languageOptions(specs) {
+  const fromApi = specs?.book_languages?.languages
+  if (Array.isArray(fromApi) && fromApi.length) return fromApi
+  return BOOK_LANGUAGES.map((l) => ({
+    code: l.code,
+    label: l.label,
+    nativeLabel: l.nativeLabel,
+    defaultVariety: l.defaultVariety,
+    varieties: l.varieties || [],
+    audience: l.audience,
+    tone: l.tone,
+  }))
+}
+
+function languageOptionLabel(l) {
+  if (l.nativeLabel && l.nativeLabel !== l.label) {
+    return `${l.label} — ${l.nativeLabel}`
+  }
+  return l.label || l.code
+}
 
 export function LibraryPage({ onOpen, onError }) {
   const [projects, setProjects] = useState([])
@@ -41,14 +69,17 @@ export function LibraryPage({ onOpen, onError }) {
     refresh().catch((e) => onError?.(e.message))
   }, [onError])
 
-  useEffect(() => {
-    const langs = specs?.book_languages?.languages || []
-    const row = langs.find((l) => l.code === language)
-    if (row?.defaultVariety) setVariety(row.defaultVariety)
-  }, [language, specs])
+  const languages = useMemo(() => languageOptions(specs), [specs])
 
-  const varieties =
-    specs?.book_languages?.languages?.find((l) => l.code === language)?.varieties || []
+  useEffect(() => {
+    const row = languages.find((l) => l.code === language)
+    if (row?.defaultVariety) {
+      setVariety(normalizeBookLanguageVariety(language, row.defaultVariety))
+    }
+  }, [language, languages])
+
+  const varieties = languages.find((l) => l.code === language)?.varieties || []
+  const cultureHint = bookLanguageCultureHint(language)
 
   async function onCreate(e) {
     e.preventDefault()
@@ -179,25 +210,42 @@ export function LibraryPage({ onOpen, onError }) {
           </div>
           <div className="row">
             <div className="field">
-              <label htmlFor="lang">Language</label>
-              <select id="lang" value={language} onChange={(e) => setLanguage(e.target.value)}>
-                {(specs?.book_languages?.languages || []).map((l) => (
+              <label htmlFor="lang">Manuscript language</label>
+              <select
+                id="lang"
+                value={language}
+                onChange={(e) => setLanguage(normalizeBookLanguage(e.target.value))}
+              >
+                {languages.map((l) => (
                   <option key={l.code} value={l.code}>
-                    {l.label}
+                    {languageOptionLabel(l)}
                   </option>
                 ))}
               </select>
+              <p className="muted" style={{ margin: '0.35rem 0 0', fontSize: '0.85rem' }}>
+                Proofreads in the selected language: English, German, Spanish, French, Italian,
+                Dutch. {cultureHint}
+              </p>
             </div>
-            {varieties.length > 1 ? (
+            {varieties.length > 0 ? (
               <div className="field">
-                <label htmlFor="variety">Variety</label>
-                <select id="variety" value={variety} onChange={(e) => setVariety(e.target.value)}>
+                <label htmlFor="variety">Regional variety</label>
+                <select
+                  id="variety"
+                  value={variety}
+                  onChange={(e) =>
+                    setVariety(normalizeBookLanguageVariety(language, e.target.value))
+                  }
+                >
                   {varieties.map((v) => (
                     <option key={v.code} value={v.code}>
                       {v.label}
                     </option>
                   ))}
                 </select>
+                <p className="muted" style={{ margin: '0.35rem 0 0', fontSize: '0.85rem' }}>
+                  Spelling and idiom for that market (not a second language list).
+                </p>
               </div>
             ) : null}
             <div className="field">

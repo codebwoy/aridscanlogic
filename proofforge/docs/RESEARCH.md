@@ -65,3 +65,4 @@ Do **not** copy proprietary code or private editorial databases — original imp
 36. Scorecard shows “—” until an audit runs (no fake 100). Interactive KDP upload checklist on Export (Previewer, cover/spine, AI disclosure, MOBI end-date).
 37. Create-project metadata: author, subtitle, intended tone, formality — tone/formality steer analysis; RTF export + cover-calculator deep link; author_decisions log on accept/reject.
 38. Translation glossary + source language UI; richer NovelForge handoff metadata; AuthorForge + StoryForge → ProofForge handoff (same import API).
+39. Manuscript language picker always lists EN/DE/ES/FR/IT/NL (native labels + culture hint); regional variety separate; strict PATCH allow-list; expanded localization packs.

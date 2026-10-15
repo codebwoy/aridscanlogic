@@ -1,4 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  BOOK_LANGUAGES,
+  bookLanguageCultureHint,
+  bookLanguageVarieties,
+  normalizeBookLanguage,
+  normalizeBookLanguageVariety,
+} from '@proofforge/shared/desktop.js'
 import { pfApi } from '../lib/api.js'
 
 const EDIT_STEPS = [
@@ -1072,6 +1079,60 @@ export function ProjectPage({ projectId, onError, onBack }) {
             Genre comparison nudges AutoCrit-style category scores. Fine-tune goals steer Manuscript
             Analysis (PWA).
           </p>
+          <div className="row" style={{ marginTop: '0.75rem' }}>
+            <div className="field">
+              <label>Manuscript language</label>
+              <select
+                value={normalizeBookLanguage(project.language)}
+                onChange={async (e) => {
+                  const language = normalizeBookLanguage(e.target.value)
+                  const language_variety = normalizeBookLanguageVariety(
+                    language,
+                    project.language_variety
+                  )
+                  const { project: p } = await pfApi.patchProject(projectId, {
+                    language,
+                    language_variety,
+                  })
+                  setProject(p)
+                }}
+                style={selectStyle}
+              >
+                {BOOK_LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.nativeLabel && l.nativeLabel !== l.label
+                      ? `${l.label} — ${l.nativeLabel}`
+                      : l.label}
+                  </option>
+                ))}
+              </select>
+              <p className="muted" style={{ margin: '0.35rem 0 0', fontSize: '0.85rem' }}>
+                {bookLanguageCultureHint(project.language)}
+              </p>
+            </div>
+            <div className="field">
+              <label>Regional variety</label>
+              <select
+                value={normalizeBookLanguageVariety(project.language, project.language_variety)}
+                onChange={async (e) => {
+                  const { project: p } = await pfApi.patchProject(projectId, {
+                    language_variety: normalizeBookLanguageVariety(
+                      project.language,
+                      e.target.value
+                    ),
+                  })
+                  setProject(p)
+                }}
+                style={selectStyle}
+              >
+                {bookLanguageVarieties(project.language).map((v) => (
+                  <option key={v.code} value={v.code}>
+                    {v.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
           <div className="field" style={{ marginTop: '0.75rem' }}>
             <label>Document domain</label>
             <select
