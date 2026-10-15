@@ -85,6 +85,32 @@ const createSchema = z.object({
   author_goals: z.string().optional(),
   translation_mode: z.boolean().optional(),
   source_language: z.string().optional(),
+  reading_level: z.string().max(80).optional(),
+  character_list: z.array(z.string()).optional(),
+  glossary: z
+    .array(
+      z.union([
+        z.string(),
+        z.object({
+          term: z.string().optional(),
+          preferred: z.string().optional(),
+          aliases: z.array(z.string()).optional(),
+        }),
+      ])
+    )
+    .optional(),
+  translation_glossary: z
+    .array(
+      z.union([
+        z.string(),
+        z.object({
+          term: z.string().optional(),
+          preferred: z.string().optional(),
+          aliases: z.array(z.string()).optional(),
+        }),
+      ])
+    )
+    .optional(),
   chapter_critique: z.boolean().optional(),
   plagiarism_consent: z.boolean().optional(),
   manuscript_text: z.string().optional(),
@@ -95,6 +121,7 @@ const createSchema = z.object({
         title: z.string().optional(),
         content_md: z.string().optional(),
         content: z.string().optional(),
+        order: z.number().optional(),
       })
     )
     .optional(),

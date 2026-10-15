@@ -47,6 +47,7 @@ import ListingDescriptionBuilder from '../components/ListingDescriptionBuilder.j
 import ListingMetadataBuilder from '../components/ListingMetadataBuilder.jsx'
 import CoverStudio from '../components/CoverStudio.jsx'
 import SeriesManager from '../components/SeriesManager.jsx'
+import { handoffBookToProofForge } from '../lib/proofforgeHandoff.js'
 
 const STEPS = ['story', 'characters', 'scenes', 'layout', 'preflight', 'export']
 
@@ -1924,6 +1925,29 @@ export default function Studio({
                 onClick={() => runJob('preflight', { trim_id: active.trim_id })}
               >
                 <BookOpen size={16} aria-hidden /> Preflight (0)
+              </button>
+              <button
+                type="button"
+                className="sf-btn sf-btn-primary"
+                disabled={busy || !active}
+                onClick={async () => {
+                  setBusy(true)
+                  setError('')
+                  try {
+                    const result = await handoffBookToProofForge(active)
+                    if (result.opened) {
+                      setStatus('Opened ProofForge with page text for audit')
+                    } else {
+                      setError(result.error || result.reason || 'ProofForge handoff failed')
+                    }
+                  } catch (e) {
+                    setError(e.message || 'ProofForge handoff failed')
+                  } finally {
+                    setBusy(false)
+                  }
+                }}
+              >
+                <ClipboardCheck size={16} aria-hidden /> Audit in ProofForge
               </button>
               <button
                 type="button"

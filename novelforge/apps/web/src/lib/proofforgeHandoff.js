@@ -32,13 +32,30 @@ export function buildProofForgePayload(book) {
     content_md: s.content_md || '',
     order: i,
   }))
+  const genre = String(book?.genre || '').toLowerCase().replace(/\s+/g, '_')
+  const genreMap = {
+    romance: 'romance',
+    thriller: 'thriller',
+    mystery: 'mystery',
+    fantasy: 'fantasy',
+    literary: 'literary',
+    contemporary: 'general_fiction',
+    historical: 'general_fiction',
+    sci_fi: 'fantasy',
+    'sci-fi': 'fantasy',
+  }
   return {
     title: book?.title || book?.working_title || 'NovelForge manuscript',
+    subtitle: book?.subtitle || undefined,
+    author_name: book?.author_name || undefined,
     language: book?.language || 'en',
     language_variety: book?.language_variety,
     book_type: 'fiction',
     edit_mode: 'natural',
     publishing_target: 'editorial_only',
+    document_domain: 'creative',
+    genre_comparison: genreMap[genre] || 'general_fiction',
+    reading_level: book?.audience || book?.reading_level || undefined,
     sections,
     source: 'novelforge',
     source_studio: 'novelforge',

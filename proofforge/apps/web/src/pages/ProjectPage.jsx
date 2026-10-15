@@ -1159,6 +1159,41 @@ export function ProjectPage({ projectId, onError, onBack }) {
             />
           </div>
           <div className="field">
+            <label>Translation glossary (comma-separated preferred terms)</label>
+            <input
+              defaultValue={(project.translation_glossary || [])
+                .map((g) => (typeof g === 'string' ? g : g.preferred || g.term))
+                .join(', ')}
+              placeholder="Bilingual / localization preferred spellings"
+              onBlur={async (e) => {
+                const translation_glossary = e.target.value
+                  .split(',')
+                  .map((s) => s.trim())
+                  .filter(Boolean)
+                  .map((term) => ({ term, preferred: term, aliases: [] }))
+                const { project: p } = await pfApi.patchProject(projectId, {
+                  translation_glossary,
+                })
+                setProject(p)
+              }}
+            />
+          </div>
+          {project.translation_mode ? (
+            <div className="field">
+              <label>Source language (translation)</label>
+              <input
+                defaultValue={project.source_language || ''}
+                placeholder="e.g. de, fr, es"
+                onBlur={async (e) => {
+                  const { project: p } = await pfApi.patchProject(projectId, {
+                    source_language: e.target.value,
+                  })
+                  setProject(p)
+                }}
+              />
+            </div>
+          ) : null}
+          <div className="field">
             <label>Author / pen name</label>
             <input
               defaultValue={project.author_name || ''}

@@ -46,6 +46,7 @@ import {
 } from '../lib/api'
 import BookEditor from '../components/BookEditor'
 import StepAssistant from '../components/StepAssistant'
+import { handoffBookToProofForge } from '../lib/proofforgeHandoff'
 
 const LAST_BOOK_KEY = 'authorforge_last_book_id'
 
@@ -2057,6 +2058,34 @@ function WizardStep(props) {
             gate={gate}
             onSaveCompliance={onCompliance}
           />
+          <h3 style={{ marginTop: '1.25rem' }}>ProofForge audit</h3>
+          <p className="muted">
+            Send this manuscript to ProofForge for a whole-book proofread / localization pass
+            (accept or reject each finding). Requires local{' '}
+            <code>npm run proofforge:dev</code> (:5183). Does not guarantee KDP approval.
+          </p>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={!!busy || !book}
+            onClick={async () => {
+              setBusy('proofforge')
+              try {
+                const result = await handoffBookToProofForge(book)
+                if (result.opened) {
+                  setMessage('Opened ProofForge with this manuscript')
+                } else {
+                  setMessage(result.error || result.reason || 'ProofForge handoff failed')
+                }
+              } catch (e) {
+                setMessage(e.message || 'ProofForge handoff failed')
+              } finally {
+                setBusy('')
+              }
+            }}
+          >
+            Audit in ProofForge
+          </button>
           <h3 style={{ marginTop: '1.25rem' }}>Export files</h3>
           <p className="muted" style={{ marginBottom: '0.75rem' }}>
             Each export runs the job, then downloads the file to your computer. Storefront opens the public

@@ -66,6 +66,8 @@ Research: [`docs/RESEARCH.md`](./docs/RESEARCH.md). Security: [`SECURITY.md`](./
 | Sticky → findings + POV/tense consistency | Done |
 | KDP title/author match + bleed toggle + Endure note | Done |
 | Translation log in Markdown export | Done |
+| Translation glossary + source language UI | Done |
+| NovelForge / AuthorForge / StoryForge handoff | Done |
 
 ## Quick start
 
