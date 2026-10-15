@@ -541,11 +541,14 @@ export function ProjectPage({ projectId, onError, onBack }) {
             <button type="button" className="btn" onClick={() => download('txt')}>
               TXT
             </button>
+            <button type="button" className="btn" onClick={() => download('rtf')}>
+              RTF
+            </button>
           </div>
           <p className="muted" style={{ fontSize: '0.85rem', marginTop: '-0.5rem' }}>
             KPF is produced inside Amazon Kindle Create — ProofForge cannot emit KPF directly. MOBI
             fixed-layout ended March 2025. PDF-as-ebook only for limited languages — prefer
-            DOCX/EPUB/KPF.
+            DOCX/EPUB/KPF. RTF is accepted by KDP but DOCX/EPUB are preferred.
           </p>
 
           {kdpChecklist ? (
@@ -1311,6 +1314,26 @@ export function ProjectPage({ projectId, onError, onBack }) {
               </pre>
             </>
           ) : null}
+          <h4>Author decisions</h4>
+          <p className="muted" style={{ marginTop: 0 }}>
+            Accept / reject / ignore history (also in JSON &amp; Markdown exports).
+          </p>
+          {(project.author_decisions || []).length === 0 ? (
+            <p className="muted">No decisions yet.</p>
+          ) : (
+            <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
+              {(project.author_decisions || []).slice(-40).reverse().map((d, i) => (
+                <li key={`${d.finding_id}-${d.at}-${i}`} className="muted" style={{ marginBottom: '0.35rem' }}>
+                  <strong>{d.action}</strong>
+                  {d.title ? ` — ${d.title}` : ''}
+                  {d.category ? ` (${d.category})` : ''}
+                  {d.at ? (
+                    <span style={{ fontSize: '0.85rem' }}> · {new Date(d.at).toLocaleString()}</span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       ) : null}
 

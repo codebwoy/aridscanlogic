@@ -38,4 +38,5 @@ test('create project, analyze with fake LLM, accept finding', async () => {
     action: finding.suggested_correction ? 'accept' : 'reject',
   })
   assert.ok(resolved.finding.resolution === 'accepted' || resolved.finding.resolution === 'rejected')
+  assert.ok((resolved.project.author_decisions || []).length >= 1)
 })

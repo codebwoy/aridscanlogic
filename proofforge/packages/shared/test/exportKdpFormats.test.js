@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {
   buildPlainTextManuscript,
   buildEbookHtml,
+  buildRtfManuscript,
   kdpUploadChecklist,
 } from '../src/index.js'
 
@@ -35,10 +36,23 @@ test('ebook html includes title and chapter', () => {
   assert.ok(filename.endsWith('.html'))
 })
 
+test('rtf manuscript is valid-ish RTF with title', () => {
+  const { text, filename } = buildRtfManuscript(project)
+  assert.ok(text.startsWith('{\\rtf1'))
+  assert.ok(text.includes('Demo'))
+  assert.ok(text.includes('Ada'))
+  assert.ok(filename.endsWith('.rtf'))
+})
+
 test('kdp checklist includes ebook and print items', () => {
   const c = kdpUploadChecklist(project)
   assert.ok(c.items.some((i) => i.id === 'previewer_ebook'))
   assert.ok(c.items.some((i) => i.id === 'print_pdf'))
   assert.ok(c.items.find((i) => i.id === 'trim')?.done)
   assert.ok(c.formats.kindle_ebook.includes('docx'))
+  assert.ok(c.formats.kindle_ebook.includes('rtf'))
+  assert.equal(
+    c.items.find((i) => i.id === 'cover')?.link,
+    'https://kdp.amazon.com/en_US/cover-calculator'
+  )
 })

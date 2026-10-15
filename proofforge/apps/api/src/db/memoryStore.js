@@ -205,6 +205,7 @@ export function createMemoryStore(options = {}) {
         custom_dictionary: Array.isArray(body.custom_dictionary)
           ? body.custom_dictionary.map(String).slice(0, 500)
           : [],
+        author_decisions: [],
         translation_mode: Boolean(body.translation_mode),
         source_language: body.source_language || '',
         chapter_critique: body.chapter_critique !== false,
@@ -480,6 +481,17 @@ export function createMemoryStore(options = {}) {
       }
       if (decision.feedback_note) {
         f.feedback_note = String(decision.feedback_note).slice(0, 500)
+      }
+      if (!Array.isArray(p.author_decisions)) p.author_decisions = []
+      p.author_decisions.push({
+        at: nowIso(),
+        finding_id: findingId,
+        action: f.user_decision || action,
+        category: f.category || null,
+        title: f.title || null,
+      })
+      if (p.author_decisions.length > 500) {
+        p.author_decisions = p.author_decisions.slice(-500)
       }
       p.scores = scoreFromFindings(p.findings)
       p.updated_at = nowIso()

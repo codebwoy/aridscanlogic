@@ -24,6 +24,7 @@ export function buildJsonReport(project) {
     kdp: project.kdp || null,
     coverage: project.last_analysis?.coverage || null,
     findings: project.findings || [],
+    author_decisions: project.author_decisions || [],
     research_note: 'Rule sources documented in proofforge/docs/RESEARCH.md',
   }
 }
@@ -114,6 +115,17 @@ export function buildMarkdownReport(project) {
     lines.push(project.kdp.disclaimer || '')
     for (const r of project.kdp.results || []) {
       lines.push(`- **${r.title}**: ${r.status} — ${r.detail}`)
+    }
+    lines.push('')
+  }
+  if ((project.author_decisions || []).length) {
+    lines.push('## Author decisions (recent)', '')
+    for (const d of project.author_decisions.slice(-40)) {
+      lines.push(
+        `- ${d.at || ''} · ${d.action || ''} · ${d.title || d.finding_id || ''}${
+          d.category ? ` (${d.category})` : ''
+        }`
+      )
     }
     lines.push('')
   }

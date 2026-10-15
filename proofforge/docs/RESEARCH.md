@@ -63,3 +63,4 @@ Do **not** copy proprietary code or private editorial databases — original imp
 34. Fiction POV/tense consistency heuristics; KDP title/author manuscript match; bleed toggle; Amazon Endure note; translation log in MD export.
 35. KDP export paths: print PDF at trim + mirror margins (+ bleed); DOCX page setup from print_config; EPUB/DOCX/HTML/TXT for Kindle; KPF via Kindle Create only; audit PDF report.
 36. Scorecard shows “—” until an audit runs (no fake 100). Interactive KDP upload checklist on Export (Previewer, cover/spine, AI disclosure, MOBI end-date).
+37. Create-project metadata: author, subtitle, intended tone, formality — tone/formality steer analysis; RTF export + cover-calculator deep link; author_decisions log on accept/reject.

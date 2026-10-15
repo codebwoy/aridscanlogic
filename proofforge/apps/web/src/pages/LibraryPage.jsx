@@ -13,6 +13,10 @@ export function LibraryPage({ onOpen, onError }) {
   const [projects, setProjects] = useState([])
   const [specs, setSpecs] = useState(null)
   const [title, setTitle] = useState('My manuscript audit')
+  const [subtitle, setSubtitle] = useState('')
+  const [authorName, setAuthorName] = useState('')
+  const [intendedTone, setIntendedTone] = useState('')
+  const [formality, setFormality] = useState('neutral')
   const [language, setLanguage] = useState('en')
   const [variety, setVariety] = useState('us')
   const [bookType, setBookType] = useState('fiction')
@@ -53,6 +57,10 @@ export function LibraryPage({ onOpen, onError }) {
     try {
       const { project } = await pfApi.createProject({
         title,
+        subtitle: subtitle || undefined,
+        author_name: authorName || undefined,
+        intended_tone: intendedTone || undefined,
+        formality,
         language,
         language_variety: variety,
         book_type: bookType,
@@ -89,6 +97,10 @@ export function LibraryPage({ onOpen, onError }) {
         mime: file.type,
         base64,
         title: title || file.name,
+        subtitle: subtitle || undefined,
+        author_name: authorName || undefined,
+        intended_tone: intendedTone || undefined,
+        formality,
         language,
         language_variety: variety,
         book_type: bookType,
@@ -122,6 +134,48 @@ export function LibraryPage({ onOpen, onError }) {
           <div className="field">
             <label htmlFor="title">Title</label>
             <input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+          </div>
+          <div className="row">
+            <div className="field">
+              <label htmlFor="subtitle">Subtitle (optional)</label>
+              <input
+                id="subtitle"
+                value={subtitle}
+                onChange={(e) => setSubtitle(e.target.value)}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="author">Author / pen name</label>
+              <input
+                id="author"
+                value={authorName}
+                onChange={(e) => setAuthorName(e.target.value)}
+                placeholder="For KDP title page + match checks"
+              />
+            </div>
+          </div>
+          <div className="row">
+            <div className="field">
+              <label htmlFor="tone">Intended tone (optional)</label>
+              <input
+                id="tone"
+                value={intendedTone}
+                onChange={(e) => setIntendedTone(e.target.value)}
+                placeholder="e.g. warm mentor, noir, academic"
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="formality">Formality</label>
+              <select
+                id="formality"
+                value={formality}
+                onChange={(e) => setFormality(e.target.value)}
+              >
+                <option value="casual">Casual</option>
+                <option value="neutral">Neutral</option>
+                <option value="formal">Formal</option>
+              </select>
+            </div>
           </div>
           <div className="row">
             <div className="field">

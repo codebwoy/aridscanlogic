@@ -1,9 +1,11 @@
 /**
  * Additional KDP-supported manuscript formats (ebook help G200634390):
- * DOCX / EPUB / PDF / TXT / HTML (+ KPF via Kindle Create only).
+ * DOCX / EPUB / PDF / TXT / HTML / RTF (+ KPF via Kindle Create only).
  */
 
 import { buildCorrectedManuscript } from './exportReport.js'
+
+const COVER_CALCULATOR_URL = 'https://kdp.amazon.com/en_US/cover-calculator'
 
 /** Plain text — KDP accepts TXT for ebook in supported languages. */
 export function buildPlainTextManuscript(project) {
@@ -87,6 +89,40 @@ export function buildEbookHtml(project) {
 /**
  * Author-facing KDP upload readiness checklist (ebook + print).
  */
+/** Minimal RTF for KDP RTF upload path (ebook help G200634390). */
+export function buildRtfManuscript(project) {
+  const sections = Object.values(project.sections || {}).sort(
+    (a, b) => (a.order ?? 0) - (b.order ?? 0)
+  )
+  const esc = (s) =>
+    String(s || '')
+      .replace(/\\/g, '\\\\')
+      .replace(/\{/g, '\\{')
+      .replace(/\}/g, '\\}')
+      .replace(/\n/g, '\\par ')
+  const parts = [
+    '{\\rtf1\\ansi\\deff0',
+    '{\\fonttbl{\\f0 Times New Roman;}}',
+    '\\f0\\fs22 ',
+    `\\b ${esc(project.title || 'Manuscript')}\\b0\\par `,
+  ]
+  if (project.author_name) parts.push(`${esc(project.author_name)}\\par\\par `)
+  for (const s of sections) {
+    parts.push(`\\par\\b ${esc(s.title || s.key)}\\b0\\par `)
+    const body = String(s.content_md || '')
+      .replace(/^#{1,6}\s+/gm, '')
+      .replace(/\*\*/g, '')
+    parts.push(`${esc(body)}\\par `)
+  }
+  parts.push('}')
+  return {
+    text: parts.join(''),
+    filename: `manuscript-${project.id || 'export'}.rtf`,
+    contentType: 'application/rtf',
+    kdp_note: 'KDP accepts RTF for ebook manuscripts. Prefer DOCX/EPUB/KPF when possible; validate in Kindle Previewer.',
+  }
+}
+
 export function kdpUploadChecklist(project) {
   const target = project.publishing_target || 'editorial_only'
   const print =
@@ -163,6 +199,7 @@ export function kdpUploadChecklist(project) {
     label: 'Cover is a separate full-bleed PDF (not the interior) — use KDP cover calculator',
     done: false,
     required: print,
+    link: COVER_CALCULATOR_URL,
   })
   items.push({
     id: 'spine',
@@ -184,9 +221,18 @@ export function kdpUploadChecklist(project) {
     publishing_target: target,
     items,
     formats: {
-      kindle_ebook: ['docx', 'epub', 'html', 'txt', 'pdf_limited_languages', 'kpf_via_kindle_create'],
+      kindle_ebook: [
+        'docx',
+        'epub',
+        'html',
+        'txt',
+        'rtf',
+        'pdf_limited_languages',
+        'kpf_via_kindle_create',
+      ],
       paperback_hardcover: ['pdf_print_interior', 'docx_then_embedded_font_pdf'],
       not_supported_here: ['kpf_direct', 'cover_designer', 'print_previewer_live'],
+      cover_calculator: COVER_CALCULATOR_URL,
     },
     disclaimer:
       'Not affiliated with Amazon. Completing this checklist does not guarantee KDP acceptance.',

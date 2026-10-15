@@ -61,6 +61,7 @@ export async function runManuscriptAnalysis(llm, project, hooks = {}) {
   const authorGoals = String(project.author_goals || '').trim()
   const formality = project.formality || prefs.formality || 'neutral'
   const readingLevel = project.reading_level || ''
+  const intendedTone = String(project.intended_tone || '').trim()
   const characterList = Array.isArray(project.character_list) ? project.character_list : []
   const glossary = Array.isArray(project.glossary) ? project.glossary : []
   const translationGlossary = Array.isArray(project.translation_glossary)
@@ -116,8 +117,15 @@ export async function runManuscriptAnalysis(llm, project, hooks = {}) {
         edit_mode: project.edit_mode,
         genre_comparison: genreComparison,
         author_goals: authorGoals || undefined,
+        intended_tone: intendedTone || undefined,
+        formality,
+        reading_level: readingLevel || undefined,
+        style_guide: styleGuide || undefined,
         fine_tune_instructions: authorGoals
           ? 'Steer Manuscript Analysis toward these author goals/concerns.'
+          : undefined,
+        tone_instructions: intendedTone
+          ? `Author intended tone: ${intendedTone}. Flag passages that clash unless clearly intentional.`
           : undefined,
         sections: summaries,
       }),
@@ -229,6 +237,9 @@ export async function runManuscriptAnalysis(llm, project, hooks = {}) {
               section_title: section.title,
               chunk_index: chunk.index,
               preferences: prefs,
+              formality,
+              intended_tone: intendedTone || undefined,
+              style_guide: styleGuide || undefined,
               instructions:
                 'Return findings whose original_excerpt is an exact substring of the SECTION text. Max 12.',
             }) + `\n\n<<<SECTION>>>\n${chunk.text}\n<<<END>>>`,

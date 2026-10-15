@@ -30,6 +30,7 @@ import {
   buildReportPdf,
   buildPlainTextManuscript,
   buildEbookHtml,
+  buildRtfManuscript,
   kdpUploadChecklist,
   resolveEntitlement,
 } from '@proofforge/shared'
@@ -68,6 +69,11 @@ const limit = rateLimit({
 
 const createSchema = z.object({
   title: z.string().min(1).max(200).optional(),
+  subtitle: z.string().max(200).optional(),
+  author_name: z.string().max(120).optional(),
+  intended_tone: z.string().max(120).optional(),
+  style_guide: z.string().max(4000).optional(),
+  formality: z.enum(['casual', 'neutral', 'formal']).optional(),
   language: z.enum(/** @type {[string, ...string[]]} */ ([...BOOK_LANGUAGE_CODES])).optional(),
   language_variety: z.string().optional(),
   book_type: z.string().optional(),
@@ -216,6 +222,7 @@ const server = http.createServer(async (req, res) => {
             'pdf-report',
             'txt',
             'html',
+            'rtf',
           ],
           kdp_upload_paths: {
             kindle_ebook: [
@@ -223,10 +230,12 @@ const server = http.createServer(async (req, res) => {
               'epub',
               'html',
               'txt',
+              'rtf',
               'pdf_limited_languages',
               'kpf_via_kindle_create',
             ],
             paperback_hardcover: ['pdf_print_interior', 'docx_then_pdf_with_fonts_embedded'],
+            cover_calculator: 'https://kdp.amazon.com/en_US/cover-calculator',
             note: 'KPF is produced in Amazon Kindle Create. Print PDF uses project trim/margins/bleed. MOBI fixed-layout ended March 2025.',
           },
           ocr: process.env.PROOFFORGE_OCR !== '0',
@@ -469,7 +478,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     const exportMatch = path.match(
-      /^\/v1\/projects\/([^/]+)\/export\/(json|csv|md|manuscript|epub|docx|pdf|pdf-report|txt|html)$/
+      /^\/v1\/projects\/([^/]+)\/export\/(json|csv|md|manuscript|epub|docx|pdf|pdf-report|txt|html|rtf)$/
     )
     if (req.method === 'GET' && exportMatch) {
       const project = store.getProject(exportMatch[1])
@@ -567,6 +576,15 @@ const server = http.createServer(async (req, res) => {
           'Content-Disposition': `attachment; filename="${filename}"`,
         })
         res.end(html)
+        return
+      }
+      if (kind === 'rtf') {
+        const { text, filename } = buildRtfManuscript(project)
+        res.writeHead(200, {
+          'Content-Type': 'application/rtf',
+          'Content-Disposition': `attachment; filename="${filename}"`,
+        })
+        res.end(text)
         return
       }
     }

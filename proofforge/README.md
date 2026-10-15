@@ -46,8 +46,10 @@ Research: [`docs/RESEARCH.md`](./docs/RESEARCH.md). Security: [`SECURITY.md`](./
 | Versioned KDP rules + content/AI policy + print config + admin catalog | Done |
 | Preferences (category toggles) | Done |
 | Ingest TXT/MD/DOCX/PDF (**OCR fallback**)/EPUB | Done |
-| Export JSON/CSV/MD/manuscript/EPUB/DOCX/TXT/HTML + **print PDF** / audit PDF | Done |
-| KDP upload checklist (ebook + print) | Done |
+| Export JSON/CSV/MD/manuscript/EPUB/DOCX/TXT/HTML/RTF + **print PDF** / audit PDF | Done |
+| KDP upload checklist (ebook + print) + cover calculator link | Done |
+| Create metadata (author / tone / formality) steers audit | Done |
+| Author decision log (accept/reject history in exports) | Done |
 | Scorecard blank until audit (no fake 100) | Done |
 | Rate limit + audit log + desktop auth | Done |
 | Personal studio (no Stripe / no paywall) | Done |
